@@ -1,12 +1,14 @@
 import { ensureSidebarMounted, hasDesignatedMenuItems, setupLayoutScrollSync, toggleDrawer, updateSidebarActiveState } from './components/layout.component.js';
 import { closeAllModals } from './components/modal.component.js';
-import { findRoute } from './config/routes.config.js';
-import { translateElement } from './services/i18n.service.js';
+import { findRoute, MatchedRoute } from './config/routes.config.js';
+import { getLocalizedPath, updateDomSeo } from './config/seo.config.js';
+import { getCurrentLanguage, setLanguage, translateElement } from './services/i18n.service.js';
 import { hideTooltip } from './services/tooltip.service.js';
 import { consumeTransferFile } from './services/transfer.service.js';
 import { ViewController } from './types/common.types.js';
 
 let activeViewElement: HTMLElement | null = null;
+let currentActiveRouteId = 'home';
 let currentNavigation = 0;
 let previousPath = '';
 
@@ -37,10 +39,30 @@ function parseRouteUrl(rawUrl: string): { fullUrl: string; pathname: string; que
   }
 }
 
-export function navigate(url: string, replace = false): void {
-  const { fullUrl, pathname } = parseRouteUrl(url);
+export function getCurrentRouteId(): string {
+  return currentActiveRouteId;
+}
 
+export async function switchLanguage(newLang: string): Promise<void> {
+  const targetBase = getLocalizedPath(currentActiveRouteId, newLang);
+  const searchAndHash = `${window.location.search}${window.location.hash}`;
+  await setLanguage(newLang);
+  navigate(`${targetBase}${searchAndHash}`);
+}
+
+export function navigate(url: string, replace = false): void {
+  const { pathname } = parseRouteUrl(url);
+  const searchAndHash = url.includes('?') || url.includes('#') ? url.replace(/^[^?#]*/, '') : '';
+  const matched = findRoute(pathname);
+
+  let targetUrl = url;
+  if (matched && !matched.isCanonical) {
+    targetUrl = `${matched.canonicalPath}${searchAndHash}`;
+  }
+
+  const { fullUrl, pathname: targetPathname } = parseRouteUrl(targetUrl);
   const currentFull = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
   if (currentFull === fullUrl && !replace) {
     const scrollable = document.querySelector<HTMLElement>(
       '.view-scrollable, .home-scrollable, .layout-scrollable, .layout-body--scrollable, .layout-content'
@@ -59,12 +81,13 @@ export function navigate(url: string, replace = false): void {
     window.history.pushState({}, '', fullUrl);
   }
 
+  const internalPath = matched ? matched.internalPath : targetPathname;
   const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
-  if (sidebar && !pathname.startsWith('/login') && !pathname.startsWith('/register') && !pathname.startsWith('/forgot-password') && !pathname.startsWith('/reset-password')) {
-    updateSidebarActiveState(sidebar, pathname);
+  if (sidebar && !internalPath.startsWith('/login') && !internalPath.startsWith('/register') && !internalPath.startsWith('/forgot-password') && !internalPath.startsWith('/reset-password')) {
+    updateSidebarActiveState(sidebar, internalPath);
   }
 
-  void render(pathname);
+  void render(targetPathname);
 }
 
 export async function render(rawPath = window.location.pathname): Promise<void> {
@@ -83,15 +106,29 @@ export async function render(rawPath = window.location.pathname): Promise<void> 
     appRoot.appendChild(layoutContent);
   }
 
-  const isAuthView = path.startsWith('/login') || path.startsWith('/register') || path.startsWith('/forgot-password') || path.startsWith('/reset-password');
+  const matched = findRoute(path);
+
+  if (matched) {
+    currentActiveRouteId = matched.routeId;
+    if (matched.lang !== getCurrentLanguage()) {
+      await setLanguage(matched.lang);
+    }
+    if (!matched.isCanonical) {
+      const fullCanonical = `${matched.canonicalPath}${window.location.search}${window.location.hash}`;
+      window.history.replaceState({}, '', fullCanonical);
+    }
+  }
+
+  const activeInternalPath = matched ? matched.internalPath : path;
+  const isAuthView = activeInternalPath.startsWith('/login') || activeInternalPath.startsWith('/register') || activeInternalPath.startsWith('/forgot-password') || activeInternalPath.startsWith('/reset-password');
 
   if (!isAuthView) {
     layoutContent.classList.remove('is-auth-mode');
     const sidebar = await ensureSidebarMounted(layoutContent);
     sidebar.style.display = '';
-    updateSidebarActiveState(sidebar, path);
+    updateSidebarActiveState(sidebar, activeInternalPath);
     translateElement(sidebar);
-    if (hasDesignatedMenuItems(path)) {
+    if (hasDesignatedMenuItems(activeInternalPath)) {
       if (window.innerWidth > 768) {
         toggleDrawer(true);
       }
@@ -106,18 +143,17 @@ export async function render(rawPath = window.location.pathname): Promise<void> 
   }
 
   const navId = ++currentNavigation;
-  const matched = findRoute(path);
-
   let nextViewElement: HTMLElement | null = null;
 
   try {
     if (matched) {
       nextViewElement = await matched.route.handler({
         params: matched.params,
-        path,
+        path: matched.internalPath,
         previousPath,
         query: new URLSearchParams(window.location.search),
       });
+      updateDomSeo(matched.routeId, matched.lang);
     } else {
       const { createNotFoundView } = await import('./views/not-found.view.js');
       nextViewElement = await createNotFoundView();

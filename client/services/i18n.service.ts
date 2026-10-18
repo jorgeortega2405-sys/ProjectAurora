@@ -1,8 +1,8 @@
 import { API_ROUTES } from '../config/api-routes.js';
-import { detectBrowserLanguage } from '../utils/languages.util.js';
+import { DEFAULT_LANGUAGE, detectBrowserLanguage, isSupportedLanguage, normalizeLanguageCode } from '../utils/languages.util.js';
 import { currentUser, postApi } from './api.service.js';
 
-let currentLanguage = 'es-MX';
+let currentLanguage = DEFAULT_LANGUAGE;
 let currentTranslations: Record<string, unknown> = {};
 
 const FALLBACK_TRANSLATIONS: Record<string, unknown> = {
@@ -107,23 +107,24 @@ export function getCurrentLanguage(): string {
 }
 
 async function loadTranslationFile(code: string): Promise<void> {
+  const norm = normalizeLanguageCode(code);
   try {
-    const res = await fetch(`/translations/${encodeURIComponent(code)}.json`);
+    const res = await fetch(`/translations/${encodeURIComponent(norm)}.json`);
     if (res.ok) {
       currentTranslations = await res.json();
       try {
-        sessionStorage.setItem(`aurora_i18n_${code}`, JSON.stringify(currentTranslations));
+        sessionStorage.setItem(`aurora_i18n_${norm}`, JSON.stringify(currentTranslations));
       } catch {}
       return;
     }
   } catch {}
 
   try {
-    const fallbackRes = await fetch('/translations/es-MX.json');
+    const fallbackRes = await fetch('/translations/es.json');
     if (fallbackRes.ok) {
       currentTranslations = await fallbackRes.json();
       try {
-        sessionStorage.setItem('aurora_i18n_es-MX', JSON.stringify(currentTranslations));
+        sessionStorage.setItem('aurora_i18n_es', JSON.stringify(currentTranslations));
       } catch {}
       return;
     }
@@ -132,32 +133,41 @@ async function loadTranslationFile(code: string): Promise<void> {
   currentTranslations = FALLBACK_TRANSLATIONS;
 }
 
-export async function initI18n(): Promise<void> {
+export async function initI18n(initialLang?: string): Promise<string> {
+  const pathMatch = window.location.pathname.match(/^\/([a-z]{2})(?:\/|$)/i);
+  const pathLang = pathMatch && isSupportedLanguage(pathMatch[1]) ? pathMatch[1] : null;
   const savedLang = localStorage.getItem('aurora_language');
   const browserLang = detectBrowserLanguage();
 
-  currentLanguage = savedLang || browserLang || 'es-MX';
+  const chosen = normalizeLanguageCode(initialLang || pathLang || savedLang || browserLang || DEFAULT_LANGUAGE);
+  currentLanguage = chosen;
+  localStorage.setItem('aurora_language', chosen);
+  document.documentElement.lang = chosen;
+
   try {
     const cached = sessionStorage.getItem(`aurora_i18n_${currentLanguage}`);
     if (cached) {
       currentTranslations = JSON.parse(cached);
       void loadTranslationFile(currentLanguage);
-      return;
+      return currentLanguage;
     }
   } catch {}
   await loadTranslationFile(currentLanguage);
+  return currentLanguage;
 }
 
 export async function setLanguage(code: string): Promise<void> {
   if (!code) return;
-  currentLanguage = code;
-  localStorage.setItem('aurora_language', code);
+  const norm = normalizeLanguageCode(code);
+  currentLanguage = norm;
+  localStorage.setItem('aurora_language', norm);
+  document.documentElement.lang = norm;
 
-  await loadTranslationFile(code);
+  await loadTranslationFile(norm);
 
   if (currentUser) {
     try {
-      await postApi(API_ROUTES.settings.preferences, { language: code });
+      await postApi(API_ROUTES.settings.preferences, { language: norm });
     } catch {}
   }
 }

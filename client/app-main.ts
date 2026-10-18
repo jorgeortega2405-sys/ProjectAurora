@@ -83,7 +83,7 @@ function setupGlobalLinks(): void {
 
 async function initApp(): Promise<void> {
   const currentPath = window.location.pathname;
-  if (currentPath === '/' || currentPath === '') {
+  if (currentPath === '/' || currentPath === '' || /^\/[a-z]{2}\/?$/i.test(currentPath)) {
     preloadTemplates(['/views/components/sidebar.html', '/views/home/home.html']);
   } else {
     preloadTemplates(['/views/components/sidebar.html']);

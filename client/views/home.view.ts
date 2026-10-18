@@ -1,9 +1,10 @@
 import { navigate } from '../app-router.js';
 import { mountSiteFooter } from '../components/footer.component.js';
+import { getLocalizedPath } from '../config/seo.config.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
 import { currentUser, getApi } from '../services/api.service.js';
-import { t } from '../services/i18n.service.js';
+import { getCurrentLanguage, t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 
@@ -89,8 +90,9 @@ export class HomeController {
       `;
     }).join('');
 
+    const currentLang = getCurrentLanguage();
     const standardToolsHtml = featuredTools.map((tool) => `
-      <div class="tool-card" data-ref="card-tool-${tool.id}" data-category="${tool.category}" data-tool-path="${tool.path}">
+      <div class="tool-card" data-ref="card-tool-${tool.id}" data-category="${tool.category}" data-tool-path="${getLocalizedPath(tool.id, currentLang)}">
         <div class="tool-card__icon-box" data-ref="icon-box-${tool.id}">
           ${tool.customSvg || `<svg class="component-icon tool-card__icon" aria-hidden="true"><use href="/icons.svg#${tool.icon}"></use></svg>`}
         </div>

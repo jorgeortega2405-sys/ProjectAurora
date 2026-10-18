@@ -7,10 +7,12 @@ import path from 'path';
 import { checkDbConnection, closeDbPools } from './config/database.config.js';
 import { config } from './config/env.config.js';
 import { checkRedisConnection, redis } from './config/redis.config.js';
+import { injectHtmlSeo, isSupportedLanguage, normalizeLanguageCode } from './config/seo.config.js';
 import { csrfProtection } from './middlewares/csrf.middleware.js';
 import { requestLogger } from './middlewares/request-logger.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import downloadRoutes from './routes/download.routes.js';
+import seoRoutes from './routes/seo.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
 import { subscriptionRouter } from './routes/subscription.routes.js';
 import toolsRoutes from './routes/tools.routes.js';
@@ -65,6 +67,23 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
       },
     });
     app.use(vite.middlewares);
+
+    app.get('/', (req: Request, res: Response) => {
+      const acceptLang = req.headers['accept-language'];
+      let targetLang = 'es';
+      if (acceptLang) {
+        const langs = acceptLang.split(',').map((l) => l.split(';')[0].trim().toLowerCase());
+        for (const al of langs) {
+          const norm = normalizeLanguageCode(al);
+          if (norm && isSupportedLanguage(norm)) {
+            targetLang = norm;
+            break;
+          }
+        }
+      }
+      res.redirect(302, `/${targetLang}`);
+    });
+
     app.use('*', async (req: Request, res: Response, next: NextFunction) => {
       const url = req.originalUrl;
       if (url.startsWith('/api') || req.path.startsWith('/api')) {
@@ -76,7 +95,11 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
       }
       try {
         const template = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
-        const html = await vite.transformIndexHtml(url, template);
+        const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+        const host = (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost:3000';
+        const baseUrl = config.baseUrl && !config.baseUrl.includes('localhost') ? config.baseUrl : `${proto}://${host}`;
+        const transformed = await vite.transformIndexHtml(url, template);
+        const html = injectHtmlSeo(transformed, req.path, baseUrl);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
       } catch (e) {
         vite.ssrFixStacktrace(e as Error);
@@ -97,6 +120,23 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
         },
       })
     );
+
+    app.get('/', (req: Request, res: Response) => {
+      const acceptLang = req.headers['accept-language'];
+      let targetLang = 'es';
+      if (acceptLang) {
+        const langs = acceptLang.split(',').map((l) => l.split(';')[0].trim().toLowerCase());
+        for (const al of langs) {
+          const norm = normalizeLanguageCode(al);
+          if (norm && isSupportedLanguage(norm)) {
+            targetLang = norm;
+            break;
+          }
+        }
+      }
+      res.redirect(302, `/${targetLang}`);
+    });
+
     app.get('*', (req: Request, res: Response) => {
       const url = req.originalUrl;
       if (url.startsWith('/api') || req.path.startsWith('/api')) {
@@ -109,7 +149,17 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
-      res.sendFile(path.join(clientDist, 'index.html'));
+
+      try {
+        const template = fs.readFileSync(path.join(clientDist, 'index.html'), 'utf-8');
+        const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+        const host = (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost:3000';
+        const baseUrl = config.baseUrl && !config.baseUrl.includes('localhost') ? config.baseUrl : `${proto}://${host}`;
+        const html = injectHtmlSeo(template, req.path, baseUrl);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+      } catch {
+        res.sendFile(path.join(clientDist, 'index.html'));
+      }
     });
   }
 
@@ -222,6 +272,7 @@ async function startServer(): Promise<void> {
   app.use('/api', toolsRoutes);
   app.use('/api', workflowRoutes);
   app.use('/api/subscriptions', subscriptionRouter);
+  app.use(seoRoutes);
 
 
   await setupClient(app, server);

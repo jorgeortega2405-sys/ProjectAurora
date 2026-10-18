@@ -1,6 +1,7 @@
-import { render } from '../app-router.js';
+import { switchLanguage } from '../app-router.js';
+import { getLocalizedPath } from '../config/seo.config.js';
 import { escapeHtml } from '../services/api.service.js';
-import { getCurrentLanguage, setLanguage, t } from '../services/i18n.service.js';
+import { getCurrentLanguage, t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { showToast } from '../services/toast.service.js';
 import { setupDropdown } from '../utils/dom.util.js';
@@ -18,19 +19,19 @@ export function getFooterHtml(): string {
             <h4 class="footer-col__title" data-ref="footer-title-producto">Producto</h4>
             <ul class="footer-col__list" data-ref="footer-list-producto">
               <li class="footer-col__item" data-ref="footer-item-inicio">
-                <a class="footer-col__link" data-ref="footer-link-inicio" href="/">Inicio</a>
+                <a class="footer-col__link" data-ref="footer-link-inicio" href="${getLocalizedPath('home', currentLang)}">Inicio</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-caracteristicas">
-                <a class="footer-col__link" data-ref="footer-link-caracteristicas" href="/features">Características</a>
+                <a class="footer-col__link" data-ref="footer-link-caracteristicas" href="${getLocalizedPath('features', currentLang)}">Características</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-precio">
-                <a class="footer-col__link" data-ref="footer-link-precio" href="/upgrade">Precio</a>
+                <a class="footer-col__link" data-ref="footer-link-precio" href="${getLocalizedPath('upgrade', currentLang)}">Precio</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-herramientas">
-                <a class="footer-col__link" data-ref="footer-link-herramientas" href="/help/documentation">Herramientas</a>
+                <a class="footer-col__link" data-ref="footer-link-herramientas" href="${getLocalizedPath('help-documentation', currentLang)}">Herramientas</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-faq">
-                <a class="footer-col__link" data-ref="footer-link-faq" href="/help/faq">Preguntas frecuentes</a>
+                <a class="footer-col__link" data-ref="footer-link-faq" href="${getLocalizedPath('help-faq', currentLang)}">Preguntas frecuentes</a>
               </li>
             </ul>
           </div>
@@ -51,16 +52,16 @@ export function getFooterHtml(): string {
             <h4 class="footer-col__title" data-ref="footer-title-legal">Legal</h4>
             <ul class="footer-col__list" data-ref="footer-list-legal">
               <li class="footer-col__item" data-ref="footer-item-seguridad">
-                <a class="footer-col__link" data-ref="footer-link-seguridad" href="/help/security">Seguridad</a>
+                <a class="footer-col__link" data-ref="footer-link-seguridad" href="${getLocalizedPath('help-security', currentLang)}">Seguridad</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-privacidad">
-                <a class="footer-col__link" data-ref="footer-link-privacidad" href="/help/privacy">Política de Privacidad</a>
+                <a class="footer-col__link" data-ref="footer-link-privacidad" href="${getLocalizedPath('help-privacy', currentLang)}">Política de Privacidad</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-terminos">
-                <a class="footer-col__link" data-ref="footer-link-terminos" href="/help/terms">Términos y Condiciones</a>
+                <a class="footer-col__link" data-ref="footer-link-terminos" href="${getLocalizedPath('help-terms', currentLang)}">Términos y Condiciones</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-cookies">
-                <a class="footer-col__link" data-ref="footer-link-cookies" href="/help/cookies">Cookies</a>
+                <a class="footer-col__link" data-ref="footer-link-cookies" href="${getLocalizedPath('help-cookies', currentLang)}">Cookies</a>
               </li>
             </ul>
           </div>
@@ -231,9 +232,8 @@ export function mountSiteFooter(container: HTMLElement, signal?: AbortSignal): {
         if (langSelectedText) {
           langSelectedText.textContent = getLanguageName(lang);
         }
-        await setLanguage(lang);
         showToast(t('toasts.language_updated', 'Idioma actualizado'), 'success');
-        render();
+        await switchLanguage(lang);
       },
     });
   }

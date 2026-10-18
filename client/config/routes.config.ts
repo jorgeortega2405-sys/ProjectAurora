@@ -1,5 +1,8 @@
 import { currentUser } from '../services/api.service.js';
+import { getCurrentLanguage } from '../services/i18n.service.js';
 import { loadStylesheet } from '../utils/dom.util.js';
+import { isSupportedLanguage, normalizeLanguageCode } from '../utils/languages.util.js';
+import { getCanonicalSlug, getLocalizedPath, resolveRouteFromSlug, SEO_ROUTES } from './seo.config.js';
 
 export interface RouteContext {
   params: Record<string, string>;
@@ -536,13 +539,140 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
 ];
 
-export function findRoute(path: string): { params: Record<string, string>; route: RouteDefinition } | null {
-  for (const route of APP_ROUTES) {
-    const matchResult = route.match(path);
-    if (matchResult) {
-      const params = typeof matchResult === 'object' ? matchResult : {};
-      return { params, route };
+export interface MatchedRoute {
+  canonicalPath: string;
+  hasLangPrefix: boolean;
+  internalPath: string;
+  isCanonical: boolean;
+  lang: string;
+  params: Record<string, string>;
+  rawPath: string;
+  route: RouteDefinition;
+  routeId: string;
+}
+
+export function parseRoutePath(rawPath: string): {
+  hasLangPrefix: boolean;
+  internalPath: string;
+  lang: string;
+  resolvedRouteId: string | null;
+  slug: string;
+} {
+  const clean = (rawPath || '').split('?')[0].replace(/^\/+|\/+$/g, '');
+  const activeLang = getCurrentLanguage();
+
+  if (!clean) {
+    return {
+      hasLangPrefix: false,
+      internalPath: '/',
+      lang: activeLang,
+      resolvedRouteId: 'home',
+      slug: '',
+    };
+  }
+
+  const parts = clean.split('/');
+  const first = parts[0].toLowerCase();
+
+  if (isSupportedLanguage(first)) {
+    const lang = normalizeLanguageCode(first);
+    const subPath = parts.slice(1).join('/');
+
+    if (!subPath) {
+      return {
+        hasLangPrefix: true,
+        internalPath: '/',
+        lang,
+        resolvedRouteId: 'home',
+        slug: '',
+      };
+    }
+
+    const resolved = resolveRouteFromSlug(subPath, lang);
+    if (resolved) {
+      return {
+        hasLangPrefix: true,
+        internalPath: `/${resolved.routeId}`,
+        lang,
+        resolvedRouteId: resolved.routeId,
+        slug: subPath,
+      };
+    }
+
+    return {
+      hasLangPrefix: true,
+      internalPath: `/${subPath}`,
+      lang,
+      resolvedRouteId: null,
+      slug: subPath,
+    };
+  }
+
+  const resolved = resolveRouteFromSlug(clean, activeLang);
+  if (resolved) {
+    return {
+      hasLangPrefix: false,
+      internalPath: `/${resolved.routeId}`,
+      lang: activeLang,
+      resolvedRouteId: resolved.routeId,
+      slug: clean,
+    };
+  }
+
+  return {
+    hasLangPrefix: false,
+    internalPath: `/${clean}`,
+    lang: activeLang,
+    resolvedRouteId: null,
+    slug: clean,
+  };
+}
+
+export function findRoute(path: string): MatchedRoute | null {
+  const parsed = parseRoutePath(path);
+
+  if (parsed.resolvedRouteId) {
+    const routeDef = APP_ROUTES.find((r) => r.id === parsed.resolvedRouteId);
+    if (routeDef) {
+      const matchResult = routeDef.match(parsed.internalPath);
+      const params = typeof matchResult === 'object' && matchResult !== null ? matchResult : {};
+      const canonicalPath = getLocalizedPath(parsed.resolvedRouteId, parsed.lang);
+      const isCanonical = parsed.hasLangPrefix && path.replace(/\/+$/, '') === canonicalPath.replace(/\/+$/, '');
+
+      return {
+        canonicalPath,
+        hasLangPrefix: parsed.hasLangPrefix,
+        internalPath: parsed.internalPath,
+        isCanonical,
+        lang: parsed.lang,
+        params,
+        rawPath: path,
+        route: routeDef,
+        routeId: parsed.resolvedRouteId,
+      };
     }
   }
+
+  for (const route of APP_ROUTES) {
+    const matchResult = route.match(parsed.internalPath);
+    if (matchResult) {
+      const params = typeof matchResult === 'object' && matchResult !== null ? matchResult : {};
+      const canonicalPath = getLocalizedPath(route.id, parsed.lang);
+      const isCanonical = parsed.hasLangPrefix && path.replace(/\/+$/, '') === canonicalPath.replace(/\/+$/, '');
+
+      return {
+        canonicalPath,
+        hasLangPrefix: parsed.hasLangPrefix,
+        internalPath: parsed.internalPath,
+        isCanonical,
+        lang: parsed.lang,
+        params,
+        rawPath: path,
+        route,
+        routeId: route.id,
+      };
+    }
+  }
+
   return null;
 }

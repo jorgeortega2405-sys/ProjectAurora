@@ -1,4 +1,4 @@
-import { navigate, render } from '../../app-router.js';
+import { navigate, render, switchLanguage } from '../../app-router.js';
 import { openModal } from '../../components/modal.component.js';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { currentUser, deleteApi, escapeHtml, getApi, hasPermission, postApi, postFormApi, setCurrentUser } from '../../services/api.service.js';
@@ -806,9 +806,8 @@ export class YourAccountController implements ViewController {
             if (langSelectedText) {
               langSelectedText.textContent = getLanguageName(lang);
             }
-            await setLanguage(lang);
             showToast(t('toasts.language_updated'), 'success');
-            render();
+            await switchLanguage(lang);
           } catch (_) {}
         },
         onClose: () => {

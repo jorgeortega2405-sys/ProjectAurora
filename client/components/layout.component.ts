@@ -1,7 +1,8 @@
 import { navigate } from '../app-router.js';
+import { getLocalizedPath } from '../config/seo.config.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { currentUser, escapeHtml, getApi, linkedAccounts, logoutAllApi, logoutApi, onAuthChange, switchAccountApi } from '../services/api.service.js';
-import { t, translateElement } from '../services/i18n.service.js';
+import { getCurrentLanguage, t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { UserWorkflow } from '../types/workflow.types.js';
@@ -16,7 +17,7 @@ let sidebarInstance: HTMLElement | null = null;
 
 export function hasDesignatedMenuItems(pathname: string): boolean {
   if (!pathname) return false;
-  return pathname.startsWith('/settings') || pathname.startsWith('/help');
+  return pathname.includes('/settings') || pathname.includes('/help');
 }
 
 export function updateSidebarAuthState(sidebar: HTMLElement): void {
@@ -78,9 +79,9 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
 }
 
 export function updateSidebarActiveState(sidebar: HTMLElement, path = window.location.pathname): void {
-  const isHome = path === '/' || path === '';
-  const isSettings = path.startsWith('/settings');
-  const isHelp = path.startsWith('/help');
+  const isHome = path === '/' || path === '' || /^\/[a-z]{2}\/?$/i.test(path);
+  const isSettings = path.includes('/settings');
+  const isHelp = path.includes('/help') || path.includes('/preguntas-frecuentes') || path.includes('/herramientas') || path.includes('/seguridad') || path.includes('/privacidad') || path.includes('/terminos') || path.includes('/cookies');
 
   const itemHome = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-home"]');
   const btnHome = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-home"]');
@@ -682,13 +683,15 @@ function renderAppsDrawerContent(drawerBody: HTMLElement): void {
         </div>
     `;
 
+    const currentLang = getCurrentLanguage();
     for (const tool of tools) {
       const toolName = t(tool.nameKey);
       const toolDesc = t(tool.descKey);
       const searchHaystack = `${toolName} ${toolDesc} ${cat.name}`.toLowerCase();
+      const toolPath = getLocalizedPath(tool.id, currentLang);
 
       html += `
-        <button type="button" class="menu-item drawer-tool-item" data-ref="drawer-tool-${tool.id}" data-tool-path="${tool.path}" data-search="${searchHaystack}">
+        <button type="button" class="menu-item drawer-tool-item" data-ref="drawer-tool-${tool.id}" data-tool-path="${toolPath}" data-search="${searchHaystack}">
           <span class="menu-item__icon tool-item__mini-icon">
             ${tool.customSvg || `<svg class="component-icon" aria-hidden="true"><use href="/icons.svg#${tool.icon}"></use></svg>`}
           </span>

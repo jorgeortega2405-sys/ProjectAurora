@@ -1,4 +1,4 @@
-import { render } from '../../app-router.js';
+import { render, switchLanguage } from '../../app-router.js';
 import { escapeHtml } from '../../services/api.service.js';
 import { getCurrentLanguage, setLanguage, t, translateElement } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
@@ -84,9 +84,8 @@ export class GuestSettingsController implements ViewController {
           if (langSelectedText) {
             langSelectedText.textContent = getLanguageName(lang);
           }
-          await setLanguage(lang);
           showToast(t('toasts.language_updated', 'Idioma actualizado'), 'success');
-          render();
+          await switchLanguage(lang);
         },
       });
       if (guestLangDropdownCtrl) this.dropdownControllers.push(guestLangDropdownCtrl);

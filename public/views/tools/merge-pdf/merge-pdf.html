@@ -90,43 +90,11 @@
         <p class="tool-sidebar__subtitle" data-ref="pdf-hero-subtitle" data-i18n="tools.merge_pdf_subtitle">Une y reorganiza múltiples documentos PDF en un único archivo ordenado.</p>
       </div>
 
-      <div class="tool-sidebar__body">
-        <div class="tool-sidebar__section" data-ref="section-output-filename">
-          <span class="tool-sidebar__section-title" data-i18n="tools.merge_pdf_output_name_label">Nombre del archivo final</span>
-          <label class="field" data-ref="field-output-name">
-            <input class="field__input" data-ref="input-output-name" type="text" placeholder=" " value="documento_unido.pdf" autocomplete="off" />
-            <span class="field__label">Nombre del documento</span>
-          </label>
-        </div>
-
-        <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title" data-i18n="tools.merge_pdf_summary_title">Resumen de Unión</span>
-          <div class="tool-summary-card" data-ref="pdf-summary-card">
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.merge_pdf_summary_files">Archivos totales</span>
-              <span class="tool-summary-card__value" data-ref="val-total-files">0</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.merge_pdf_summary_pages">Páginas totales</span>
-              <span class="tool-summary-card__value" data-ref="val-total-pages">0</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.merge_pdf_summary_size">Tamaño total</span>
-              <span class="tool-summary-card__value" data-ref="val-total-size">0 B</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="tool-sidebar__footer">
+      <div class="tool-sidebar__footer" style="margin-top: auto;">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-main-action">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
           <span data-ref="txt-main-action" data-i18n="tools.merge_pdf_btn_select">Seleccionar PDFs</span>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
-        </button>
-        <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-sidebar-reset" style="display: none;">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-          <span data-i18n="tools.merge_pdf_btn_merge_more">Unir más archivos</span>
         </button>
         <div class="banner banner--danger" data-ref="merge-pdf-error" style="display: none; margin-top: 6px;"></div>
       </div>

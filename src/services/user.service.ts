@@ -12,15 +12,18 @@ import path from 'path';
 interface UserRow extends RowDataPacket {
   avatar_url: string | null;
   cancel_at_period_end: number | boolean;
+  ai_credits_balance: number;
   created_at: Date | string;
   email: string;
   email_changed_at: Date | string | null;
   google_id: string | null;
   id: string;
+  is_student?: number | boolean;
   password_hash: string | null;
   role: 'USER' | 'ADMIN';
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  subscription_origin?: string;
   subscription_period_end: Date | string | null;
   subscription_status: string;
   subscription_tier: string;
@@ -35,6 +38,7 @@ interface UserRow extends RowDataPacket {
 function mapRowToUser(row: UserRow): UserRecord {
   const tier = row.subscription_tier || 'free';
   return {
+    ai_credits_balance: Number(row.ai_credits_balance || 0),
     avatar_url: row.avatar_url ?? null,
     cancel_at_period_end: Boolean(row.cancel_at_period_end),
     created_at: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
@@ -42,10 +46,12 @@ function mapRowToUser(row: UserRow): UserRecord {
     email_changed_at: row.email_changed_at ? (row.email_changed_at instanceof Date ? row.email_changed_at.toISOString() : String(row.email_changed_at)) : null,
     google_id: row.google_id ?? null,
     id: row.id,
+    is_student: Boolean(row.is_student),
     password_hash: row.password_hash ?? null,
     role: row.role || 'USER',
     stripe_customer_id: row.stripe_customer_id ?? null,
     stripe_subscription_id: row.stripe_subscription_id ?? null,
+    subscription_origin: row.subscription_origin || 'payment',
     subscription_period_end: row.subscription_period_end ? (row.subscription_period_end instanceof Date ? row.subscription_period_end.toISOString() : String(row.subscription_period_end)) : null,
     subscription_status: row.subscription_status || 'active',
     subscription_tier: tier,
@@ -62,14 +68,17 @@ function mapRowToUser(row: UserRow): UserRecord {
 export function sanitizeUser(user: UserRecord | UserPayload | SessionAccount): UserPayload {
   const tier = (user as any).subscription_tier || 'free';
   return {
+    ai_credits_balance: (user as any).ai_credits_balance !== undefined ? Number((user as any).ai_credits_balance) : 0,
     avatar_url: user.avatar_url ?? null,
     cancel_at_period_end: (user as any).cancel_at_period_end,
     created_at: user.created_at || new Date().toISOString(),
     email: user.email,
     id: user.id,
+    is_student: Boolean((user as any).is_student),
     permissions: (user as any).permissions || [],
     stripe_customer_id: (user as any).stripe_customer_id ?? null,
     stripe_subscription_id: (user as any).stripe_subscription_id ?? null,
+    subscription_origin: (user as any).subscription_origin || 'payment',
     subscription_period_end: (user as any).subscription_period_end ?? null,
     subscription_status: (user as any).subscription_status || 'active',
     subscription_tier: tier,

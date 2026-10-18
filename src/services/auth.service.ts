@@ -1,9 +1,11 @@
-import { config } from '../config/env.config.js';
-import { MultiAccountSessionPayload, SessionAccount, UserPayload } from '../types/auth.types.js';
-import { findUserById, sanitizeUser } from './user.service.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Request, Response } from 'express';
+import { config } from '../config/env.config.js';
+import { MultiAccountSessionPayload, SessionAccount, UserPayload } from '../types/auth.types.js';
+import { getUserOrganization } from './organization.service.js';
+import { getRolePermissions, getUserEffectivePermissions } from './pbac.service.js';
+import { findUserById, sanitizeUser } from './user.service.js';
 
 export const COOKIE_NAME = 'aurora_session';
 export const MAX_CONCURRENT_ACCOUNTS = 3;
@@ -140,7 +142,18 @@ export async function getSessionUser(req: Request): Promise<UserPayload | null> 
   const freshUser = await findUserById(current.id);
   if (!freshUser) return null;
 
-  return sanitizeUser(freshUser);
+  let permissions = await getUserEffectivePermissions(freshUser);
+  try {
+    const userOrg = await getUserOrganization(freshUser.id);
+    if (userOrg && userOrg.memberRole) {
+      const orgPerms = await getRolePermissions(userOrg.memberRole);
+      permissions = Array.from(new Set([...permissions, ...orgPerms]));
+    }
+  } catch {}
+
+  const sanitized = sanitizeUser(freshUser);
+  sanitized.permissions = permissions;
+  return sanitized;
 }
 
 export async function addAccountToSession(
@@ -155,6 +168,7 @@ export async function addAccountToSession(
   const now = Date.now();
 
   const sessionAcc: SessionAccount = {
+    ai_credits_balance: user.ai_credits_balance !== undefined ? user.ai_credits_balance : 0,
     avatar_url: user.avatar_url ?? null,
     cancel_at_period_end: user.cancel_at_period_end,
     created_at: user.created_at,

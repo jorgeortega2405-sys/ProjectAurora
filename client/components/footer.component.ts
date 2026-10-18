@@ -43,7 +43,7 @@ export function getFooterHtml(): string {
                 <a class="footer-col__link" data-ref="footer-link-business" href="${getLocalizedPath('business', currentLang)}">Business</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-educacion">
-                <a class="footer-col__link" data-ref="footer-link-educacion" href="javascript:void(0)">Educación</a>
+                <a class="footer-col__link" data-ref="footer-link-educacion" href="${getLocalizedPath('education', currentLang)}">Educación</a>
               </li>
             </ul>
           </div>

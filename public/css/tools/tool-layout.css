@@ -17,7 +17,7 @@
   gap: 16px;
   height: 100%;
   overflow: hidden;
-  padding: 16px;
+  padding: 0;
   position: relative;
   width: 100%;
 }
@@ -25,8 +25,8 @@
 .tool-layout__workspace {
   align-items: center;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border: none;
+  border-radius: 0;
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -60,7 +60,8 @@
 .tool-layout__sidebar {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
   box-shadow: var(--sl-shadow-large);
   box-sizing: border-box;
   display: flex;
@@ -275,7 +276,7 @@
   flex: 1;
   flex-direction: column;
   height: 100%;
-  justify-content: center;
+  justify-content: flex-start;
   margin: auto;
   max-width: 760px;
   padding: 48px 24px 32px;
@@ -334,12 +335,12 @@
 
 .tool-hero-dropzone__cloud-btn {
   align-items: center;
-  background-color: var(--action-primary);
-  border: none;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
   border-radius: var(--sl-border-radius-circle);
-  box-shadow: var(--sl-shadow-small);
+  box-shadow: none;
   box-sizing: border-box;
-  color: var(--action-primary-text);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   height: 36px;
@@ -347,14 +348,16 @@
   outline: none;
   padding: 0;
   position: relative;
-  transition: transform 0.18s ease, background-color 0.15s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   user-select: none;
   width: 36px;
 }
 
 .tool-hero-dropzone__cloud-btn:hover {
-  background-color: var(--action-primary-hover);
-  box-shadow: var(--sl-shadow-medium);
+  background-color: var(--bg-hover);
+  border-color: var(--border-color-focus);
+  color: var(--text-primary);
+  box-shadow: none;
   transform: scale(1.08);
 }
 
@@ -1639,6 +1642,7 @@
     border-radius: 16px;
     box-shadow: none;
     height: auto;
+    margin: 0;
     max-width: 100%;
     min-width: 100%;
     width: 100%;

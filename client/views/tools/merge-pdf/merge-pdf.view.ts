@@ -1,5 +1,8 @@
+import Sortable from 'sortablejs';
 import { navigate } from '../../../app-router.js';
+import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -11,11 +14,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { MergePdfResponseData, SelectedPdfItem } from './merge-pdf.types.js';
-import Sortable from 'sortablejs';
-
-const MAX_PDF_FILES = 30;
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const MAX_TOTAL_SIZE = 150 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -259,21 +257,35 @@ export class MergePdfController implements ViewController {
       return;
     }
 
-    if (this.selectedFiles.length + validPdfs.length > MAX_PDF_FILES) {
-      this.showError(`Puedes unir un máximo de ${MAX_PDF_FILES} archivos PDF.`);
+    const limits = getCurrentUserToolLimits('merge-pdf');
+    if (this.selectedFiles.length + validPdfs.length > limits.maxFiles) {
+      if (!limits.isPremium) {
+        this.showError(`El plan gratuito permite unir hasta ${limits.maxFiles} archivos PDF por tarea. Actualiza a Pro para unir hasta 500 archivos.`);
+        openUpgradeModal('pro');
+      } else {
+        this.showError(`Puedes unir un máximo de ${limits.maxFiles} archivos PDF.`);
+      }
       return;
     }
 
-    const oversized = validPdfs.find((f) => f.size > MAX_FILE_SIZE);
+    const maxFileSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    const oversized = validPdfs.find((f) => f.size > maxFileSizeBytes);
     if (oversized) {
-      this.showError(`El archivo "${oversized.name}" supera el límite de 50 MB.`);
+      this.showError(`El archivo "${oversized.name}" supera el límite de ${limits.maxFileSizeMB} MB.`);
+      if (!limits.isPremium) {
+        openUpgradeModal('pro');
+      }
       return;
     }
 
     const currentTotalSize = this.selectedFiles.reduce((acc, curr) => acc + curr.size, 0);
     const incomingTotalSize = validPdfs.reduce((acc, curr) => acc + curr.size, 0);
-    if (currentTotalSize + incomingTotalSize > MAX_TOTAL_SIZE) {
-      this.showError('El tamaño acumulado de todos los archivos no debe superar 150 MB.');
+    const maxTotalSizeBytes = limits.maxTotalSizeMB * 1024 * 1024;
+    if (currentTotalSize + incomingTotalSize > maxTotalSizeBytes) {
+      this.showError(`El tamaño acumulado de todos los archivos no debe superar ${limits.maxTotalSizeMB} MB.`);
+      if (!limits.isPremium) {
+        openUpgradeModal('pro');
+      }
       return;
     }
 
@@ -521,12 +533,7 @@ export class MergePdfController implements ViewController {
     this.showProcessingState();
 
     try {
-      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-      let customFilename = outputNameInput?.value.trim() || 'documento_unido.pdf';
-      if (!customFilename.toLowerCase().endsWith('.pdf')) {
-        customFilename = `${customFilename}.pdf`;
-      }
-
+      const customFilename = 'documento_unido.pdf';
       const formData = new FormData();
       formData.append('filename', customFilename);
 

@@ -1,10 +1,12 @@
+import multer from 'multer';
+import { NextFunction, Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
+import { AI_CREDIT_COSTS, deductUserCredits } from '../../services/credits.service.js';
 import { logger } from '../../services/logger.service.js';
 import { summarizePdf } from './summarize-pdf.service.js';
 import { SummaryMode } from './summarize-pdf.types.js';
-import { NextFunction, Request, Response } from 'express';
-import multer from 'multer';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 200 * 1024 * 1024;
 
 const upload = multer({
   fileFilter: (_req, file, cb) => {
@@ -29,7 +31,7 @@ export function handlePdfUploadMiddleware(req: Request, res: Response, next: Nex
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo PDF supera el límite permitido de 50 MB.',
+          error: 'El archivo PDF supera el límite permitido de 200 MB.',
           success: false,
         });
         return;
@@ -72,7 +74,40 @@ export async function handleSummarizePdf(req: Request, res: Response): Promise<v
     return;
   }
 
-  const mode = (typeof req.body?.mode === 'string' ? req.body.mode : 'executive') as SummaryMode;
+  const user = (req as any).user;
+  const userPerms: string[] = user?.permissions || [];
+  const limits = getToolLimits('summarize-pdf', userPerms);
+  const maxBytes = limits.maxFileSizeMB * 1024 * 1024;
+
+  if (file.buffer.length > maxBytes) {
+    res.status(400).json({
+      error: `El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB. Actualiza a Pro para procesar documentos de hasta 200 MB.`,
+      success: false,
+    });
+    return;
+  }
+
+  const mode: SummaryMode = req.body?.mode === 'advanced' ? 'advanced' : 'standard';
+
+  if (mode === 'advanced') {
+    if (!user) {
+      res.status(401).json({
+        error: 'Debes iniciar sesión con una cuenta Pro o Empresas para utilizar Advanced AI.',
+        success: false,
+      });
+      return;
+    }
+
+    const deduction = await deductUserCredits(user.id, AI_CREDIT_COSTS.advancedSummarize, 'summarize_pdf_advanced');
+    if (!deduction.success) {
+      res.status(403).json({
+        error: `Créditos de IA insuficientes (${deduction.remaining} disponibles). Esta tarea requiere ${AI_CREDIT_COSTS.advancedSummarize} créditos.`,
+        success: false,
+      });
+      return;
+    }
+  }
+
   const customPrompt = typeof req.body?.customPrompt === 'string' ? req.body.customPrompt : undefined;
 
   try {

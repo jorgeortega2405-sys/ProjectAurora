@@ -1,6 +1,7 @@
 export type UserRole = 'USER' | 'ADMIN';
 
 export interface UserRecord {
+  ai_credits_balance?: number;
   avatar_url: string | null;
   cancel_at_period_end?: boolean;
   created_at: string;
@@ -11,7 +12,9 @@ export interface UserRecord {
   password_hash: string | null;
   role: UserRole;
   stripe_customer_id?: string | null;
+  is_student?: boolean;
   stripe_subscription_id?: string | null;
+  subscription_origin?: string;
   subscription_period_end?: string | null;
   subscription_status?: string;
   subscription_tier: string;
@@ -25,16 +28,19 @@ export interface UserRecord {
 }
 
 export interface UserPayload {
+  ai_credits_balance?: number;
   avatar_url: string | null;
   cancel_at_period_end?: boolean;
   created_at: string;
   email: string;
   google_id?: string | null;
   id: string;
+  is_student?: boolean;
   permissions?: string[];
   role?: UserRole;
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
+  subscription_origin?: string;
   subscription_period_end?: string | null;
   subscription_status?: string;
   subscription_tier?: string;
@@ -44,6 +50,7 @@ export interface UserPayload {
 }
 
 export interface SessionAccount {
+  ai_credits_balance?: number;
   avatar_url: string | null;
   cancel_at_period_end?: boolean;
   created_at?: string;

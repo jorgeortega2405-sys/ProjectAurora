@@ -10,11 +10,14 @@ CREATE TABLE IF NOT EXISTS users (
     avatar_url VARCHAR(512) NULL,
     role VARCHAR(50) NOT NULL DEFAULT 'USER',
     subscription_tier VARCHAR(50) NOT NULL DEFAULT 'free',
+    subscription_origin VARCHAR(50) NOT NULL DEFAULT 'payment',
+    is_student BOOLEAN NOT NULL DEFAULT FALSE,
     stripe_customer_id VARCHAR(255) NULL,
     stripe_subscription_id VARCHAR(255) NULL,
     subscription_status VARCHAR(50) NOT NULL DEFAULT 'active',
     subscription_period_end TIMESTAMP NULL,
     cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE,
+    ai_credits_balance INT NOT NULL DEFAULT 0,
     two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     two_factor_secret VARCHAR(255) NULL,
     two_factor_recovery_codes TEXT NULL,
@@ -23,7 +26,8 @@ CREATE TABLE IF NOT EXISTS users (
     username_changed_at TIMESTAMP NULL,
     email_changed_at TIMESTAMP NULL,
     INDEX idx_users_stripe_cust (stripe_customer_id),
-    INDEX idx_users_stripe_sub (stripe_subscription_id)
+    INDEX idx_users_stripe_sub (stripe_subscription_id),
+    INDEX idx_users_student (is_student)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS user_preferences (
@@ -81,7 +85,13 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('org:members:remove', 'Remover Miembros', 'Eliminar miembros de la organización'),
 ('org:sso:configure', 'Configurar SSO', 'Configurar proveedores de SSO corporativo'),
 ('subscription:feature:sso', 'Función SSO Corporativo', 'Acceso a inicio de sesión único empresarial'),
-('subscription:feature:teams', 'Función Espacios de Equipo', 'Acceso a gestión de equipos y límites de asientos');
+('subscription:feature:teams', 'Función Espacios de Equipo', 'Acceso a gestión de equipos y límites de asientos'),
+('subscription:feature:pro', 'Función Plan Pro', 'Acceso a características Pro y límites expandidos'),
+('subscription:feature:enterprise', 'Función Plan Enterprise', 'Acceso a características corporativas y límites máximos'),
+('tools:merge:batch_500', 'Unir PDF Lote 500', 'Procesar hasta 500 archivos por tarea en Unir PDF'),
+('tools:split:by_size', 'Dividir PDF por Tamaño', 'Dividir archivos PDF por tamaño objetivo'),
+('tools:ai:advanced', 'Modo IA Avanzado', 'Acceso a modelos y análisis avanzados de IA con créditos'),
+('tools:high_size_limit', 'Límite Alto de Tamaño', 'Procesar archivos de gran tamaño (hasta 1 GB/2 GB)');
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('ADMIN', '*'),
@@ -216,6 +226,24 @@ CREATE TABLE IF NOT EXISTS organization_sso_configs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS student_verifications (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    full_name VARCHAR(150) NOT NULL,
+    school_name VARCHAR(200) NOT NULL,
+    document_url VARCHAR(512) NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    admin_notes TEXT NULL,
+    reviewed_by VARCHAR(36) NULL,
+    reviewed_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student_verifications_user (user_id),
+    INDEX idx_student_verifications_status (status),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

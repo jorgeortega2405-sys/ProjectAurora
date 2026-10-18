@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -10,8 +11,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { CropBoxPercent, CropPdfResponseData } from './crop-pdf.types.js';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 export class CropPdfController implements ViewController {
   private abortController: AbortController | null = null;
@@ -327,8 +326,9 @@ export class CropPdfController implements ViewController {
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      this.showError('El archivo PDF supera el tamaño máximo permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('crop-pdf');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo PDF supera el tamaño máximo permitido de ${limits.maxFileSizeMB} MB.`);
       return;
     }
 

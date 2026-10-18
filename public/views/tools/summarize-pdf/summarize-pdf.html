@@ -78,37 +78,27 @@
 
       <div class="tool-sidebar__body">
         <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title">Tipo de Resumen</span>
+          <span class="tool-sidebar__section-title">Modo de Inteligencia Artificial</span>
           <div class="ai-mode-options" data-ref="ai-mode-options">
-            <label class="ai-mode-option is-active" data-ref="opt-mode-executive" data-mode="executive">
-              <input class="ai-mode-option__radio" data-ref="radio-mode-executive" type="radio" name="summary-mode" value="executive" checked />
+            <label class="ai-mode-option is-active" data-ref="opt-mode-standard" data-mode="standard">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-standard" type="radio" name="summary-mode" value="standard" checked />
               <div class="ai-mode-option__body">
-                <span class="ai-mode-option__title">Resumen Ejecutivo</span>
-                <p class="ai-mode-option__desc">Visión general condensada, puntos clave y conclusiones fundamentales.</p>
+                <div class="ai-mode-option__header" style="display: flex; align-items: center; justify-content: space-between;">
+                  <span class="ai-mode-option__title">Standard AI</span>
+                  <span class="tool-badge">Gratis</span>
+                </div>
+                <p class="ai-mode-option__desc">Visión general condensada, puntos clave y síntesis esencial sin costo de créditos.</p>
               </div>
             </label>
 
-            <label class="ai-mode-option" data-ref="opt-mode-detailed" data-mode="detailed">
-              <input class="ai-mode-option__radio" data-ref="radio-mode-detailed" type="radio" name="summary-mode" value="detailed" />
+            <label class="ai-mode-option" data-ref="opt-mode-advanced" data-mode="advanced">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-advanced" type="radio" name="summary-mode" value="advanced" />
               <div class="ai-mode-option__body">
-                <span class="ai-mode-option__title">Análisis Detallado</span>
-                <p class="ai-mode-option__desc">Desglose exhaustivo por secciones, datos y evidencia relevante.</p>
-              </div>
-            </label>
-
-            <label class="ai-mode-option" data-ref="opt-mode-key-points" data-mode="key_points">
-              <input class="ai-mode-option__radio" data-ref="radio-mode-key-points" type="radio" name="summary-mode" value="key_points" />
-              <div class="ai-mode-option__body">
-                <span class="ai-mode-option__title">Puntos Clave y Acciones</span>
-                <p class="ai-mode-option__desc">Lista directa de hallazgos más importantes y conclusiones clave.</p>
-              </div>
-            </label>
-
-            <label class="ai-mode-option" data-ref="opt-mode-qa" data-mode="qa">
-              <input class="ai-mode-option__radio" data-ref="radio-mode-qa" type="radio" name="summary-mode" value="qa" />
-              <div class="ai-mode-option__body">
-                <span class="ai-mode-option__title">Preguntas y Respuestas</span>
-                <p class="ai-mode-option__desc">Guía esencial de preguntas frecuentes respondidas con el documento.</p>
+                <div class="ai-mode-option__header" style="display: flex; align-items: center; justify-content: space-between;">
+                  <span class="ai-mode-option__title">Advanced AI</span>
+                  <span class="tool-badge tool-badge--pro">10 créditos</span>
+                </div>
+                <p class="ai-mode-option__desc">Análisis exhaustivo y profundo por secciones, métricas y razonamiento avanzado.</p>
               </div>
             </label>
           </div>
@@ -123,7 +113,7 @@
           <div class="ai-summary-result-panel" data-ref="summary-result-panel">
             <div class="ai-summary-header" data-ref="summary-result-header">
               <div class="ai-summary-meta">
-                <span class="ai-summary-badge" data-ref="summary-badge-model">Gemini 3.5 Flash</span>
+                <span class="ai-summary-badge" data-ref="summary-badge-model">Gemini AI</span>
                 <span class="ai-summary-badge" data-ref="summary-badge-words">0 palabras</span>
               </div>
               <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-copy-summary" title="Copiar resumen al portapapeles">
@@ -132,24 +122,6 @@
               </button>
             </div>
             <div class="ai-summary-content" data-ref="summary-rendered-text"></div>
-          </div>
-        </div>
-
-        <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title">Información del Archivo</span>
-          <div class="tool-summary-card" data-ref="summarize-summary-card">
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label">Archivo</span>
-              <span class="tool-summary-card__value" data-ref="sidebar-file-status">Ninguno</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label">Tamaño</span>
-              <span class="tool-summary-card__value" data-ref="sidebar-file-size">0 KB</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label">Páginas</span>
-              <span class="tool-summary-card__value" data-ref="sidebar-file-pages">-</span>
-            </div>
           </div>
         </div>
       </div>

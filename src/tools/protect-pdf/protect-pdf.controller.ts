@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { getProtectPdfResult, protectPdf } from './protect-pdf.service.js';
 import { ProtectPdfOptions } from './protect-pdf.types.js';
@@ -7,6 +8,17 @@ export async function protectPdfHandler(req: Request, res: Response): Promise<vo
   try {
     if (!req.file) {
       res.status(400).json({ error: 'Debes seleccionar un archivo PDF.', success: false });
+      return;
+    }
+
+    const userPermissions = (req as any).user?.permissions || [];
+    const limits = getToolLimits('protect-pdf', userPermissions);
+
+    if (req.file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      res.status(403).json({
+        error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos más grandes.`,
+        success: false,
+      });
       return;
     }
 

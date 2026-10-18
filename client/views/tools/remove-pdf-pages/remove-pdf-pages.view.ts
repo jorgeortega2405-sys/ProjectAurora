@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -11,8 +12,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { RemovePageItem, RemovePdfResponseData } from './remove-pdf-pages.types.js';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -146,7 +145,6 @@ export class RemovePdfPagesController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-sidebar"]');
     const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
-    const sidebarResetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
     const downloadResultBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const restartRemoveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-restart-remove"]');
     const pagesGrid = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-grid"]');
@@ -262,10 +260,6 @@ export class RemovePdfPagesController implements ViewController {
       }
     }, { signal });
 
-    sidebarResetBtn?.addEventListener('click', () => {
-      this.resetToInitial();
-    }, { signal });
-
     downloadResultBtn?.addEventListener('click', () => {
       if (this.currentResult) {
         window.open(this.currentResult.downloadUrl, '_blank');
@@ -288,8 +282,10 @@ export class RemovePdfPagesController implements ViewController {
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      this.showError('El archivo PDF seleccionado supera el límite permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('remove-pdf-pages');
+    const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
       return;
     }
 
@@ -324,12 +320,6 @@ export class RemovePdfPagesController implements ViewController {
       const inputPagesToRemove = this.container.querySelector<HTMLInputElement>('[data-ref="input-pages-to-remove"]');
       if (inputPagesToRemove) {
         inputPagesToRemove.value = '';
-      }
-
-      const defaultOutput = file.name.replace(/\.pdf$/i, '') + '_sin_paginas.pdf';
-      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-      if (outputNameInput) {
-        outputNameInput.value = defaultOutput;
       }
 
       this.renderFilesView();
@@ -451,17 +441,9 @@ export class RemovePdfPagesController implements ViewController {
   private updateSummary(): void {
     const total = this.pages.length;
     const removed = this.removedPages.size;
-    const remaining = Math.max(0, total - removed);
 
     const valTotalPages = this.container.querySelector<HTMLElement>('[data-ref="val-total-pages"]');
-    const valSummaryOrig = this.container.querySelector<HTMLElement>('[data-ref="val-summary-original"]');
-    const valSummaryRemoved = this.container.querySelector<HTMLElement>('[data-ref="val-summary-removed"]');
-    const valSummaryRemain = this.container.querySelector<HTMLElement>('[data-ref="val-summary-remaining"]');
-
     if (valTotalPages) valTotalPages.textContent = `${total}`;
-    if (valSummaryOrig) valSummaryOrig.textContent = `${total}`;
-    if (valSummaryRemoved) valSummaryRemoved.textContent = `${removed}`;
-    if (valSummaryRemain) valSummaryRemain.textContent = `${remaining}`;
 
     if (this.currentFile) {
       if (removed === 0) {
@@ -477,20 +459,16 @@ export class RemovePdfPagesController implements ViewController {
   private updateActionButtons(): void {
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
     const txtMainAction = this.container.querySelector<HTMLElement>('[data-ref="txt-main-action"]');
-    const sidebarResetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
 
     if (mainActionBtn && txtMainAction) {
       if (!this.currentFile) {
         txtMainAction.textContent = t('tools.remove_pdf_pages_btn_select') || 'Seleccionar PDF';
         mainActionBtn.style.display = '';
-        if (sidebarResetBtn) sidebarResetBtn.style.display = 'none';
       } else if (this.currentResult) {
         mainActionBtn.style.display = 'none';
-        if (sidebarResetBtn) sidebarResetBtn.style.display = '';
       } else {
         txtMainAction.textContent = t('tools.remove_pdf_pages_btn_action') || 'Eliminar páginas';
         mainActionBtn.style.display = '';
-        if (sidebarResetBtn) sidebarResetBtn.style.display = 'none';
       }
     }
   }
@@ -512,15 +490,12 @@ export class RemovePdfPagesController implements ViewController {
       return;
     }
 
-    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-    const customFilename = outputNameInput?.value.trim() || undefined;
+    const customFilename = `${this.currentFile.name.replace(/\.pdf$/i, '')}_sin_paginas.pdf`;
 
     const formData = new FormData();
     formData.append('pdf', this.currentFile);
     formData.append('pagesToRemove', JSON.stringify(Array.from(this.removedPages)));
-    if (customFilename) {
-      formData.append('filename', customFilename);
-    }
+    formData.append('filename', customFilename);
 
     this.isProcessing = true;
     this.showProcessingState();
@@ -624,7 +599,6 @@ export class RemovePdfPagesController implements ViewController {
     this.isProcessing = false;
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
-    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
     const inputPagesToRemove = this.container.querySelector<HTMLInputElement>('[data-ref="input-pages-to-remove"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
@@ -633,7 +607,6 @@ export class RemovePdfPagesController implements ViewController {
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-workspace"]');
 
     if (fileInput) fileInput.value = '';
-    if (outputNameInput) outputNameInput.value = 'documento_sin_paginas.pdf';
     if (inputPagesToRemove) inputPagesToRemove.value = '';
 
     if (processingCard) processingCard.style.display = 'none';

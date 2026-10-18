@@ -1,6 +1,8 @@
 import { navigate } from '../../../app-router.js';
+import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
+import { currentUser, hasPermission, postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { loadPdfJs } from '../../../services/pdf-loader.service.js';
@@ -24,6 +26,7 @@ export class TranslatePdfViewController implements ViewController {
   private currentFile: File | null = null;
   private dropdownControllers: Array<{ destroy: () => void }> = [];
   private pdfDocument: any = null;
+  private selectedMode: 'standard' | 'advanced' = 'standard';
   private showingTranslated: boolean = false;
   private sidebarModal: ToolSidebarModalController | null = null;
   private sourceLang: string = '';
@@ -139,6 +142,36 @@ export class TranslatePdfViewController implements ViewController {
       }, { signal });
     }
 
+    const modeOptions = this.container.querySelectorAll<HTMLElement>('.ai-mode-option');
+    modeOptions.forEach((opt) => {
+      opt.addEventListener('click', () => {
+        const mode = opt.getAttribute('data-mode') as 'standard' | 'advanced';
+        if (!mode) return;
+
+        if (mode === 'advanced') {
+          if (!currentUser) {
+            showToast('Inicia sesión para utilizar Advanced AI con tus créditos de suscripción.', 'info');
+            navigate('/login');
+            return;
+          }
+          const credits = currentUser.ai_credits_balance ?? 0;
+          if (credits < 10 && !hasPermission(currentUser, '*')) {
+            showToast('No tienes suficientes créditos de IA (10 requeridos). Actualiza tu plan para obtener más.', 'info');
+            openUpgradeModal('pro');
+            return;
+          }
+        }
+
+        this.selectedMode = mode;
+        modeOptions.forEach((o) => {
+          const isMatch = o === opt;
+          o.classList.toggle('is-active', isMatch);
+          const radio = o.querySelector<HTMLInputElement>('input[type="radio"]');
+          if (radio) radio.checked = isMatch;
+        });
+      }, { signal });
+    });
+
     zoomInBtn?.addEventListener('click', () => {
       if (this.zoomScale < 2.0) {
         this.zoomScale = Math.min(2.0, this.zoomScale + 0.15);
@@ -235,9 +268,12 @@ export class TranslatePdfViewController implements ViewController {
       return;
     }
 
-    const maxSize = 25 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo PDF excede el límite máximo de 25 MB.');
+    const limits = getCurrentUserToolLimits('translate-pdf');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo PDF excede el límite máximo de ${limits.maxFileSizeMB} MB.`);
+      if (!limits.isPremium) {
+        openUpgradeModal('pro');
+      }
       return;
     }
 
@@ -267,11 +303,6 @@ export class TranslatePdfViewController implements ViewController {
     const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-page-count"]');
     const docStateEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-doc-state"]');
 
-    const metaBox = this.container.querySelector<HTMLElement>('[data-ref="translate-doc-meta"]');
-    const metaName = this.container.querySelector<HTMLElement>('[data-ref="doc-meta-name"]');
-    const metaSize = this.container.querySelector<HTMLElement>('[data-ref="doc-meta-size"]');
-    const metaPages = this.container.querySelector<HTMLElement>('[data-ref="doc-meta-pages"]');
-
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="translate-result-card"]');
     if (resultCard) resultCard.style.display = 'none';
 
@@ -293,11 +324,6 @@ export class TranslatePdfViewController implements ViewController {
       docStateEl.textContent = 'Original';
       docStateEl.classList.remove('pdf-viewer-toolbar__badge--active');
     }
-
-    if (metaBox) metaBox.style.display = 'flex';
-    if (metaName) metaName.textContent = file.name;
-    if (metaSize) metaSize.textContent = formatBytes(file.size);
-    if (metaPages) metaPages.textContent = `${numPages}`;
   }
 
   private async renderAllPages(): Promise<void> {
@@ -370,6 +396,7 @@ export class TranslatePdfViewController implements ViewController {
 
     const formData = new FormData();
     formData.append('file', this.currentFile);
+    formData.append('mode', this.selectedMode);
     formData.append('targetLang', this.targetLang || 'ES');
     if (this.sourceLang) {
       formData.append('sourceLang', this.sourceLang);
@@ -386,6 +413,10 @@ export class TranslatePdfViewController implements ViewController {
         if (!response.ok || !res.success || !res.data) {
           this.showError(res.error || 'No se pudo completar la traducción del documento.');
           return;
+        }
+
+        if (this.selectedMode === 'advanced' && currentUser && currentUser.ai_credits_balance !== undefined) {
+          currentUser.ai_credits_balance = Math.max(0, currentUser.ai_credits_balance - 10);
         }
 
         this.translatedResult = res.data;
@@ -495,6 +526,7 @@ export class TranslatePdfViewController implements ViewController {
     this.translatedPdfBuffer = null;
     this.translatedResult = null;
     this.showingTranslated = false;
+    this.selectedMode = 'standard';
     this.sourceLang = '';
     this.targetLang = 'ES';
     this.hideError();
@@ -504,12 +536,10 @@ export class TranslatePdfViewController implements ViewController {
 
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="translate-dropzone-card"]');
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="translate-viewer-card"]');
-    const metaBox = this.container.querySelector<HTMLElement>('[data-ref="translate-doc-meta"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="translate-result-card"]');
 
     if (dropzoneCard) dropzoneCard.style.display = 'flex';
     if (viewerCard) viewerCard.style.display = 'none';
-    if (metaBox) metaBox.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-sidebar"]');

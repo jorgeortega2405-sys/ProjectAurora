@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -328,9 +329,9 @@ export class EditPdfController implements ViewController {
       return;
     }
 
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo seleccionado supera el límite de 50 MB.');
+    const limits = getCurrentUserToolLimits('edit-pdf');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB.`);
       return;
     }
 
@@ -341,13 +342,6 @@ export class EditPdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-workspace"]');
-
-    const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-name"]');
-    const fileSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
-    const pagesCountEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-pages-count"]');
-
-    if (fileNameEl) fileNameEl.textContent = file.name;
-    if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
 
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (editorCard) editorCard.style.display = 'flex';
@@ -361,7 +355,6 @@ export class EditPdfController implements ViewController {
       this.pdfDocument = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       const numPages = this.pdfDocument.numPages;
 
-      if (pagesCountEl) pagesCountEl.textContent = `${numPages}`;
       const pagesCountBadge = this.container.querySelector<HTMLElement>('[data-ref="pages-count-badge"]');
       if (pagesCountBadge) pagesCountBadge.textContent = `${numPages}`;
 
@@ -1109,13 +1102,7 @@ export class EditPdfController implements ViewController {
     if (btnRedo) btnRedo.disabled = this.redoStack.length === 0;
   }
 
-  private updateModificationsSummary(): void {
-    const total = this.texts.length + this.shapes.length + this.drawings.length + this.replacements.length + this.images.length;
-    const modsCountEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-mods-count"]');
-    if (modsCountEl) {
-      modsCountEl.textContent = `${total} ${total === 1 ? 'cambio' : 'cambios'}`;
-    }
-  }
+  private updateModificationsSummary(): void {}
 
   private restoreModifications(): void {
     this.drawings.forEach((stroke) => {

@@ -1,6 +1,8 @@
 import { navigate } from '../../../app-router.js';
+import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
+import { currentUser, hasPermission, postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
@@ -11,8 +13,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { PageItem, RangeItem, SplitMode, SplitPdfResponseData } from './split-pdf.types.js';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -162,7 +162,6 @@ export class SplitPdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-splitter-sidebar"]');
     const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
-    const sidebarResetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
     const downloadResultBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const restartSplitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-restart-split"]');
     const pagesGrid = this.container.querySelector<HTMLElement>('[data-ref="split-pages-grid"]');
@@ -231,10 +230,6 @@ export class SplitPdfController implements ViewController {
       }
     }, { signal });
 
-    sidebarResetBtn?.addEventListener('click', () => {
-      this.resetToInitial();
-    }, { signal });
-
     downloadResultBtn?.addEventListener('click', () => {
       this.downloadSplitResult();
     }, { signal });
@@ -249,7 +244,18 @@ export class SplitPdfController implements ViewController {
 
     tabRange?.addEventListener('click', () => this.switchMode('range'), { signal });
     tabPages?.addEventListener('click', () => this.switchMode('pages'), { signal });
-    tabSize?.addEventListener('click', () => this.switchMode('size'), { signal });
+    tabSize?.addEventListener('click', () => {
+      const canSplitBySize = hasPermission(currentUser, 'tools:split:by_size') ||
+        hasPermission(currentUser, 'subscription:feature:pro') ||
+        hasPermission(currentUser, 'subscription:feature:enterprise') ||
+        hasPermission(currentUser, '*');
+      if (!canSplitBySize) {
+        showToast('Dividir por tamaño es una función exclusiva del plan Pro.', 'info');
+        openUpgradeModal('pro');
+        return;
+      }
+      this.switchMode('size');
+    }, { signal });
 
     const btnRangeCustom = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-range-submode-custom"]');
     const btnRangeFixed = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-range-submode-fixed"]');
@@ -388,8 +394,9 @@ export class SplitPdfController implements ViewController {
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      this.showError('El archivo PDF seleccionado supera el límite permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('split-pdf');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB.`);
       return;
     }
 
@@ -424,12 +431,6 @@ export class SplitPdfController implements ViewController {
       const inputPagesSelection = this.container.querySelector<HTMLInputElement>('[data-ref="input-pages-selection"]');
       if (inputPagesSelection) {
         inputPagesSelection.value = formatPageNumbers(Array.from(this.selectedPages));
-      }
-
-      const defaultOutput = file.name.replace(/\.pdf$/i, '') + '_dividido.pdf';
-      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-      if (outputNameInput) {
-        outputNameInput.value = defaultOutput;
       }
 
       this.renderFilesView();
@@ -782,19 +783,15 @@ export class SplitPdfController implements ViewController {
   private updateActionButtons(): void {
     const mainBtnText = this.container.querySelector<HTMLElement>('[data-ref="txt-main-action"]');
     const mainBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
-    const resetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
 
     if (!mainBtnText || !mainBtn) return;
 
     if (this.currentResult) {
       mainBtnText.textContent = t('tools.split_pdf_btn_download') || 'Descargar PDF(s) Dividido(s)';
-      if (resetBtn) resetBtn.style.display = '';
     } else if (this.currentFile) {
       mainBtnText.textContent = t('tools.split_pdf_btn_split') || 'Dividir PDF';
-      if (resetBtn) resetBtn.style.display = '';
     } else {
       mainBtnText.textContent = t('tools.split_pdf_btn_select') || 'Seleccionar PDF';
-      if (resetBtn) resetBtn.style.display = 'none';
     }
   }
 
@@ -806,8 +803,9 @@ export class SplitPdfController implements ViewController {
     this.showProcessingState();
 
     try {
-      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-      let customFilename = outputNameInput?.value.trim() || 'documento_dividido.pdf';
+      const customFilename = this.currentFile
+        ? this.currentFile.name.replace(/\.pdf$/i, '') + '_dividido.pdf'
+        : 'documento_dividido.pdf';
 
       const checkMergeRanges = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-ranges"]');
       const checkMergePages = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-pages"]');
@@ -951,10 +949,8 @@ export class SplitPdfController implements ViewController {
     const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-splitter-workspace"]');
-    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
 
     if (fileInput) fileInput.value = '';
-    if (outputNameInput) outputNameInput.value = 'documento_dividido.pdf';
 
     if (processingCard) processingCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';

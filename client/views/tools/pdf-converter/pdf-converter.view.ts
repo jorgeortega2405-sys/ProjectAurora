@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -65,9 +66,6 @@ export class PdfConverterController implements ViewController {
 
     const subtitleEl = this.container.querySelector<HTMLElement>('[data-ref="converter-sidebar-subtitle"]');
     if (subtitleEl) subtitleEl.textContent = this.config.subtitle;
-
-    const sidebarBadgeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-target-badge"]');
-    if (sidebarBadgeEl) sidebarBadgeEl.textContent = this.config.targetBadge;
 
     const actionTextEl = this.container.querySelector<HTMLElement>('[data-ref="txt-convert-action"]');
     if (actionTextEl) actionTextEl.textContent = this.config.actionText;
@@ -170,9 +168,10 @@ export class PdfConverterController implements ViewController {
       return;
     }
 
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo excede el límite máximo de 50 MB.');
+    const limits = getCurrentUserToolLimits('pdf-converter');
+    const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
       return;
     }
 
@@ -185,7 +184,6 @@ export class PdfConverterController implements ViewController {
     const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="converter-selected-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="selected-file-name"]');
     const fileSizeEl = this.container.querySelector<HTMLElement>('[data-ref="selected-file-size"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-converter-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-converter-workspace"]');
@@ -200,7 +198,6 @@ export class PdfConverterController implements ViewController {
 
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
-    if (sidebarStatusEl) sidebarStatusEl.textContent = `${file.name.substring(0, 16)}... (${formatBytes(file.size)})`;
     if (convertBtn) convertBtn.disabled = false;
 
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
@@ -246,7 +243,6 @@ export class PdfConverterController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-converter-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-converter-workspace"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
     const convertBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
 
     if (dropzoneCard) dropzoneCard.style.display = '';
@@ -257,7 +253,6 @@ export class PdfConverterController implements ViewController {
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
     this.sidebarModal?.close();
 
-    if (sidebarStatusEl) sidebarStatusEl.textContent = 'Ninguno';
     if (convertBtn) convertBtn.disabled = true;
 
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { getTempFile } from '../../services/temp-storage.service.js';
 import { editPdfDocument } from './edit-pdf.service.js';
@@ -11,6 +12,17 @@ export async function editPdfHandler(req: Request, res: Response): Promise<void>
 
     if (!pdfFile) {
       res.status(400).json({ error: 'Debes seleccionar un archivo PDF.', success: false });
+      return;
+    }
+
+    const userPerms = ((req as any).user?.permissions as string[]) || [];
+    const limits = getToolLimits('edit-pdf', userPerms);
+
+    if (pdfFile.size > limits.maxFileSizeMB * 1024 * 1024) {
+      res.status(400).json({
+        error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar documentos de mayor tamaño.`,
+        success: false,
+      });
       return;
     }
 

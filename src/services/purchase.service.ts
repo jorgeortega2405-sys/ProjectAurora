@@ -1,6 +1,7 @@
 import { pool } from '../config/database.config.js';
 import { getTierBorderColor, getTierName } from '../config/plans.config.js';
 import { BillingInterval, PurchaseRecord, UserBillingInfo } from '../types/subscription.types.js';
+import { syncSubscriptionCredits } from './credits.service.js';
 import { logger } from './logger.service.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
@@ -132,6 +133,8 @@ export async function updateUserSubscription(
       `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
       values
     );
+
+    await syncSubscriptionCredits(userId, params.tier);
   } catch (error) {
     logger.db.error('Error al actualizar suscripcion de usuario', { error, userId });
     throw error;

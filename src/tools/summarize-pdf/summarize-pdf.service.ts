@@ -11,42 +11,29 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 
 const MODE_PROMPTS: Record<SummaryMode, string> = {
-  detailed: `Genera un análisis y resumen detallado del documento.
+  advanced: `Genera un Análisis y Resumen Avanzado, exhaustivo y profundo del siguiente documento mediante IA avanzada.
 Estructura la respuesta de la siguiente forma con formato Markdown limpio:
-# Resumen Detallado del Documento
-## 1. Contexto y Objetivos
-(Explicación clara del propósito y contexto del documento)
+# Análisis Avanzado del Documento
+## 1. Contexto, Objetivos y Alcance
+(Explicación detallada del propósito, contexto y destinatarios)
 ## 2. Desglose Temático y Secciones Principales
-(Análisis exhaustivo de cada tema o sección importante con subtítulos)
-## 3. Datos, Cifras y Evidencia Relevante
-(Puntos de datos, estadísticas o argumentos centrales)
-## 4. Conclusiones y Hallazgos Finales
-(Síntesis y reflexiones finales)`,
+(Análisis exhaustivo de cada sección relevante con subtítulos explicativos)
+## 3. Datos Clave, Métricas y Evidencia
+(Puntos de datos, estadísticas, citas o argumentos centrales)
+## 4. Hallazgos Críticos e Implicaciones
+(Análisis de impacto, implicaciones estratégicas y riesgos)
+## 5. Recomendaciones y Conclusiones Ejecutivas
+(Plan de acción o recomendaciones detalladas)`,
 
-  executive: `Genera un Resumen Ejecutivo claro, profesional y de alto impacto del siguiente documento.
+  standard: `Genera un Resumen Estándar claro, conciso y profesional del siguiente documento.
 Estructura la respuesta de la siguiente forma con formato Markdown limpio:
-# Resumen Ejecutivo
+# Resumen General
 ## 📌 Visión General
 (2 a 3 párrafos concisos resumiendo de qué trata el documento y su mensaje principal)
 ## 💡 Puntos Clave
 (Lista de 5 a 8 viñetas con los aspectos más importantes y conclusiones fundamentales)
-## 🎯 Conclusiones y Próximos Pasos
-(Conclusiones principales y recomendaciones)`,
-
-  key_points: `Extrae únicamente los Puntos Clave y Aprendizajes Esenciales del documento.
-Estructura la respuesta con formato Markdown limpio:
-# Puntos Clave y Conclusiones
-## 🔑 Aspectos Fundamentales
-(Lista clara y concisa de los hallazgos más destacados)
-## ⚡ Decisiones y Acciones Clave
-(Puntos de acción o implicaciones directas)
-## 📌 Resumen en una frase
-(Una sola frase memorable que resuma todo el contenido)`,
-
-  qa: `Genera una guía de Preguntas y Respuestas (FAQ) fundamentales basadas en el documento.
-Estructura la respuesta con formato Markdown limpio:
-# Preguntas y Respuestas Esenciales
-(Genera entre 5 y 10 preguntas clave que un lector se haría sobre el documento, con respuestas concisas y directas basadas en el texto)`,
+## 🎯 Conclusiones
+(Conclusiones principales y aspectos a considerar)`,
 };
 
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
@@ -124,7 +111,7 @@ No inventes datos que no estén presentes en el texto. Usa Markdown enriquecido 
 }
 
 export async function summarizePdf(params: SummarizePdfParams): Promise<SummarizePdfResponse> {
-  const { buffer, customPrompt, mode = 'executive', originalname } = params;
+  const { buffer, customPrompt, mode = 'standard', originalname } = params;
 
   const apiKey = config.gemini.apiKey;
   if (!apiKey) {
@@ -139,7 +126,7 @@ export async function summarizePdf(params: SummarizePdfParams): Promise<Summariz
   const maxChars = 400000;
   const truncatedText = rawText.length > maxChars ? rawText.slice(0, maxChars) : rawText;
 
-  const basePrompt = MODE_PROMPTS[mode] || MODE_PROMPTS.executive;
+  const basePrompt = MODE_PROMPTS[mode] || MODE_PROMPTS.standard;
   const finalPrompt = customPrompt ? `${basePrompt}\n\nInstrucción adicional del usuario: ${customPrompt}` : basePrompt;
 
   const primaryModel = config.gemini.model || 'gemini-3.5-flash';

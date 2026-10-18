@@ -105,6 +105,13 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
 
   updateSidebarAuthState(sidebar);
   if (isDrawerOpen) {
+    if (isSettings && currentDrawerMode !== 'settings' && currentDrawerMode !== 'apps') {
+      currentDrawerMode = 'settings';
+    } else if (isHelp && currentDrawerMode !== 'help' && currentDrawerMode !== 'apps') {
+      currentDrawerMode = 'help';
+    } else if (!isSettings && !isHelp && currentDrawerMode !== 'navigation' && currentDrawerMode !== 'apps') {
+      currentDrawerMode = 'navigation';
+    }
     void updateDynamicDrawer(sidebar);
   }
 }
@@ -378,7 +385,10 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
     });
   };
 
-  if (currentDrawerMode === 'settings' || (currentDrawerMode !== 'apps' && currentPath.startsWith('/settings'))) {
+  const isSettings = currentDrawerMode === 'settings' || (currentDrawerMode !== 'apps' && currentPath.includes('/settings'));
+  const isHelp = currentDrawerMode === 'help' || (currentDrawerMode !== 'apps' && (currentPath.includes('/help') || currentPath.includes('/preguntas-frecuentes') || currentPath.includes('/herramientas') || currentPath.includes('/seguridad') || currentPath.includes('/privacidad') || currentPath.includes('/terminos') || currentPath.includes('/cookies')));
+
+  if (isSettings) {
     if (currentUser) {
       drawerBody.innerHTML = `
         <div class="drawer-section__header" data-ref="drawer-settings-header" style="padding: 8px 8px 4px 8px;">
@@ -419,9 +429,9 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
         const btnBilling = drawerFooter.querySelector<HTMLElement>('[data-ref="btn-nav-settings-billing"]');
         const btnPurchases = drawerFooter.querySelector<HTMLElement>('[data-ref="btn-nav-settings-purchases"]');
 
-        if (currentPath === '/settings/billing') {
+        if (currentPath.endsWith('/billing') || currentPath.includes('/billing')) {
           btnBilling?.classList.add('is-active');
-        } else if (currentPath === '/settings/purchases' || currentPath === '/settings/purchases-history') {
+        } else if (currentPath.endsWith('/purchases') || currentPath.includes('/purchases') || currentPath.includes('purchases-history')) {
           btnPurchases?.classList.add('is-active');
         }
 
@@ -437,13 +447,13 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       const btnAccessibility = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-accessibility"]');
       const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-security"]');
 
-      if (currentPath === '/settings' || currentPath === '/settings/your-account') {
+      if (currentPath.endsWith('/settings') || currentPath.includes('/your-account') || currentPath.includes('/profile')) {
         btnAccount?.classList.add('is-active');
-      } else if (currentPath === '/settings/organization') {
+      } else if (currentPath.includes('/organization')) {
         btnOrganization?.classList.add('is-active');
-      } else if (currentPath === '/settings/accessibility') {
+      } else if (currentPath.includes('/accessibility')) {
         btnAccessibility?.classList.add('is-active');
-      } else if (currentPath === '/settings/security' || currentPath === '/settings/login-and-security') {
+      } else if (currentPath.includes('/security') || currentPath.includes('login-and-security')) {
         btnSecurity?.classList.add('is-active');
       }
 
@@ -476,16 +486,16 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       const btnGuest = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-guest"]');
       const btnAccessibility = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-accessibility"]');
 
-      if (currentPath === '/settings' || currentPath === '/settings/guest') {
+      if (currentPath.endsWith('/settings') || currentPath.includes('/guest')) {
         btnGuest?.classList.add('is-active');
-      } else if (currentPath === '/settings/accessibility') {
+      } else if (currentPath.includes('/accessibility')) {
         btnAccessibility?.classList.add('is-active');
       }
 
       bindNavLink(btnGuest, '/settings/guest');
       bindNavLink(btnAccessibility, '/settings/accessibility');
     }
-  } else if (currentDrawerMode === 'help' || (currentDrawerMode !== 'apps' && currentPath.startsWith('/help'))) {
+  } else if (isHelp) {
     if (drawerFooter) {
       drawerFooter.innerHTML = '';
       drawerFooter.style.display = 'none';
@@ -766,7 +776,7 @@ export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'settings' | 
   const btnApps = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
 
   const currentPath = window.location.pathname;
-  const targetMode = mode || (currentPath.startsWith('/settings') ? 'settings' : (currentPath.startsWith('/help') ? 'help' : 'navigation'));
+  const targetMode = mode || (currentPath.includes('/settings') ? 'settings' : (currentPath.includes('/help') ? 'help' : 'navigation'));
 
   if (forceState === undefined) {
     if (isDrawerOpen && currentDrawerMode === targetMode) {
@@ -816,7 +826,7 @@ function setupDrawerContent(sidebar: HTMLElement): void {
   btnToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     const currentPath = window.location.pathname;
-    const mode = currentPath.startsWith('/settings') ? 'settings' : (currentPath.startsWith('/help') ? 'help' : 'navigation');
+    const mode = currentPath.includes('/settings') ? 'settings' : (currentPath.includes('/help') ? 'help' : 'navigation');
     toggleDrawer(undefined, mode);
   });
 

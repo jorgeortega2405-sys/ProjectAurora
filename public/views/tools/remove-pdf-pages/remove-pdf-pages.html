@@ -98,31 +98,6 @@
           <span class="remove-field-hint">Haz clic en las tarjetas a la izquierda o escribe los números aquí.</span>
         </div>
 
-        <div class="tool-sidebar__section" data-ref="section-output-filename" style="margin-top: 14px;">
-          <span class="tool-sidebar__section-title" data-i18n="tools.remove_pdf_pages_output_name_label">Nombre del archivo final</span>
-          <label class="field" data-ref="field-output-name">
-            <input class="field__input" data-ref="input-output-name" type="text" placeholder=" " value="documento_sin_paginas.pdf" autocomplete="off" />
-            <span class="field__label">Nombre del documento</span>
-          </label>
-        </div>
-
-        <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title" data-i18n="tools.remove_pdf_pages_summary_title">Resumen</span>
-          <div class="tool-summary-card" data-ref="remove-pages-summary-card">
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.remove_pdf_pages_summary_original">Páginas originales</span>
-              <span class="tool-summary-card__value" data-ref="val-summary-original">0</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.remove_pdf_pages_summary_removed">Páginas a quitar</span>
-              <span class="tool-summary-card__value remove-highlight-red" data-ref="val-summary-removed">0</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.remove_pdf_pages_summary_remaining">Páginas resultantes</span>
-              <span class="tool-summary-card__value" data-ref="val-summary-remaining">0</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="tool-sidebar__footer">
@@ -130,10 +105,6 @@
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete_sweep"></use></svg>
           <span data-ref="txt-main-action" data-i18n="tools.remove_pdf_pages_btn_select">Seleccionar PDF</span>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
-        </button>
-        <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-sidebar-reset" style="display: none;">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-          <span data-i18n="tools.remove_pdf_pages_btn_another">Procesar otro archivo</span>
         </button>
         <div class="banner banner--danger" data-ref="remove-pdf-error" style="display: none; margin-top: 6px;"></div>
       </div>

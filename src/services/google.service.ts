@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { config } from '../config/env.config.js';
 import { GoogleTokenResponse, GoogleUserInfo, UserPayload } from '../types/auth.types.js';
 import { logger } from './logger.service.js';
+import { getUserEffectivePermissions } from './pbac.service.js';
 import { createUser, findUserByEmail, findUserByGoogleId, findUserByUsername, sanitizeUser, updateUserGoogleId, updateUserUsername } from './user.service.js';
 
 export const STATE_COOKIE_NAME = 'oauth_state';
@@ -110,14 +111,18 @@ export async function processGoogleAuthCallback(code: string): Promise<UserPaylo
 
   const existingGoogleUser = await findUserByGoogleId(googleId);
   if (existingGoogleUser) {
+    let finalUser = existingGoogleUser;
     if (existingGoogleUser.username.startsWith('aurora_')) {
       const newUsername = await generateUniqueUsername(baseName);
       const updated = await updateUserUsername(existingGoogleUser.id, newUsername);
       if (updated) {
-        return sanitizeUser(updated);
+        finalUser = updated;
       }
     }
-    return sanitizeUser(existingGoogleUser);
+    const permissions = await getUserEffectivePermissions(finalUser);
+    const sanitized = sanitizeUser(finalUser);
+    sanitized.permissions = permissions;
+    return sanitized;
   }
 
   const existingEmailUser = await findUserByEmail(email);
@@ -131,7 +136,10 @@ export async function processGoogleAuthCallback(code: string): Promise<UserPaylo
         userToReturn = updated;
       }
     }
-    return sanitizeUser({ ...userToReturn, google_id: googleId });
+    const permissions = await getUserEffectivePermissions(userToReturn);
+    const sanitized = sanitizeUser({ ...userToReturn, google_id: googleId });
+    sanitized.permissions = permissions;
+    return sanitized;
   }
 
   const uniqueUsername = await generateUniqueUsername(baseName);
@@ -144,5 +152,8 @@ export async function processGoogleAuthCallback(code: string): Promise<UserPaylo
     username: uniqueUsername,
   });
 
-  return sanitizeUser(newUser);
+  const permissions = await getUserEffectivePermissions(newUser);
+  const sanitized = sanitizeUser(newUser);
+  sanitized.permissions = permissions;
+  return sanitized;
 }

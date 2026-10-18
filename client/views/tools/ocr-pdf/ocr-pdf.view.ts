@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -169,9 +170,9 @@ export class OcrPdfController implements ViewController {
       return;
     }
 
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo excede el límite máximo de 50 MB.');
+    const limits = getCurrentUserToolLimits('ocr-pdf');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo excede el límite permitido de ${limits.maxFileSizeMB} MB.`);
       return;
     }
 
@@ -185,8 +186,6 @@ export class OcrPdfController implements ViewController {
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="ocr-result-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="selected-file-name"]');
     const fileSizeEl = this.container.querySelector<HTMLElement>('[data-ref="selected-file-size"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="ocr-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="ocr-pdf-workspace"]');
@@ -202,8 +201,6 @@ export class OcrPdfController implements ViewController {
 
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
-    if (sidebarStatusEl) sidebarStatusEl.textContent = file.name;
-    if (sidebarSizeEl) sidebarSizeEl.textContent = formatBytes(file.size);
     if (ocrBtn) ocrBtn.disabled = false;
 
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
@@ -251,8 +248,6 @@ export class OcrPdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="ocr-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="ocr-pdf-workspace"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
     const ocrBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ocr-action"]');
 
     if (dropzoneCard) dropzoneCard.style.display = '';
@@ -264,8 +259,6 @@ export class OcrPdfController implements ViewController {
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
     this.sidebarModal?.close();
 
-    if (sidebarStatusEl) sidebarStatusEl.textContent = 'Ninguno';
-    if (sidebarSizeEl) sidebarSizeEl.textContent = '0 KB';
     if (ocrBtn) ocrBtn.disabled = true;
 
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');

@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -10,8 +11,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { RotatePageItem, RotatePdfResponseData } from './rotate-pdf.types.js';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 export class RotatePdfController implements ViewController {
   private abortController: AbortController | null = null;
@@ -196,8 +195,10 @@ export class RotatePdfController implements ViewController {
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      this.showError('El archivo PDF seleccionado supera el límite permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('rotate-pdf');
+    const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
       return;
     }
 
@@ -225,14 +226,10 @@ export class RotatePdfController implements ViewController {
 
       const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="rotate-dropzone-card"]');
       const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="rotate-workspace-card"]');
-      const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-name"]');
-      const totalPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-total-pages"]');
       const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-rotate"]');
 
       if (dropzoneCard) dropzoneCard.style.display = 'none';
       if (workspaceCard) workspaceCard.style.display = '';
-      if (fileNameEl) fileNameEl.textContent = file.name;
-      if (totalPagesEl) totalPagesEl.textContent = String(count);
       if (executeBtn) executeBtn.disabled = false;
 
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-sidebar"]');
@@ -243,7 +240,6 @@ export class RotatePdfController implements ViewController {
       if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
 
       this.renderPagesGrid();
-      this.updateSidebarSummary();
 
       for (const page of this.pages) {
         void this.renderThumbnail(page);
@@ -304,8 +300,6 @@ export class RotatePdfController implements ViewController {
     if (canvas) {
       canvas.style.transform = `rotate(${page.rotation}deg)`;
     }
-
-    this.updateSidebarSummary();
   }
 
   private rotateAll(delta: number): void {
@@ -316,7 +310,6 @@ export class RotatePdfController implements ViewController {
         canvas.style.transform = `rotate(${page.rotation}deg)`;
       }
     }
-    this.updateSidebarSummary();
   }
 
   private resetRotations(): void {
@@ -326,15 +319,6 @@ export class RotatePdfController implements ViewController {
       if (canvas) {
         canvas.style.transform = 'rotate(0deg)';
       }
-    }
-    this.updateSidebarSummary();
-  }
-
-  private updateSidebarSummary(): void {
-    const rotatedCount = this.pages.filter((p) => p.rotation !== 0).length;
-    const rotatedCountEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-rotated-count"]');
-    if (rotatedCountEl) {
-      rotatedCountEl.textContent = String(rotatedCount);
     }
   }
 
@@ -409,18 +393,12 @@ export class RotatePdfController implements ViewController {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="rotate-dropzone-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="rotate-workspace-card"]');
     const processingCard = this.container.querySelector<HTMLElement>('[data-ref="rotate-processing-card"]');
-    const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-name"]');
-    const totalPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-total-pages"]');
-    const rotatedCountEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-rotated-count"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-rotate"]');
 
     if (fileInput) fileInput.value = '';
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (workspaceCard) workspaceCard.style.display = 'none';
     if (processingCard) processingCard.style.display = 'none';
-    if (fileNameEl) fileNameEl.textContent = '-';
-    if (totalPagesEl) totalPagesEl.textContent = '0';
-    if (rotatedCountEl) rotatedCountEl.textContent = '0';
     if (executeBtn) executeBtn.disabled = true;
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-sidebar"]');

@@ -1,7 +1,8 @@
+import { Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { convertToPdf, getStoredToPdfFile } from './to-pdf-converter.service.js';
 import { ToPdfSourceType } from './to-pdf-converter.types.js';
-import { Request, Response } from 'express';
 
 const ALLOWED_SOURCE_TYPES: Set<string> = new Set([
   'excel-to-pdf',
@@ -15,6 +16,17 @@ export async function convertToPdfHandler(req: Request, res: Response): Promise<
   try {
     if (!req.file) {
       res.status(400).json({ error: 'Debes seleccionar un archivo para convertir.', success: false });
+      return;
+    }
+
+    const userPerms = ((req as any).user?.permissions as string[]) || [];
+    const limits = getToolLimits('to-pdf-converter', userPerms);
+
+    if (req.file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      res.status(400).json({
+        error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar documentos de mayor tamaño.`,
+        success: false,
+      });
       return;
     }
 

@@ -699,110 +699,115 @@
     "plans": {
       "free": {
         "name": "Aurora Gratis",
-        "tagline": "Ideal para uso personal y tareas rápidas de conversión sin costo alguno.",
-        "storage": "500 MB por archivo",
+        "tagline": "Herramientas esenciales de PDF para uso personal y tareas cotidianas.",
+        "storage": "Hasta 50 MB por archivo",
         "button": "Comenzar gratis",
         "hover_button": "Crear cuenta",
         "features": {
           "0": {
-            "title": "Descarga de video en HD 1080p",
-            "desc": "Guarda videos de YouTube, TikTok, Twitter e Instagram sin marcas de agua"
+            "title": "20+ herramientas esenciales de PDF",
+            "desc": "Unir, dividir, comprimir, convertir, proteger, girar, marca de agua y más"
           },
           "1": {
-            "title": "Compresión básica de video e imagen",
-            "desc": "Reduce el peso hasta un 65% optimizando para compartir en redes"
+            "title": "Hasta 25 archivos por tarea",
+            "desc": "Procesa y organiza lotes de hasta 25 documentos simultáneamente"
           },
           "2": {
-            "title": "Gestión y unión de PDFs",
-            "desc": "Une, divide y organiza hasta 10 páginas por documento en segundos"
+            "title": "Documentos de hasta 50 MB",
+            "desc": "Capacidad generosa para la mayoría de documentos de oficina y estudio"
           },
           "3": {
-            "title": "Generador de códigos QR esenciales",
-            "desc": "Genera códigos QR dinámicos en formatos estándar con colores básicos"
+            "title": "Modo IA Estándar ilimitado",
+            "desc": "Resúmenes rápidos y traducciones esenciales sin consumo de créditos"
           },
           "4": {
-            "title": "Procesamiento estándar en la nube",
-            "desc": "Conversiones rápidas con infraestructura compartida de alta disponibilidad"
+            "title": "Seguridad y privacidad total",
+            "desc": "Tus archivos se procesan de forma efímera y segura sin persistencia innecesaria"
           }
         }
       },
       "pro": {
         "name": "Aurora Pro",
-        "tagline": "El plan más equilibrado para profesionales, creadores de contenido y alta demanda.",
-        "storage": "5 GB por archivo",
+        "tagline": "La suite definitiva para profesionales con límites masivos, tokens de IA y funciones avanzadas.",
         "badge": "Más Popular",
         "button": "Obtén Aurora Pro",
         "hover_button": "Mejorar plan",
         "features": {
           "0": {
-            "title": "Descargas en Ultra HD 4K y 60 FPS",
-            "desc": "Máxima resolución y tasa de cuadros sin límites diarios de descarga"
+            "title": "2.000 Créditos mensuales de IA",
+            "desc": "Tokens para resúmenes avanzados y traducciones de alta fidelidad con Gemini"
           },
           "1": {
-            "title": "Extracción de audio MP3 de 320 kbps",
-            "desc": "Convierte cualquier video a audio de alta fidelidad al instante"
+            "title": "Procesamiento por lote de hasta 500 archivos",
+            "desc": "Une, comprime y gestiona hasta 500 páginas o documentos por operación"
           },
           "2": {
-            "title": "Compresión ultra con IA sin pérdida visual",
-            "desc": "Soporte avanzado para formatos modernos AVIF, WebP, H.265 y HEVC"
+            "title": "Archivos de gran volumen hasta 1.000 MB",
+            "desc": "Procesa libros, planos y expedientes pesados de hasta 1 GB sin restricciones"
           },
           "3": {
-            "title": "Edición y fusión de PDFs ilimitada",
-            "desc": "Procesa documentos de cientos de páginas con OCR y renderizado veloz"
+            "title": "División inteligente de PDF por tamaño",
+            "desc": "Segmenta automáticamente documentos según el tamaño en MB especificado"
           },
           "4": {
-            "title": "Códigos QR vectoriales y logos personalizados",
-            "desc": "Exportación en SVG y PDF de alta resolución con marcos y logotipos"
+            "title": "OCR multilingüe de alta precisión",
+            "desc": "Convierte PDFs escaneados a texto editable en español, inglés o bilingüe"
           },
           "5": {
-            "title": "Procesamiento acelerado en GPU dedicada",
-            "desc": "Tus archivos entran directo a la cola prioritaria sin esperas"
+            "title": "Comparación semántica y visual de PDFs",
+            "desc": "Detecta diferencias textuales y visuales lado a lado con visor interactivo"
           },
           "6": {
-            "title": "Procesamiento masivo por lotes",
-            "desc": "Comprime o descarga hasta 50 archivos simultáneamente en un solo clic"
+            "title": "Censura confidencial irreversible",
+            "desc": "Oculta y elimina de forma definitiva información sensible o datos protegidos"
           },
           "7": {
-            "title": "30 días de historial y almacenamiento seguro",
-            "desc": "Vuelve a descargar tus conversiones desde cualquier lugar sin caducidad inmediata"
+            "title": "Flujos de trabajo y automatización",
+            "desc": "Encadena múltiples herramientas en un solo pipeline automatizado"
+          },
+          "8": {
+            "title": "Edición avanzada y conversión universal",
+            "desc": "Dibuja, añade texto, marcas de agua, numeración y exporta a Markdown y Office"
           }
         }
       },
       "enterprise": {
         "name": "Aurora Empresas",
-        "tagline": "Máxima potencia, capacidad masiva, seguridad corporativa y flujos de trabajo en equipo.",
-        "storage": "Archivos ilimitados",
-        "badge": "Para Empresas",
-        "button": "Obtén Aurora Empresas",
-        "hover_button": "Hablar con el equipo",
+        "tagline": "Control corporativo total con inicio de sesión único (SSO), gestión de asientos y máxima seguridad.",
+        "button": "Contactar a ventas",
+        "hover_button": "Contactar a ventas",
         "features": {
           "0": {
-            "title": "Espacio de trabajo y colaboración de equipos",
-            "desc": "Añade miembros con gestión de roles, permisos PBAC y proyectos compartidos"
+            "title": "Single Sign-On (SSO) empresarial",
+            "desc": "Autenticación unificada con Google Workspace, Microsoft Entra ID (Azure AD), Okta y SAML 2.0 / OIDC"
           },
           "1": {
-            "title": "API REST dedicada y automatización con Webhooks",
-            "desc": "Integra nuestro motor de compresión y conversión en tus propios sistemas"
+            "title": "Administración centralizada de asientos",
+            "desc": "Agrega y administra cuentas de empleados de tu empresa con altas y bajas automáticas"
           },
           "2": {
-            "title": "Servidores dedicados con 10 Gbps de ancho de banda",
-            "desc": "Capacidad de cómputo aislada para garantizar latencia mínima en grandes volúmenes"
+            "title": "Permisos granulares PBAC",
+            "desc": "Asigna permisos y políticas de acceso a nivel de usuario y roles organizativos"
           },
           "3": {
-            "title": "Kits de marca y marcas de agua corporativas",
-            "desc": "Aplica la identidad visual de tu empresa automáticamente en cada exportación"
+            "title": "10.000 Créditos de IA para el equipo",
+            "desc": "Bolsa mensual compartida de tokens para resúmenes avanzados y traducción con Gemini"
           },
           "4": {
-            "title": "Seguridad empresarial, SSO y SAML 2.0",
-            "desc": "Acceso unificado con Google Workspace, Azure AD, Okta y registros de auditoría"
+            "title": "Suite completa Pro en cada asiento",
+            "desc": "Límite de 500 archivos por tarea, 1.000 MB por archivo y acceso a las 20+ herramientas"
           },
           "5": {
-            "title": "Almacenamiento cloud permanente con cifrado TLS 1.3",
-            "desc": "Respaldo centralizado de todas las operaciones con retención configurable"
+            "title": "Flujos de trabajo corporativos",
+            "desc": "Automatiza pipelines documentales complejos para operaciones repetitivas de toda la organización"
           },
           "6": {
-            "title": "Soporte prioritario 24/7 y SLA del 99.9%",
-            "desc": "Atención técnica especializada inmediata por canales dedicados y gestor asignado"
+            "title": "Cero persistencia residual y cifrado TLS 1.3",
+            "desc": "Procesamiento en memoria efímera sin retención innecesaria y máxima seguridad de datos"
+          },
+          "7": {
+            "title": "Soporte prioritario y asistencia técnica",
+            "desc": "Acompañamiento en configuración de SSO corporativo y atención técnica preferencial"
           }
         }
       }
@@ -813,5 +818,56 @@
     "subtitle": "Automatiza y optimiza tus tareas recurrentes combinando herramientas inteligentes de PDF en un solo proceso.",
     "create_title": "Crear flujo de trabajo",
     "create_desc": "Automatiza tus tareas recurrentes combinando herramientas PDF en un solo paso."
+  },
+  "upgrade_modal": {
+    "title_prefix": "Sube de categoría a",
+    "choose_plan": "Elige tu plan.",
+    "enterprise_active": "Ya cuentas con el plan corporativo Empresas con todas las capacidades activas.",
+    "current_plan": "Tu plan actual",
+    "plan_pro_name": "Aurora Pro",
+    "plan_pro_price": "$9.99/mes",
+    "plan_pro_desc": "Límites masivos, 2.000 créditos de IA y funciones avanzadas.",
+    "plan_enterprise_name": "Aurora Empresas",
+    "plan_enterprise_price": "A medida",
+    "plan_enterprise_desc": "SSO corporativo, gestión de asientos y 10.000 créditos de IA.",
+    "cta_prefix": "Sube de categoría a",
+    "contact_sales": "Contactar a ventas",
+    "view_all_link": "Ver todos los planes y características",
+    "col_benefits": "Beneficios",
+    "col_pro": "Pro",
+    "col_enterprise": "Empresas",
+    "benefit_ai_credits": "Créditos mensuales de IA (tokens)",
+    "val_ai_pro": "2.000 / mes",
+    "val_ai_enterprise": "10.000 / mes",
+    "benefit_batch_files": "Archivos por tarea",
+    "val_batch_pro": "Hasta 500 archivos",
+    "val_batch_enterprise": "Hasta 500 archivos",
+    "benefit_file_size": "Tamaño máx. por archivo",
+    "val_size_pro": "Hasta 1.000 MB",
+    "val_size_enterprise": "Hasta 1.000 MB",
+    "benefit_split_size": "División por tamaño en MB",
+    "benefit_ocr": "Reconocimiento OCR multilingüe",
+    "val_ocr_pro": "Alta precisión",
+    "val_ocr_enterprise": "Alta precisión",
+    "benefit_compare": "Comparador semántico de PDFs",
+    "val_compare_pro": "Visor interactivo",
+    "val_compare_enterprise": "Visor interactivo",
+    "benefit_workflows": "Flujos de Trabajo",
+    "val_wf_pro": "Hasta 100 flujos",
+    "val_wf_enterprise": "Hasta 1.000 flujos",
+    "benefit_redact": "Censura confidencial irreversible",
+    "benefit_edit": "Edición avanzada y conversión",
+    "val_edit_pro": "Suite completa",
+    "val_edit_enterprise": "Suite completa",
+    "benefit_sso": "Single Sign-On (SSO)",
+    "val_sso_pro": "—",
+    "val_sso_enterprise": "Google, Azure AD, Okta, SAML",
+    "benefit_seats": "Administración de asientos PBAC",
+    "val_seats_pro": "—",
+    "val_seats_enterprise": "Consola con altas/bajas",
+    "benefit_support": "Soporte técnico",
+    "val_support_pro": "Prioritario",
+    "val_support_enterprise": "Dedicado 24/7 y asistencia SSO",
+    "included": "Incluido"
   }
 }

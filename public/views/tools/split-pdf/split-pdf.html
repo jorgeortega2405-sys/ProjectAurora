@@ -91,6 +91,7 @@
           <button type="button" class="split-tab" data-ref="tab-size" data-mode="size">
             <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#straighten"></use></svg>
             <span class="split-tab__label" data-i18n="tools.split_pdf_tab_size">Tamaño</span>
+            <span class="component-badge component-badge--pro" data-ref="badge-split-pro" style="margin-left: 4px; font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--accent); color: #fff; font-weight: 700;">PRO</span>
           </button>
         </div>
 
@@ -163,17 +164,6 @@
         </div>
 
         <div class="split-mode-panel" data-ref="panel-mode-size" style="display: none;">
-          <div class="tool-summary-card" data-ref="card-size-original-info" style="margin-bottom: 16px;">
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_original_size">Tamaño del archivo original:</span>
-              <span class="tool-summary-card__value" data-ref="val-size-orig-bytes">0 KB</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_total_pages">Páginas totales:</span>
-              <span class="tool-summary-card__value" data-ref="val-size-orig-pages">0</span>
-            </div>
-          </div>
-
           <div class="tool-sidebar__section">
             <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_max_size">Tamaño máximo por archivo:</span>
             <div class="split-size-input-row">
@@ -193,43 +183,13 @@
             <span class="split-info-notice__text" data-ref="txt-size-info-notice">Este PDF se dividirá en archivos de no más de 200 KB cada uno.</span>
           </div>
         </div>
-
-        <div class="tool-sidebar__section" data-ref="section-output-filename" style="margin-top: 14px;">
-          <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_output_name_label">Nombre del archivo final</span>
-          <label class="field" data-ref="field-output-name">
-            <input class="field__input" data-ref="input-output-name" type="text" placeholder=" " value="documento_dividido.pdf" autocomplete="off" />
-            <span class="field__label">Nombre del documento</span>
-          </label>
-        </div>
-
-        <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_summary_title">Resumen de División</span>
-          <div class="tool-summary-card" data-ref="pdf-split-summary-card">
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_summary_files">Archivos a generar</span>
-              <span class="tool-summary-card__value" data-ref="val-summary-files">1</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_summary_pages">Páginas totales</span>
-              <span class="tool-summary-card__value" data-ref="val-summary-pages">0</span>
-            </div>
-            <div class="tool-summary-card__row">
-              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_summary_size">Tamaño original</span>
-              <span class="tool-summary-card__value" data-ref="val-summary-size">0 B</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div class="tool-sidebar__footer">
+      <div class="tool-sidebar__footer" style="margin-top: auto;">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-main-action">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#call_split"></use></svg>
           <span data-ref="txt-main-action" data-i18n="tools.split_pdf_btn_select">Seleccionar PDF</span>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
-        </button>
-        <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-sidebar-reset" style="display: none;">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-          <span data-i18n="tools.split_pdf_btn_split_more">Dividir otro archivo</span>
         </button>
         <div class="banner banner--danger" data-ref="split-pdf-error" style="display: none; margin-top: 6px;"></div>
       </div>

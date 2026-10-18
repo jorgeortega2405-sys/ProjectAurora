@@ -1,10 +1,11 @@
+import { NextFunction, Request, Response } from 'express';
+import multer from 'multer';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { getStoredRedactedPdf, redactPdfDocument } from './redact-pdf.service.js';
 import { PageRedaction } from './redact-pdf.types.js';
-import { NextFunction, Request, Response } from 'express';
-import multer from 'multer';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MULTER_MAX_FILE_SIZE = 500 * 1024 * 1024;
 
 const upload = multer({
   fileFilter: (_req, file, cb) => {
@@ -18,7 +19,7 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: MAX_FILE_SIZE,
+    fileSize: MULTER_MAX_FILE_SIZE,
     files: 1,
   },
   storage: multer.memoryStorage(),
@@ -29,7 +30,7 @@ export function handlePdfUploadMiddleware(req: Request, res: Response, next: Nex
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo PDF supera el límite permitido de 50 MB.',
+          error: 'El archivo PDF supera el límite máximo permitido de 500 MB.',
           success: false,
         });
         return;
@@ -67,6 +68,17 @@ export async function handleRedactPdf(req: Request, res: Response): Promise<void
   if (!file) {
     res.status(400).json({
       error: 'Debes seleccionar un archivo PDF para aplicar la censura.',
+      success: false,
+    });
+    return;
+  }
+
+  const userPerms = ((req as any).user?.permissions as string[]) || [];
+  const limits = getToolLimits('redact-pdf', userPerms);
+
+  if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+    res.status(400).json({
+      error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar documentos de mayor tamaño.`,
       success: false,
     });
     return;

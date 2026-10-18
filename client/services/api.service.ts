@@ -53,8 +53,17 @@ export async function ensureCsrfToken(): Promise<string> {
 export function hasPermission(user: User | null, permission: string): boolean {
   if (!user) return false;
   const perms = user.permissions;
-  if (Array.isArray(perms)) {
+  if (Array.isArray(perms) && perms.length > 0) {
     if (perms.includes('*') || perms.includes(permission)) return true;
+  }
+  const tier = (user.subscription_tier || '').toLowerCase();
+  if (tier === 'enterprise' || tier === 'empresas') {
+    return true;
+  }
+  if (tier === 'pro' || tier === 'plus') {
+    if (permission === 'subscription:feature:pro' || permission.startsWith('tools:')) {
+      return true;
+    }
   }
   return false;
 }

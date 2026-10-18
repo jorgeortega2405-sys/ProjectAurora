@@ -1,0 +1,728 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 780" width="1680" height="780" style="background:#ffffff; font-family:'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap');
+      text {
+        user-select: none;
+      }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#1e293b" />
+    </marker>
+    <marker id="arrow-sub" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 2 L 7 5 L 0 8 z" fill="#475569" />
+    </marker>
+    <marker id="arrow-dash" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94a3b8" />
+    </marker>
+  </defs>
+
+  <!-- ==============================================
+       LÍNEAS Y CONECTORES
+       ============================================== -->
+  <g fill="none" stroke-linecap="round">
+    <!-- Centro superior: X=840, Y=74 -->
+    <path d="M 840 74 V 104" stroke="#1e293b" stroke-width="2" />
+
+    <!-- Distribución a los 5 pilares -->
+    <path d="M 840 104 H 212 Q 192 104 192 118 V 136" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+    <path d="M 840 104 H 536 Q 516 104 516 118 V 136" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+    <path d="M 840 104 V 136" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+    <path d="M 840 104 H 1144 Q 1164 104 1164 118 V 136" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+    <path d="M 840 104 H 1468 Q 1488 104 1488 118 V 136" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- Pilar 1 a Estrategia 1 -->
+    <path d="M 192 184 V 232" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+  
+    <!-- Ramales de Estrategia 1 a sus 2 subnodos -->
+    <path d="M 192 272 V 284 H 130 Q 118 284 118 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 192 272 V 284 H 254 Q 266 284 266 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 192 352 V 416" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 2 a sus 2 subnodos -->
+    <path d="M 192 456 V 468 H 130 Q 118 468 118 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 192 456 V 468 H 254 Q 266 468 266 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 192 536 V 600" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 3 a sus 2 subnodos -->
+    <path d="M 192 640 V 652 H 130 Q 118 652 118 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 192 640 V 652 H 254 Q 266 652 266 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Pilar 2 a Estrategia 1 -->
+    <path d="M 516 184 V 232" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+  
+    <!-- Ramales de Estrategia 1 a sus 2 subnodos -->
+    <path d="M 516 272 V 284 H 454 Q 442 284 442 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 516 272 V 284 H 578 Q 590 284 590 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 516 352 V 416" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 2 a sus 2 subnodos -->
+    <path d="M 516 456 V 468 H 454 Q 442 468 442 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 516 456 V 468 H 578 Q 590 468 590 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 516 536 V 600" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 3 a sus 2 subnodos -->
+    <path d="M 516 640 V 652 H 454 Q 442 652 442 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 516 640 V 652 H 578 Q 590 652 590 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Pilar 3 a Estrategia 1 -->
+    <path d="M 840 184 V 232" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+  
+    <!-- Ramales de Estrategia 1 a sus 2 subnodos -->
+    <path d="M 840 272 V 284 H 778 Q 766 284 766 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 840 272 V 284 H 902 Q 914 284 914 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 840 352 V 416" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 2 a sus 2 subnodos -->
+    <path d="M 840 456 V 468 H 778 Q 766 468 766 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 840 456 V 468 H 902 Q 914 468 914 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 840 536 V 600" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 3 a sus 2 subnodos -->
+    <path d="M 840 640 V 652 H 778 Q 766 652 766 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 840 640 V 652 H 902 Q 914 652 914 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Pilar 4 a Estrategia 1 -->
+    <path d="M 1164 184 V 232" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+  
+    <!-- Ramales de Estrategia 1 a sus 2 subnodos -->
+    <path d="M 1164 272 V 284 H 1102 Q 1090 284 1090 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 1164 272 V 284 H 1226 Q 1238 284 1238 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 1164 352 V 416" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 2 a sus 2 subnodos -->
+    <path d="M 1164 456 V 468 H 1102 Q 1090 468 1090 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 1164 456 V 468 H 1226 Q 1238 468 1238 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 1164 536 V 600" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 3 a sus 2 subnodos -->
+    <path d="M 1164 640 V 652 H 1102 Q 1090 652 1090 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 1164 640 V 652 H 1226 Q 1238 652 1238 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Pilar 5 a Estrategia 1 -->
+    <path d="M 1488 184 V 232" stroke="#1e293b" stroke-width="2" marker-end="url(#arrow)" />
+  
+    <!-- Ramales de Estrategia 1 a sus 2 subnodos -->
+    <path d="M 1488 272 V 284 H 1426 Q 1414 284 1414 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 1488 272 V 284 H 1550 Q 1562 284 1562 296 V 294" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 1488 352 V 416" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 2 a sus 2 subnodos -->
+    <path d="M 1488 456 V 468 H 1426 Q 1414 468 1414 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 1488 456 V 468 H 1550 Q 1562 468 1562 480 V 478" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+    <!-- Enlace vertical a siguiente estrategia -->
+    <path d="M 1488 536 V 600" stroke="#94a3b8" stroke-dasharray="3 3" stroke-width="1.5" marker-end="url(#arrow-dash)" />
+      
+    <!-- Ramales de Estrategia 3 a sus 2 subnodos -->
+    <path d="M 1488 640 V 652 H 1426 Q 1414 652 1414 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    <path d="M 1488 640 V 652 H 1550 Q 1562 652 1562 664 V 662" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-sub)" />
+    
+  </g>
+
+  <!-- ==============================================
+       FRASES CONECTORAS SOBRE LÍNEAS
+       ============================================== -->
+  <!-- Frase conectora superior -->
+  <g transform="translate(840, 104)">
+    <rect x="-105" y="-9" width="210" height="18" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">se dividen en 5 grupos según su objetivo</text>
+  </g>
+
+  <!-- Frase conectora abarcan -->
+  <g transform="translate(192, 208)">
+    <rect x="-24" y="-8" width="48" height="16" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">abarcan</text>
+  </g>
+  
+  <!-- Frases busca / para -->
+  <g transform="translate(118, 284)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(266, 284)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(192, 386)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(118, 468)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(266, 468)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(192, 570)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(118, 652)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(266, 652)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <!-- Frase conectora abarcan -->
+  <g transform="translate(516, 208)">
+    <rect x="-24" y="-8" width="48" height="16" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">abarcan</text>
+  </g>
+  
+  <!-- Frases busca / para -->
+  <g transform="translate(442, 284)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(590, 284)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(516, 386)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(442, 468)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(590, 468)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(516, 570)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(442, 652)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(590, 652)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <!-- Frase conectora abarcan -->
+  <g transform="translate(840, 208)">
+    <rect x="-24" y="-8" width="48" height="16" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">abarcan</text>
+  </g>
+  
+  <!-- Frases busca / para -->
+  <g transform="translate(766, 284)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(914, 284)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(840, 386)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(766, 468)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(914, 468)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(840, 570)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(766, 652)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(914, 652)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <!-- Frase conectora abarcan -->
+  <g transform="translate(1164, 208)">
+    <rect x="-24" y="-8" width="48" height="16" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">abarcan</text>
+  </g>
+  
+  <!-- Frases busca / para -->
+  <g transform="translate(1090, 284)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(1238, 284)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(1164, 386)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(1090, 468)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(1238, 468)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(1164, 570)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(1090, 652)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(1238, 652)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <!-- Frase conectora abarcan -->
+  <g transform="translate(1488, 208)">
+    <rect x="-24" y="-8" width="48" height="16" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">abarcan</text>
+  </g>
+  
+  <!-- Frases busca / para -->
+  <g transform="translate(1414, 284)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(1562, 284)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(1488, 386)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(1414, 468)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(1562, 468)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <g transform="translate(1488, 570)">
+    <rect x="-24" y="-7" width="48" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="9.5" font-weight="700" fill="#475569">siguiente</text>
+  </g>
+      
+  <!-- Frases busca / para -->
+  <g transform="translate(1414, 652)">
+    <rect x="-18" y="-7" width="36" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">busca</text>
+  </g>
+  <g transform="translate(1562, 652)">
+    <rect x="-16" y="-7" width="32" height="14" fill="#ffffff" />
+    <text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="700" fill="#475569">para</text>
+  </g>
+    
+  <!-- ==============================================
+       NODO RAÍZ PRINCIPAL
+       ============================================== -->
+  <g transform="translate(670, 26)">
+    <rect width="340" height="48" rx="24" fill="#0f172a" stroke="#0f172a" stroke-width="2" />
+    <text x="170" y="24" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="800" letter-spacing="-0.01em" fill="#ffffff">15 Estrategias de la Negociación</text>
+  </g>
+
+  <!-- PILAR 1: Tácticas Básicas -->
+  <g transform="translate(67, 140)">
+    <rect width="250" height="44" rx="22" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <circle cx="24" cy="22" r="10" fill="#0f172a" />
+    <text x="24" y="22" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800" fill="#ffffff">1</text>
+    <text x="135" y="22" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="800" fill="#0f172a">Tácticas Básicas</text>
+  </g>
+  
+  <!-- Estrategia 1: La Decisión -->
+  <g transform="translate(82, 236)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">La Decisión</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(47, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Pedir la opinión a</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">los involucrados</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(195, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Cambiar de plan si</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">hace falta</text>
+  </g>
+
+  <!-- Estrategia 2: Límite de Dinero -->
+  <g transform="translate(82, 420)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Límite de Dinero</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(47, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Poner un tope de</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">cuánto gastar</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(195, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Apurar al otro a que</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">baje su precio</text>
+  </g>
+
+  <!-- Estrategia 3: La Migaja -->
+  <g transform="translate(82, 604)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">La Migaja</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(47, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Pedir favores chicos</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">en la charla</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(195, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Ganar mucho sumando</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">detalles</text>
+  </g>
+
+  <!-- PILAR 2: Manejo del Poder -->
+  <g transform="translate(391, 140)">
+    <rect width="250" height="44" rx="22" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <circle cx="24" cy="22" r="10" fill="#0f172a" />
+    <text x="24" y="22" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800" fill="#ffffff">2</text>
+    <text x="135" y="22" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="800" fill="#0f172a">Manejo del Poder</text>
+  </g>
+  
+  <!-- Estrategia 1: Hacerse del Rogar -->
+  <g transform="translate(406, 236)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Hacerse del Rogar</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(371, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">No mostrar prisa ni</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">interés al inicio</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(519, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Hacer que el otro</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">mejore su oferta</text>
+  </g>
+
+  <!-- Estrategia 2: Jugar con el Rango -->
+  <g transform="translate(406, 420)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Jugar con el Rango</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(371, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Fingir poco mando</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">para no ceder</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(519, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Mostrar peso de jefe</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">para frenar</text>
+  </g>
+
+  <!-- Estrategia 3: El Bueno y el Malo -->
+  <g transform="translate(406, 604)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">El Bueno y el Malo</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(371, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Uno aprieta y se pone</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">duro</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(519, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">El otro ofrece una</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">salida fácil</text>
+  </g>
+
+  <!-- PILAR 3: Formas de Convencer -->
+  <g transform="translate(715, 140)">
+    <rect width="250" height="44" rx="22" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <circle cx="24" cy="22" r="10" fill="#0f172a" />
+    <text x="24" y="22" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800" fill="#ffffff">3</text>
+    <text x="135" y="22" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="800" fill="#0f172a">Formas de Convencer</text>
+  </g>
+  
+  <!-- Estrategia 1: Salirse a Tiempo -->
+  <g transform="translate(730, 236)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Salirse a Tiempo</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(695, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Pausar si la plática</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">se traba</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(843, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Hacer que el otro</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">valore el trato</text>
+  </g>
+
+  <!-- Estrategia 2: El Asombro -->
+  <g transform="translate(730, 420)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">El Asombro</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(695, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Cara de sorpresa ante</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">un precio alto</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(843, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Hacer dudar al otro</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">para que baje</text>
+  </g>
+
+  <!-- Estrategia 3: La Prueba Gratis -->
+  <g transform="translate(730, 604)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">La Prueba Gratis</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(695, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Dejar probar el</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">producto antes</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(843, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Crear cariño para que</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">lo compren</text>
+  </g>
+
+  <!-- PILAR 4: Empatía y Acuerdos -->
+  <g transform="translate(1039, 140)">
+    <rect width="250" height="44" rx="22" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <circle cx="24" cy="22" r="10" fill="#0f172a" />
+    <text x="24" y="22" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800" fill="#ffffff">4</text>
+    <text x="135" y="22" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="800" fill="#0f172a">Empatía y Acuerdos</text>
+  </g>
+  
+  <!-- Estrategia 1: Ponerse en su Lugar -->
+  <g transform="translate(1054, 236)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Ponerse en su Lugar</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(1019, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Escuchar qué busca la</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">persona</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(1167, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Bajar el enojo y</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">buscar acuerdo</text>
+  </g>
+
+  <!-- Estrategia 2: Participar Todos -->
+  <g transform="translate(1054, 420)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Participar Todos</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(1019, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Invitar al equipo a</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">armar la idea</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(1167, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Comprometerse con lo</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">que armaron</text>
+  </g>
+
+  <!-- Estrategia 3: Cumplir lo Dicho -->
+  <g transform="translate(1054, 604)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Cumplir lo Dicho</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(1019, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Sostener con hechos</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">lo hablado</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(1167, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Dar tranquilidad de</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">que no hay trampa</text>
+  </g>
+
+  <!-- PILAR 5: Reglas y Control -->
+  <g transform="translate(1363, 140)">
+    <rect width="250" height="44" rx="22" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <circle cx="24" cy="22" r="10" fill="#0f172a" />
+    <text x="24" y="22" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800" fill="#ffffff">5</text>
+    <text x="135" y="22" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="800" fill="#0f172a">Reglas y Control</text>
+  </g>
+  
+  <!-- Estrategia 1: Autoridad Limitada -->
+  <g transform="translate(1378, 236)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Autoridad Limitada</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(1343, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Decir que falta</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">permiso del jefe</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(1491, 298)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Ganar tiempo para</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">pensar con calma</text>
+  </g>
+
+  <!-- Estrategia 2: Dinero en Mano -->
+  <g transform="translate(1378, 420)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">Dinero en Mano</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(1343, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Ofrecer pago en</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">efectivo al instante</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(1491, 482)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Cerrar el trato</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">rápido y sin vueltas</text>
+  </g>
+
+  <!-- Estrategia 3: La Costumbre -->
+  <g transform="translate(1378, 604)">
+    <rect width="220" height="36" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="2" />
+    <text x="110" y="18" text-anchor="middle" dominant-baseline="central" font-size="11.5" font-weight="800" fill="#0f172a">La Costumbre</text>
+  </g>
+    
+  <!-- Subnodo 1 -->
+  <g transform="translate(1343, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Apoyarse en reglas</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">conocidas</text>
+  </g>
+
+  <!-- Subnodo 2 -->
+  <g transform="translate(1491, 666)">
+    <rect width="142" height="54" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5" />
+        <text x="71" y="20" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">Evitar pleitos usando</text>
+    <text x="71" y="34" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="#334155">lo probado</text>
+  </g>
+
+</svg>

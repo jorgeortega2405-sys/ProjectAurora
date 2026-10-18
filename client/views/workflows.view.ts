@@ -1,5 +1,7 @@
 import { navigate } from '../app-router.js';
 import { openModal } from '../components/modal.component.js';
+import { openUpgradeModal } from '../components/upgrade-modal.component.js';
+import { getMaxWorkflows } from '../config/tools-limits.config.js';
 import { WORKFLOW_TOOLS } from '../config/workflow-tools.config.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
 import { currentUser, deleteApi, getApi, postApi, putApi } from '../services/api.service.js';
@@ -60,6 +62,10 @@ export class WorkflowsController {
     const grid = this.container.querySelector<HTMLElement>('[data-ref="workflows-grid"]');
     if (!grid) return;
 
+    const maxAllowed = getMaxWorkflows(currentUser);
+    const count = this.workflows.length;
+    const isAtLimit = count >= maxAllowed;
+
     const createWorkflowCardHtml = `
       <div class="tool-card tool-card--create-workflow" data-ref="card-create-workflow">
         <div class="tool-card__icon-box" data-ref="icon-box-create-workflow">
@@ -67,6 +73,11 @@ export class WorkflowsController {
         </div>
         <h3 class="tool-card__title" data-ref="title-create-workflow">Crear flujo de trabajo</h3>
         <p class="tool-card__desc" data-ref="desc-create-workflow">Automatiza tus tareas recurrentes combinando herramientas PDF en un solo paso.</p>
+        <div style="align-items: center; display: flex; gap: 8px; margin-top: 10px;">
+          <span class="component-badge component-badge--sm${isAtLimit ? ' component-badge--warning' : ''}" data-ref="badge-workflows-limit" style="font-size: 11px;">
+            ${count} / ${maxAllowed} flujos guardados
+          </span>
+        </div>
       </div>
     `;
 
@@ -130,6 +141,12 @@ export class WorkflowsController {
         const createCard = target.closest<HTMLElement>('[data-ref="card-create-workflow"]');
         if (createCard) {
           e.preventDefault();
+          const maxAllowed = getMaxWorkflows(currentUser);
+          if (this.workflows.length >= maxAllowed) {
+            showToast(`Has alcanzado el límite de ${maxAllowed} flujo${maxAllowed === 1 ? '' : 's'} de trabajo de tu plan actual.`, 'warning');
+            openUpgradeModal();
+            return;
+          }
           this.openWorkflowModal();
           return;
         }
@@ -148,6 +165,15 @@ export class WorkflowsController {
   }
 
   private openWorkflowModal(workflow?: UserWorkflow): void {
+    if (!workflow) {
+      const maxAllowed = getMaxWorkflows(currentUser);
+      if (this.workflows.length >= maxAllowed) {
+        showToast(`Has alcanzado el límite de ${maxAllowed} flujo${maxAllowed === 1 ? '' : 's'} de trabajo de tu plan actual.`, 'warning');
+        openUpgradeModal();
+        return;
+      }
+    }
+
     let currentSteps: WorkflowStep[] = workflow && Array.isArray(workflow.steps) ? [...workflow.steps] : [];
 
     const toolsOptionsHtml = WORKFLOW_TOOLS.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
@@ -411,6 +437,13 @@ export class WorkflowsController {
           }
 
           const errData = await res.json().catch(() => ({}));
+          if (res.status === 403 && errData.code === 'WORKFLOW_LIMIT_REACHED') {
+            inst.close();
+            showToast(errData.error || 'Has alcanzado el límite de tu plan actual.', 'warning');
+            openUpgradeModal();
+            return false;
+          }
+
           inst.showError(errData.error || 'Ocurrió un error al guardar el flujo de trabajo.');
           inst.setConfirmLoading(false);
           return false;

@@ -1,4 +1,5 @@
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -317,22 +318,6 @@ export class PdfToMarkdownController implements ViewController {
       }, { signal });
     }
 
-    const modeOptions = this.container.querySelectorAll<HTMLElement>('.ai-mode-option');
-    modeOptions.forEach((opt) => {
-      opt.addEventListener('click', () => {
-        const mode = opt.getAttribute('data-mode') as ClientMarkdownMode;
-        if (mode) {
-          this.selectedMode = mode;
-          modeOptions.forEach((o) => {
-            const isMatch = o === opt;
-            o.classList.toggle('is-active', isMatch);
-            const radio = o.querySelector<HTMLInputElement>('input[type="radio"]');
-            if (radio) radio.checked = isMatch;
-          });
-        }
-      }, { signal });
-    });
-
     zoomInBtn?.addEventListener('click', () => {
       if (this.zoomScale < 2.0) {
         this.zoomScale = Math.min(2.0, this.zoomScale + 0.15);
@@ -395,9 +380,9 @@ export class PdfToMarkdownController implements ViewController {
       return;
     }
 
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo PDF supera el tamaño máximo permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('pdf-to-markdown');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo PDF supera el tamaño máximo permitido de ${limits.maxFileSizeMB} MB.`);
       return;
     }
 
@@ -424,9 +409,6 @@ export class PdfToMarkdownController implements ViewController {
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-viewer-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-file-name"]');
     const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-page-count"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
-    const sidebarPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-pages"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
@@ -441,9 +423,6 @@ export class PdfToMarkdownController implements ViewController {
     const numPages = this.pdfDocument?.numPages || 1;
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (pageCountEl) pageCountEl.textContent = `${numPages} página${numPages === 1 ? '' : 's'}`;
-    if (sidebarStatusEl) sidebarStatusEl.textContent = file.name;
-    if (sidebarSizeEl) sidebarSizeEl.textContent = formatBytes(file.size);
-    if (sidebarPagesEl) sidebarPagesEl.textContent = `${numPages}`;
     if (actionBtn) actionBtn.disabled = false;
   }
 
@@ -531,13 +510,10 @@ export class PdfToMarkdownController implements ViewController {
     const workspaceTabs = this.container.querySelector<HTMLElement>('[data-ref="toolbar-workspace-tabs"]');
     const resultSection = this.container.querySelector<HTMLElement>('[data-ref="section-markdown-result"]');
     const processingSection = this.container.querySelector<HTMLElement>('[data-ref="section-processing"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
-    const sidebarPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-pages"]');
-    const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
-    const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-workspace"]');
+    const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
 
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (viewerCard) viewerCard.style.display = 'none';
@@ -551,9 +527,6 @@ export class PdfToMarkdownController implements ViewController {
     if (processingSection) processingSection.style.display = 'none';
     this.sidebarModal?.close();
 
-    if (sidebarStatusEl) sidebarStatusEl.textContent = 'Ninguno';
-    if (sidebarSizeEl) sidebarSizeEl.textContent = '0 KB';
-    if (sidebarPagesEl) sidebarPagesEl.textContent = '-';
     if (actionBtn) actionBtn.disabled = true;
     this.hideError();
   }

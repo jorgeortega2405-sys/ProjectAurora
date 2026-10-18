@@ -606,6 +606,90 @@ export const SERVER_SEO_ROUTES: Record<string, ServerRouteSeoInfo> = {
       es: 'Flujos de Trabajo - ProjectAurora',
     },
   },
+  about: {
+    descriptions: {
+      en: 'Learn about the story, mission, and core values driving ProjectAurora.',
+      es: 'Conoce la historia, la misión y los valores fundamentales que impulsan a ProjectAurora.',
+    },
+    routeId: 'about',
+    slugs: { en: 'about', es: 'sobre-nosotros' },
+    titles: {
+      en: 'About Us - Our Story | ProjectAurora',
+      es: 'Sobre Nosotros - Nuestra Historia | ProjectAurora',
+    },
+  },
+  contact: {
+    descriptions: {
+      en: 'Get in touch with the ProjectAurora team for inquiries, support, or partnership opportunities.',
+      es: 'Ponte en contacto con el equipo de ProjectAurora para consultas, soporte o alianzas.',
+    },
+    routeId: 'contact',
+    slugs: { en: 'contact', es: 'contacto' },
+    titles: {
+      en: 'Contact Us | ProjectAurora',
+      es: 'Contacto | ProjectAurora',
+    },
+  },
+  press: {
+    descriptions: {
+      en: 'Official brand assets, media kit, press releases, and media contact for journalists.',
+      es: 'Recursos oficiales de marca, kit de medios, notas de prensa y contacto para periodistas.',
+    },
+    routeId: 'press',
+    slugs: { en: 'press', es: 'prensa' },
+    titles: {
+      en: 'Press & Media Kit | ProjectAurora',
+      es: 'Sala de Prensa y Media Kit | ProjectAurora',
+    },
+  },
+  business: {
+    descriptions: {
+      en: 'Enterprise PDF solutions with SSO, dedicated compute, team management, and SLA for your organization.',
+      es: 'Soluciones PDF para empresas con SSO, cómputo dedicado, gestión de equipos y SLA corporativo.',
+    },
+    routeId: 'business',
+    slugs: { en: 'business', es: 'empresas' },
+    titles: {
+      en: 'Enterprise Solutions & Team Workspaces | ProjectAurora',
+      es: 'Soluciones Empresariales y Equipos | ProjectAurora',
+    },
+  },
+  'business-contact': {
+    descriptions: {
+      en: 'Contact our enterprise sales team to request a customized proposal and live demo.',
+      es: 'Contacta a nuestro equipo de ventas corporativas para solicitar una propuesta a medida.',
+    },
+    routeId: 'business-contact',
+    slugs: { en: 'business-contact', es: 'contacto-empresas' },
+    titles: {
+      en: 'Contact Enterprise Sales | ProjectAurora',
+      es: 'Contacto Ventas Corporativas | ProjectAurora',
+    },
+  },
+  education: {
+    descriptions: {
+      en: 'Education and academic program. Powerful, accessible, and secure PDF tools for students, teachers, and schools.',
+      es: 'Programa educativo y académico. Herramientas PDF potentes, accesibles y seguras para estudiantes, docentes y escuelas.',
+    },
+    routeId: 'education',
+    slugs: { en: 'education', es: 'educacion' },
+    titles: {
+      en: 'Education & Academic Program | ProjectAurora',
+      es: 'Educación y Programa Académico | ProjectAurora',
+    },
+  },
+  'education-verify': {
+    descriptions: {
+      en: 'Verify your student or teacher status to unlock educational Pro benefits on ProjectAurora.',
+      es: 'Verifica tu estado de estudiante o docente para desbloquear los beneficios Pro educativos en ProjectAurora.',
+    },
+    routeId: 'education-verify',
+    slugs: { en: 'education/verify', es: 'educacion/verificar' },
+    titles: {
+      en: 'Verify Student Status | ProjectAurora',
+      es: 'Verificar Estado de Estudiante | ProjectAurora',
+    },
+  },
 };
 
 const SERVER_SLUG_MAP = new Map<string, string>();
@@ -634,6 +718,20 @@ SERVER_SLUG_MAP.set('security-policy', 'help-security');
 SERVER_SLUG_MAP.set('privacy-policy', 'help-privacy');
 SERVER_SLUG_MAP.set('terms-and-conditions', 'help-terms');
 SERVER_SLUG_MAP.set('cookie-policy', 'help-cookies');
+SERVER_SLUG_MAP.set('about', 'about');
+SERVER_SLUG_MAP.set('sobre-nosotros', 'about');
+SERVER_SLUG_MAP.set('contact', 'contact');
+SERVER_SLUG_MAP.set('contacto', 'contact');
+SERVER_SLUG_MAP.set('press', 'press');
+SERVER_SLUG_MAP.set('prensa', 'press');
+SERVER_SLUG_MAP.set('business', 'business');
+SERVER_SLUG_MAP.set('empresas', 'business');
+SERVER_SLUG_MAP.set('business-contact', 'business-contact');
+SERVER_SLUG_MAP.set('contacto-empresas', 'business-contact');
+SERVER_SLUG_MAP.set('education', 'education');
+SERVER_SLUG_MAP.set('educacion', 'education');
+SERVER_SLUG_MAP.set('education/verify', 'education-verify');
+SERVER_SLUG_MAP.set('educacion/verificar', 'education-verify');
 
 export function getServerCanonicalSlug(routeId: string, lang = DEFAULT_LANGUAGE): string {
   const norm = normalizeLanguageCode(lang);

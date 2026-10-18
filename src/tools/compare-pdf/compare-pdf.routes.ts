@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
+import { optionalAuth } from '../../middlewares/auth.middleware.js';
 import { comparePdfLimiter } from '../../middlewares/rate-limit.middleware.js';
 import { handleComparePdf, handleDownloadComparisonReport } from './compare-pdf.controller.js';
 
 const upload = multer({
   limits: {
-    fileSize: 50 * 1024 * 1024,
+    fileSize: 500 * 1024 * 1024,
   },
   storage: multer.memoryStorage(),
 });
@@ -13,7 +14,8 @@ const upload = multer({
 const router = Router();
 
 router.post(
-  '/compare',
+  '/tools/compare-pdf/compare',
+  optionalAuth,
   comparePdfLimiter,
   upload.fields([
     { maxCount: 1, name: 'file1' },
@@ -22,6 +24,6 @@ router.post(
   handleComparePdf
 );
 
-router.get('/download/:fileId', handleDownloadComparisonReport);
+router.get('/tools/compare-pdf/download/:fileId', handleDownloadComparisonReport);
 
 export default router;

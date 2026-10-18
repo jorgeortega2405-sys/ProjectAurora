@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { convertPdfFile, getStoredConversionFile, UPLOADS_DIR } from './pdf-converter.service.js';
 import { ConversionType } from './pdf-converter.types.js';
@@ -24,7 +25,7 @@ export const uploadPdf = multer({
     }
   },
   limits: {
-    fileSize: 50 * 1024 * 1024,
+    fileSize: 500 * 1024 * 1024,
   },
   storage,
 });
@@ -42,6 +43,17 @@ export async function handleConvertPdf(req: Request, res: Response): Promise<voi
     const file = req.file;
     if (!file) {
       res.status(400).json({ error: 'Debes seleccionar un archivo PDF para convertir.', success: false });
+      return;
+    }
+
+    const userPerms = ((req as any).user?.permissions as string[]) || [];
+    const limits = getToolLimits('pdf-converter', userPerms);
+
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      res.status(400).json({
+        error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar documentos de mayor tamaño.`,
+        success: false,
+      });
       return;
     }
 

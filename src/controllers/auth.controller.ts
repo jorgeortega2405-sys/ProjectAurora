@@ -5,6 +5,7 @@ import { addAccountToSession, clearSessionCookie, getLinkedAccounts, getMultiAcc
 import { getGoogleAuthUrl, processGoogleAuthCallback, STATE_COOKIE_NAME } from '../services/google.service.js';
 import { logger } from '../services/logger.service.js';
 import { sendPasswordResetEmail, sendVerificationCodeEmail, sendWelcomeEmail } from '../services/mail.service.js';
+import { getUserEffectivePermissions } from '../services/pbac.service.js';
 import { lookupSsoByEmail } from '../services/sso.service.js';
 import { consumePending2FALogin, getPending2FALogin, savePending2FALogin, verifyTotpCode } from '../services/two-factor.service.js';
 import { createUser, findUserByEmail, findUserById, findUserDuplicates, getUser2FASecret, sanitizeUser, updateUserPassword, verifyAndConsumeBackupCode } from '../services/user.service.js';
@@ -153,7 +154,9 @@ export async function verifyRegistrationCode(req: Request, res: Response): Promi
       username: pending.username,
     });
 
+    const permissions = await getUserEffectivePermissions(newUser);
     const userPayload = sanitizeUser(newUser);
+    userPayload.permissions = permissions;
     const session = await addAccountToSession(res, req, userPayload);
 
     logger.security.info('Cuenta creada y verificada exitosamente', { email: newUser.email, userId: newUser.id });
@@ -278,7 +281,9 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const permissions = await getUserEffectivePermissions(user);
     const userPayload = sanitizeUser(user);
+    userPayload.permissions = permissions;
     const session = await addAccountToSession(res, req, userPayload);
 
     logger.security.info('Inicio de sesión exitoso', { email: user.email, userId: user.id });
@@ -324,7 +329,7 @@ export function logoutAll(_req: Request, res: Response): void {
   res.status(200).json({ message: 'Todas las sesiones fueron cerradas exitosamente.', success: true });
 }
 
-export function switchAccount(req: Request, res: Response): void {
+export async function switchAccount(req: Request, res: Response): Promise<void> {
   try {
     const { user_id } = req.body;
     const targetId = String(user_id || '').trim();
@@ -340,12 +345,17 @@ export function switchAccount(req: Request, res: Response): void {
       return;
     }
 
+    const freshActive = await findUserById(result.activeUser.id);
+    const permissions = freshActive ? await getUserEffectivePermissions(freshActive) : [];
+    const userPayload = freshActive ? sanitizeUser(freshActive) : sanitizeUser(result.activeUser);
+    userPayload.permissions = permissions;
+
     logger.security.info('Cambio de cuenta activa exitoso', { targetUserId: targetId });
     res.status(200).json({
       accounts: result.accounts.map(sanitizeUser),
       message: 'Cuenta cambiada exitosamente.',
       success: true,
-      user: sanitizeUser(result.activeUser),
+      user: userPayload,
     });
   } catch (err) {
     logger.app.error('Error al cambiar de cuenta activa', err);
@@ -650,7 +660,9 @@ export async function verify2FALogin(req: Request, res: Response): Promise<void>
 
     await consumePending2FALogin(tempToken);
 
+    const permissions = await getUserEffectivePermissions(userRow);
     const userPayload = sanitizeUser(userRow);
+    userPayload.permissions = permissions;
     const session = await addAccountToSession(res, req, userPayload);
 
     res.clearCookie('2fa_temp_token', { path: '/' });

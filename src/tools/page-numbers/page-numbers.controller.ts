@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { addPageNumbers, getPageNumberResult } from './page-numbers.service.js';
 import { PageNumberOptions } from './page-numbers.types.js';
@@ -7,6 +8,17 @@ export async function addPageNumbersHandler(req: Request, res: Response): Promis
   try {
     if (!req.file) {
       res.status(400).json({ error: 'Debes seleccionar un archivo PDF.', success: false });
+      return;
+    }
+
+    const userPermissions = (req as any).user?.permissions || [];
+    const limits = getToolLimits('page-numbers', userPermissions);
+
+    if (req.file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      res.status(403).json({
+        error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos más grandes.`,
+        success: false,
+      });
       return;
     }
 

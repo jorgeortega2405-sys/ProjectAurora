@@ -1,5 +1,8 @@
+import { navigate } from '../../../app-router.js';
+import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
+import { currentUser, hasPermission, postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -97,7 +100,7 @@ export class SummarizePdfController implements ViewController {
   private isProcessing = false;
   private isRenderingPages = false;
   private pdfDocument: any = null;
-  private selectedMode: ClientSummaryMode = 'executive';
+  private selectedMode: ClientSummaryMode = 'standard';
   private sidebarModal: ToolSidebarModalController | null = null;
   private zoomScale = 1.0;
 
@@ -211,15 +214,29 @@ export class SummarizePdfController implements ViewController {
     modeOptions.forEach((opt) => {
       opt.addEventListener('click', () => {
         const mode = opt.getAttribute('data-mode') as ClientSummaryMode;
-        if (mode) {
-          this.selectedMode = mode;
-          modeOptions.forEach((o) => {
-            const isMatch = o === opt;
-            o.classList.toggle('is-active', isMatch);
-            const radio = o.querySelector<HTMLInputElement>('input[type="radio"]');
-            if (radio) radio.checked = isMatch;
-          });
+        if (!mode) return;
+
+        if (mode === 'advanced') {
+          if (!currentUser) {
+            showToast('Inicia sesión para utilizar Advanced AI con tus créditos de suscripción.', 'info');
+            navigate('/login');
+            return;
+          }
+          const credits = currentUser.ai_credits_balance ?? 0;
+          if (credits < 10 && !hasPermission(currentUser, '*')) {
+            showToast('No tienes suficientes créditos de IA (10 requeridos). Actualiza tu plan para obtener más.', 'info');
+            openUpgradeModal('pro');
+            return;
+          }
         }
+
+        this.selectedMode = mode;
+        modeOptions.forEach((o) => {
+          const isMatch = o === opt;
+          o.classList.toggle('is-active', isMatch);
+          const radio = o.querySelector<HTMLInputElement>('input[type="radio"]');
+          if (radio) radio.checked = isMatch;
+        });
       }, { signal });
     });
 
@@ -289,9 +306,12 @@ export class SummarizePdfController implements ViewController {
       return;
     }
 
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo PDF excede el límite máximo de 50 MB.');
+    const limits = getCurrentUserToolLimits('summarize-pdf');
+    if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      this.showError(`El archivo PDF excede el límite máximo de ${limits.maxFileSizeMB} MB.`);
+      if (!limits.isPremium) {
+        openUpgradeModal('pro');
+      }
       return;
     }
 
@@ -316,9 +336,6 @@ export class SummarizePdfController implements ViewController {
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="summarize-viewer-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-file-name"]');
     const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-page-count"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
-    const sidebarPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-pages"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-summarize-action"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="summarize-pdf-sidebar"]');
@@ -333,9 +350,6 @@ export class SummarizePdfController implements ViewController {
     const numPages = this.pdfDocument?.numPages || 1;
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (pageCountEl) pageCountEl.textContent = `${numPages} página${numPages === 1 ? '' : 's'}`;
-    if (sidebarStatusEl) sidebarStatusEl.textContent = file.name;
-    if (sidebarSizeEl) sidebarSizeEl.textContent = formatBytes(file.size);
-    if (sidebarPagesEl) sidebarPagesEl.textContent = `${numPages}`;
     if (actionBtn) actionBtn.disabled = false;
   }
 
@@ -420,9 +434,6 @@ export class SummarizePdfController implements ViewController {
     const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
     const resultSection = this.container.querySelector<HTMLElement>('[data-ref="section-summary-result"]');
     const processingSection = this.container.querySelector<HTMLElement>('[data-ref="section-processing"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
-    const sidebarPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-pages"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-summarize-action"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="summarize-pdf-sidebar"]');
@@ -438,9 +449,6 @@ export class SummarizePdfController implements ViewController {
     if (processingSection) processingSection.style.display = 'none';
     this.sidebarModal?.close();
 
-    if (sidebarStatusEl) sidebarStatusEl.textContent = 'Ninguno';
-    if (sidebarSizeEl) sidebarSizeEl.textContent = '0 KB';
-    if (sidebarPagesEl) sidebarPagesEl.textContent = '-';
     if (actionBtn) actionBtn.disabled = true;
     this.hideError();
   }
@@ -467,6 +475,10 @@ export class SummarizePdfController implements ViewController {
 
         if (!response.ok || !result.success || !result.data) {
           throw new Error(result.error || 'Error al generar el resumen del documento.');
+        }
+
+        if (this.selectedMode === 'advanced' && currentUser && currentUser.ai_credits_balance !== undefined) {
+          currentUser.ai_credits_balance = Math.max(0, currentUser.ai_credits_balance - 10);
         }
 
         this.currentResult = result.data;

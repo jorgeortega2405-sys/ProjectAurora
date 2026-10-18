@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { comparePdfDocuments, getStoredComparisonReport } from './compare-pdf.service.js';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 export async function handleComparePdf(req: Request, res: Response): Promise<Response> {
   try {
@@ -17,9 +16,12 @@ export async function handleComparePdf(req: Request, res: Response): Promise<Res
       });
     }
 
-    if (file1.size > MAX_FILE_SIZE || file2.size > MAX_FILE_SIZE) {
-      return res.status(400).json({
-        error: 'Uno o ambos archivos exceden el tamaño máximo permitido de 50 MB.',
+    const userPermissions = (req as any).user?.permissions || [];
+    const limits = getToolLimits('compare-pdf', userPermissions);
+
+    if (file1.size > limits.maxFileSizeMB * 1024 * 1024 || file2.size > limits.maxFileSizeMB * 1024 * 1024) {
+      return res.status(403).json({
+        error: `Uno o ambos archivos superan el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos más grandes.`,
         success: false,
       });
     }

@@ -1,15 +1,18 @@
 export type UserRole = 'USER' | 'ADMIN';
 
 export interface User {
+  ai_credits_balance?: number;
   avatar_url?: string | null;
   created_at?: string;
   email: string;
   google_id?: string | null;
   id: string;
+  is_student?: boolean;
   language?: string;
   permissions?: string[];
   role?: UserRole;
   roles?: string[];
+  subscription_origin?: string;
   subscription_tier?: string;
   subscription_tier_color?: string;
   two_factor_enabled?: boolean;

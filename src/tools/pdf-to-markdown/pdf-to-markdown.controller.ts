@@ -1,10 +1,11 @@
+import multer from 'multer';
+import { NextFunction, Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { convertPdfToMarkdown, getStoredMarkdown } from './pdf-to-markdown.service.js';
 import { MarkdownConversionMode } from './pdf-to-markdown.types.js';
-import { NextFunction, Request, Response } from 'express';
-import multer from 'multer';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
 const upload = multer({
   fileFilter: (_req, file, cb) => {
@@ -29,7 +30,7 @@ export function handlePdfUploadMiddleware(req: Request, res: Response, next: Nex
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo PDF supera el límite permitido de 50 MB.',
+          error: 'El archivo PDF supera el límite permitido de 500 MB.',
           success: false,
         });
         return;
@@ -72,7 +73,20 @@ export async function handleConvertPdfToMarkdown(req: Request, res: Response): P
     return;
   }
 
-  const mode = (typeof req.body?.mode === 'string' ? req.body.mode : 'structured') as MarkdownConversionMode;
+  const user = (req as any).user;
+  const userPerms: string[] = user?.permissions || [];
+  const limits = getToolLimits('pdf-to-markdown', userPerms);
+  const maxBytes = limits.maxFileSizeMB * 1024 * 1024;
+
+  if (file.buffer.length > maxBytes) {
+    res.status(400).json({
+      error: `El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB. Actualiza a Pro para procesar documentos de hasta 500 MB.`,
+      success: false,
+    });
+    return;
+  }
+
+  const mode: MarkdownConversionMode = 'structured';
   const customPrompt = typeof req.body?.customPrompt === 'string' ? req.body.customPrompt : undefined;
   const includeMathLatex = req.body?.includeMathLatex === 'true' || req.body?.includeMathLatex === true;
   const removeHeadersFooters = req.body?.removeHeadersFooters !== 'false' && req.body?.removeHeadersFooters !== false;

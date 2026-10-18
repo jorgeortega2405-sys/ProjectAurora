@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { compressPdfFile, getCompressedPdf } from './compress-pdf.service.js';
 import { PdfCompressLevel } from './compress-pdf.types.js';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MULTER_MAX_FILE_SIZE = 1000 * 1024 * 1024;
 
 const upload = multer({
   fileFilter: (_req, file, cb) => {
@@ -17,7 +18,7 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: MAX_FILE_SIZE,
+    fileSize: MULTER_MAX_FILE_SIZE,
     files: 1,
   },
   storage: multer.memoryStorage(),
@@ -39,7 +40,7 @@ export function handleUploadMiddleware(req: Request, res: Response, next: NextFu
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo supera el límite permitido de 50 MB.',
+          error: 'El archivo supera el límite máximo permitido de 1000 MB.',
           success: false,
         });
         return;
@@ -82,6 +83,17 @@ export async function handleCompressPdf(req: Request, res: Response): Promise<vo
     return;
   }
 
+  const userPerms = ((req as any).user?.permissions as string[]) || [];
+  const limits = getToolLimits('compress-pdf', userPerms);
+
+  if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+    res.status(400).json({
+      error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar documentos de mayor tamaño.`,
+      success: false,
+    });
+    return;
+  }
+
   if (!isPdfBuffer(file.buffer)) {
     res.status(400).json({
       error: `El archivo "${file.originalname}" no tiene un formato PDF válido.`,
@@ -92,7 +104,7 @@ export async function handleCompressPdf(req: Request, res: Response): Promise<vo
 
   const rawLevel = req.body?.level;
   const level: PdfCompressLevel = rawLevel === 'extreme' || rawLevel === 'low' ? rawLevel : 'recommended';
-  const customFilename = typeof req.body?.filename === 'string' ? req.body.filename : undefined;
+  const customFilename = typeof req.body?.filename === 'string' && req.body.filename.trim() ? req.body.filename.trim() : `${file.originalname.replace(/\.pdf$/i, '')}_comprimido.pdf`;
 
   try {
     const result = await compressPdfFile({

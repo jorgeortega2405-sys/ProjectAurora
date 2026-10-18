@@ -23,7 +23,7 @@ interface PlanTier {
   name: string;
   priceMonthly: number;
   priceYearly: number;
-  storage: string;
+  storage: string | null;
   tagline: string;
 }
 
@@ -34,44 +34,49 @@ const TIERS: PlanTier[] = [
     buttonText: 'Obtén Aurora Pro',
     features: [
       {
-        desc: 'Procesa documentos sin límites diarios de tamaño ni cantidad de páginas',
-        icon: 'picture_as_pdf',
-        title: 'Conversión y procesamiento de PDFs ilimitado',
+        desc: 'Tokens para resúmenes avanzados y traducciones de alta fidelidad con Gemini',
+        icon: 'auto_awesome',
+        title: '2.000 Créditos mensuales de IA',
       },
       {
-        desc: 'Convierte PDFs escaneados e imágenes a texto editable con alta precisión',
-        icon: 'bolt',
-        title: 'Reconocimiento óptico de caracteres (OCR) avanzado',
+        desc: 'Une, comprime y gestiona hasta 500 páginas o documentos por operación',
+        icon: 'layers',
+        title: 'Procesamiento por lote de hasta 500 archivos',
       },
       {
-        desc: 'Reduce el peso de tus documentos con algoritmos de optimización inteligente',
-        icon: 'speed',
-        title: 'Compresión ultra de PDF sin pérdida visual',
+        desc: 'Procesa libros, planos y expedientes pesados de hasta 1 GB sin restricciones',
+        icon: 'upload_file',
+        title: 'Archivos de gran volumen hasta 1.000 MB',
       },
       {
-        desc: 'Protección con contraseña, censura irreversible de datos y comparación de PDFs',
+        desc: 'Segmenta automáticamente documentos según el tamaño en MB especificado',
+        icon: 'call_split',
+        title: 'División inteligente de PDF por tamaño',
+      },
+      {
+        desc: 'Convierte PDFs escaneados a texto editable en español, inglés o bilingüe',
+        icon: 'center_focus_strong',
+        title: 'OCR multilingüe de alta precisión',
+      },
+      {
+        desc: 'Detecta diferencias textuales y visuales lado a lado con visor interactivo',
+        icon: 'swap_horiz',
+        title: 'Comparación semántica y visual de PDFs',
+      },
+      {
+        desc: 'Oculta y elimina de forma definitiva información sensible o datos protegidos',
         icon: 'shield',
-        title: 'Seguridad avanzada y censura confidencial',
+        title: 'Censura confidencial irreversible',
       },
       {
-        desc: 'Automatiza secuencias completas de tareas encadenadas sin intervención manual',
-        icon: 'layers',
-        title: 'Flujos de trabajo y automatización ilimitados',
+        desc: 'Encadena herramientas en pipelines automatizados (hasta 100 flujos guardados)',
+        icon: 'account_tree',
+        title: 'Hasta 100 flujos de trabajo',
       },
       {
-        desc: 'Tus archivos entran directo a la cola prioritaria sin esperas',
-        icon: 'rocket_launch',
-        title: 'Procesamiento acelerado en GPU dedicada',
-      },
-      {
-        desc: 'Comprime o descarga hasta 50 archivos simultáneamente en un solo clic',
-        icon: 'layers',
-        title: 'Procesamiento masivo por lotes',
-      },
-      {
-        desc: 'Vuelve a descargar tus conversiones desde cualquier lugar sin caducidad inmediata',
-        icon: 'cloud',
-        title: '30 días de historial y almacenamiento seguro',
+        desc: 'Dibuja, añade texto, marcas de agua, numeración y exporta a Markdown y Office',
+        icon: 'picture_as_pdf',
+        title: 'Edición avanzada y conversión universal',
       },
     ],
     id: 'pro',
@@ -79,57 +84,62 @@ const TIERS: PlanTier[] = [
     name: 'Aurora Pro',
     priceMonthly: 9.99,
     priceYearly: 7.99,
-    storage: '5 GB por archivo',
-    tagline: 'El plan más equilibrado para profesionales, creadores de contenido y alta demanda.',
+    storage: null,
+    tagline: 'La suite definitiva para profesionales con límites masivos, tokens de IA y funciones avanzadas.',
   },
   {
-    badge: 'Para Empresas',
-    buttonHoverText: 'Hablar con el equipo',
-    buttonText: 'Obtén Aurora Empresas',
+    badge: null,
+    buttonHoverText: 'Contactar a ventas',
+    buttonText: 'Contactar a ventas',
     features: [
       {
-        desc: 'Añade miembros con gestión de roles, permisos PBAC y proyectos compartidos',
-        icon: 'groups',
-        title: 'Espacio de trabajo y colaboración de equipos',
-      },
-      {
-        desc: 'Integra nuestro motor de compresión y conversión en tus propios sistemas',
+        desc: 'Autenticación unificada con Google Workspace, Microsoft Entra ID (Azure AD), Okta y SAML 2.0 / OIDC',
         icon: 'vpn_key',
-        title: 'API REST dedicada y automatización con Webhooks',
+        title: 'Single Sign-On (SSO) empresarial',
       },
       {
-        desc: 'Capacidad de cómputo aislada para garantizar latencia mínima en grandes volúmenes',
-        icon: 'speed',
-        title: 'Servidores dedicados con 10 Gbps de ancho de banda',
+        desc: 'Agrega y administra cuentas de empleados de tu empresa con altas y bajas automáticas',
+        icon: 'groups',
+        title: 'Administración centralizada de asientos',
       },
       {
-        desc: 'Aplica la identidad visual de tu empresa automáticamente en cada exportación',
-        icon: 'palette',
-        title: 'Kits de marca y marcas de agua corporativas',
+        desc: 'Asigna permisos y políticas de acceso a nivel de usuario y roles organizativos',
+        icon: 'verified_user',
+        title: 'Permisos granulares PBAC',
       },
       {
-        desc: 'Acceso unificado con Google Workspace, Azure AD, Okta y registros de auditoría',
+        desc: 'Bolsa mensual compartida de tokens para resúmenes avanzados y traducción con Gemini',
+        icon: 'auto_awesome',
+        title: '10.000 Créditos de IA para el equipo',
+      },
+      {
+        desc: 'Límite de 500 archivos por tarea, 1.000 MB por archivo y acceso a las 20+ herramientas',
+        icon: 'picture_as_pdf',
+        title: 'Suite completa Pro en cada asiento',
+      },
+      {
+        desc: 'Automatiza pipelines documentales a escala corporativa (hasta 1.000 flujos)',
+        icon: 'account_tree',
+        title: 'Hasta 1.000 flujos corporativos',
+      },
+      {
+        desc: 'Procesamiento en memoria efímera sin retención innecesaria y máxima seguridad de datos',
         icon: 'shield',
-        title: 'Seguridad empresarial, SSO y SAML 2.0',
+        title: 'Cero persistencia residual y cifrado TLS 1.3',
       },
       {
-        desc: 'Respaldo centralizado de todas las operaciones con retención configurable',
-        icon: 'cloud',
-        title: 'Almacenamiento cloud permanente con cifrado TLS 1.3',
-      },
-      {
-        desc: 'Atención técnica especializada inmediata por canales dedicados y gestor asignado',
+        desc: 'Acompañamiento en configuración de SSO corporativo y atención técnica preferencial',
         icon: 'support_agent',
-        title: 'Soporte prioritario 24/7 y SLA del 99.9%',
+        title: 'Soporte prioritario y asistencia técnica',
       },
     ],
     id: 'enterprise',
     isPopular: false,
     name: 'Aurora Empresas',
-    priceMonthly: 29.99,
-    priceYearly: 23.99,
-    storage: 'Archivos ilimitados',
-    tagline: 'Máxima potencia, capacidad masiva, seguridad corporativa y flujos de trabajo en equipo.',
+    priceMonthly: 0,
+    priceYearly: 0,
+    storage: null,
+    tagline: 'Control corporativo total con inicio de sesión único (SSO), gestión de asientos y máxima seguridad.',
   },
 ];
 
@@ -421,21 +431,27 @@ export class UpgradeController {
           ` : '')}
           <h2 class="component-card-title" data-ref="card-title-${tier.id}">${escapeHtml(t(`upgrade.plans.${tier.id}.name`) || tier.name)}</h2>
           <p class="component-card-desc" data-ref="card-desc-${tier.id}">${escapeHtml(t(`upgrade.plans.${tier.id}.tagline`) || tier.tagline)}</p>
-          <span class="component-card-storage-badge" data-ref="storage-badge-${tier.id}">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#cloud"></use></svg>
-            <span>${escapeHtml(t(`upgrade.plans.${tier.id}.storage`) || tier.storage)}</span>
-          </span>
+          ${tier.storage ? `
+            <span class="component-card-storage-badge" data-ref="storage-badge-${tier.id}">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#cloud"></use></svg>
+              <span>${escapeHtml(t(`upgrade.plans.${tier.id}.storage`) || tier.storage)}</span>
+            </span>
+          ` : ''}
         </div>
 
-        <div class="component-card-section component-card-section--price" data-ref="card-price-${tier.id}">
-          <div class="component-card-price-label" data-ref="price-label-${tier.id}">${t('upgrade.price_from')}</div>
-          <div class="component-card-price-container" data-ref="price-container-${tier.id}">
-            <span class="component-card-price" data-ref="price-val-container-${tier.id}">
-              USD $<span data-ref="plan-price-${tier.id}" data-monthly="${monthlyPrice}" data-yearly="${yearlyPrice}">${initialPrice}</span>
-            </span>
-            <span class="component-card-period" data-ref="plan-period-${tier.id}" data-period-monthly="${t('upgrade.period_monthly')}" data-period-yearly="${t('upgrade.period_yearly')}">${isYearly ? t('upgrade.period_yearly') : t('upgrade.period_monthly')}</span>
+        ${tier.id !== 'enterprise' ? `
+          <div class="component-card-section component-card-section--price" data-ref="card-price-${tier.id}">
+            <div class="component-card-price-label" data-ref="price-label-${tier.id}">${t('upgrade.price_from')}</div>
+            <div class="component-card-price-container" data-ref="price-container-${tier.id}">
+              <span class="component-card-price" data-ref="price-val-container-${tier.id}">
+                USD $<span data-ref="plan-price-${tier.id}" data-monthly="${monthlyPrice}" data-yearly="${yearlyPrice}">${initialPrice}</span>
+              </span>
+              <span class="component-card-period" data-ref="plan-period-${tier.id}" data-period-monthly="${t('upgrade.period_monthly')}" data-period-yearly="${t('upgrade.period_yearly')}">${isYearly ? t('upgrade.period_yearly') : t('upgrade.period_monthly')}</span>
+            </div>
           </div>
-        </div>
+        ` : `
+          <div class="component-card-section component-card-section--price component-card-section--price-empty" data-ref="card-price-${tier.id}"></div>
+        `}
 
         <div class="component-card-section component-card-section--action" data-ref="card-action-${tier.id}">
           ${isCurrentPlan ? `
@@ -448,13 +464,15 @@ export class UpgradeController {
               <span>${escapeHtml(t('upgrade.current_plan'))}</span>
             </button>
           ` : `
-            <button type="button" class="component-button component-button--rounded-pill component-button--hover-text component-cursor-pointer component-card-button ${isPopular ? 'component-card-button--featured' : ''}" data-ref="btn-subscribe-${tier.id}" data-action="subscribe" data-tier="${tier.id}">
+            <button type="button" class="component-button component-button--rounded-pill ${tier.id === 'enterprise' ? '' : 'component-button--hover-text'} component-cursor-pointer component-card-button ${isPopular ? 'component-card-button--featured' : ''}" data-ref="btn-subscribe-${tier.id}" data-action="subscribe" data-tier="${tier.id}">
               <span class="component-button__default-text">
                 ${escapeHtml(t(`upgrade.plans.${tier.id}.button`) || tier.buttonText)}
               </span>
-              <span class="component-button__hover-text">
-                ${escapeHtml(t(`upgrade.plans.${tier.id}.hover_button`) || tier.buttonHoverText)}
-              </span>
+              ${tier.id !== 'enterprise' ? `
+                <span class="component-button__hover-text">
+                  ${escapeHtml(t(`upgrade.plans.${tier.id}.hover_button`) || tier.buttonHoverText)}
+                </span>
+              ` : ''}
             </button>
           `}
         </div>

@@ -1,4 +1,4 @@
-export type ClientSummaryMode = 'executive' | 'detailed' | 'key_points' | 'qa';
+export type ClientSummaryMode = 'standard' | 'advanced';
 
 export interface SummarizePdfResultData {
   characterCount: number;

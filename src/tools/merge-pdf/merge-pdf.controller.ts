@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { getMergedPdf, mergePdfFiles } from './merge-pdf.service.js';
 
-const MAX_FILES = 30;
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const MAX_TOTAL_SIZE = 150 * 1024 * 1024;
+const MAX_BATCH_LIMIT = 500;
+const MAX_UPLOAD_FILE_SIZE = 1000 * 1024 * 1024;
 
 const upload = multer({
   fileFilter: (_req, file, cb) => {
@@ -18,11 +18,11 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: MAX_FILE_SIZE,
-    files: MAX_FILES,
+    fileSize: MAX_UPLOAD_FILE_SIZE,
+    files: MAX_BATCH_LIMIT,
   },
   storage: multer.memoryStorage(),
-}).array('pdfs', MAX_FILES);
+}).array('pdfs', MAX_BATCH_LIMIT);
 
 function isPdfBuffer(buffer: Buffer): boolean {
   if (buffer.length < 5) return false;
@@ -47,7 +47,7 @@ export function handleUploadMiddleware(req: Request, res: Response, next: NextFu
       }
       if (err.code === 'LIMIT_FILE_COUNT') {
         res.status(400).json({
-          error: `Puedes unir un máximo de ${MAX_FILES} archivos PDF por tarea.`,
+          error: `Puedes unir un máximo de ${MAX_BATCH_LIMIT} archivos PDF por tarea.`,
           success: false,
         });
         return;
@@ -90,17 +90,29 @@ export async function handleMergePdf(req: Request, res: Response): Promise<void>
     return;
   }
 
-  if (files.length > MAX_FILES) {
+  const userPerms: string[] = (req as any).user?.permissions || [];
+  const limits = getToolLimits('merge-pdf', userPerms);
+
+  if (files.length > limits.maxFiles) {
     res.status(400).json({
-      error: `No puedes superar el límite de ${MAX_FILES} archivos por tarea.`,
+      error: `El plan gratuito permite unir hasta ${limits.maxFiles} archivos por tarea. Actualiza a Pro para unir hasta 500 archivos.`,
       success: false,
     });
     return;
   }
 
+  const maxBytes = limits.maxFileSizeMB * 1024 * 1024;
+  const maxTotalBytes = limits.maxTotalSizeMB * 1024 * 1024;
   let totalSize = 0;
   for (const file of files) {
     totalSize += file.buffer.length;
+    if (file.buffer.length > maxBytes) {
+      res.status(400).json({
+        error: `El archivo "${file.originalname}" supera el límite permitido de ${limits.maxFileSizeMB} MB.`,
+        success: false,
+      });
+      return;
+    }
     if (!isPdfBuffer(file.buffer)) {
       res.status(400).json({
         error: `El archivo "${file.originalname}" no tiene un formato PDF válido.`,
@@ -110,9 +122,9 @@ export async function handleMergePdf(req: Request, res: Response): Promise<void>
     }
   }
 
-  if (totalSize > MAX_TOTAL_SIZE) {
+  if (totalSize > maxTotalBytes) {
     res.status(400).json({
-      error: 'El tamaño total acumulado de los archivos supera el límite de 150 MB.',
+      error: `El tamaño total acumulado de los archivos supera el límite de ${limits.maxTotalSizeMB} MB.`,
       success: false,
     });
     return;

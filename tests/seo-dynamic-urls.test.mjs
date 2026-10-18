@@ -108,6 +108,14 @@ async function runTests() {
     const parsedPricing = parseRequestPath('/en/pricing');
     assert.strictEqual(parsedPricing.lang, 'en');
     assert.strictEqual(parsedPricing.routeId, 'upgrade');
+
+    const parsedEducationEs = parseRequestPath('/es/educacion');
+    assert.strictEqual(parsedEducationEs.lang, 'es');
+    assert.strictEqual(parsedEducationEs.routeId, 'education');
+
+    const parsedEducationEn = parseRequestPath('/en/education');
+    assert.strictEqual(parsedEducationEn.lang, 'en');
+    assert.strictEqual(parsedEducationEn.routeId, 'education');
   });
 
   test('Sitemap index XML generation', () => {
@@ -152,6 +160,10 @@ async function runTests() {
     assert.ok(transformed.includes('og:title'), 'Must include og:title');
     assert.ok(transformed.includes('application/ld+json'), 'Must include JSON-LD structured data');
     assert.ok(transformed.includes('WebApplication'), 'JSON-LD must be WebApplication for tool');
+
+    const educationHtml = injectHtmlSeo(dummyHtml, '/es/educacion', 'https://projectaurora.com');
+    assert.ok(educationHtml.includes('Educación y Programa Académico'), 'Must set education localized title');
+    assert.ok(educationHtml.includes('/es/educacion'), 'Must set education canonical link');
   });
 
   if (failed > 0) {

@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -169,9 +170,10 @@ export class CompressPdfController implements ViewController {
       return;
     }
 
-    const maxSize = 50 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showError('El archivo excede el límite máximo de 50 MB.');
+    const limits = getCurrentUserToolLimits('compress-pdf');
+    const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
       return;
     }
 
@@ -185,8 +187,6 @@ export class CompressPdfController implements ViewController {
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="compress-result-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="selected-file-name"]');
     const fileSizeEl = this.container.querySelector<HTMLElement>('[data-ref="selected-file-size"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="compress-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="compress-pdf-workspace"]');
@@ -202,8 +202,6 @@ export class CompressPdfController implements ViewController {
 
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
-    if (sidebarStatusEl) sidebarStatusEl.textContent = file.name;
-    if (sidebarSizeEl) sidebarSizeEl.textContent = formatBytes(file.size);
     if (compressBtn) compressBtn.disabled = false;
 
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
@@ -217,8 +215,6 @@ export class CompressPdfController implements ViewController {
       const pdfjs = await loadPdfJs();
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-      const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-pages"]');
-      if (pageCountEl) pageCountEl.textContent = `${pdf.numPages} ${pdf.numPages === 1 ? 'pág.' : 'págs.'}`;
 
       const page = await pdf.getPage(1);
       const targetWidth = 180;
@@ -254,9 +250,6 @@ export class CompressPdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="compress-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="compress-pdf-workspace"]');
-    const sidebarStatusEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-status"]');
-    const sidebarSizeEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-size"]');
-    const sidebarPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-pages"]');
     const compressBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-compress-action"]');
 
     if (dropzoneCard) dropzoneCard.style.display = '';
@@ -268,9 +261,6 @@ export class CompressPdfController implements ViewController {
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
     this.sidebarModal?.close();
 
-    if (sidebarStatusEl) sidebarStatusEl.textContent = 'Ninguno';
-    if (sidebarSizeEl) sidebarSizeEl.textContent = '0 KB';
-    if (sidebarPagesEl) sidebarPagesEl.textContent = '-';
     if (compressBtn) compressBtn.disabled = true;
 
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');

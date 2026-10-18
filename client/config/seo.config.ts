@@ -937,6 +937,36 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
       es: 'Contacto Ventas Corporativas | ProjectAurora',
     },
   },
+  education: {
+    descriptions: {
+      en: 'Education and academic program. Powerful, accessible, and secure PDF tools for students, teachers, and schools.',
+      es: 'Programa educativo y académico. Herramientas PDF potentes, accesibles y seguras para estudiantes, docentes y escuelas.',
+    },
+    routeId: 'education',
+    slugs: {
+      en: 'education',
+      es: 'educacion',
+    },
+    titles: {
+      en: 'Education & Academic Program | ProjectAurora',
+      es: 'Educación y Programa Académico | ProjectAurora',
+    },
+  },
+  'education-verify': {
+    descriptions: {
+      en: 'Verify your student or teacher status to unlock educational Pro benefits on ProjectAurora.',
+      es: 'Verifica tu estado de estudiante o docente para desbloquear los beneficios Pro educativos en ProjectAurora.',
+    },
+    routeId: 'education-verify',
+    slugs: {
+      en: 'education/verify',
+      es: 'educacion/verificar',
+    },
+    titles: {
+      en: 'Verify Student Status | ProjectAurora',
+      es: 'Verificar Estado de Estudiante | ProjectAurora',
+    },
+  },
 };
 
 const SLUG_TO_ROUTE_MAP = new Map<string, string>();
@@ -979,6 +1009,10 @@ SLUG_TO_ROUTE_MAP.set('business', 'business');
 SLUG_TO_ROUTE_MAP.set('empresas', 'business');
 SLUG_TO_ROUTE_MAP.set('business-contact', 'business-contact');
 SLUG_TO_ROUTE_MAP.set('contacto-empresas', 'business-contact');
+SLUG_TO_ROUTE_MAP.set('education', 'education');
+SLUG_TO_ROUTE_MAP.set('educacion', 'education');
+SLUG_TO_ROUTE_MAP.set('education/verify', 'education-verify');
+SLUG_TO_ROUTE_MAP.set('educacion/verificar', 'education-verify');
 
 export function getCanonicalSlug(routeId: string, lang = DEFAULT_LANGUAGE): string {
   const normLang = normalizeLanguageCode(lang);

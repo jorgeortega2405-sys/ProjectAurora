@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { getUnlockPdfResult, unlockPdf } from './unlock-pdf.service.js';
 import { UnlockPdfOptions } from './unlock-pdf.types.js';
@@ -7,6 +8,17 @@ export async function unlockPdfHandler(req: Request, res: Response): Promise<voi
   try {
     if (!req.file) {
       res.status(400).json({ error: 'Debes seleccionar un archivo PDF.', success: false });
+      return;
+    }
+
+    const userPermissions = (req as any).user?.permissions || [];
+    const limits = getToolLimits('unlock-pdf', userPermissions);
+
+    if (req.file.size > limits.maxFileSizeMB * 1024 * 1024) {
+      res.status(403).json({
+        error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos más grandes.`,
+        success: false,
+      });
       return;
     }
 

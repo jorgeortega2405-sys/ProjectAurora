@@ -1,5 +1,8 @@
+import Sortable from 'sortablejs';
 import { navigate } from '../../../app-router.js';
+import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -11,9 +14,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { OrganizePageItem, OrganizePdfResponseData } from './organize-pdf.types.js';
-import Sortable from 'sortablejs';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -126,7 +126,6 @@ export class OrganizePdfController implements ViewController {
     const rotateAllBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-rotate-all"]');
     const resetOrderBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-reset-order"]');
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
-    const sidebarResetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
     const downloadResultBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const restartOrganizeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-restart-organize"]');
     const pagesGrid = this.container.querySelector<HTMLElement>('[data-ref="organize-pages-grid"]');
@@ -202,10 +201,6 @@ export class OrganizePdfController implements ViewController {
       }
     }, { signal });
 
-    sidebarResetBtn?.addEventListener('click', () => {
-      this.resetToInitial();
-    }, { signal });
-
     downloadResultBtn?.addEventListener('click', () => {
       if (this.currentResult) {
         window.open(this.currentResult.downloadUrl, '_blank');
@@ -228,8 +223,13 @@ export class OrganizePdfController implements ViewController {
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      this.showError('El archivo PDF seleccionado supera el límite permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('organize-pdf');
+    const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
+      if (!limits.isPremium) {
+        openUpgradeModal('pro');
+      }
       return;
     }
 
@@ -255,12 +255,6 @@ export class OrganizePdfController implements ViewController {
       }));
 
       this.originalPages = this.pages.map((p) => ({ ...p }));
-
-      const defaultOutput = file.name.replace(/\.pdf$/i, '') + '_organizado.pdf';
-      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-      if (outputNameInput) {
-        outputNameInput.value = defaultOutput;
-      }
 
       this.renderFilesView();
       this.updateSummary();
@@ -497,21 +491,8 @@ export class OrganizePdfController implements ViewController {
 
   private updateSummary(): void {
     const total = this.pages.length;
-    let modified = 0;
-
-    this.pages.forEach((p, index) => {
-      if (p.originalIndex !== index || p.rotation !== 0) {
-        modified++;
-      }
-    });
-
     const valTotalPages = this.container.querySelector<HTMLElement>('[data-ref="val-total-pages"]');
-    const valSummaryPages = this.container.querySelector<HTMLElement>('[data-ref="val-summary-pages"]');
-    const valSummaryModified = this.container.querySelector<HTMLElement>('[data-ref="val-summary-modified"]');
-
     if (valTotalPages) valTotalPages.textContent = `${total}`;
-    if (valSummaryPages) valSummaryPages.textContent = `${total}`;
-    if (valSummaryModified) valSummaryModified.textContent = `${modified}`;
 
     if (total > 0) {
       this.hideError();
@@ -521,20 +502,16 @@ export class OrganizePdfController implements ViewController {
   private updateActionButtons(): void {
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
     const txtMainAction = this.container.querySelector<HTMLElement>('[data-ref="txt-main-action"]');
-    const sidebarResetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
 
     if (mainActionBtn && txtMainAction) {
       if (!this.currentFile) {
         txtMainAction.textContent = t('tools.organize_pdf_btn_select') || 'Seleccionar PDF';
         mainActionBtn.style.display = '';
-        if (sidebarResetBtn) sidebarResetBtn.style.display = 'none';
       } else if (this.currentResult) {
         mainActionBtn.style.display = 'none';
-        if (sidebarResetBtn) sidebarResetBtn.style.display = '';
       } else {
         txtMainAction.textContent = t('tools.organize_pdf_btn_action') || 'Ordenar PDF';
         mainActionBtn.style.display = '';
-        if (sidebarResetBtn) sidebarResetBtn.style.display = 'none';
       }
     }
   }
@@ -548,8 +525,7 @@ export class OrganizePdfController implements ViewController {
       return;
     }
 
-    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-    const customFilename = outputNameInput?.value.trim() || undefined;
+    const customFilename = `${this.currentFile.name.replace(/\.pdf$/i, '')}_organizado.pdf`;
 
     const pagesOrder = this.pages.map((p) => ({
       pageIndex: p.originalIndex,
@@ -559,9 +535,7 @@ export class OrganizePdfController implements ViewController {
     const formData = new FormData();
     formData.append('pdf', this.currentFile);
     formData.append('pagesOrder', JSON.stringify(pagesOrder));
-    if (customFilename) {
-      formData.append('filename', customFilename);
-    }
+    formData.append('filename', customFilename);
 
     this.isProcessing = true;
     this.showProcessingState();
@@ -665,7 +639,6 @@ export class OrganizePdfController implements ViewController {
     }
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
-    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
     const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
@@ -673,7 +646,6 @@ export class OrganizePdfController implements ViewController {
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="organize-pdf-workspace"]');
 
     if (fileInput) fileInput.value = '';
-    if (outputNameInput) outputNameInput.value = 'documento_organizado.pdf';
 
     if (processingCard) processingCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';

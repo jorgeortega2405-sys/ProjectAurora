@@ -1,5 +1,6 @@
 import { navigate } from '../../../app-router.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
+import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
@@ -10,8 +11,6 @@ import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { ClientRedactionBox, ClientRedactTool, RedactPdfResultData } from './redact-pdf.types.js';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 B';
@@ -259,8 +258,10 @@ export class RedactPdfController implements ViewController {
       this.showError('Por favor selecciona un archivo PDF válido.');
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      this.showError('El archivo excede el límite máximo permitido de 50 MB.');
+    const limits = getCurrentUserToolLimits('redact-pdf');
+    const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
       return;
     }
 
@@ -271,9 +272,6 @@ export class RedactPdfController implements ViewController {
 
     const docNamePill = this.container.querySelector<HTMLElement>('[data-ref="val-doc-title"]');
     if (docNamePill) docNamePill.textContent = file.name;
-
-    const sidebarFileName = this.container.querySelector<HTMLElement>('[data-ref="sidebar-file-name"]');
-    if (sidebarFileName) sidebarFileName.textContent = file.name;
 
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="redact-dropzone-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="redact-workspace-card"]');
@@ -301,9 +299,6 @@ export class RedactPdfController implements ViewController {
 
       const pagesBadge = this.container.querySelector<HTMLElement>('[data-ref="pages-count-badge"]');
       if (pagesBadge) pagesBadge.textContent = `${numPages}`;
-
-      const sidebarPagesCount = this.container.querySelector<HTMLElement>('[data-ref="sidebar-pages-count"]');
-      if (sidebarPagesCount) sidebarPagesCount.textContent = `${numPages}`;
 
       await this.renderThumbnails();
       await this.renderDocumentPages();
@@ -847,12 +842,6 @@ export class RedactPdfController implements ViewController {
   private updateSidebarSummary(): void {
     const totalRedactions = this.redactionBoxes.length;
     const fullPagesCount = this.fullPageRedactions.size;
-
-    const countBoxesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-redactions-count"]');
-    if (countBoxesEl) countBoxesEl.textContent = `${totalRedactions}`;
-
-    const countFullPagesEl = this.container.querySelector<HTMLElement>('[data-ref="sidebar-full-pages-count"]');
-    if (countFullPagesEl) countFullPagesEl.textContent = `${fullPagesCount}`;
 
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-redact"]');
     if (executeBtn) {

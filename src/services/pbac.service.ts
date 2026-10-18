@@ -39,6 +39,49 @@ export async function getRolePermissions(role: string): Promise<string[]> {
   }
 }
 
+export function getSubscriptionPermissions(tier?: string): string[] {
+  const norm = (tier || 'free').toLowerCase();
+  if (norm === 'enterprise' || norm === 'empresas') {
+    return [
+      'subscription:feature:enterprise',
+      'subscription:feature:pro',
+      'subscription:feature:sso',
+      'subscription:feature:teams',
+      'tools:ai:advanced',
+      'tools:high_size_limit',
+      'tools:merge:batch_500',
+      'tools:split:by_size',
+    ];
+  }
+  if (norm === 'pro' || norm === 'plus') {
+    return [
+      'subscription:feature:pro',
+      'tools:ai:advanced',
+      'tools:high_size_limit',
+      'tools:merge:batch_500',
+      'tools:split:by_size',
+    ];
+  }
+  return [];
+}
+
+export async function getUserEffectivePermissions(user: {
+  id: string;
+  role?: string;
+  subscription_status?: string;
+  subscription_tier?: string;
+}): Promise<string[]> {
+  let permissions = await getRolePermissions(user.role || 'USER');
+
+  const isActiveSub = user.subscription_status === 'active' || user.subscription_status === 'trialing';
+  if (isActiveSub && user.subscription_tier) {
+    const subPerms = getSubscriptionPermissions(user.subscription_tier);
+    permissions = Array.from(new Set([...permissions, ...subPerms]));
+  }
+
+  return permissions;
+}
+
 export function hasPermission(permissions: string[] | undefined, requiredPermission: string): boolean {
   if (!permissions || !Array.isArray(permissions)) return false;
   if (permissions.includes('*') || permissions.includes(requiredPermission)) return true;

@@ -1,9 +1,12 @@
 import { navigate } from '../../app-router.js';
 import { openModal } from '../../components/modal.component.js';
 import { API_ROUTES } from '../../config/api-routes.js';
+import { getLocalizedPath } from '../../config/seo.config.js';
+import { TOOLS_REGISTRY } from '../../config/tools.registry.js';
 import { deleteApi, getApi } from '../../services/api.service.js';
 import { exportToDropbox } from '../../services/dropbox.service.js';
 import { exportToGoogleDrive } from '../../services/google-drive.service.js';
+import { getCurrentLanguage, t } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
@@ -21,62 +24,19 @@ interface DownloadReadyData {
   token?: string;
 }
 
-interface ContinueToolItem {
-  desc: string;
-  icon: string;
-  path: string;
-  title: string;
-}
-
-const CONTINUE_TOOLS: ContinueToolItem[] = [
-  {
-    desc: 'Reduce el peso manteniendo la mejor calidad',
-    icon: 'compress',
-    path: '/compress-pdf',
-    title: 'Comprimir PDF',
-  },
-  {
-    desc: 'Separa páginas o extrae intervalos específicos',
-    icon: 'call_split',
-    path: '/split-pdf',
-    title: 'Dividir PDF',
-  },
-  {
-    desc: 'Añade numeración personalizada al documento',
-    icon: 'format_list_numbered',
-    path: '/page-numbers',
-    title: 'Insertar números de página',
-  },
-  {
-    desc: 'Protege tu archivo con contraseña cifrada',
-    icon: 'lock',
-    path: '/protect-pdf',
-    title: 'Proteger PDF',
-  },
-  {
-    desc: 'Rota las páginas en la dirección que necesites',
-    icon: 'rotate_right',
-    path: '/rotate-pdf',
-    title: 'Girar PDF',
-  },
-  {
-    desc: 'Inserta texto o imagen en tus páginas',
-    icon: 'branding_watermark',
-    path: '/watermark-pdf',
-    title: 'Añadir marca de agua',
-  },
-  {
-    desc: 'Reorganiza, reordena o elimina páginas',
-    icon: 'layers',
-    path: '/organize-pdf',
-    title: 'Organizar PDF',
-  },
-  {
-    desc: 'Combina este PDF con otros documentos',
-    icon: 'call_split',
-    path: '/merge-pdf',
-    title: 'Unir con otros PDFs',
-  },
+const CONTINUE_TOOL_IDS = [
+  'compress-pdf',
+  'split-pdf',
+  'merge-pdf',
+  'organize-pdf',
+  'edit-pdf',
+  'protect-pdf',
+  'page-numbers',
+  'watermark-pdf',
+  'rotate-pdf',
+  'pdf-to-markdown',
+  'summarize-pdf',
+  'translate-pdf',
 ];
 
 export class DownloadReadyController implements ViewController {
@@ -200,29 +160,33 @@ export class DownloadReadyController implements ViewController {
     }
 
     const currentReturn = this.data.returnUrl || '';
-    const toolsToShow = CONTINUE_TOOLS.filter((tool) => !currentReturn.startsWith(tool.path)).slice(0, 5);
+    const currentLang = getCurrentLanguage();
+    const toolsToShow = CONTINUE_TOOL_IDS
+      .map((id) => TOOLS_REGISTRY.find((tool) => tool.id === id))
+      .filter((tool): tool is typeof TOOLS_REGISTRY[0] => tool !== undefined && !currentReturn.startsWith(tool.path))
+      .slice(0, 6);
 
     gridEl.innerHTML = toolsToShow
-      .map(
-        (tool) => `
-        <button type="button" class="tool-continue-item" data-ref="btn-continue-tool" data-tool-path="${tool.path}">
-          <div class="tool-continue-item__icon-wrap">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#${tool.icon}"></use></svg>
-          </div>
-          <div class="tool-continue-item__col">
-            <span class="tool-continue-item__title">${tool.title}</span>
-            <span class="tool-continue-item__desc">${tool.desc}</span>
-          </div>
-          <svg class="component-icon tool-continue-item__arrow" aria-hidden="true"><use href="/icons.svg#chevron_right"></use></svg>
+      .map((tool) => {
+        const toolName = t(tool.nameKey);
+        const toolDesc = t(tool.descKey);
+        const toolPath = getLocalizedPath(tool.id, currentLang);
+        const searchHaystack = `${toolName} ${toolDesc}`.toLowerCase();
+        return `
+        <button type="button" class="menu-item drawer-tool-item" data-ref="drawer-tool-${tool.id}" data-tool-path="${toolPath}" data-search="${searchHaystack}">
+          <span class="menu-item__icon tool-item__mini-icon">
+            ${tool.customSvg || `<svg class="component-icon" aria-hidden="true"><use href="/icons.svg#${tool.icon}"></use></svg>`}
+          </span>
+          <span class="menu-item__text" style="font-size: 13px; font-weight: 500;">${toolName}</span>
         </button>
-      `
-      )
+      `;
+      })
       .join('');
 
     renderIcons(gridEl);
 
     const signal = this.abortController?.signal;
-    const buttons = gridEl.querySelectorAll<HTMLButtonElement>('[data-ref="btn-continue-tool"]');
+    const buttons = gridEl.querySelectorAll<HTMLButtonElement>('.drawer-tool-item');
     buttons.forEach((btn) => {
       btn.addEventListener(
         'click',
@@ -311,32 +275,6 @@ export class DownloadReadyController implements ViewController {
       'click',
       () => {
         this.openShareModal();
-      },
-      { signal }
-    );
-
-    this.container.querySelector('[data-ref="btn-thankyou-share"]')?.addEventListener(
-      'click',
-      () => {
-        if (navigator.share && this.data) {
-          const downloadLink = this.data.token
-            ? `${window.location.origin}/download/${this.data.token}`
-            : this.data.downloadUrl.startsWith('http')
-            ? this.data.downloadUrl
-            : `${window.location.origin}${this.data.downloadUrl}`;
-
-          navigator
-            .share({
-              text: 'He procesado mi documento PDF con ProjectAurora. ¡Pruébalo gratis!',
-              title: 'ProjectAurora - Herramientas PDF',
-              url: downloadLink,
-            })
-            .catch(() => {
-              this.openShareModal();
-            });
-        } else {
-          this.openShareModal();
-        }
       },
       { signal }
     );

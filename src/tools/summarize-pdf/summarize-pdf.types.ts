@@ -1,4 +1,4 @@
-export type SummaryMode = 'executive' | 'detailed' | 'key_points' | 'qa';
+export type SummaryMode = 'standard' | 'advanced';
 
 export interface SummarizePdfParams {
   buffer: Buffer;

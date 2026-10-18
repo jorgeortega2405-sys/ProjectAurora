@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
-import { getCurrentUser } from '../services/auth.service.js';
+import { getMaxWorkflows } from '../config/tools-limits.config.js';
+import { getCurrentUser, getSessionUser } from '../services/auth.service.js';
 import { logger } from '../services/logger.service.js';
+import { getUserEffectivePermissions } from '../services/pbac.service.js';
 import { createWorkflow, deleteWorkflow, executeWorkflow, getWorkflowById, getWorkflowResult, listWorkflows, updateWorkflow } from '../services/workflow.service.js';
 
 export async function getWorkflowsHandler(req: Request, res: Response): Promise<void> {
@@ -43,9 +45,23 @@ export async function getWorkflowHandler(req: Request, res: Response): Promise<v
 
 export async function createWorkflowHandler(req: Request, res: Response): Promise<void> {
   try {
-    const user = getCurrentUser(req);
+    const user = (req as any).user || (await getSessionUser(req)) || getCurrentUser(req);
     if (!user) {
       res.status(401).json({ error: 'No autorizado', success: false });
+      return;
+    }
+
+    const permissions: string[] = user.permissions || (await getUserEffectivePermissions(user));
+    const maxWorkflows = getMaxWorkflows(permissions);
+    const existingWorkflows = await listWorkflows(user.id);
+
+    if (existingWorkflows.length >= maxWorkflows) {
+      res.status(403).json({
+        code: 'WORKFLOW_LIMIT_REACHED',
+        error: `Has alcanzado el límite de ${maxWorkflows} flujo${maxWorkflows === 1 ? '' : 's'} de trabajo de tu plan actual. Sube de categoría para crear más.`,
+        limit: maxWorkflows,
+        success: false,
+      });
       return;
     }
 

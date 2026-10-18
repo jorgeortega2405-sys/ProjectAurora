@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
+import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
 import { getOcrPdf, processOcrPdf } from './ocr-pdf.service.js';
 import { OcrLanguage } from './ocr-pdf.types.js';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
 const upload = multer({
   fileFilter: (_req, file, cb) => {
@@ -39,7 +40,7 @@ export function handleUploadMiddleware(req: Request, res: Response, next: NextFu
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo supera el límite permitido de 50 MB.',
+          error: 'El archivo supera el límite permitido de 500 MB.',
           success: false,
         });
         return;
@@ -77,6 +78,17 @@ export async function handleProcessOcrPdf(req: Request, res: Response): Promise<
   if (!file) {
     res.status(400).json({
       error: 'Debes seleccionar un archivo PDF para poder aplicarle OCR.',
+      success: false,
+    });
+    return;
+  }
+
+  const userPermissions = (req as any).user?.permissions || [];
+  const limits = getToolLimits('ocr-pdf', userPermissions);
+
+  if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
+    res.status(403).json({
+      error: `El archivo supera el límite permitido de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos más grandes.`,
       success: false,
     });
     return;

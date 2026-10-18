@@ -130,7 +130,8 @@ export async function render(rawPath = window.location.pathname): Promise<void> 
     translateElement(sidebar);
     if (hasDesignatedMenuItems(activeInternalPath)) {
       if (window.innerWidth > 768) {
-        toggleDrawer(true);
+        const mode = activeInternalPath.includes('/settings') ? 'settings' : 'help';
+        toggleDrawer(true, mode);
       }
     }
   } else {

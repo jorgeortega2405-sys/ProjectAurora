@@ -539,6 +539,24 @@ export const APP_ROUTES: RouteDefinition[] = [
     match: (path) => path === '/business' || path === '/empresas' || path === '/solutions/business' || path === '/soluciones/business' || path.startsWith('/business') || path.startsWith('/empresas'),
   },
   {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createEducationVerifyView } = await import('../views/education-verify.view.js');
+      return await createEducationVerifyView();
+    },
+    id: 'education-verify',
+    match: (path) => path === '/education/verify' || path === '/educacion/verificar' || path === '/solutions/education/verify' || path === '/soluciones/educacion/verificar' || path.startsWith('/education/verify') || path.startsWith('/educacion/verificar'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createEducationView } = await import('../views/education.view.js');
+      return await createEducationView();
+    },
+    id: 'education',
+    match: (path) => (path === '/education' || path === '/educacion' || path === '/solutions/education' || path === '/soluciones/educacion' || path.startsWith('/education') || path.startsWith('/educacion')) && !path.startsWith('/education/verify') && !path.startsWith('/educacion/verificar'),
+  },
+  {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
       const { createHelpCookiesView, createHelpDocumentationView, createHelpFaqView, createHelpPrivacyView, createHelpSecurityView, createHelpTermsView } = await import('../views/help.view.js');
@@ -695,8 +713,9 @@ export function findRoute(path: string): MatchedRoute | null {
     if (routeDef) {
       const matchResult = routeDef.match(parsed.internalPath);
       const params = typeof matchResult === 'object' && matchResult !== null ? matchResult : {};
-      const canonicalPath = getLocalizedPath(parsed.resolvedRouteId, parsed.lang);
-      const isCanonical = parsed.hasLangPrefix && path.replace(/\/+$/, '') === canonicalPath.replace(/\/+$/, '');
+      const isSeo = parsed.resolvedRouteId in SEO_ROUTES;
+      const canonicalPath = isSeo ? getLocalizedPath(parsed.resolvedRouteId, parsed.lang) : path;
+      const isCanonical = isSeo ? (parsed.hasLangPrefix && path.replace(/\/+$/, '') === canonicalPath.replace(/\/+$/, '')) : true;
 
       return {
         canonicalPath,
@@ -716,8 +735,9 @@ export function findRoute(path: string): MatchedRoute | null {
     const matchResult = route.match(parsed.internalPath);
     if (matchResult) {
       const params = typeof matchResult === 'object' && matchResult !== null ? matchResult : {};
-      const canonicalPath = getLocalizedPath(route.id, parsed.lang);
-      const isCanonical = parsed.hasLangPrefix && path.replace(/\/+$/, '') === canonicalPath.replace(/\/+$/, '');
+      const isSeo = route.id in SEO_ROUTES;
+      const canonicalPath = isSeo ? getLocalizedPath(route.id, parsed.lang) : path;
+      const isCanonical = isSeo ? (parsed.hasLangPrefix && path.replace(/\/+$/, '') === canonicalPath.replace(/\/+$/, '')) : true;
 
       return {
         canonicalPath,

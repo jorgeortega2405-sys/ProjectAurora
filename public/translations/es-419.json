@@ -15,10 +15,19 @@
       "toggle_password": "Alternar visibilidad",
       "submit_btn": "Iniciar sesión",
       "google_btn": "Continuar con Google",
+      "sso_btn": "Continuar con SSO corporativo",
       "forgot_password": "¿Olvidaste tu contraseña?",
       "no_account": "¿No tienes una cuenta?",
       "create_account": "Crear cuenta",
       "loading": "Iniciando sesión..."
+    },
+    "login_sso": {
+      "title": "Inicio de sesión único (SSO)",
+      "subtitle": "Ingresa tu correo empresarial para acceder a través del portal de tu organización",
+      "email_label": "Correo corporativo (ej. tu@empresa.com)",
+      "submit_btn": "Continuar a tu empresa",
+      "back_to_login": "Volver a inicio de sesión estándar",
+      "loading": "Buscando proveedor corporativo..."
     },
     "forgot_password": {
       "title": "¿Olvidaste tu contraseña?",
@@ -322,6 +331,7 @@
     "logout": "Cerrar sesión",
     "logout_all": "Cerrar todas las sesiones",
     "menu": "Menú",
+    "organization": "Organización",
     "profile": "Perfil",
     "purchases": "Historial de compras",
     "security": "Seguridad",
@@ -646,6 +656,10 @@
       "modal_cancel_immediate_desc": "Esta acción cancelará tu suscripción de inmediato en Stripe y perderás el acceso a las funciones Pro. ¿Deseas continuar?",
       "btn_confirm_cancel_immediate": "Sí, cancelar de inmediato",
       "toast_cancelled_success": "Suscripción cancelada exitosamente."
+    },
+    "organization": {
+      "title": "Organización",
+      "subtitle": "Administra los miembros de tu equipo, licencias contratadas, dominios y configuración de SSO corporativo."
     },
     "purchases": {
       "title": "Historial de compras",

@@ -388,6 +388,10 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
           <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#person"></use></svg>
           <span class="menu-item__text" data-i18n="nav.your_account">Tu cuenta</span>
         </button>
+        <button type="button" class="menu-item" data-ref="btn-nav-settings-organization">
+          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
+          <span class="menu-item__text" data-i18n="nav.organization">Organización</span>
+        </button>
         <button type="button" class="menu-item" data-ref="btn-nav-settings-accessibility">
           <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#accessibility_new"></use></svg>
           <span class="menu-item__text" data-i18n="nav.accessibility">Accesibilidad</span>
@@ -429,11 +433,14 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       translateElement(drawerBody);
 
       const btnAccount = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-account"]');
+      const btnOrganization = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-organization"]');
       const btnAccessibility = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-accessibility"]');
       const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-security"]');
 
       if (currentPath === '/settings' || currentPath === '/settings/your-account') {
         btnAccount?.classList.add('is-active');
+      } else if (currentPath === '/settings/organization') {
+        btnOrganization?.classList.add('is-active');
       } else if (currentPath === '/settings/accessibility') {
         btnAccessibility?.classList.add('is-active');
       } else if (currentPath === '/settings/security' || currentPath === '/settings/login-and-security') {
@@ -441,6 +448,7 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       }
 
       bindNavLink(btnAccount, '/settings/your-account');
+      bindNavLink(btnOrganization, '/settings/organization');
       bindNavLink(btnAccessibility, '/settings/accessibility');
       bindNavLink(btnSecurity, '/settings/security');
     } else {

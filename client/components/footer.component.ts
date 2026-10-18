@@ -40,7 +40,7 @@ export function getFooterHtml(): string {
             <h4 class="footer-col__title" data-ref="footer-title-soluciones">Soluciones</h4>
             <ul class="footer-col__list" data-ref="footer-list-soluciones">
               <li class="footer-col__item" data-ref="footer-item-business">
-                <a class="footer-col__link" data-ref="footer-link-business" href="javascript:void(0)">Business</a>
+                <a class="footer-col__link" data-ref="footer-link-business" href="${getLocalizedPath('business', currentLang)}">Business</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-educacion">
                 <a class="footer-col__link" data-ref="footer-link-educacion" href="javascript:void(0)">Educación</a>
@@ -70,16 +70,13 @@ export function getFooterHtml(): string {
             <h4 class="footer-col__title" data-ref="footer-title-empresa">Empresa</h4>
             <ul class="footer-col__list" data-ref="footer-list-empresa">
               <li class="footer-col__item" data-ref="footer-item-nosotros">
-                <a class="footer-col__link" data-ref="footer-link-nosotros" href="javascript:void(0)">Sobre nosotros</a>
+                <a class="footer-col__link" data-ref="footer-link-nosotros" href="${getLocalizedPath('about', currentLang)}">Sobre nosotros</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-contacto">
-                <a class="footer-col__link" data-ref="footer-link-contacto" href="javascript:void(0)">Contacto</a>
-              </li>
-              <li class="footer-col__item" data-ref="footer-item-blog">
-                <a class="footer-col__link" data-ref="footer-link-blog" href="javascript:void(0)">Blog</a>
+                <a class="footer-col__link" data-ref="footer-link-contacto" href="${getLocalizedPath('contact', currentLang)}">Contacto</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-prensa">
-                <a class="footer-col__link" data-ref="footer-link-prensa" href="javascript:void(0)">Prensa</a>
+                <a class="footer-col__link" data-ref="footer-link-prensa" href="${getLocalizedPath('press', currentLang)}">Prensa</a>
               </li>
             </ul>
           </div>

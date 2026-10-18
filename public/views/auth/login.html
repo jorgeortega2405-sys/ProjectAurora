@@ -38,6 +38,11 @@
           <span class="component-button__text" data-ref="google-btn-text" data-i18n="auth.login.google_btn">Continuar con Google</span>
         </button>
 
+        <button type="button" class="component-button component-button--h55 component-button--w-full" data-ref="btn-sso-login">
+          <svg class="component-icon" style="width: 20px; height: 20px;" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
+          <span class="component-button__text" data-ref="sso-btn-text" data-i18n="auth.login.sso_btn">Continuar con SSO corporativo</span>
+        </button>
+
         <div class="banner banner--danger" data-ref="login-error" style="display: none;"></div>
 
         <p class="footer-note" data-ref="login-footer">
@@ -68,6 +73,30 @@
 
         <div class="link-row" data-ref="login-2fa-back-row" style="justify-content: center; margin-top: 14px;">
           <a class="link" data-ref="btn-back-to-login" href="/login" data-i18n="auth.login_2fa.back_to_login">Volver a iniciar sesión</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-step" data-ref="login-step-sso" style="display: none;">
+      <div class="card__header" data-ref="login-sso-header">
+        <h1 class="card__title" data-ref="login-sso-title" data-i18n="auth.login_sso.title">Inicio de sesión único (SSO)</h1>
+        <p class="card__subtitle" data-ref="login-sso-subtitle" data-i18n="auth.login_sso.subtitle">Ingresa tu correo empresarial para acceder a través del portal de tu organización</p>
+      </div>
+
+      <div class="card__body" data-ref="login-sso-form">
+        <label class="field" data-ref="field-login-sso-email">
+          <input class="field__input" data-ref="login-sso-email" type="email" maxlength="254" placeholder=" " autocomplete="email" />
+          <span class="field__label" data-ref="label-login-sso-email" data-i18n="auth.login_sso.email_label">Correo corporativo (ej. tu@empresa.com)</span>
+        </label>
+
+        <button type="button" class="component-button component-button--h55 component-button--black component-button--w-full" data-ref="btn-submit-sso" data-i18n="auth.login_sso.submit_btn">
+          Continuar a tu empresa
+        </button>
+
+        <div class="banner banner--danger" data-ref="login-sso-error" style="display: none;"></div>
+
+        <div class="link-row" data-ref="login-sso-back-row" style="justify-content: center; margin-top: 14px;">
+          <a class="link" data-ref="btn-back-from-sso" href="/login" data-i18n="auth.login_sso.back_to_login">Volver a inicio de sesión estándar</a>
         </div>
       </div>
     </div>

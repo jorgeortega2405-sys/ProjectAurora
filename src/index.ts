@@ -12,8 +12,11 @@ import { csrfProtection } from './middlewares/csrf.middleware.js';
 import { requestLogger } from './middlewares/request-logger.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import downloadRoutes from './routes/download.routes.js';
+import enterpriseRoutes from './routes/enterprise.routes.js';
+import organizationRoutes from './routes/organization.routes.js';
 import seoRoutes from './routes/seo.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
+import ssoRoutes from './routes/sso.routes.js';
 import { subscriptionRouter } from './routes/subscription.routes.js';
 import toolsRoutes from './routes/tools.routes.js';
 import workflowRoutes from './routes/workflow.routes.js';
@@ -268,7 +271,10 @@ async function startServer(): Promise<void> {
 
   app.use('/api', authRoutes);
   app.use('/api', downloadRoutes);
+  app.use('/api', enterpriseRoutes);
+  app.use('/api', organizationRoutes);
   app.use('/api', settingsRoutes);
+  app.use('/api', ssoRoutes);
   app.use('/api', toolsRoutes);
   app.use('/api', workflowRoutes);
   app.use('/api/subscriptions', subscriptionRouter);

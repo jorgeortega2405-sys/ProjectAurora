@@ -143,18 +143,25 @@ export class LoginController {
 
     const stepMain = this.container.querySelector<HTMLElement>('[data-ref="login-step-main"]');
     const step2FA = this.container.querySelector<HTMLElement>('[data-ref="login-step-2fa"]');
+    const stepSSO = this.container.querySelector<HTMLElement>('[data-ref="login-step-sso"]');
 
     const emailInput = this.container.querySelector<HTMLInputElement>('[data-ref="login-email"]');
     const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="login-password"]');
     const toggleBtn = this.container.querySelector<HTMLElement>('[data-ref="toggle-login-password"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-login"]');
     const googleBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-google-login"]');
+    const ssoBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sso-login"]');
     const bannersMain = createBannerManager(this.container, { errorRef: 'login-error' });
 
     const code2FAInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-login-2fa-code"]');
     const submit2FABtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-2fa"]');
     const backToLoginLink = this.container.querySelector<HTMLElement>('[data-ref="btn-back-to-login"]');
     const banners2FA = createBannerManager(this.container, { errorRef: 'login-2fa-error' });
+
+    const ssoEmailInput = this.container.querySelector<HTMLInputElement>('[data-ref="login-sso-email"]');
+    const submitSsoBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-sso"]');
+    const backFromSsoLink = this.container.querySelector<HTMLElement>('[data-ref="btn-back-from-sso"]');
+    const bannersSSO = createBannerManager(this.container, { errorRef: 'login-sso-error' });
 
     bindNavigationLinks(this.container, {
       'btn-forgot-password': '/forgot-password',
@@ -165,6 +172,20 @@ export class LoginController {
     googleBtn?.addEventListener('click', (e) => {
       e.preventDefault();
       window.location.href = '/api/auth/google';
+    }, { signal: this.abortController.signal });
+
+    ssoBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentEmail = emailInput?.value.trim() || '';
+      if (currentEmail && ssoEmailInput) {
+        ssoEmailInput.value = currentEmail;
+      }
+      activateStep('sso');
+    }, { signal: this.abortController.signal });
+
+    backFromSsoLink?.addEventListener('click', (e) => {
+      e.preventDefault();
+      activateStep('main');
     }, { signal: this.abortController.signal });
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -186,16 +207,21 @@ export class LoginController {
       showTooltip: t('auth.login.show_password') || 'Mostrar contraseña',
     });
 
-    const activateStep = (stepName: 'main' | '2fa') => {
+    const activateStep = (stepName: 'main' | '2fa' | 'sso') => {
       bannersMain.hideAll();
       banners2FA.hideAll();
+      bannersSSO.hideAll();
 
       if (stepMain) stepMain.style.display = stepName === 'main' ? 'block' : 'none';
       if (step2FA) step2FA.style.display = stepName === '2fa' ? 'block' : 'none';
+      if (stepSSO) stepSSO.style.display = stepName === 'sso' ? 'block' : 'none';
 
       if (stepName === '2fa') {
         window.history.pushState({}, '', '/login/verification-aditional');
         requestAnimationFrame(() => code2FAInput?.focus());
+      } else if (stepName === 'sso') {
+        window.history.pushState({}, '', '/login/sso');
+        requestAnimationFrame(() => ssoEmailInput?.focus());
       } else if (stepName === 'main') {
         window.history.pushState({}, '', '/login');
         requestAnimationFrame(() => emailInput?.focus());
@@ -203,6 +229,8 @@ export class LoginController {
     };
 
     const is2FARoute = this.startAt2FA || window.location.pathname === '/login/verification-aditional';
+    const isSSORoute = window.location.pathname === '/login/sso';
+
     if (is2FARoute) {
       if (!hasTwoFactorLoginData()) {
         activateStep('main');
@@ -210,6 +238,8 @@ export class LoginController {
       } else {
         activateStep('2fa');
       }
+    } else if (isSSORoute) {
+      activateStep('sso');
     } else {
       activateStep('main');
     }
@@ -234,6 +264,12 @@ export class LoginController {
           const data = await res.json();
 
           if (!res.ok) {
+            if (data.requiresSso) {
+              if (ssoEmailInput) ssoEmailInput.value = email;
+              activateStep('sso');
+              bannersSSO.showError(data.error || 'Tu organización exige inicio de sesión con SSO.');
+              return;
+            }
             bannersMain.showError(data.error || 'Credenciales inválidas.');
             return;
           }
@@ -254,6 +290,39 @@ export class LoginController {
 
     submitBtn?.addEventListener('click', executeLogin, { signal: this.abortController.signal });
     bindSubmitOnEnter([emailInput, passwordInput], executeLogin);
+
+    const executeSso = async () => {
+      bannersSSO.hideAll();
+      const ssoEmail = ssoEmailInput?.value.trim().toLowerCase() || '';
+
+      if (!ssoEmail || !ssoEmail.includes('@')) {
+        bannersSSO.showError('Ingresa un correo corporativo válido.');
+        return;
+      }
+
+      await withButtonLoading(submitSsoBtn, t('auth.login_sso.loading') || 'Buscando proveedor corporativo...', async () => {
+        try {
+          const res = await getApi(`/api/auth/sso/initiate?email=${encodeURIComponent(ssoEmail)}`);
+          const data = await res.json();
+
+          if (!res.ok) {
+            bannersSSO.showError(data.error || 'No se encontró un proveedor de SSO para el dominio de este correo.');
+            return;
+          }
+
+          if (data.authorizeUrl) {
+            window.location.href = data.authorizeUrl;
+          } else {
+            bannersSSO.showError('No se pudo generar la URL de autorización corporativa.');
+          }
+        } catch {
+          bannersSSO.showError('Error de red al conectar con el servidor corporativo.');
+        }
+      });
+    };
+
+    submitSsoBtn?.addEventListener('click', executeSso, { signal: this.abortController.signal });
+    bindSubmitOnEnter(ssoEmailInput, executeSso);
 
     const executeVerify2FA = async () => {
       banners2FA.hideAll();

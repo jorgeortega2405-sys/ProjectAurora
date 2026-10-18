@@ -1,10 +1,11 @@
-import { getCurrentUser } from '../services/auth.service.js';
-import { logger } from '../services/logger.service.js';
-import { getRolePermissions, hasPermission } from '../services/pbac.service.js';
 import type { NextFunction, Request, Response } from 'express';
+import { getCurrentUser, getSessionUser } from '../services/auth.service.js';
+import { logger } from '../services/logger.service.js';
+import { getUserOrganization } from '../services/organization.service.js';
+import { getRolePermissions, hasPermission } from '../services/pbac.service.js';
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const user = getCurrentUser(req);
+  const user = (await getSessionUser(req)) || getCurrentUser(req);
   if (!user) {
     res.status(401).json({
       error: 'Sesión no válida o expirada. Por favor inicia sesión nuevamente.',
@@ -14,7 +15,16 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  const permissions = await getRolePermissions(user.role || 'USER');
+  let permissions = await getRolePermissions(user.role || 'USER');
+
+  try {
+    const userOrg = await getUserOrganization(user.id);
+    if (userOrg && userOrg.memberRole) {
+      const orgPerms = await getRolePermissions(userOrg.memberRole);
+      permissions = Array.from(new Set([...permissions, ...orgPerms]));
+    }
+  } catch {}
+
   (req as any).user = { ...user, permissions };
   next();
 }
@@ -29,17 +39,32 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
 
 export function requirePermission(permission: string) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const user = (req as any).user || getCurrentUser(req);
+    let user = (req as any).user;
     if (!user) {
-      res.status(401).json({
-        error: 'Sesión requerida para realizar esta acción.',
-        ok: false,
-        success: false,
-      });
-      return;
+      user = (await getSessionUser(req)) || getCurrentUser(req);
+      if (!user) {
+        res.status(401).json({
+          error: 'Sesión requerida para realizar esta acción.',
+          ok: false,
+          success: false,
+        });
+        return;
+      }
+
+      let permissions = await getRolePermissions(user.role || 'USER');
+      try {
+        const userOrg = await getUserOrganization(user.id);
+        if (userOrg && userOrg.memberRole) {
+          const orgPerms = await getRolePermissions(userOrg.memberRole);
+          permissions = Array.from(new Set([...permissions, ...orgPerms]));
+        }
+      } catch {}
+
+      user = { ...user, permissions };
+      (req as any).user = user;
     }
 
-    const permissions: string[] = (req as any).user?.permissions || await getRolePermissions(user.role || 'USER');
+    const permissions: string[] = user.permissions || [];
     if (!hasPermission(permissions, permission)) {
       logger.security.warn('Acceso denegado por falta de permiso requerido', {
         path: req.path,

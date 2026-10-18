@@ -280,6 +280,11 @@ export class UpgradeController {
     const targetTier = TIERS.find((t) => t.id === tierId);
     if (!targetTier) return;
 
+    if (tierId === 'enterprise') {
+      navigate('/business');
+      return;
+    }
+
     if (!currentUser) {
       showToast(t('upgrade.login_required') || 'Debes iniciar sesión para suscribirte.', 'info');
       navigate('/login');
@@ -317,10 +322,6 @@ export class UpgradeController {
         }
       }
       return;
-    }
-
-    if (tierId === 'enterprise') {
-      window.location.href = 'mailto:ventas@projectaurora.com?subject=Consulta%20Plan%20Empresas';
     }
   }
 

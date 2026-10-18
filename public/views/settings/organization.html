@@ -1,0 +1,196 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="settings-wrapper">
+  <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="settings-scrollable">
+    <div class="settings-layout" data-ref="settings-layout">
+      <div class="settings-header" data-ref="settings-header">
+        <h1 class="settings-title" data-ref="settings-title" data-i18n="settings.organization.title">Organización</h1>
+        <p class="settings-subtitle" data-ref="settings-subtitle" data-i18n="settings.organization.subtitle">Administra los miembros de tu equipo, licencias contratadas, dominios y configuración de SSO corporativo.</p>
+      </div>
+
+      <div class="settings-group" data-ref="org-empty-state" style="display: none;">
+        <div class="settings-item" data-ref="item-empty-org">
+          <div class="settings-item__content" data-ref="item-empty-org-content">
+            <div class="settings-item__icon-box" data-ref="item-empty-org-icon-box">
+              <span class="material-symbols-rounded">corporate_fare</span>
+            </div>
+            <div class="settings-item__text" data-ref="item-empty-org-text">
+              <h2 class="settings-item__title" data-ref="item-empty-org-title">No perteneces a una organización corporativa</h2>
+              <p class="settings-item__desc" data-ref="item-empty-org-desc">Con un plan Aurora Empresas obtienes licencias centralizadas para tu equipo, control de asientos y soporte para Single Sign-On (SSO con Google Workspace y Microsoft Entra ID).</p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-empty-org-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a class="component-button component-button--h34" data-ref="btn-contact-sales" href="/business/contact">Contactar a ventas</a>
+            <a class="component-button component-button--h34 component-button--black" data-ref="btn-explore-business" href="/business">Conocer Aurora Empresas</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="org-main-state" style="display: none;">
+        <div class="settings-item" data-ref="item-org-overview">
+          <div class="settings-item__content" data-ref="item-org-overview-content" style="flex: 1;">
+            <div class="settings-item__icon-box" data-ref="item-org-overview-icon-box">
+              <span class="material-symbols-rounded">groups</span>
+            </div>
+            <div class="settings-item__text" data-ref="item-org-overview-text" style="flex: 1;">
+              <div class="settings-item__title-row" data-ref="org-title-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h2 class="settings-item__title" data-ref="org-name">-</h2>
+                <span class="component-badge component-badge--sm" data-ref="org-role-badge">-</span>
+                <span class="component-badge component-badge--sm" data-ref="org-status-badge">Activo</span>
+              </div>
+              <p class="settings-item__desc" data-ref="org-seat-usage-desc">Cargando asientos...</p>
+              <div class="seat-progress-bar" data-ref="seat-progress-bar" style="width: 100%; height: 8px; background: var(--bg-surface-secondary, rgba(0,0,0,0.06)); border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                <div class="seat-progress-fill" data-ref="seat-progress-fill" style="width: 0%; height: 100%; background: var(--primary-color, #1a73e8); border-radius: 4px; transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="settings-divider" />
+
+        <div class="settings-item" data-ref="item-invite-member" style="display: block;">
+          <div class="settings-item__text" data-ref="item-invite-member-text" style="margin-bottom: 14px;">
+            <h2 class="settings-item__title" data-ref="item-invite-member-title">Invitar a un nuevo miembro</h2>
+            <p class="settings-item__desc" data-ref="item-invite-member-desc">Agrega colegas a tu organización consumiendo uno de los asientos disponibles contratados.</p>
+          </div>
+          <form class="org-invite-form" data-ref="form-invite-member" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start;">
+            <label class="field" data-ref="field-invite-email" style="flex: 2; min-width: 220px;">
+              <input class="field__input" data-ref="input-invite-email" type="email" placeholder=" " autocomplete="email" />
+              <span class="field__label" data-ref="label-invite-email">Correo electrónico del usuario</span>
+            </label>
+
+            <label class="field" data-ref="field-invite-role" style="flex: 1; min-width: 140px;">
+              <select class="field__input" data-ref="select-invite-role" style="height: 48px; padding-top: 10px;">
+                <option value="ORG_MEMBER">Miembro</option>
+                <option value="ORG_ADMIN">Administrador</option>
+              </select>
+              <span class="field__label" data-ref="label-invite-role">Rol</span>
+            </label>
+
+            <button type="submit" class="component-button component-button--h48 component-button--black" data-ref="btn-submit-invite">
+              Invitar miembro
+            </button>
+          </form>
+          <div class="banner banner--danger" data-ref="invite-member-error" style="display: none; margin-top: 12px;"></div>
+          <div class="banner banner--success" data-ref="invite-member-success" style="display: none; margin-top: 12px;"></div>
+        </div>
+
+        <hr class="settings-divider" />
+
+        <div class="settings-item" data-ref="item-members-list-wrapper" style="display: block;">
+          <div class="settings-item__text" data-ref="item-members-text" style="margin-bottom: 14px;">
+            <h2 class="settings-item__title" data-ref="item-members-title">
+              Miembros del equipo (<span data-ref="member-count-number">0</span>)
+            </h2>
+            <p class="settings-item__desc" data-ref="item-members-desc">Usuarios que tienen acceso activo a las funciones corporativas de tu cuenta.</p>
+          </div>
+
+          <div class="org-members-table-wrapper" data-ref="org-members-table-wrapper" style="overflow-x: auto;">
+            <table class="org-table" data-ref="org-members-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+              <thead>
+                <tr class="org-table__row org-table__row--header" data-ref="members-table-header" style="border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.1));">
+                  <th class="org-table__th" data-ref="th-user" style="padding: 10px 8px; font-weight: 600; color: var(--text-secondary);">Usuario</th>
+                  <th class="org-table__th" data-ref="th-role" style="padding: 10px 8px; font-weight: 600; color: var(--text-secondary);">Rol</th>
+                  <th class="org-table__th" data-ref="th-status" style="padding: 10px 8px; font-weight: 600; color: var(--text-secondary);">Estado</th>
+                  <th class="org-table__th" data-ref="th-date" style="padding: 10px 8px; font-weight: 600; color: var(--text-secondary);">Fecha de ingreso</th>
+                  <th class="org-table__th" data-ref="th-actions" style="padding: 10px 8px; font-weight: 600; color: var(--text-secondary); text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="org-table__body" data-ref="members-table-body"></tbody>
+            </table>
+          </div>
+          <div class="banner banner--danger" data-ref="members-action-error" style="display: none; margin-top: 12px;"></div>
+        </div>
+
+        <hr class="settings-divider" />
+
+        <div class="settings-item" data-ref="item-domains-wrapper" style="display: block;">
+          <div class="settings-item__text" data-ref="item-domains-text" style="margin-bottom: 14px;">
+            <h2 class="settings-item__title" data-ref="item-domains-title">Dominios corporativos autorizados</h2>
+            <p class="settings-item__desc" data-ref="item-domains-desc">Los correos con estos dominios serán reconocidos automáticamente para el inicio de sesión único (SSO).</p>
+          </div>
+
+          <div class="org-domains-badges" data-ref="org-domains-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;"></div>
+
+          <form class="org-domain-form" data-ref="form-add-domain" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start;">
+            <label class="field" data-ref="field-new-domain" style="flex: 1; min-width: 220px;">
+              <input class="field__input" data-ref="input-new-domain" type="text" placeholder=" " />
+              <span class="field__label" data-ref="label-new-domain">Nuevo dominio (ej. acme.com)</span>
+            </label>
+            <button type="submit" class="component-button component-button--h48 component-button--black" data-ref="btn-submit-domain">
+              Agregar dominio
+            </button>
+          </form>
+          <div class="banner banner--danger" data-ref="add-domain-error" style="display: none; margin-top: 12px;"></div>
+          <div class="banner banner--success" data-ref="add-domain-success" style="display: none; margin-top: 12px;"></div>
+        </div>
+
+        <hr class="settings-divider" />
+
+        <div class="settings-item" data-ref="item-sso-wrapper" style="display: block;">
+          <div class="settings-item__text" data-ref="item-sso-text" style="margin-bottom: 14px;">
+            <div class="settings-item__title-row" data-ref="sso-title-row" style="display: flex; align-items: center; gap: 8px;">
+              <h2 class="settings-item__title" data-ref="item-sso-title">Inicio de sesión único corporativo (SSO)</h2>
+              <span class="component-badge component-badge--sm" data-ref="sso-status-badge">Inactivo</span>
+            </div>
+            <p class="settings-item__desc" data-ref="item-sso-desc">Conecta tu proveedor de identidad empresarial (Google Workspace o Microsoft Entra ID) para permitir autenticación centralizada.</p>
+          </div>
+
+          <form class="org-sso-form" data-ref="form-sso-config" style="display: flex; flex-direction: column; gap: 14px;">
+            <label class="field" data-ref="field-sso-provider">
+              <select class="field__input" data-ref="select-sso-provider" style="height: 48px; padding-top: 10px;">
+                <option value="google">Google Workspace (OAuth 2.0 / OIDC)</option>
+                <option value="azure">Microsoft Entra ID (Azure AD OIDC)</option>
+                <option value="saml">SAML 2.0 (Okta, Ping, etc.)</option>
+              </select>
+              <span class="field__label" data-ref="label-sso-provider">Proveedor de identidad</span>
+            </label>
+
+            <label class="field" data-ref="field-sso-client-id">
+              <input class="field__input" data-ref="input-sso-client-id" type="text" placeholder=" " />
+              <span class="field__label" data-ref="label-sso-client-id">Client ID / Application (client) ID</span>
+            </label>
+
+            <label class="field" data-ref="field-sso-client-secret">
+              <input class="field__input" data-ref="input-sso-client-secret" type="password" placeholder=" " />
+              <span class="field__label" data-ref="label-sso-client-secret">Client Secret (Valor del secreto de cliente)</span>
+            </label>
+
+            <div class="sso-extra-fields" data-ref="sso-azure-fields" style="display: none;">
+              <label class="field" data-ref="field-sso-tenant-id">
+                <input class="field__input" data-ref="input-sso-tenant-id" type="text" placeholder=" " />
+                <span class="field__label" data-ref="label-sso-tenant-id">Tenant ID / Directory (tenant) ID</span>
+              </label>
+            </div>
+
+            <div class="sso-extra-fields" data-ref="sso-saml-fields" style="display: none;">
+              <label class="field" data-ref="field-sso-saml-entrypoint">
+                <input class="field__input" data-ref="input-sso-saml-entrypoint" type="url" placeholder=" " />
+                <span class="field__label" data-ref="label-sso-saml-entrypoint">SAML Single Sign-On URL (Entrypoint)</span>
+              </label>
+
+              <label class="field" data-ref="field-sso-saml-issuer" style="margin-top: 14px;">
+                <input class="field__input" data-ref="input-sso-saml-issuer" type="text" placeholder=" " />
+                <span class="field__label" data-ref="label-sso-saml-issuer">SAML Entity ID / Issuer</span>
+              </label>
+            </div>
+
+            <label class="settings-checkbox-row" data-ref="label-sso-enforce" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 0;">
+              <input class="component-checkbox" data-ref="input-sso-enforce" type="checkbox" />
+              <span class="settings-checkbox-text" data-ref="text-sso-enforce" style="font-size: 14px; font-weight: 500; color: var(--text-primary);">
+                Exigir SSO obligatorio para todos los usuarios del dominio corporativo
+              </span>
+            </label>
+
+            <div>
+              <button type="submit" class="component-button component-button--h48 component-button--black" data-ref="btn-submit-sso-config">
+                Guardar configuración SSO
+              </button>
+            </div>
+          </form>
+
+          <div class="banner banner--danger" data-ref="sso-config-error" style="display: none; margin-top: 12px;"></div>
+          <div class="banner banner--success" data-ref="sso-config-success" style="display: none; margin-top: 12px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

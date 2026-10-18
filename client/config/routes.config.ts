@@ -414,7 +414,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
-      const { createAccessibilityView, createBillingView, createGuestSettingsView, createPurchasesView, createSecurityView, createYourAccountView } = await import('../views/settings.view.js');
+      const { createAccessibilityView, createBillingView, createGuestSettingsView, createOrganizationView, createPurchasesView, createSecurityView, createYourAccountView } = await import('../views/settings.view.js');
 
       if (!currentUser) {
         if (path.startsWith('/settings/workflows')) {
@@ -442,6 +442,8 @@ export const APP_ROUTES: RouteDefinition[] = [
           return await createAccessibilityView();
         case '/settings/billing':
           return await createBillingView();
+        case '/settings/organization':
+          return await createOrganizationView();
         case '/settings/purchases':
         case '/settings/purchases-history':
           return await createPurchasesView();
@@ -492,6 +494,51 @@ export const APP_ROUTES: RouteDefinition[] = [
     match: (path) => path === '/help/faq' || path === '/faq' || path === '/preguntas-frecuentes',
   },
   {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createAboutView } = await import('../views/about.view.js');
+      return await createAboutView();
+    },
+    id: 'about',
+    match: (path) => path === '/about' || path === '/sobre-nosotros' || path === '/help/about' || path.startsWith('/about'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createContactView } = await import('../views/contact.view.js');
+      return await createContactView();
+    },
+    id: 'contact',
+    match: (path) => path === '/contact' || path === '/contacto' || path === '/help/contact' || path.startsWith('/contact'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createPressView } = await import('../views/press.view.js');
+      return await createPressView();
+    },
+    id: 'press',
+    match: (path) => path === '/press' || path === '/prensa' || path.startsWith('/press'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createBusinessContactView } = await import('../views/business-contact.view.js');
+      return await createBusinessContactView();
+    },
+    id: 'business-contact',
+    match: (path) => path === '/business/contact' || path === '/empresas/contacto' || path.startsWith('/business/contact') || path.startsWith('/empresas/contacto'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createBusinessView } = await import('../views/business.view.js');
+      return await createBusinessView();
+    },
+    id: 'business',
+    match: (path) => path === '/business' || path === '/empresas' || path === '/solutions/business' || path === '/soluciones/business' || path.startsWith('/business') || path.startsWith('/empresas'),
+  },
+  {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
       const { createHelpCookiesView, createHelpDocumentationView, createHelpFaqView, createHelpPrivacyView, createHelpSecurityView, createHelpTermsView } = await import('../views/help.view.js');
@@ -505,6 +552,18 @@ export const APP_ROUTES: RouteDefinition[] = [
         case '/faq':
         case '/preguntas-frecuentes':
           return await createHelpFaqView();
+        case '/help/about':
+        case '/about':
+        case '/sobre-nosotros': {
+          const { createAboutView } = await import('../views/about.view.js');
+          return await createAboutView();
+        }
+        case '/help/contact':
+        case '/contact':
+        case '/contacto': {
+          const { createContactView } = await import('../views/contact.view.js');
+          return await createContactView();
+        }
         case '/help/privacy':
         case '/privacy':
         case '/privacy-policy':

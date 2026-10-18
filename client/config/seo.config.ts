@@ -862,6 +862,81 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
       es: 'Restablecer Contraseña - ProjectAurora',
     },
   },
+  about: {
+    descriptions: {
+      en: 'Learn about the story, mission, and core values driving ProjectAurora.',
+      es: 'Conoce la historia, la misión y los valores fundamentales que impulsan a ProjectAurora.',
+    },
+    routeId: 'about',
+    slugs: {
+      en: 'about',
+      es: 'sobre-nosotros',
+    },
+    titles: {
+      en: 'About Us - Our Story | ProjectAurora',
+      es: 'Sobre Nosotros - Nuestra Historia | ProjectAurora',
+    },
+  },
+  contact: {
+    descriptions: {
+      en: 'Get in touch with the ProjectAurora team for inquiries, support, or partnership opportunities.',
+      es: 'Ponte en contacto con el equipo de ProjectAurora para consultas, soporte o alianzas.',
+    },
+    routeId: 'contact',
+    slugs: {
+      en: 'contact',
+      es: 'contacto',
+    },
+    titles: {
+      en: 'Contact Us | ProjectAurora',
+      es: 'Contacto | ProjectAurora',
+    },
+  },
+  press: {
+    descriptions: {
+      en: 'Official brand assets, media kit, press releases, and media contact for journalists.',
+      es: 'Recursos oficiales de marca, kit de medios, notas de prensa y contacto para periodistas.',
+    },
+    routeId: 'press',
+    slugs: {
+      en: 'press',
+      es: 'prensa',
+    },
+    titles: {
+      en: 'Press & Media Kit | ProjectAurora',
+      es: 'Sala de Prensa y Media Kit | ProjectAurora',
+    },
+  },
+  business: {
+    descriptions: {
+      en: 'Enterprise PDF solutions with SSO, dedicated compute, team management, and SLA for your organization.',
+      es: 'Soluciones PDF para empresas con SSO, cómputo dedicado, gestión de equipos y SLA corporativo.',
+    },
+    routeId: 'business',
+    slugs: {
+      en: 'business',
+      es: 'empresas',
+    },
+    titles: {
+      en: 'Enterprise Solutions & Team Workspaces | ProjectAurora',
+      es: 'Soluciones Empresariales y Equipos | ProjectAurora',
+    },
+  },
+  'business-contact': {
+    descriptions: {
+      en: 'Contact our enterprise sales team to request a customized proposal and live demo.',
+      es: 'Contacta a nuestro equipo de ventas corporativas para solicitar una propuesta a medida.',
+    },
+    routeId: 'business-contact',
+    slugs: {
+      en: 'business-contact',
+      es: 'contacto-empresas',
+    },
+    titles: {
+      en: 'Contact Enterprise Sales | ProjectAurora',
+      es: 'Contacto Ventas Corporativas | ProjectAurora',
+    },
+  },
 };
 
 const SLUG_TO_ROUTE_MAP = new Map<string, string>();
@@ -894,6 +969,16 @@ SLUG_TO_ROUTE_MAP.set('security-policy', 'help-security');
 SLUG_TO_ROUTE_MAP.set('privacy-policy', 'help-privacy');
 SLUG_TO_ROUTE_MAP.set('terms-and-conditions', 'help-terms');
 SLUG_TO_ROUTE_MAP.set('cookie-policy', 'help-cookies');
+SLUG_TO_ROUTE_MAP.set('about', 'about');
+SLUG_TO_ROUTE_MAP.set('sobre-nosotros', 'about');
+SLUG_TO_ROUTE_MAP.set('contact', 'contact');
+SLUG_TO_ROUTE_MAP.set('contacto', 'contact');
+SLUG_TO_ROUTE_MAP.set('press', 'press');
+SLUG_TO_ROUTE_MAP.set('prensa', 'press');
+SLUG_TO_ROUTE_MAP.set('business', 'business');
+SLUG_TO_ROUTE_MAP.set('empresas', 'business');
+SLUG_TO_ROUTE_MAP.set('business-contact', 'business-contact');
+SLUG_TO_ROUTE_MAP.set('contacto-empresas', 'business-contact');
 
 export function getCanonicalSlug(routeId: string, lang = DEFAULT_LANGUAGE): string {
   const normLang = normalizeLanguageCode(lang);

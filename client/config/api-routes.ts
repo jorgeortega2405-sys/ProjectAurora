@@ -20,6 +20,15 @@ export const API_ROUTES = {
   },
   health: '/api/health',
   me: '/api/me',
+  organization: {
+    domains: '/api/organizations/me/domains',
+    me: '/api/organizations/me',
+    members: '/api/organizations/me/members',
+    removeMember: (memberId: string) => `/api/organizations/me/members/${encodeURIComponent(memberId)}`,
+    ssoConfig: '/api/auth/sso/config',
+    ssoInitiate: (emailOrDomain: string) => `/api/auth/sso/initiate?email=${encodeURIComponent(emailOrDomain)}`,
+    ssoLookup: (email: string) => `/api/auth/sso/lookup?email=${encodeURIComponent(email)}`,
+  },
   settings: {
     accountDelete: '/api/settings/account/delete',
     avatar: '/api/settings/avatar',

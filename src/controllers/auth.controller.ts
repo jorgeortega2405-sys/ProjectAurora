@@ -5,6 +5,7 @@ import { addAccountToSession, clearSessionCookie, getLinkedAccounts, getMultiAcc
 import { getGoogleAuthUrl, processGoogleAuthCallback, STATE_COOKIE_NAME } from '../services/google.service.js';
 import { logger } from '../services/logger.service.js';
 import { sendPasswordResetEmail, sendVerificationCodeEmail, sendWelcomeEmail } from '../services/mail.service.js';
+import { lookupSsoByEmail } from '../services/sso.service.js';
 import { consumePending2FALogin, getPending2FALogin, savePending2FALogin, verifyTotpCode } from '../services/two-factor.service.js';
 import { createUser, findUserByEmail, findUserById, findUserDuplicates, getUser2FASecret, sanitizeUser, updateUserPassword, verifyAndConsumeBackupCode } from '../services/user.service.js';
 import { consumePasswordResetToken, generateSixDigitCode, getPendingRegistration, savePasswordResetToken, savePendingRegistration, verifyAndConsumeCode, verifyPasswordResetToken } from '../services/verification.service.js';
@@ -239,6 +240,17 @@ export async function login(req: Request, res: Response): Promise<void> {
     if (!user || !user.password_hash) {
       logger.security.warn('Intento de login fallido: usuario no encontrado o sin contraseña configurada', { email: trimmedEmail });
       res.status(401).json({ error: 'Credenciales inválidas.', success: false });
+      return;
+    }
+
+    const ssoLookup = await lookupSsoByEmail(trimmedEmail);
+    if (ssoLookup.hasSso && ssoLookup.enforceSso) {
+      logger.security.warn('Intento de login con contraseña para cuenta con SSO forzado', { email: trimmedEmail });
+      res.status(403).json({
+        error: 'Tu organización exige inicio de sesión único (SSO). Por favor ingresa a través del portal de SSO corporativo.',
+        requiresSso: true,
+        success: false,
+      });
       return;
     }
 

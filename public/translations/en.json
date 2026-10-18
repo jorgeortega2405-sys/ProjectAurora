@@ -15,10 +15,19 @@
       "password_label": "Password",
       "show_password": "Show password",
       "submit_btn": "Sign in",
+      "sso_btn": "Continue with Corporate SSO",
       "subtitle": "Enter your credentials to access your account",
       "title": "Welcome back",
       "toggle_password": "Toggle visibility",
       "forgot_password": "Forgot password?"
+    },
+    "login_sso": {
+      "title": "Single Sign-On (SSO)",
+      "subtitle": "Enter your work email to sign in through your organization's portal",
+      "email_label": "Work email (e.g. you@company.com)",
+      "submit_btn": "Continue to your company",
+      "back_to_login": "Back to standard sign in",
+      "loading": "Looking up corporate provider..."
     },
     "forgot_password": {
       "title": "Forgot your password?",
@@ -334,6 +343,7 @@
     "logout": "Sign out",
     "logout_all": "Sign out of all accounts",
     "menu": "Menu",
+    "organization": "Organization",
     "profile": "Profile",
     "purchases": "Purchase history",
     "security": "Security",
@@ -600,6 +610,10 @@
       "modal_cancel_immediate_desc": "This action will cancel your subscription immediately on Stripe and you will lose access to Pro features. Do you want to continue?",
       "btn_confirm_cancel_immediate": "Yes, cancel immediately",
       "toast_cancelled_success": "Subscription cancelled successfully."
+    },
+    "organization": {
+      "title": "Organization",
+      "subtitle": "Manage team members, subscribed seats, domains, and corporate SSO settings."
     },
     "purchases": {
       "title": "Purchase history",

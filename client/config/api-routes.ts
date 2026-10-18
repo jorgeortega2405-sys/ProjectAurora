@@ -99,10 +99,6 @@ export const API_ROUTES = {
       download: (fileId: string) => `/api/tools/rotate-pdf/download/${encodeURIComponent(fileId)}`,
       process: '/api/tools/rotate-pdf/process',
     },
-    signPdf: {
-      download: (fileId: string) => `/api/tools/sign-pdf/download/${encodeURIComponent(fileId)}`,
-      sign: '/api/tools/sign-pdf/sign',
-    },
     splitPdf: {
       download: (fileId: string) => `/api/tools/split-pdf/download/${encodeURIComponent(fileId)}`,
       split: '/api/tools/split-pdf/split',

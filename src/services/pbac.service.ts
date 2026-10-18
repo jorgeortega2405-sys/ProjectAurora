@@ -32,9 +32,7 @@ export async function getRolePermissions(role: string): Promise<string[]> {
         'account:edit_identifiers',
         'account:edit_security',
         'account:delete',
-        'tools:dynamic_qr',
-        'tools:compressor',
-        'tools:downloader',
+        'workflows:manage',
       ];
     }
     return ['account:view_profile'];

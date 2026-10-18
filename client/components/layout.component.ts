@@ -486,6 +486,14 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       <div class="drawer-section__header" data-ref="drawer-help-header" style="padding: 8px 8px 4px 8px;">
         <span class="drawer-section__title" data-ref="drawer-help-title" data-i18n="nav.help" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.help', 'Ayuda')}</span>
       </div>
+      <button type="button" class="menu-item" data-ref="btn-nav-help-documentation">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+        <span class="menu-item__text">Documentación</span>
+      </button>
+      <button type="button" class="menu-item" data-ref="btn-nav-help-faq">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#help"></use></svg>
+        <span class="menu-item__text">Preguntas frecuentes</span>
+      </button>
       <button type="button" class="menu-item" data-ref="btn-nav-help-security">
         <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
         <span class="menu-item__text" data-i18n="help.nav_security">${t('help.nav_security', 'Política de seguridad')}</span>
@@ -505,12 +513,18 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
     `;
     translateElement(drawerBody);
 
+    const btnDocs = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-documentation"]');
+    const btnFaq = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-faq"]');
     const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-security"]');
     const btnPrivacy = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-privacy"]');
     const btnTerms = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-terms"]');
     const btnCookies = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-cookies"]');
 
-    if (currentPath === '/help' || currentPath === '/help/security' || currentPath === '/security-policy') {
+    if (currentPath === '/help/documentation' || currentPath === '/documentation' || currentPath === '/herramientas') {
+      btnDocs?.classList.add('is-active');
+    } else if (currentPath === '/help/faq' || currentPath === '/faq' || currentPath === '/preguntas-frecuentes') {
+      btnFaq?.classList.add('is-active');
+    } else if (currentPath === '/help' || currentPath === '/help/security' || currentPath === '/security-policy') {
       btnSecurity?.classList.add('is-active');
     } else if (currentPath === '/help/privacy' || currentPath === '/privacy' || currentPath === '/privacy-policy') {
       btnPrivacy?.classList.add('is-active');
@@ -520,6 +534,8 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       btnCookies?.classList.add('is-active');
     }
 
+    bindNavLink(btnDocs, '/help/documentation');
+    bindNavLink(btnFaq, '/help/faq');
     bindNavLink(btnSecurity, '/help/security');
     bindNavLink(btnPrivacy, '/help/privacy');
     bindNavLink(btnTerms, '/help/terms');
@@ -642,12 +658,13 @@ async function renderWorkflowsDrawerContent(drawerBody: HTMLElement, drawerFoote
 
 function renderAppsDrawerContent(drawerBody: HTMLElement): void {
   const categoriesConfig = [
-    { id: 'pdf-intelligence', name: t('home.cat_pdf_intelligence') || 'PDF Intelligence' },
-    { id: 'organize', name: t('home.cat_organize') || 'Organizar PDF' },
+    { id: 'organize', name: t('home.cat_organize') || 'Ordenar PDF' },
     { id: 'optimize', name: t('home.cat_optimize') || 'Optimizar PDF' },
     { id: 'convert-to-pdf', name: t('home.cat_convert_to_pdf') || 'Convertir a PDF' },
-    { id: 'convert', name: t('home.cat_convert') || 'Convertir desde PDF' },
-    { id: 'security', name: t('home.cat_security') || 'Seguridad' },
+    { id: 'convert-from-pdf', name: t('home.cat_convert_from_pdf') || t('home.cat_convert') || 'Convertir desde PDF' },
+    { id: 'edit', name: t('home.cat_edit') || 'Editar PDF' },
+    { id: 'security', name: t('home.cat_security') || 'Seguridad de PDF' },
+    { id: 'pdf-intelligence', name: t('home.cat_pdf_intelligence') || 'PDF Intelligence' },
   ];
 
   let html = `

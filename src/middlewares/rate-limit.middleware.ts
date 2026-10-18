@@ -275,37 +275,7 @@ export const updatePasswordLimiter = createRateLimiter({
 });
 
 
-export const videoInspectLimiter = createRateLimiter({
-  keyGenerator: getUserOrIpKey,
-  max: 20,
-  message: 'Demasiadas consultas de video en poco tiempo. Por favor espera unos minutos.',
-  prefix: 'video_inspect',
-  windowMs: 5 * 60 * 1000,
-});
 
-export const videoDownloadLimiter = createRateLimiter({
-  keyGenerator: getUserOrIpKey,
-  max: 15,
-  message: 'Has iniciado demasiadas descargas recientemente. Por favor espera unos minutos.',
-  prefix: 'video_download',
-  windowMs: 15 * 60 * 1000,
-});
-
-export const dynamicQrLimiter = createRateLimiter({
-  keyGenerator: getUserOrIpKey,
-  max: 60,
-  message: 'Demasiadas solicitudes de códigos QR dinámicos. Por favor espera unos momentos.',
-  prefix: 'dynamic_qr',
-  windowMs: 60 * 1000,
-});
-
-export const imageCompressLimiter = createRateLimiter({
-  keyGenerator: getUserOrIpKey,
-  max: 40,
-  message: 'Has realizado demasiadas solicitudes de compresión de imágenes. Por favor espera unos minutos.',
-  prefix: 'image_compress',
-  windowMs: 5 * 60 * 1000,
-});
 
 export const pdfMergeLimiter = createRateLimiter({
   keyGenerator: getUserOrIpKey,
@@ -403,14 +373,6 @@ export const summarizePdfLimiter = createRateLimiter({
   windowMs: 5 * 60 * 1000,
 });
 
-export const upscaleImageLimiter = createRateLimiter({
-  keyGenerator: getUserOrIpKey,
-  max: 20,
-  message: 'Has realizado demasiadas solicitudes para escalar imágenes. Por favor espera unos minutos.',
-  prefix: 'upscale_img',
-  windowMs: 5 * 60 * 1000,
-});
-
 export const translatePdfLimiter = createRateLimiter({
   keyGenerator: getUserOrIpKey,
   max: 15,
@@ -418,8 +380,4 @@ export const translatePdfLimiter = createRateLimiter({
   prefix: 'translate_pdf',
   windowMs: 5 * 60 * 1000,
 });
-
-
-
-
 

@@ -19,7 +19,6 @@ const TOOL_SLUGS = [
   'remove-pdf-pages',
   'repair-pdf',
   'rotate-pdf',
-  'sign-pdf',
   'split-pdf',
   'summarize-pdf',
   'to-pdf-converter',

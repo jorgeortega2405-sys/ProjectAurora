@@ -172,15 +172,6 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/sign-pdf.css');
-      const { createSignPdfView } = await import('../views/tools/sign-pdf/sign-pdf.view.js');
-      return await createSignPdfView();
-    },
-    id: 'sign-pdf',
-    match: (path) => path === '/sign-pdf' || path.startsWith('/sign-pdf'),
-  },
-  {
-    handler: async () => {
       await loadStylesheet('/css/tools/unlock-pdf.css');
       const { createUnlockPdfView } = await import('../views/tools/unlock-pdf/unlock-pdf.view.js');
       return await createUnlockPdfView();
@@ -471,11 +462,46 @@ export const APP_ROUTES: RouteDefinition[] = [
     match: (path) => path.startsWith('/settings'),
   },
   {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createFeaturesView } = await import('../views/features.view.js');
+      return await createFeaturesView();
+    },
+    id: 'features',
+    match: (path) => path === '/features' || path === '/caracteristicas' || path.startsWith('/features') || path.startsWith('/caracteristicas'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createHelpDocumentationView } = await import('../views/help.view.js');
+      return await createHelpDocumentationView();
+    },
+    id: 'help-documentation',
+    match: (path) => path === '/help/documentation' || path === '/documentation' || path === '/herramientas',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createHelpFaqView } = await import('../views/help.view.js');
+      return await createHelpFaqView();
+    },
+    id: 'help-faq',
+    match: (path) => path === '/help/faq' || path === '/faq' || path === '/preguntas-frecuentes',
+  },
+  {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
-      const { createHelpCookiesView, createHelpPrivacyView, createHelpSecurityView, createHelpTermsView } = await import('../views/help.view.js');
+      const { createHelpCookiesView, createHelpDocumentationView, createHelpFaqView, createHelpPrivacyView, createHelpSecurityView, createHelpTermsView } = await import('../views/help.view.js');
 
       switch (path) {
+        case '/help/documentation':
+        case '/documentation':
+        case '/herramientas':
+          return await createHelpDocumentationView();
+        case '/help/faq':
+        case '/faq':
+        case '/preguntas-frecuentes':
+          return await createHelpFaqView();
         case '/help/privacy':
         case '/privacy':
         case '/privacy-policy':

@@ -34,29 +34,29 @@ const TIERS: PlanTier[] = [
     buttonText: 'Obtén Aurora Pro',
     features: [
       {
-        desc: 'Máxima resolución y tasa de cuadros sin límites diarios de descarga',
-        icon: 'download',
-        title: 'Descargas en Ultra HD 4K y 60 FPS',
-      },
-      {
-        desc: 'Convierte cualquier video a audio de alta fidelidad al instante',
-        icon: 'bolt',
-        title: 'Extracción de audio MP3 de 320 kbps',
-      },
-      {
-        desc: 'Soporte avanzado para formatos modernos AVIF, WebP, H.265 y HEVC',
-        icon: 'speed',
-        title: 'Compresión ultra con IA sin pérdida visual',
-      },
-      {
-        desc: 'Procesa documentos de cientos de páginas con OCR y renderizado veloz',
+        desc: 'Procesa documentos sin límites diarios de tamaño ni cantidad de páginas',
         icon: 'picture_as_pdf',
-        title: 'Edición y fusión de PDFs ilimitada',
+        title: 'Conversión y procesamiento de PDFs ilimitado',
       },
       {
-        desc: 'Exportación en SVG y PDF de alta resolución con marcos y logotipos',
-        icon: 'brush',
-        title: 'Códigos QR vectoriales y logos personalizados',
+        desc: 'Convierte PDFs escaneados e imágenes a texto editable con alta precisión',
+        icon: 'bolt',
+        title: 'Reconocimiento óptico de caracteres (OCR) avanzado',
+      },
+      {
+        desc: 'Reduce el peso de tus documentos con algoritmos de optimización inteligente',
+        icon: 'speed',
+        title: 'Compresión ultra de PDF sin pérdida visual',
+      },
+      {
+        desc: 'Protección con contraseña, censura irreversible de datos y comparación de PDFs',
+        icon: 'shield',
+        title: 'Seguridad avanzada y censura confidencial',
+      },
+      {
+        desc: 'Automatiza secuencias completas de tareas encadenadas sin intervención manual',
+        icon: 'layers',
+        title: 'Flujos de trabajo y automatización ilimitados',
       },
       {
         desc: 'Tus archivos entran directo a la cola prioritaria sin esperas',

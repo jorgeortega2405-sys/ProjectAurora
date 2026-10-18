@@ -2,10 +2,10 @@ import { API_ROUTES } from '../../config/api-routes.js';
 import { getApi, postApi } from '../../services/api.service.js';
 import { t } from '../../services/i18n.service.js';
 import { loadTemplate } from '../../services/template.service.js';
-import { applyAccessibilityPreferences, getTheme, setTheme } from '../../services/theme.service.js';
+import { applyAccessibilityPreferences } from '../../services/theme.service.js';
 import { setToastPreferences, showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';
-import { debounce, setupDropdown } from '../../utils/dom.util.js';
+import { debounce } from '../../utils/dom.util.js';
 
 export class AccessibilitySettingsController implements ViewController {
   private abortController: AbortController | null = null;
@@ -19,40 +19,9 @@ export class AccessibilitySettingsController implements ViewController {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
-    const themeDropdown = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-theme"]');
-    const themeSelectedText = this.container.querySelector<HTMLElement>('[data-ref="theme-selected-text"]');
-    const themeSelectedIcon = this.container.querySelector<HTMLElement>('[data-ref="theme-selected-icon"]');
-
     const toggleReduceMotion = this.container.querySelector<HTMLInputElement>('[data-ref="toggle-reduce-motion"]');
     const toggleHighContrast = this.container.querySelector<HTMLInputElement>('[data-ref="toggle-high-contrast"]');
     const toggleExtendedAlerts = this.container.querySelector<HTMLInputElement>('[data-ref="toggle-extended-alerts"]');
-
-    const getThemeLabel = (_theme: string) => t('settings.accessibility.theme_light', 'Claro');
-
-    const themeIcons: Record<string, string> = {
-      light: 'light_mode',
-    };
-
-    const updateThemeUi = (theme: string) => {
-      const validTheme = ['system', 'light', 'dark'].includes(theme) ? theme : 'system';
-      if (themeSelectedText) {
-        themeSelectedText.textContent = getThemeLabel(validTheme);
-      }
-      if (themeSelectedIcon && themeIcons[validTheme]) {
-        themeSelectedIcon.textContent = themeIcons[validTheme];
-      }
-      if (themeDropdown) {
-        const activeItem = themeDropdown.querySelector<HTMLElement>(
-          `[data-theme-value="${validTheme}"], [data-theme="${validTheme}"]`
-        );
-        if (activeItem) {
-          themeDropdown.querySelectorAll('.menu-item').forEach((i) => i.classList.remove('is-active'));
-          activeItem.classList.add('is-active');
-        }
-      }
-    };
-
-    updateThemeUi(getTheme());
 
     try {
       const prefRes = await getApi(API_ROUTES.settings.preferences);
@@ -64,32 +33,12 @@ export class AccessibilitySettingsController implements ViewController {
           setToastPreferences(prefs);
           applyAccessibilityPreferences(prefs);
 
-          const currentLocal = localStorage.getItem('aurora_theme');
-          if (!currentLocal && prefs.theme && ['system', 'light', 'dark'].includes(prefs.theme)) {
-            await setTheme(prefs.theme, false);
-            updateThemeUi(prefs.theme);
-          } else {
-            updateThemeUi(getTheme());
-          }
-
           if (toggleReduceMotion) toggleReduceMotion.checked = Boolean(prefs.reduce_motion);
           if (toggleHighContrast) toggleHighContrast.checked = Boolean(prefs.high_contrast);
           if (toggleExtendedAlerts) toggleExtendedAlerts.checked = Boolean(prefs.extended_alerts);
         }
       }
     } catch (_) {}
-
-    if (themeDropdown) {
-      setupDropdown(themeDropdown, {
-        onSelect: async (theme: string) => {
-          try {
-            updateThemeUi(theme);
-            await setTheme(theme, true);
-            showToast(t('toasts.theme_updated', 'Tema actualizado'), 'success');
-          } catch (_) {}
-        },
-      });
-    }
 
     const saveReduceMotion = debounce(async (checked: boolean) => {
       try {

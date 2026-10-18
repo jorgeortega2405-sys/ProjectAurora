@@ -1,4 +1,5 @@
 import { navigate } from '../app-router.js';
+import { mountSiteFooter } from '../components/footer.component.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
 import { currentUser, getApi } from '../services/api.service.js';
@@ -16,6 +17,7 @@ interface UserWorkflowItem {
 export class HomeController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
+  private dropdownControllers: Array<{ destroy: () => void }> = [];
   private userWorkflows: UserWorkflowItem[] = [];
 
   constructor(container: HTMLElement) {
@@ -37,6 +39,8 @@ export class HomeController {
       this.abortController.abort();
       this.abortController = null;
     }
+    this.dropdownControllers.forEach((ctrl) => ctrl.destroy());
+    this.dropdownControllers = [];
   }
 
   private async loadUserWorkflows(): Promise<void> {
@@ -55,10 +59,10 @@ export class HomeController {
     const grid = this.container.querySelector<HTMLElement>('[data-ref="tools-grid"]');
     if (!grid) return;
 
-    const featuredTools = TOOLS_REGISTRY.filter((tool) => tool.featured);
+    const featuredTools = TOOLS_REGISTRY.filter((tool) => tool.featured).slice(0, 30);
 
     const createWorkflowCardHtml = `
-      <div class="tool-card tool-card--create-workflow" data-ref="card-create-workflow" data-category="all pdf-intelligence organize optimize convert convert-to-pdf">
+      <div class="tool-card tool-card--create-workflow" data-ref="card-create-workflow" data-category="all organize optimize convert-to-pdf convert-from-pdf edit security pdf-intelligence">
         <div class="tool-card__icon-box" data-ref="icon-box-create-workflow">
           ${SVG_TOOL_CREATE_WORKFLOW}
         </div>
@@ -155,6 +159,32 @@ export class HomeController {
         { signal: this.abortController?.signal }
       );
     });
+
+    const btnAiSummarize = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-summarize"]');
+    btnAiSummarize?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        navigate('/summarize-pdf');
+      },
+      { signal: this.abortController?.signal }
+    );
+
+    const btnAiTranslate = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-translate"]');
+    btnAiTranslate?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        navigate('/translate-pdf');
+      },
+      { signal: this.abortController?.signal }
+    );
+
+    const footerEl = this.container.querySelector<HTMLElement>('[data-ref="home-footer-section"]');
+    if (footerEl) {
+      const footerCtrl = mountSiteFooter(footerEl, this.abortController?.signal);
+      this.dropdownControllers.push(footerCtrl);
+    }
   }
 
   private filterCards(category: string, cards: NodeListOf<HTMLElement>): void {

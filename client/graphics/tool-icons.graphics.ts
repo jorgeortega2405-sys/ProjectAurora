@@ -169,6 +169,18 @@ export const SVG_TOOL_SUMMARIZE_PDF = `
 
 
 
+export const SVG_TOOL_PDF_TO_MARKDOWN = `
+  <div class="icon-outline icon-outline--teal" data-ref="icon-outline-pdf-to-markdown">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M7 16v-4.5l2 2 2-2v4.5" />
+      <path d="M15 11.5v5" />
+      <path d="M13.2 14.8l1.8 1.8 1.8-1.8" />
+    </svg>
+  </div>
+`;
+
 export const SVG_TOOL_TRANSLATE_PDF = `
   <div class="icon-outline icon-outline--blue" data-ref="icon-outline-translate-pdf">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -278,11 +290,34 @@ export const SVG_TOOL_PROTECT_PDF = `
   </div>
 `;
 
+export const SVG_TOOL_REDACT_PDF = `
+  <div class="icon-outline icon-outline--crimson" data-ref="icon-outline-redact-pdf">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <rect x="7" y="11" width="10" height="2.5" rx="0.5" fill="currentColor" />
+      <rect x="7" y="15.5" width="7" height="2.5" rx="0.5" fill="currentColor" />
+    </svg>
+  </div>
+`;
+
 export const SVG_TOOL_UNLOCK_PDF = `
   <div class="icon-outline icon-outline--crimson" data-ref="icon-outline-unlock-pdf">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
       <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+    </svg>
+  </div>
+`;
+
+export const SVG_TOOL_SIGN_PDF = `
+  <div class="icon-outline icon-outline--green" data-ref="icon-outline-sign-pdf">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <path d="M7 16.5c1.5-1 3-1 4.5 0s3 1 4.5 0" />
+      <path d="M8 12h3" />
+      <path d="M17.5 13.5l1.5-1.5a1.4 1.4 0 0 1 2 2L18.5 16.5l-2.5.5.5-2.5z" />
     </svg>
   </div>
 `;
@@ -315,6 +350,17 @@ export const SVG_TOOL_EDIT_PDF = `
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <path d="M10.4 12.6a2 2 0 1 1 2.8 2.8L8 20.6l-3.2.8.8-3.2z" />
+    </svg>
+  </div>
+`;
+
+export const SVG_TOOL_COMPARE_PDF = `
+  <div class="icon-outline icon-outline--blue" data-ref="icon-outline-compare-pdf">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4v16a1 1 0 0 0 1 1h4V3H5a1 1 0 0 0-1 1z" />
+      <path d="M15 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4" />
+      <path d="M9 8l-3 3 3 3" />
+      <path d="M15 10l3 3-3 3" />
     </svg>
   </div>
 `;

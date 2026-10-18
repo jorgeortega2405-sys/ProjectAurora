@@ -1114,7 +1114,7 @@
 
 .pdf-doc-card__canvas,
 .pdf-doc-card__img {
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
   display: block;
   height: 100%;
   max-height: 100%;
@@ -1424,10 +1424,10 @@
 
 .pdf-page-card {
   align-items: center;
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09), 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--sl-shadow-small);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -1439,11 +1439,11 @@
 }
 
 .pdf-page-card:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--sl-shadow-medium);
 }
 
 .pdf-page-card__canvas {
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
   border-radius: 3px;
   display: block;
 }

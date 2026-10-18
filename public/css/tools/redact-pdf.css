@@ -1,0 +1,409 @@
+@import './tool-layout.css';
+
+.redact-editor-workspace {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.redact-toolbar {
+  align-items: center;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 8px 16px;
+  position: relative;
+  z-index: 20;
+}
+
+.redact-doc-name-pill {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redact-mode-switcher {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-sizing: border-box;
+  display: inline-flex;
+  padding: 3px;
+}
+
+.redact-tool-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 5px 12px;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.redact-tool-btn:hover {
+  color: var(--text-primary);
+}
+
+.redact-tool-btn.is-active {
+  background-color: var(--bg-surface);
+  box-shadow: var(--sl-shadow-small);
+  color: var(--text-primary);
+}
+
+.redact-pages-sidebar {
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-color);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 160px;
+  min-width: 160px;
+  overflow: hidden;
+  width: 160px;
+}
+
+.redact-pages-sidebar .pdf-editor-pages-sidebar__header {
+  border-bottom: 1px solid var(--border-color);
+  box-sizing: border-box;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 12px;
+  text-transform: uppercase;
+}
+
+.redact-pages-sidebar .pdf-editor-thumbnails-scroll {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.redact-thumbnail {
+  align-items: center;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  position: relative;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.redact-thumbnail:hover {
+  background-color: var(--bg-hover);
+}
+
+.redact-thumbnail.is-active {
+  background-color: var(--bg-hover);
+  border-color: var(--text-primary);
+}
+
+.redact-thumbnail.is-full-redacted .redact-thumbnail__sheet {
+  background-color: var(--black-100);
+  border-color: var(--black-100);
+}
+
+.redact-thumbnail__sheet {
+  align-items: center;
+  aspect-ratio: 1 / 1.414;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--sl-shadow-small);
+  display: flex;
+  justify-content: center;
+  max-width: 110px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.redact-thumbnail__canvas {
+  display: block;
+  height: 100%;
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.redact-thumbnail__badge {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.redact-thumbnail__censor-pill {
+  align-items: center;
+  background-color: var(--danger-color);
+  border-radius: 10px;
+  color: var(--white-100);
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 700;
+  height: 16px;
+  justify-content: center;
+  min-width: 16px;
+  padding: 0 4px;
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+
+.redact-canvas-container {
+  background-color: var(--bg-app);
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  overflow: auto;
+  padding: 32px 24px;
+  position: relative;
+}
+
+.pdf-redact-page-card {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.pdf-redact-page-card__header {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.pdf-redact-page-card__title {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pdf-redact-viewport {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--sl-shadow-medium);
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.pdf-redact-canvas {
+  display: block;
+  pointer-events: none;
+}
+
+.pdf-redact-text-layer {
+  cursor: text;
+  inset: 0;
+  pointer-events: auto;
+  position: absolute;
+  user-select: text;
+  z-index: 5;
+}
+
+.pdf-redact-text-item {
+  color: transparent;
+  cursor: text;
+  line-height: 1;
+  pointer-events: auto;
+  position: absolute;
+  user-select: text;
+  white-space: pre;
+}
+
+.pdf-redact-drawing-surface {
+  cursor: crosshair;
+  inset: 0;
+  pointer-events: auto;
+  position: absolute;
+  z-index: 10;
+}
+
+.pdf-redact-preview-box {
+  background-color: var(--black-100);
+  border: 1px dashed var(--white-100);
+  box-sizing: border-box;
+  opacity: 0.65;
+  pointer-events: none;
+  position: absolute;
+  z-index: 25;
+}
+
+.redaction-box {
+  background-color: var(--black-100);
+  border-radius: 2px;
+  box-sizing: border-box;
+  cursor: pointer;
+  pointer-events: auto;
+  position: absolute;
+  transition: outline 0.15s ease;
+  z-index: 15;
+}
+
+.redaction-box:hover {
+  outline: 2px solid var(--danger-color);
+}
+
+.redaction-box__remove-btn {
+  align-items: center;
+  background-color: var(--danger-color);
+  border: 1px solid var(--white-100);
+  border-radius: 50%;
+  color: var(--white-100);
+  cursor: pointer;
+  display: none;
+  font-size: 11px;
+  font-weight: 700;
+  height: 18px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  right: -9px;
+  top: -9px;
+  width: 18px;
+  z-index: 30;
+}
+
+.redaction-box:hover .redaction-box__remove-btn {
+  display: flex;
+}
+
+.page-redaction-overlay--full {
+  align-items: center;
+  background-color: var(--black-100);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  inset: 0;
+  justify-content: center;
+  pointer-events: auto;
+  position: absolute;
+  z-index: 20;
+}
+
+.page-redaction-overlay--full__badge {
+  align-items: center;
+  background-color: var(--bg-surface);
+  border-radius: 20px;
+  box-shadow: var(--sl-shadow-medium);
+  color: var(--text-primary);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  padding: 8px 18px;
+}
+
+.redact-search-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.redact-items-list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.redact-items-list__empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 12px 0;
+  text-align: center;
+}
+
+.redact-item-row {
+  align-items: center;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.redact-item-row__badge {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.redact-item-row__text {
+  color: var(--text-primary);
+  flex: 1;
+  font-family: monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redact-item-row__remove {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease;
+  width: 24px;
+}
+
+.redact-item-row__remove:hover {
+  background-color: var(--danger-light);
+  color: var(--danger-color);
+}

@@ -61,7 +61,7 @@
 
 .pdf-editor-mode-btn.is-active {
   background-color: var(--bg-surface);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--sl-shadow-small);
   color: var(--text-primary);
 }
 
@@ -111,15 +111,15 @@
 }
 
 .pdf-editor-status-pill--warning {
-  background-color: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.3);
-  color: #d97706;
+  background-color: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
 }
 
 .pdf-editor-status-pill--success {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: #059669;
+  background-color: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
 }
 
 .pdf-editor-main-layout {
@@ -193,7 +193,7 @@
 .pdf-editor-thumbnail__sheet {
   align-items: center;
   aspect-ratio: 1 / 1.414;
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   box-shadow: var(--sl-shadow-small);
@@ -220,7 +220,7 @@
 }
 
 .pdf-editor-canvas-container {
-  background-color: var(--bg-body, #f4f5f7);
+  background-color: var(--bg-app);
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -239,10 +239,10 @@
 }
 
 .pdf-edit-page-card {
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--sl-shadow-medium);
   box-sizing: border-box;
   overflow: visible;
   position: relative;
@@ -304,17 +304,17 @@
 }
 
 .pdf-editor-workspace.mode--edit .pdf-native-text-item:hover {
-  background-color: rgba(59, 130, 246, 0.12);
-  border-color: rgba(59, 130, 246, 0.5);
+  background-color: var(--bg-hover);
+  border-color: var(--border-color-focus);
 }
 
 .pdf-native-text-input {
-  background-color: #ffffff;
-  border: 1.5px solid #2563eb;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-color-focus);
   border-radius: 2px;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 3px var(--border-color-hover);
   box-sizing: border-box;
-  color: #000000;
+  color: var(--text-primary);
   font-family: inherit;
   font-size: inherit;
   line-height: 1;
@@ -326,7 +326,7 @@
 
 .pdf-text-replace-patch {
   align-items: center;
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
   border: 1px dashed transparent;
   box-sizing: border-box;
   cursor: pointer;
@@ -337,7 +337,7 @@
 }
 
 .pdf-editor-workspace.mode--edit .pdf-text-replace-patch:hover {
-  border-color: #2563eb;
+  border-color: var(--border-color-focus);
 }
 
 .pdf-added-textbox {
@@ -353,8 +353,8 @@
 }
 
 .pdf-added-textbox.is-selected {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 1px #2563eb;
+  border-color: var(--border-color-focus);
+  box-shadow: 0 0 0 1px var(--border-color-focus);
 }
 
 .pdf-added-textbox__content {
@@ -375,8 +375,8 @@
 }
 
 .pdf-added-image.is-selected {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 1px #2563eb;
+  border-color: var(--border-color-focus);
+  box-shadow: 0 0 0 1px var(--border-color-focus);
 }
 
 .pdf-added-image img {
@@ -388,8 +388,8 @@
 }
 
 .pdf-element-resize-handle {
-  background-color: #2563eb;
-  border: 1px solid #ffffff;
+  background-color: var(--border-color-focus);
+  border: 1px solid var(--bg-surface);
   border-radius: 2px;
   bottom: -4px;
   cursor: se-resize;

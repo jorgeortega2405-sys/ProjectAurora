@@ -1,0 +1,207 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="compare-pdf-wrapper">
+  <div class="tool-layout" data-ref="compare-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="compare-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file1" type="file" accept="application/pdf,.pdf" />
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file2" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Panel de cambios" aria-label="Panel de cambios">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#compare_arrows"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="compare-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="compare-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="compare-dropzone-title">Comparar PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="compare-dropzone-desc">Compara dos archivos PDF uno al lado del otro, detecta cambios de texto semántico y visualiza diferencias con facilidad.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file1">
+              <span data-ref="txt-browse-file">Seleccionar Primer PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive1" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox1" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí para comenzar la comparación</p>
+        </div>
+      </div>
+
+      <div class="pdf-editor-workspace compare-editor-workspace" data-ref="compare-workspace-card" style="display: none;">
+        <header class="pdf-editor-toolbar compare-toolbar" data-ref="compare-toolbar">
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
+            <button type="button" class="compare-toolbar-btn is-active" data-ref="btn-pan-tool" data-tooltip="Herramienta de desplazamiento" aria-label="Desplazamiento">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#pan_tool"></use></svg>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36 compare-sync-btn is-active" data-ref="btn-sync-scroll" data-tooltip="Sincronizar desplazamiento entre ambos documentos" aria-label="Sincronizar desplazamiento">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#sync_alt"></use></svg>
+              <span>Sincronizar el desplazamiento</span>
+            </button>
+          </div>
+
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-center">
+            <div class="pdf-editor-status-pill compare-sim-pill" data-ref="pill-similarity">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+              <span>Similitud: <strong data-ref="txt-similarity-val">-</strong></span>
+            </div>
+          </div>
+
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-right">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-files" data-tooltip="Cambiar archivos">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+              <span>Cambiar archivos</span>
+            </button>
+            <button type="button" class="component-button component-button--black component-button--h36" data-ref="btn-header-report">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+              <span>Descargar informe</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="compare-split-layout" data-ref="split-layout">
+          <section class="compare-pane compare-pane--left" data-ref="pane-left">
+            <button type="button" class="compare-pane__close-btn" data-ref="btn-remove-doc1" data-tooltip="Quitar archivo antiguo" aria-label="Quitar archivo">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
+
+            <div class="compare-scroll-container" data-ref="scroll-container-left">
+              <div class="compare-pages-wrapper" data-ref="pages-wrapper-left"></div>
+            </div>
+
+            <div class="compare-floating-pill" data-ref="floating-pill-left">
+              <button type="button" class="compare-floating-pill__btn" data-ref="btn-zoom-out-left" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+              </button>
+              <span class="compare-floating-pill__val" data-ref="val-zoom-left">100%</span>
+              <button type="button" class="compare-floating-pill__btn" data-ref="btn-zoom-in-left" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+              </button>
+              <span class="compare-floating-pill__sep"></span>
+              <span class="compare-floating-pill__title" data-ref="title-doc-left">documento_1.pdf</span>
+            </div>
+          </section>
+
+          <div class="compare-split-divider" data-ref="split-divider">
+            <div class="compare-split-divider__handle"></div>
+          </div>
+
+          <section class="compare-pane compare-pane--right" data-ref="pane-right">
+            <button type="button" class="compare-pane__close-btn" data-ref="btn-remove-doc2" data-tooltip="Quitar archivo nuevo" aria-label="Quitar archivo" style="display: none;">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
+
+            <div class="compare-secondary-dropzone" data-ref="dropzone-doc2">
+              <div class="compare-secondary-dropzone__card">
+                <svg class="component-icon compare-secondary-dropzone__icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+                <p class="compare-secondary-dropzone__hint">Arrastra y suelta aquí el segundo PDF</p>
+                <p class="compare-secondary-dropzone__or">o</p>
+                <button type="button" class="component-button component-button--black component-button--h44" data-ref="btn-browse-file2">
+                  <span>Seleccionar archivo</span>
+                </button>
+                <div class="tool-hero-dropzone__cloud-btns compare-secondary-dropzone__cloud-btns" data-ref="cloud-btns-doc2">
+                  <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive2" data-tooltip="Google Drive" aria-label="Google Drive">
+                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+                  </button>
+                  <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox2" data-tooltip="Dropbox" aria-label="Dropbox">
+                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="compare-scroll-container" data-ref="scroll-container-right" style="display: none;">
+              <div class="compare-pages-wrapper" data-ref="pages-wrapper-right"></div>
+            </div>
+
+            <div class="compare-floating-pill" data-ref="floating-pill-right" style="display: none;">
+              <button type="button" class="compare-floating-pill__btn" data-ref="btn-zoom-out-right" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+              </button>
+              <span class="compare-floating-pill__val" data-ref="val-zoom-right">100%</span>
+              <button type="button" class="compare-floating-pill__btn" data-ref="btn-zoom-in-right" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+              </button>
+              <span class="compare-floating-pill__sep"></span>
+              <span class="compare-floating-pill__title" data-ref="title-doc-right">documento_2.pdf</span>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="compare-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner" data-ref="compare-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="compare-processing-title">Comparando documentos PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="compare-processing-subtitle">Analizando estructura de texto semántico y detectando modificaciones</p>
+        <div class="tool-progress-card__track" data-ref="compare-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="compare-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar pdf-editor-properties-sidebar compare-sidebar" data-ref="compare-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="compare-mode-tabs" data-ref="compare-mode-tabs">
+        <button type="button" class="compare-mode-tab is-active" data-ref="btn-tab-semantic" data-mode="semantic">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
+          <span>Texto semántico</span>
+        </button>
+        <button type="button" class="compare-mode-tab" data-ref="btn-tab-overlay" data-mode="overlay">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#layers"></use></svg>
+          <span>Superposición de contenido</span>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="banner banner--info compare-instruction-banner" data-ref="compare-instruction-banner">
+          <span>Compara los cambios entre dos archivos PDF.</span>
+        </div>
+
+        <div class="tool-sidebar__section compare-overlay-controls" data-ref="section-overlay-controls" style="display: none;">
+          <span class="tool-sidebar__section-title">Opacidad de superposición</span>
+          <div class="compare-opacity-slider-row">
+            <input class="compare-opacity-slider" data-ref="input-overlay-opacity" type="range" min="0" max="100" value="50" />
+            <span class="compare-opacity-val" data-ref="val-overlay-opacity">50%</span>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-search">
+          <label class="field" data-ref="field-search-changes">
+            <input class="field__input" data-ref="input-search-changes" type="text" placeholder=" " />
+            <span class="field__label">Buscar texto</span>
+          </label>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-summary">
+          <span class="tool-sidebar__section-title">Informe de cambios (<span data-ref="val-total-changes">0</span>)</span>
+          <div class="compare-changes-list" data-ref="changes-list-container">
+            <p class="compare-changes-list__empty" data-ref="changes-empty-msg">Sube el segundo documento para analizar y visualizar las diferencias.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-download-report" disabled>
+          <span>Descargar informe</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="compare-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -39,6 +39,10 @@ export const API_ROUTES = {
     username: '/api/settings/username',
   },
   tools: {
+    comparePdf: {
+      compare: '/api/tools/compare-pdf/compare',
+      download: (fileId: string) => `/api/tools/compare-pdf/download/${encodeURIComponent(fileId)}`,
+    },
     compressPdf: {
       compress: '/api/tools/compress-pdf/compress',
       download: (fileId: string) => `/api/tools/compress-pdf/download/${encodeURIComponent(fileId)}`,
@@ -71,9 +75,17 @@ export const API_ROUTES = {
       convert: '/api/tools/pdf-converter/convert',
       download: (token: string) => `/api/tools/pdf-converter/download/${encodeURIComponent(token)}`,
     },
+    pdfToMarkdown: {
+      convert: '/api/tools/pdf-to-markdown/convert',
+      download: (fileId: string) => `/api/tools/pdf-to-markdown/download/${encodeURIComponent(fileId)}`,
+    },
     protectPdf: {
       download: (fileId: string) => `/api/tools/protect-pdf/download/${encodeURIComponent(fileId)}`,
       process: '/api/tools/protect-pdf/process',
+    },
+    redactPdf: {
+      download: (fileId: string) => `/api/tools/redact-pdf/download/${encodeURIComponent(fileId)}`,
+      redact: '/api/tools/redact-pdf/redact',
     },
     removePdfPages: {
       download: (fileId: string) => `/api/tools/remove-pdf-pages/download/${encodeURIComponent(fileId)}`,
@@ -86,6 +98,10 @@ export const API_ROUTES = {
     rotatePdf: {
       download: (fileId: string) => `/api/tools/rotate-pdf/download/${encodeURIComponent(fileId)}`,
       process: '/api/tools/rotate-pdf/process',
+    },
+    signPdf: {
+      download: (fileId: string) => `/api/tools/sign-pdf/download/${encodeURIComponent(fileId)}`,
+      sign: '/api/tools/sign-pdf/sign',
     },
     splitPdf: {
       download: (fileId: string) => `/api/tools/split-pdf/download/${encodeURIComponent(fileId)}`,

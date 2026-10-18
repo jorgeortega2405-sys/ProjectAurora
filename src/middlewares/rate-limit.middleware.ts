@@ -363,11 +363,35 @@ export const pdfOcrLimiter = createRateLimiter({
   windowMs: 5 * 60 * 1000,
 });
 
+export const comparePdfLimiter = createRateLimiter({
+  keyGenerator: getUserOrIpKey,
+  max: 25,
+  message: 'Has realizado demasiadas solicitudes para comparar documentos PDF. Por favor espera unos minutos.',
+  prefix: 'compare_pdf',
+  windowMs: 5 * 60 * 1000,
+});
+
+export const redactPdfLimiter = createRateLimiter({
+  keyGenerator: getUserOrIpKey,
+  max: 25,
+  message: 'Has realizado demasiadas solicitudes para censurar documentos PDF. Por favor espera unos minutos.',
+  prefix: 'redact_pdf',
+  windowMs: 5 * 60 * 1000,
+});
+
 export const removeBackgroundLimiter = createRateLimiter({
   keyGenerator: getUserOrIpKey,
   max: 25,
   message: 'Has realizado demasiadas solicitudes para eliminar fondos de imagen. Por favor espera unos minutos.',
   prefix: 'remove_bg',
+  windowMs: 5 * 60 * 1000,
+});
+
+export const pdfToMarkdownLimiter = createRateLimiter({
+  keyGenerator: getUserOrIpKey,
+  max: 20,
+  message: 'Has realizado demasiadas solicitudes para convertir documentos PDF a Markdown. Por favor espera unos minutos.',
+  prefix: 'pdf_to_markdown',
   windowMs: 5 * 60 * 1000,
 });
 

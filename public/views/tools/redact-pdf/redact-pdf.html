@@ -1,0 +1,179 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="redact-pdf-wrapper">
+  <div class="tool-layout" data-ref="redact-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="redact-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Opciones de censura" aria-label="Opciones de censura">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#visibility_off"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="redact-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="redact-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="redact-dropzone-title">Censurar PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="redact-dropzone-desc">Oculta y elimina de forma irreversible información confidencial, texto o páginas completas de tu PDF.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar Archivo PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="pdf-editor-workspace redact-editor-workspace" data-ref="redact-workspace-card" style="display: none;">
+        <header class="pdf-editor-toolbar redact-toolbar" data-ref="redact-toolbar">
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file" data-tooltip="Cambiar archivo">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+            <div class="pdf-editor-status-pill redact-doc-name-pill" data-ref="val-doc-title">Documento</div>
+          </div>
+
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-center">
+            <div class="redact-mode-switcher" data-ref="tool-switcher">
+              <button type="button" class="redact-tool-btn is-active" data-ref="btn-tool-select" data-tool="select" data-tooltip="Seleccionar y censurar texto" aria-label="Seleccionar y censurar texto">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#format_color_text"></use></svg>
+                <span>Seleccionar texto</span>
+              </button>
+              <button type="button" class="redact-tool-btn" data-ref="btn-tool-draw" data-tool="draw" data-tooltip="Dibujar rectángulo de censura" aria-label="Dibujar rectángulo de censura">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#crop_square"></use></svg>
+                <span>Dibujar área</span>
+              </button>
+            </div>
+
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+            </button>
+            <span class="pdf-editor-status-pill" data-ref="val-zoom-level">100%</span>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            </button>
+          </div>
+
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-right">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-clear-redactions" data-tooltip="Limpiar todas las censuras" aria-label="Limpiar todas las censuras">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
+              <span>Limpiar todo</span>
+            </button>
+            <button type="button" class="component-button component-button--black component-button--h36" data-ref="btn-header-apply">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility_off"></use></svg>
+              <span>Aplicar y Descargar</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="pdf-editor-main-layout" data-ref="editor-main-layout">
+          <aside class="pdf-editor-pages-sidebar redact-pages-sidebar" data-ref="pages-sidebar">
+            <div class="pdf-editor-pages-sidebar__header">
+              <span>Páginas (<span data-ref="pages-count-badge">0</span>)</span>
+            </div>
+            <div class="pdf-editor-thumbnails-scroll" data-ref="thumbnails-container"></div>
+          </aside>
+
+          <div class="pdf-editor-canvas-container redact-canvas-container" data-ref="editor-scroll-container">
+            <div class="pdf-editor-pages-wrapper" data-ref="pages-wrapper"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="redact-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner" data-ref="redact-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="redact-processing-title">Censurando y purgando contenido...</h3>
+        <p class="tool-progress-card__meta" data-ref="redact-processing-subtitle">Eliminando texto internamente y aplicando marcas de censura permanentes</p>
+        <div class="tool-progress-card__track" data-ref="redact-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="redact-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar pdf-editor-properties-sidebar redact-sidebar" data-ref="redact-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="redact-sidebar-title">Censurar PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="redact-sidebar-subtitle">Selecciona texto con el ratón, dibuja áreas o censura páginas completas.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section" data-ref="section-search-redact">
+          <span class="tool-sidebar__section-title">Buscar y censurar texto</span>
+          <div class="redact-search-box" data-ref="redact-search-box">
+            <label class="field" data-ref="field-search-phrase">
+              <input class="field__input" data-ref="input-search-phrase" type="text" placeholder=" " />
+              <span class="field__label">Palabra o frase confidencial</span>
+            </label>
+            <button type="button" class="component-button component-button--secondary component-button--h40 component-button--w-full" data-ref="btn-search-redact">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+              <span>Censurar coincidencias</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-summary">
+          <span class="tool-sidebar__section-title">Resumen de censura</span>
+          <div class="tool-summary-card" data-ref="summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Documento</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-name">-</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Total páginas</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-pages-count">0</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Zonas censuradas</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-redactions-count">0</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Páginas censuradas</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-full-pages-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-list">
+          <span class="tool-sidebar__section-title">Elementos a censurar</span>
+          <div class="redact-items-list" data-ref="redactions-list-container">
+            <p class="redact-items-list__empty" data-ref="redactions-empty-msg">No has añadido ninguna censura todavía. Selecciona texto en el documento o dibuja un área.</p>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-warning">
+          <div class="banner banner--info" data-ref="redact-info-banner">
+            <span>El texto censurado se eliminará internamente del documento PDF para garantizar que sea imposible de extraer o copiar.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-redact" disabled>
+          <span>Aplicar Censuras</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="redact-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

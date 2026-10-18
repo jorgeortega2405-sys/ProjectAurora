@@ -6,7 +6,9 @@ import { cropPdf, getCropPdfResult } from '../tools/crop-pdf/crop-pdf.service.js
 import { getOcrPdf, processOcrPdf } from '../tools/ocr-pdf/ocr-pdf.service.js';
 import { getOrganizePdfResult, organizePdf } from '../tools/organize-pdf/organize-pdf.service.js';
 import { addPageNumbers, getPageNumberResult } from '../tools/page-numbers/page-numbers.service.js';
+import { convertPdfToMarkdown } from '../tools/pdf-to-markdown/pdf-to-markdown.service.js';
 import { getProtectPdfResult, protectPdf } from '../tools/protect-pdf/protect-pdf.service.js';
+import { getStoredRedactedPdf, redactPdfDocument } from '../tools/redact-pdf/redact-pdf.service.js';
 import { getRemovePagesResult, removePdfPages } from '../tools/remove-pdf-pages/remove-pdf-pages.service.js';
 import { getRepairedPdf, repairPdfFile } from '../tools/repair-pdf/repair-pdf.service.js';
 import { getRotatePdfResult, rotatePdf } from '../tools/rotate-pdf/rotate-pdf.service.js';
@@ -37,7 +39,7 @@ interface StoredWorkflowResult {
   filename: string;
 }
 
-const TERMINAL_TOOLS = new Set(['pdf-to-excel', 'pdf-to-jpg', 'pdf-to-powerpoint', 'pdf-to-word', 'summarize-pdf']);
+const TERMINAL_TOOLS = new Set(['pdf-to-excel', 'pdf-to-jpg', 'pdf-to-markdown', 'pdf-to-powerpoint', 'pdf-to-word', 'summarize-pdf']);
 
 function validateWorkflowStepsStructure(steps: WorkflowStep[]): void {
   for (let i = 0; i < steps.length; i++) {
@@ -468,6 +470,20 @@ export async function executeWorkflowSteps(
         currentBuffer = stored.buffer;
         currentContentType = 'application/pdf';
         currentFilename = protectRes.filename || currentFilename;
+      } else if (stepTool === 'redact-pdf') {
+        const redactRes = await redactPdfDocument({
+          buffer: currentBuffer,
+          originalFilename: currentFilename,
+          redactions: opts.redactions || [],
+          sanitizeMetadata: opts.sanitizeMetadata !== false,
+        });
+        const stored = await getStoredRedactedPdf(redactRes.fileId);
+        if (!stored?.buffer) {
+          throw new Error('Error al recuperar el archivo censurado.');
+        }
+        currentBuffer = stored.buffer;
+        currentContentType = 'application/pdf';
+        currentFilename = redactRes.filename || currentFilename;
       } else if (stepTool === 'unlock-pdf') {
         const unlockRes = await unlockPdf(currentBuffer, currentFilename, {
           filename: currentFilename,
@@ -480,6 +496,15 @@ export async function executeWorkflowSteps(
         currentBuffer = stored.buffer;
         currentContentType = 'application/pdf';
         currentFilename = unlockRes.filename || currentFilename;
+      } else if (stepTool === 'pdf-to-markdown') {
+        const mdRes = await convertPdfToMarkdown({
+          buffer: currentBuffer,
+          mode: opts.mode || 'structured',
+          originalname: currentFilename,
+        });
+        currentBuffer = Buffer.from(mdRes.markdown, 'utf-8');
+        currentContentType = 'text/markdown; charset=utf-8';
+        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '.md';
       } else if (stepTool === 'summarize-pdf') {
         const sumRes = await summarizePdf({
           buffer: currentBuffer,

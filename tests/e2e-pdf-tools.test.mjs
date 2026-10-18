@@ -5,6 +5,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 const TOOL_SLUGS = [
+  'compare-pdf',
   'compress-pdf',
   'crop-pdf',
   'merge-pdf',
@@ -12,10 +13,13 @@ const TOOL_SLUGS = [
   'organize-pdf',
   'page-numbers',
   'pdf-converter',
+  'pdf-to-markdown',
   'protect-pdf',
+  'redact-pdf',
   'remove-pdf-pages',
   'repair-pdf',
   'rotate-pdf',
+  'sign-pdf',
   'split-pdf',
   'summarize-pdf',
   'to-pdf-converter',

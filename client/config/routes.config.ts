@@ -37,6 +37,15 @@ export const APP_ROUTES: RouteDefinition[] = [
 
   {
     handler: async () => {
+      await loadStylesheet('/css/tools/pdf-to-markdown.css');
+      const { createPdfToMarkdownView } = await import('../views/tools/pdf-to-markdown/pdf-to-markdown.view.js');
+      return await createPdfToMarkdownView();
+    },
+    id: 'pdf-to-markdown',
+    match: (path) => path === '/pdf-to-markdown' || path.startsWith('/pdf-to-markdown'),
+  },
+  {
+    handler: async () => {
       await loadStylesheet('/css/tools/summarize-pdf.css');
       const { createSummarizePdfView } = await import('../views/tools/summarize-pdf/summarize-pdf.view.js');
       return await createSummarizePdfView();
@@ -154,6 +163,24 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
+      await loadStylesheet('/css/tools/redact-pdf.css');
+      const { createRedactPdfView } = await import('../views/tools/redact-pdf/redact-pdf.view.js');
+      return await createRedactPdfView();
+    },
+    id: 'redact-pdf',
+    match: (path) => path === '/redact-pdf' || path.startsWith('/redact-pdf'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/tools/sign-pdf.css');
+      const { createSignPdfView } = await import('../views/tools/sign-pdf/sign-pdf.view.js');
+      return await createSignPdfView();
+    },
+    id: 'sign-pdf',
+    match: (path) => path === '/sign-pdf' || path.startsWith('/sign-pdf'),
+  },
+  {
+    handler: async () => {
       await loadStylesheet('/css/tools/unlock-pdf.css');
       const { createUnlockPdfView } = await import('../views/tools/unlock-pdf/unlock-pdf.view.js');
       return await createUnlockPdfView();
@@ -252,6 +279,15 @@ export const APP_ROUTES: RouteDefinition[] = [
     match: (path) => path === '/html-to-pdf' || path.startsWith('/html-to-pdf'),
   },
 
+  {
+    handler: async () => {
+      await loadStylesheet('/css/tools/compare-pdf.css');
+      const { createComparePdfView } = await import('../views/tools/compare-pdf/compare-pdf.view.js');
+      return await createComparePdfView();
+    },
+    id: 'compare-pdf',
+    match: (path) => path === '/compare-pdf' || path.startsWith('/compare-pdf'),
+  },
   {
     handler: async () => {
       await loadStylesheet('/css/tools/compress-pdf.css');

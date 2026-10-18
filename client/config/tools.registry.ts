@@ -1,4 +1,4 @@
-import { SVG_TOOL_COMPRESS_PDF, SVG_TOOL_CROP_PDF, SVG_TOOL_EDIT_PDF, SVG_TOOL_EXCEL_TO_PDF, SVG_TOOL_EXTRACT_PDF_PAGES, SVG_TOOL_HTML_TO_PDF, SVG_TOOL_JPG_TO_PDF, SVG_TOOL_MERGE_PDF, SVG_TOOL_OCR_PDF, SVG_TOOL_ORGANIZE_PDF, SVG_TOOL_PAGE_NUMBERS, SVG_TOOL_PDF_TO_EXCEL, SVG_TOOL_PDF_TO_JPG, SVG_TOOL_PDF_TO_PDFA, SVG_TOOL_PDF_TO_POWERPOINT, SVG_TOOL_PDF_TO_WORD, SVG_TOOL_POWERPOINT_TO_PDF, SVG_TOOL_PROTECT_PDF, SVG_TOOL_REMOVE_PDF_PAGES, SVG_TOOL_REPAIR_PDF, SVG_TOOL_ROTATE_PDF, SVG_TOOL_SPLIT_PDF, SVG_TOOL_SUMMARIZE_PDF, SVG_TOOL_TRANSLATE_PDF, SVG_TOOL_UNLOCK_PDF, SVG_TOOL_WATERMARK_PDF, SVG_TOOL_WORD_TO_PDF } from '../graphics/tool-icons.graphics.js';
+import { SVG_TOOL_COMPARE_PDF, SVG_TOOL_COMPRESS_PDF, SVG_TOOL_CROP_PDF, SVG_TOOL_EDIT_PDF, SVG_TOOL_EXCEL_TO_PDF, SVG_TOOL_EXTRACT_PDF_PAGES, SVG_TOOL_HTML_TO_PDF, SVG_TOOL_JPG_TO_PDF, SVG_TOOL_MERGE_PDF, SVG_TOOL_OCR_PDF, SVG_TOOL_ORGANIZE_PDF, SVG_TOOL_PAGE_NUMBERS, SVG_TOOL_PDF_TO_EXCEL, SVG_TOOL_PDF_TO_JPG, SVG_TOOL_PDF_TO_MARKDOWN, SVG_TOOL_PDF_TO_PDFA, SVG_TOOL_PDF_TO_POWERPOINT, SVG_TOOL_PDF_TO_WORD, SVG_TOOL_POWERPOINT_TO_PDF, SVG_TOOL_PROTECT_PDF, SVG_TOOL_REDACT_PDF, SVG_TOOL_REMOVE_PDF_PAGES, SVG_TOOL_REPAIR_PDF, SVG_TOOL_ROTATE_PDF, SVG_TOOL_SIGN_PDF, SVG_TOOL_SPLIT_PDF, SVG_TOOL_SUMMARIZE_PDF, SVG_TOOL_TRANSLATE_PDF, SVG_TOOL_UNLOCK_PDF, SVG_TOOL_WATERMARK_PDF, SVG_TOOL_WORD_TO_PDF } from '../graphics/tool-icons.graphics.js';
 
 export interface ToolItem {
   category: string;
@@ -14,6 +14,18 @@ export interface ToolItem {
 }
 
 export const TOOLS_REGISTRY: ToolItem[] = [
+  {
+    category: 'pdf-intelligence',
+    cssPath: '/css/tools/pdf-to-markdown.css',
+    customSvg: SVG_TOOL_PDF_TO_MARKDOWN,
+    descKey: 'home.tool_pdf_to_markdown_desc',
+    featured: true,
+    icon: 'article',
+    iconBoxClass: 'tool-card__icon-box--teal',
+    id: 'pdf-to-markdown',
+    nameKey: 'home.tool_pdf_to_markdown_title',
+    path: '/pdf-to-markdown',
+  },
   {
     category: 'pdf-intelligence',
     cssPath: '/css/tools/summarize-pdf.css',
@@ -37,6 +49,18 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     id: 'translate-pdf',
     nameKey: 'home.tool_translate_pdf_title',
     path: '/translate-pdf',
+  },
+  {
+    category: 'pdf-intelligence',
+    cssPath: '/css/tools/compare-pdf.css',
+    customSvg: SVG_TOOL_COMPARE_PDF,
+    descKey: 'home.tool_compare_pdf_desc',
+    featured: true,
+    icon: 'compare_arrows',
+    iconBoxClass: 'tool-card__icon-box--blue',
+    id: 'compare-pdf',
+    nameKey: 'home.tool_compare_pdf_title',
+    path: '/compare-pdf',
   },
   {
     category: 'organize',
@@ -325,6 +349,30 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     id: 'protect-pdf',
     nameKey: 'home.tool_protect_pdf_title',
     path: '/protect-pdf',
+  },
+  {
+    category: 'security',
+    cssPath: '/css/tools/redact-pdf.css',
+    customSvg: SVG_TOOL_REDACT_PDF,
+    descKey: 'home.tool_redact_pdf_desc',
+    featured: true,
+    icon: 'visibility_off',
+    iconBoxClass: 'tool-card__icon-box--crimson',
+    id: 'redact-pdf',
+    nameKey: 'home.tool_redact_pdf_title',
+    path: '/redact-pdf',
+  },
+  {
+    category: 'security',
+    cssPath: '/css/tools/sign-pdf.css',
+    customSvg: SVG_TOOL_SIGN_PDF,
+    descKey: 'home.tool_sign_pdf_desc',
+    featured: true,
+    icon: 'verified',
+    iconBoxClass: 'tool-card__icon-box--green',
+    id: 'sign-pdf',
+    nameKey: 'home.tool_sign_pdf_title',
+    path: '/sign-pdf',
   },
   {
     category: 'security',

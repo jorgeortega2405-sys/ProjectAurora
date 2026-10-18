@@ -1,0 +1,252 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="pdf-to-markdown-wrapper">
+  <div class="tool-layout" data-ref="pdf-to-markdown-layout">
+    <main class="tool-layout__workspace" data-ref="pdf-to-markdown-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="markdown-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="markdown-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="markdown-dropzone-title">PDF a Markdown con IA</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="markdown-dropzone-desc">Convierte cualquier documento PDF en un archivo Markdown (.md) estructurado, limpio y listo para usar con Gemini AI.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar Archivo PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="pdf-viewer-workspace" data-ref="markdown-viewer-card" style="display: none;">
+        <div class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-info-group">
+            <span class="pdf-viewer-toolbar__title" data-ref="viewer-file-name">documento.pdf</span>
+            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-page-count">0 páginas</span>
+          </div>
+
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-workspace-tabs" style="display: none;">
+            <button type="button" class="component-button component-button--secondary component-button--h36 is-active" data-ref="btn-tab-view-pdf">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
+              <span>PDF Original</span>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-tab-view-markdown">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
+              <span>Markdown Generado</span>
+            </button>
+          </div>
+
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-actions-group">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-out" title="Reducir zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+            </button>
+            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" title="Aumentar zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pdf-viewer-scroll" data-ref="viewer-scroll-container">
+          <!-- Páginas del PDF se renderizan aquí dinámicamente -->
+        </div>
+
+        <div class="markdown-preview-workspace" data-ref="markdown-preview-workspace" style="display: none;">
+          <div class="markdown-preview-workspace__toolbar">
+            <div class="markdown-preview-workspace__tabs">
+              <button type="button" class="markdown-preview-workspace__tab is-active" data-ref="btn-subtab-preview">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+                <span>Vista Previa</span>
+              </button>
+              <button type="button" class="markdown-preview-workspace__tab" data-ref="btn-subtab-raw">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#code"></use></svg>
+                <span>Código Fuente (.md)</span>
+              </button>
+            </div>
+            <div class="markdown-preview-workspace__actions">
+              <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-workspace-copy" title="Copiar Markdown">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_copy"></use></svg>
+                <span>Copiar</span>
+              </button>
+              <button type="button" class="component-button component-button--primary component-button--h36" data-ref="btn-workspace-download" title="Descargar archivo Markdown">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+                <span>Descargar .md</span>
+              </button>
+            </div>
+          </div>
+          <div class="markdown-preview-workspace__content" data-ref="markdown-workspace-rendered"></div>
+          <pre class="markdown-preview-workspace__raw" data-ref="markdown-workspace-raw" style="display: none;"></pre>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="pdf-to-markdown-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="markdown-sidebar-title">PDF a Markdown</h1>
+        <p class="tool-sidebar__subtitle" data-ref="markdown-sidebar-subtitle">Convierte cualquier documento PDF en un archivo Markdown (.md) estructurado con IA.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Modo de Conversión</span>
+          <div class="ai-mode-options" data-ref="ai-mode-options">
+            <label class="ai-mode-option is-active" data-ref="opt-mode-structured" data-mode="structured">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-structured" type="radio" name="markdown-mode" value="structured" checked />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Estructurado Completo</span>
+                <p class="ai-mode-option__desc">Jerarquía completa de títulos, tablas GFM, listas, citas y énfasis.</p>
+              </div>
+            </label>
+
+            <label class="ai-mode-option" data-ref="opt-mode-tables" data-mode="tables">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-tables" type="radio" name="markdown-mode" value="tables" />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Tablas y Datos</span>
+                <p class="ai-mode-option__desc">Enfoque en matrices, estadísticas y formateo riguroso de tablas Markdown.</p>
+              </div>
+            </label>
+
+            <label class="ai-mode-option" data-ref="opt-mode-clean" data-mode="clean">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-clean" type="radio" name="markdown-mode" value="clean" />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Texto Limpio Continuo</span>
+                <p class="ai-mode-option__desc">Lectura fluida sin interrupciones, descarta encabezados y numeración.</p>
+              </div>
+            </label>
+
+            <label class="ai-mode-option" data-ref="opt-mode-academic" data-mode="academic">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-academic" type="radio" name="markdown-mode" value="academic" />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Técnico / Fórmulas</span>
+                <p class="ai-mode-option__desc">Preserva expresiones LaTeX ($...$), bloques de código y referencias.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Opciones de Formato</span>
+          <div class="md-options-list" data-ref="md-options-list">
+            <label class="md-option-item" data-ref="opt-toggle-latex">
+              <input class="md-option-item__checkbox" data-ref="chk-include-latex" type="checkbox" />
+              <div class="md-option-item__body">
+                <span class="md-option-item__title">Fórmulas en LaTeX</span>
+                <p class="md-option-item__desc">Formatea fórmulas matemáticas con sintaxis $ y $$.</p>
+              </div>
+            </label>
+
+            <label class="md-option-item" data-ref="opt-toggle-headers">
+              <input class="md-option-item__checkbox" data-ref="chk-remove-headers" type="checkbox" checked />
+              <div class="md-option-item__body">
+                <span class="md-option-item__title">Omitir números de página</span>
+                <p class="md-option-item__desc">Descarta cabeceras repetitivas y pies de página periódicos.</p>
+              </div>
+            </label>
+
+            <label class="md-option-item" data-ref="opt-toggle-tables">
+              <input class="md-option-item__checkbox" data-ref="chk-preserve-tables" type="checkbox" checked />
+              <div class="md-option-item__body">
+                <span class="md-option-item__title">Tablas Markdown GFM</span>
+                <p class="md-option-item__desc">Formatea datos en cuadrículas con cabeceras y barras verticales.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Instrucciones Adicionales (Opcional)</span>
+          <label class="field" data-ref="field-custom-prompt">
+            <textarea class="field__input md-custom-prompt" data-ref="input-custom-prompt" placeholder=" " rows="2"></textarea>
+            <span class="field__label">Ej: Traducir notas al español, resumir pies de figura...</span>
+          </label>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-processing" style="display: none;">
+          <div class="ai-pulse-bar" data-ref="ai-pulse-bar"></div>
+          <p class="tool-sidebar__subtitle" data-ref="ai-processing-status" style="margin-top: 10px; font-weight: 500;">Leyendo documento y convirtiendo a Markdown con Gemini AI...</p>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-markdown-result" style="display: none;">
+          <div class="ai-summary-result-panel" data-ref="markdown-result-panel">
+            <div class="ai-summary-header" data-ref="markdown-result-header">
+              <div class="ai-summary-meta">
+                <span class="ai-summary-badge" data-ref="markdown-badge-model">Gemini 3.5 Flash</span>
+                <span class="ai-summary-badge" data-ref="markdown-badge-words">0 palabras</span>
+                <span class="ai-summary-badge" data-ref="markdown-badge-lines">0 líneas</span>
+              </div>
+            </div>
+
+            <div class="md-result-actions" data-ref="markdown-result-actions">
+              <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-sidebar-copy" title="Copiar Markdown">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_copy"></use></svg>
+                <span>Copiar</span>
+              </button>
+              <button type="button" class="component-button component-button--primary component-button--h36" data-ref="btn-sidebar-download" title="Descargar Markdown">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+                <span>Descargar .md</span>
+              </button>
+            </div>
+
+            <div class="ai-summary-content" data-ref="markdown-sidebar-preview"></div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Información del Archivo</span>
+          <div class="tool-summary-card" data-ref="markdown-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Archivo</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-status">Ninguno</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Tamaño</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-size">0 KB</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Páginas</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-pages">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-convert-action" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+          <span data-ref="txt-convert-action">Convertir a Markdown con IA</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="markdown-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

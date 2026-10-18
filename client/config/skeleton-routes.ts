@@ -9,8 +9,11 @@ export function getSkeletonTemplateForRouteId(routeId: string): string {
     case 'pdf-to-excel':
     case 'pdf-to-pdfa':
     case 'compress-pdf':
+    case 'compare-pdf':
     case 'repair-pdf':
     case 'ocr-pdf':
+    case 'pdf-to-markdown':
+    case 'redact-pdf':
     case 'summarize-pdf':
     case 'translate-pdf':
       return HOME_SKELETON_TEMPLATE;

@@ -1,0 +1,178 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="compress-pdf-wrapper">
+  <div class="tool-layout" data-ref="compress-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="compress-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="compress-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="compress-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="compress-dropzone-title">Comprimir PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="compress-dropzone-desc">Reduce el tamaño de tus archivos PDF optimizando imágenes y tipografías con la mejor calidad visual.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="compress-selected-card" style="display: none;">
+        <div class="pdf-doc-card-container" data-ref="doc-card-container">
+          <div class="pdf-doc-card-toolbar">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+              <span>Cambiar archivo</span>
+            </button>
+          </div>
+          <div class="pdf-doc-card" data-ref="selected-file-panel">
+            <div class="pdf-doc-card__sheet-wrapper">
+              <div class="pdf-doc-card__sheet">
+                <canvas class="pdf-doc-card__canvas" data-ref="doc-preview-canvas"></canvas>
+              </div>
+            </div>
+            <span class="pdf-doc-card__name" data-ref="selected-file-name">documento.pdf</span>
+            <span class="pdf-doc-card__meta" data-ref="selected-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="compress-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="compress-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="compress-processing-title">Comprimiendo documento PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="compress-processing-subtitle">Optimizando fuentes e imágenes para reducir el peso</p>
+        <div class="tool-progress-card__track" data-ref="compress-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="compress-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="compress-result-card" style="display: none;">
+        <div class="pdf-compress-result-card" data-ref="result-card-inner">
+          <div class="pdf-compress-result__icon-box" data-ref="result-icon-box">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#compress"></use></svg>
+          </div>
+          <h2 class="pdf-compress-result__title" data-ref="result-title">¡PDF comprimido con éxito!</h2>
+          <div class="pdf-compress-result__comparison" data-ref="result-comparison">
+            <div class="pdf-compress-result__metric" data-ref="metric-original">
+              <span class="pdf-compress-result__metric-label">Original</span>
+              <span class="pdf-compress-result__metric-value" data-ref="val-original-size">0 KB</span>
+            </div>
+            <div class="pdf-compress-result__metric" data-ref="metric-savings-badge">
+              <span class="pdf-compress-result__metric-savings" data-ref="val-savings-percent">-0%</span>
+            </div>
+            <div class="pdf-compress-result__metric" data-ref="metric-compressed">
+              <span class="pdf-compress-result__metric-label">Comprimido</span>
+              <span class="pdf-compress-result__metric-value" data-ref="val-compressed-size">0 KB</span>
+            </div>
+          </div>
+          <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full" data-ref="btn-download-result">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+            <span data-ref="txt-download-result">Descargar PDF Comprimido</span>
+          </button>
+          <button type="button" class="component-button component-button--secondary component-button--h40" data-ref="btn-compress-another">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+            <span>Comprimir otro archivo</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="compress-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="compress-sidebar-title">Comprimir PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="compress-sidebar-subtitle">Reduce el peso de tus archivos PDF manteniendo la mejor calidad visual.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Nivel de Compresión</span>
+          <div class="pdf-compress-options" data-ref="compress-options-container">
+            <label class="pdf-compress-option" data-ref="opt-compress-extreme" data-level="extreme">
+              <input class="pdf-compress-option__radio" data-ref="radio-compress-extreme" type="radio" name="compress-level" value="extreme" />
+              <div class="pdf-compress-option__body">
+                <div class="pdf-compress-option__title-row">
+                  <span class="pdf-compress-option__title">Alta Compresión</span>
+                  <span class="pdf-compress-option__badge">Menor tamaño</span>
+                </div>
+                <p class="pdf-compress-option__desc">Máxima reducción de peso (72 DPI). Ideal para enviar por correo o web.</p>
+              </div>
+            </label>
+
+            <label class="pdf-compress-option is-active" data-ref="opt-compress-recommended" data-level="recommended">
+              <input class="pdf-compress-option__radio" data-ref="radio-compress-recommended" type="radio" name="compress-level" value="recommended" checked />
+              <div class="pdf-compress-option__body">
+                <div class="pdf-compress-option__title-row">
+                  <span class="pdf-compress-option__title">Compresión Recomendada</span>
+                  <span class="pdf-compress-option__badge">Recomendado</span>
+                </div>
+                <p class="pdf-compress-option__desc">Excelente balance entre calidad nítida y reducción sustancial de tamaño (150 DPI).</p>
+              </div>
+            </label>
+
+            <label class="pdf-compress-option" data-ref="opt-compress-low" data-level="low">
+              <input class="pdf-compress-option__radio" data-ref="radio-compress-low" type="radio" name="compress-level" value="low" />
+              <div class="pdf-compress-option__body">
+                <div class="pdf-compress-option__title-row">
+                  <span class="pdf-compress-option__title">Baja Compresión</span>
+                  <span class="pdf-compress-option__badge">Alta calidad</span>
+                </div>
+                <p class="pdf-compress-option__desc">Compresión ligera preservando resolución óptima (300 DPI) para impresión.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Detalles del Archivo</span>
+          <div class="tool-summary-card" data-ref="compress-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Archivo Seleccionado</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-status">Ninguno</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Tamaño Original</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-size">0 KB</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Páginas Estimadas</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-pages">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-compress-action" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#compress"></use></svg>
+          <span data-ref="txt-compress-action">Comprimir PDF</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="compress-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,702 @@
+import { navigate } from '../../../app-router.js';
+import { API_ROUTES } from '../../../config/api-routes.js';
+import { postFormApi } from '../../../services/api.service.js';
+import { pickDropboxFiles } from '../../../services/dropbox.service.js';
+import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
+import { t } from '../../../services/i18n.service.js';
+import { renderIcons } from '../../../services/icon.service.js';
+import { loadPdfJs } from '../../../services/pdf-loader.service.js';
+import { loadTemplate } from '../../../services/template.service.js';
+import { showToast } from '../../../services/toast.service.js';
+import { ViewController } from '../../../types/common.types.js';
+import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
+import { MergePdfResponseData, SelectedPdfItem } from './merge-pdf.types.js';
+import Sortable from 'sortablejs';
+
+const MAX_PDF_FILES = 30;
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 150 * 1024 * 1024;
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
+async function estimatePdfPages(file: File): Promise<number> {
+  try {
+    const headBuffer = await file.slice(0, Math.min(file.size, 128 * 1024)).arrayBuffer();
+    const headText = new TextDecoder('latin1').decode(headBuffer);
+    const countMatch = headText.match(/\/Type\s*\/Pages[^>]*?\/Count\s+(\d+)/);
+    if (countMatch && countMatch[1]) {
+      const count = parseInt(countMatch[1], 10);
+      if (count > 0) return count;
+    }
+    const tailBuffer = await file.slice(Math.max(0, file.size - 128 * 1024)).arrayBuffer();
+    const tailText = new TextDecoder('latin1').decode(tailBuffer);
+    const tailCountMatch = tailText.match(/\/Count\s+(\d+)/);
+    if (tailCountMatch && tailCountMatch[1]) {
+      const count = parseInt(tailCountMatch[1], 10);
+      if (count > 0) return count;
+    }
+  } catch {}
+  return 1;
+}
+
+export class MergePdfController implements ViewController {
+  private abortController: AbortController | null = null;
+  private container: HTMLElement;
+  private currentResult: MergePdfResponseData | null = null;
+  private isProcessing = false;
+  private selectedFiles: SelectedPdfItem[] = [];
+  private sidebarModal: ToolSidebarModalController | null = null;
+  private sortable: Sortable | null = null;
+
+  constructor(container: HTMLElement) {
+    this.container = container;
+  }
+
+  public async init(): Promise<void> {
+    this.abortController = new AbortController();
+    renderIcons(this.container);
+    this.bindEvents();
+  }
+
+  public destroy(): void {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+    if (this.sortable) {
+      this.sortable.destroy();
+      this.sortable = null;
+    }
+    if (this.sidebarModal) {
+      this.sidebarModal.destroy();
+      this.sidebarModal = null;
+    }
+  }
+
+  private bindEvents(): void {
+    if (!this.abortController) return;
+    const { signal } = this.abortController;
+
+    const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-files"]');
+    const addMoreInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-add-more-pdf"]');
+    const dropzone = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone"]');
+    const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-pdfs"]');
+    const fabAddMoreBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-add-more"]');
+    const fabDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-drive"]');
+    const fabDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-dropbox"]');
+    const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
+    const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
+    const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
+    const sidebarResetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
+    const downloadResultBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
+    const restartMergeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-restart-merge"]');
+    const itemsGrid = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-grid"]');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const sidebarBackdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
+    const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
+    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-sidebar"]');
+
+    this.sidebarModal = setupToolSidebarModal({
+      backdrop: sidebarBackdrop,
+      closeBtn: sidebarCloseBtn,
+      dragZone: sidebarDragZone,
+      settingsBtn,
+      sidebar,
+      signal,
+    });
+
+    browseBtn?.addEventListener('click', () => {
+      fileInput?.click();
+    }, { signal });
+
+    dropzone?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('is-dragover');
+    }, { signal });
+
+    dropzone?.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('is-dragover');
+    }, { signal });
+
+    dropzone?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('is-dragover');
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        void this.handleFilesAdded(files);
+      }
+    }, { signal });
+
+    fileInput?.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        void this.handleFilesAdded(fileInput.files);
+      }
+    }, { signal });
+
+    fabAddMoreBtn?.addEventListener('click', () => {
+      addMoreInput?.click();
+    }, { signal });
+
+    fabDriveBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void this.handleDriveImport();
+    }, { signal });
+
+    fabDropboxBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void this.handleDropboxImport();
+    }, { signal });
+
+    heroDriveBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void this.handleDriveImport();
+    }, { signal });
+
+    heroDropboxBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void this.handleDropboxImport();
+    }, { signal });
+
+    addMoreInput?.addEventListener('change', () => {
+      if (addMoreInput.files && addMoreInput.files.length > 0) {
+        void this.handleFilesAdded(addMoreInput.files);
+        addMoreInput.value = '';
+      }
+    }, { signal });
+
+    mainActionBtn?.addEventListener('click', () => {
+      if (this.currentResult) {
+        this.downloadMergedResult();
+      } else if (this.selectedFiles.length === 0) {
+        fileInput?.click();
+      } else {
+        this.sidebarModal?.close();
+        void this.startMergeProcess();
+      }
+    }, { signal });
+
+    sidebarResetBtn?.addEventListener('click', () => {
+      this.resetToInitial();
+    }, { signal });
+
+    downloadResultBtn?.addEventListener('click', () => {
+      this.downloadMergedResult();
+    }, { signal });
+
+    restartMergeBtn?.addEventListener('click', () => {
+      this.resetToInitial();
+    }, { signal });
+
+    outputNameInput?.addEventListener('input', () => {
+      this.hideError();
+    }, { signal });
+
+    itemsGrid?.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const removeBtn = target.closest<HTMLButtonElement>('[data-ref="btn-remove-pdf"]');
+      if (removeBtn) {
+        e.stopPropagation();
+        const id = removeBtn.getAttribute('data-id');
+        if (id) {
+          this.removeFile(id);
+        }
+      }
+    }, { signal });
+  }
+
+  private async handleDriveImport(): Promise<void> {
+    if (this.isProcessing) return;
+    this.hideError();
+    try {
+      const files = await pickGoogleDriveFiles({ multiselect: true });
+      if (files.length > 0) {
+        await this.handleFilesAdded(files);
+      }
+    } catch (err: any) {
+      this.showError(err?.message || 'Error al importar archivos desde Google Drive.');
+    }
+  }
+
+  private async handleDropboxImport(): Promise<void> {
+    if (this.isProcessing) return;
+    this.hideError();
+    try {
+      const files = await pickDropboxFiles({ multiselect: true });
+      if (files.length > 0) {
+        await this.handleFilesAdded(files);
+      }
+    } catch (err: any) {
+      this.showError(err?.message || 'Error al importar archivos desde Dropbox.');
+    }
+  }
+
+  private async handleFilesAdded(fileList: FileList | File[]): Promise<void> {
+    if (this.isProcessing) return;
+    this.hideError();
+
+    const incomingFiles = Array.isArray(fileList) ? fileList : Array.from(fileList);
+    const validPdfs = incomingFiles.filter((f) => {
+      const isPdfExt = f.name.toLowerCase().endsWith('.pdf');
+      const isPdfMime = f.type === 'application/pdf' || f.type === 'application/x-pdf';
+      return isPdfExt || isPdfMime;
+    });
+
+    if (validPdfs.length === 0) {
+      this.showError('Selecciona únicamente documentos en formato PDF.');
+      return;
+    }
+
+    if (this.selectedFiles.length + validPdfs.length > MAX_PDF_FILES) {
+      this.showError(`Puedes unir un máximo de ${MAX_PDF_FILES} archivos PDF.`);
+      return;
+    }
+
+    const oversized = validPdfs.find((f) => f.size > MAX_FILE_SIZE);
+    if (oversized) {
+      this.showError(`El archivo "${oversized.name}" supera el límite de 50 MB.`);
+      return;
+    }
+
+    const currentTotalSize = this.selectedFiles.reduce((acc, curr) => acc + curr.size, 0);
+    const incomingTotalSize = validPdfs.reduce((acc, curr) => acc + curr.size, 0);
+    if (currentTotalSize + incomingTotalSize > MAX_TOTAL_SIZE) {
+      this.showError('El tamaño acumulado de todos los archivos no debe superar 150 MB.');
+      return;
+    }
+
+    const newItems: SelectedPdfItem[] = [];
+
+    for (const file of validPdfs) {
+      const initialPages = await estimatePdfPages(file);
+      const item: SelectedPdfItem = {
+        file,
+        id: `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        name: file.name,
+        pageCount: initialPages,
+        size: file.size,
+      };
+      this.selectedFiles.push(item);
+      newItems.push(item);
+    }
+
+    this.renderFilesList();
+    this.updateSummary();
+
+    for (const item of newItems) {
+      void this.generateThumbnailForItem(item);
+    }
+  }
+
+  private async generateThumbnailForItem(item: SelectedPdfItem): Promise<void> {
+    try {
+      const pdfjsLib = await loadPdfJs();
+      const arrayBuffer = await item.file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({
+        cMapPacked: true,
+        cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.6.205/cmaps/',
+        data: new Uint8Array(arrayBuffer),
+        standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.6.205/standard_fonts/',
+      });
+      const pdfDoc = await loadingTask.promise;
+      item.pageCount = pdfDoc.numPages || item.pageCount;
+
+      const page = await pdfDoc.getPage(1);
+      const origViewport = page.getViewport({ scale: 1 });
+      const targetWidth = 280;
+      const scale = targetWidth / Math.max(origViewport.width, 1);
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        await page.render({
+          canvas,
+          canvasContext: ctx,
+          viewport,
+        }).promise;
+
+        item.thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+        const sheet = this.container.querySelector<HTMLElement>(`[data-ref="sheet-${item.id}"]`);
+        if (sheet && item.thumbnailDataUrl) {
+          sheet.innerHTML = `<img class="pdf-card__preview-img" data-ref="img-preview-${item.id}" src="${item.thumbnailDataUrl}" alt="${item.name}" />`;
+        }
+
+        const metaEl = this.container.querySelector<HTMLElement>(`[data-ref="meta-${item.id}"]`);
+        if (metaEl) {
+          const pagesLabel = item.pageCount === 1 ? '1 pág.' : `${item.pageCount} págs.`;
+          metaEl.textContent = `${pagesLabel} • ${formatBytes(item.size)}`;
+        }
+      }
+    } catch {}
+
+    this.updateSummary();
+  }
+
+  private renderFilesList(): void {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
+    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
+    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
+    const itemsGrid = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-grid"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
+    const badge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+    const fabBadge = this.container.querySelector<HTMLElement>('[data-ref="badge-fab-count"]');
+    const fabSettings = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-sidebar"]');
+
+    if (!itemsGrid) return;
+
+    if (this.selectedFiles.length === 0) {
+      this.resetToInitial();
+      return;
+    }
+
+    if (dropzoneCard) dropzoneCard.style.display = 'none';
+    if (processingCard) processingCard.style.display = 'none';
+    if (resultCard) resultCard.style.display = 'none';
+    if (itemsCard) itemsCard.style.display = 'flex';
+    if (sidebar) sidebar.style.display = 'flex';
+    if (fabSettings) fabSettings.classList.add('is-visible');
+    if (fabMore) fabMore.style.display = 'flex';
+    if (fabBadge) fabBadge.textContent = this.selectedFiles.length.toString();
+    if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+    if (badge) badge.textContent = this.selectedFiles.length.toString();
+
+    itemsGrid.innerHTML = this.selectedFiles
+      .map((item, index) => this.renderCardHtml(item, index))
+      .join('');
+
+    renderIcons(itemsGrid);
+    this.initSortable();
+    this.updateActionButtons();
+  }
+
+  private renderCardHtml(item: SelectedPdfItem, index: number): string {
+    const pagesLabel = item.pageCount === 1 ? '1 pág.' : `${item.pageCount} págs.`;
+
+    const sheetContent = item.thumbnailDataUrl
+      ? `<img class="pdf-card__preview-img" src="${item.thumbnailDataUrl}" alt="${item.name}" />`
+      : `
+        <div class="pdf-card__placeholder">
+          <svg class="component-icon pdf-card__placeholder-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
+          <div class="pdf-card__placeholder-lines">
+            <span class="pdf-card__placeholder-line"></span>
+            <span class="pdf-card__placeholder-line pdf-card__placeholder-line--short"></span>
+            <span class="pdf-card__placeholder-line"></span>
+          </div>
+        </div>
+      `;
+
+    return `
+      <div class="pdf-card" data-ref="card-pdf-${item.id}" data-id="${item.id}">
+        <div class="pdf-card__order-badge" data-ref="badge-${item.id}">#${index + 1}</div>
+        <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-pdf" data-id="${item.id}" title="Eliminar archivo" aria-label="Eliminar archivo">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+
+        <div class="pdf-card__sheet-wrapper" data-ref="sheet-wrapper-${item.id}">
+          <div class="pdf-card__sheet" data-ref="sheet-${item.id}">
+            ${sheetContent}
+          </div>
+        </div>
+
+        <span class="pdf-card__filename" title="${item.name}">${item.name}</span>
+        <span class="pdf-card__meta" data-ref="meta-${item.id}">${pagesLabel} • ${formatBytes(item.size)}</span>
+      </div>
+    `;
+  }
+
+  private initSortable(): void {
+    if (this.sortable) {
+      this.sortable.destroy();
+      this.sortable = null;
+    }
+
+    const itemsGrid = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-grid"]');
+    if (!itemsGrid) return;
+
+    this.sortable = new Sortable(itemsGrid, {
+      animation: 200,
+      chosenClass: 'pdf-card--chosen',
+      filter: 'button, .pdf-card__btn-remove',
+      ghostClass: 'pdf-card--ghost',
+      onEnd: () => {
+        this.syncOrderFromDom();
+      },
+      preventOnFilter: false,
+    });
+  }
+
+  private syncOrderFromDom(): void {
+    const itemsGrid = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-grid"]');
+    if (!itemsGrid) return;
+
+    const cards = Array.from(itemsGrid.querySelectorAll<HTMLElement>('.pdf-card[data-id]'));
+    const newOrderedFiles: SelectedPdfItem[] = [];
+
+    cards.forEach((card, index) => {
+      const id = card.getAttribute('data-id');
+      const found = this.selectedFiles.find((f) => f.id === id);
+      if (found) {
+        newOrderedFiles.push(found);
+      }
+      const badge = card.querySelector<HTMLElement>('.pdf-card__order-badge');
+      if (badge) {
+        badge.textContent = `#${index + 1}`;
+      }
+    });
+
+    this.selectedFiles = newOrderedFiles;
+  }
+
+  private removeFile(id: string): void {
+    this.selectedFiles = this.selectedFiles.filter((f) => f.id !== id);
+    this.renderFilesList();
+    this.updateSummary();
+  }
+
+  private updateSummary(): void {
+    const filesEl = this.container.querySelector<HTMLElement>('[data-ref="val-total-files"]');
+    const pagesEl = this.container.querySelector<HTMLElement>('[data-ref="val-total-pages"]');
+    const sizeEl = this.container.querySelector<HTMLElement>('[data-ref="val-total-size"]');
+
+    const totalFiles = this.selectedFiles.length;
+    const totalPages = this.selectedFiles.reduce((acc, curr) => acc + curr.pageCount, 0);
+    const totalBytes = this.selectedFiles.reduce((acc, curr) => acc + curr.size, 0);
+
+    if (filesEl) filesEl.textContent = `${totalFiles} ${totalFiles === 1 ? 'archivo' : 'archivos'}`;
+    if (pagesEl) pagesEl.textContent = `${totalPages} ${totalPages === 1 ? 'página' : 'páginas'}`;
+    if (sizeEl) sizeEl.textContent = formatBytes(totalBytes);
+  }
+
+  private updateActionButtons(): void {
+    const mainBtnText = this.container.querySelector<HTMLElement>('[data-ref="txt-main-action"]');
+    const mainBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
+    const resetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
+
+    if (!mainBtnText || !mainBtn) return;
+
+    if (this.currentResult) {
+      mainBtnText.textContent = t('tools.merge_pdf_btn_download') || 'Descargar PDF Unido';
+      if (resetBtn) resetBtn.style.display = '';
+    } else if (this.selectedFiles.length >= 2) {
+      mainBtnText.textContent = t('tools.merge_pdf_btn_merge') || 'Unir PDF';
+      if (resetBtn) resetBtn.style.display = '';
+    } else if (this.selectedFiles.length === 1) {
+      mainBtnText.textContent = t('tools.merge_pdf_btn_merge') || 'Unir PDF (Falta 1 archivo)';
+      if (resetBtn) resetBtn.style.display = '';
+    } else {
+      mainBtnText.textContent = t('tools.merge_pdf_btn_select') || 'Seleccionar PDFs';
+      if (resetBtn) resetBtn.style.display = 'none';
+    }
+  }
+
+  private async startMergeProcess(): Promise<void> {
+    if (this.isProcessing) return;
+
+    if (this.selectedFiles.length < 2) {
+      this.showError('Debes seleccionar al menos 2 archivos PDF para poder unirlos.');
+      return;
+    }
+
+    this.isProcessing = true;
+    this.hideError();
+    this.showProcessingState();
+
+    try {
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+      let customFilename = outputNameInput?.value.trim() || 'documento_unido.pdf';
+      if (!customFilename.toLowerCase().endsWith('.pdf')) {
+        customFilename = `${customFilename}.pdf`;
+      }
+
+      const formData = new FormData();
+      formData.append('filename', customFilename);
+
+      for (const item of this.selectedFiles) {
+        formData.append('pdfs', item.file, item.name);
+      }
+
+      const response = await postFormApi(API_ROUTES.tools.mergePdf.merge, formData);
+
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        const errorMsg = json.error || 'No se pudieron unir los documentos PDF. Intenta nuevamente.';
+        this.showError(errorMsg);
+        this.renderFilesList();
+        return;
+      }
+
+      this.currentResult = json.data as MergePdfResponseData;
+      const token = this.currentResult.fileId;
+      const downloadPayload = {
+        downloadUrl: `/api/download/${token}`,
+        fileSize: this.currentResult.fileSize,
+        filename: this.currentResult.filename,
+        returnText: 'Unir más archivos PDF',
+        returnUrl: '/merge-pdf',
+        subtitle: `Se han unido exitosamente ${this.selectedFiles.length} archivos en un solo documento.`,
+        title: '¡PDFs unidos con éxito!',
+        token,
+      };
+      sessionStorage.setItem('download_ready_data', JSON.stringify(downloadPayload));
+      showToast('¡Documentos PDF unidos exitosamente!', 'success');
+      navigate(`/download/${token}`);
+    } catch {
+      this.showError('Ha ocurrido un error inesperado al procesar los archivos. Por favor intenta más tarde.');
+      this.renderFilesList();
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  private showProcessingState(): void {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
+    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
+    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+    const fabSettings = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-sidebar"]');
+
+    if (sidebar) sidebar.style.display = 'none';
+    if (fabSettings) fabSettings.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
+    if (dropzoneCard) dropzoneCard.style.display = 'none';
+    if (itemsCard) itemsCard.style.display = 'none';
+    if (resultCard) resultCard.style.display = 'none';
+    if (processingCard) processingCard.style.display = 'flex';
+    if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+  }
+
+  private renderResultState(result: MergePdfResponseData): void {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
+    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
+    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+    const fabSettings = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-sidebar"]');
+
+    if (sidebar) sidebar.style.display = 'none';
+    if (fabSettings) fabSettings.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
+    if (dropzoneCard) dropzoneCard.style.display = 'none';
+    if (itemsCard) itemsCard.style.display = 'none';
+    if (processingCard) processingCard.style.display = 'none';
+    if (resultCard) resultCard.style.display = 'flex';
+    if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+
+    const nameEl = this.container.querySelector<HTMLElement>('[data-ref="result-file-name"]');
+    const pagesEl = this.container.querySelector<HTMLElement>('[data-ref="result-page-count"]');
+    const sizeEl = this.container.querySelector<HTMLElement>('[data-ref="result-file-size"]');
+
+    if (nameEl) nameEl.textContent = result.filename;
+    if (pagesEl) pagesEl.textContent = `${result.pageCount} ${result.pageCount === 1 ? 'página' : 'páginas'}`;
+    if (sizeEl) sizeEl.textContent = formatBytes(result.fileSize);
+
+    this.updateActionButtons();
+    renderIcons(this.container);
+  }
+
+  private downloadMergedResult(): void {
+    if (!this.currentResult) return;
+    const downloadUrl = this.currentResult.downloadUrl || API_ROUTES.tools.mergePdf.download(this.currentResult.fileId);
+    const filename = this.currentResult.filename || 'documento_unido.pdf';
+
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast('Iniciando descarga del PDF...', 'success');
+  }
+
+  private resetToInitial(): void {
+    this.selectedFiles = [];
+    this.currentResult = null;
+    this.isProcessing = false;
+
+    if (this.sortable) {
+      this.sortable.destroy();
+      this.sortable = null;
+    }
+
+    const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-files"]');
+    const addMoreInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-add-more-pdf"]');
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
+    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
+    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+    const fabSettings = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-sidebar"]');
+
+    if (sidebar) sidebar.style.display = 'none';
+    if (fabSettings) fabSettings.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
+    if (fileInput) fileInput.value = '';
+    if (addMoreInput) addMoreInput.value = '';
+    if (outputNameInput) outputNameInput.value = 'documento_unido.pdf';
+
+    if (processingCard) processingCard.style.display = 'none';
+    if (itemsCard) itemsCard.style.display = 'none';
+    if (resultCard) resultCard.style.display = 'none';
+    if (dropzoneCard) dropzoneCard.style.display = 'flex';
+    if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+
+    this.updateSummary();
+    this.updateActionButtons();
+    this.hideError();
+  }
+
+  private showError(msg: string): void {
+    const banner = this.container.querySelector<HTMLElement>('[data-ref="merge-pdf-error"]');
+    if (banner) {
+      banner.textContent = msg;
+      banner.style.display = '';
+    }
+  }
+
+  private hideError(): void {
+    const banner = this.container.querySelector<HTMLElement>('[data-ref="merge-pdf-error"]');
+    if (banner) {
+      banner.textContent = '';
+      banner.style.display = 'none';
+    }
+  }
+}
+
+export async function createMergePdfView(): Promise<HTMLElement> {
+  const container = await loadTemplate('/views/tools/merge-pdf/merge-pdf.html');
+  const controller = new MergePdfController(container);
+  await controller.init();
+  (container as any).__controller = controller;
+  return container;
+}

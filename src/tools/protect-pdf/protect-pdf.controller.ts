@@ -1,0 +1,64 @@
+import { Request, Response } from 'express';
+import { logger } from '../../services/logger.service.js';
+import { getProtectPdfResult, protectPdf } from './protect-pdf.service.js';
+import { ProtectPdfOptions } from './protect-pdf.types.js';
+
+export async function protectPdfHandler(req: Request, res: Response): Promise<void> {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'Debes seleccionar un archivo PDF.', success: false });
+      return;
+    }
+
+    let options: ProtectPdfOptions = { password: '' };
+    if (req.body?.options) {
+      try {
+        options = typeof req.body.options === 'string' ? JSON.parse(req.body.options) : req.body.options;
+      } catch {
+        options = { password: req.body.password || '' };
+      }
+    } else if (req.body?.password) {
+      options = { password: req.body.password };
+    }
+
+    if (!options.password || options.password.trim().length === 0) {
+      res.status(400).json({ error: 'Debes introducir una contraseña válida.', success: false });
+      return;
+    }
+
+    const result = await protectPdf(req.file.buffer, req.file.originalname, options);
+    res.json({ data: result, success: true });
+  } catch (err: unknown) {
+    logger.app.error('Fallo en endpoint protectPdfHandler', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error al proteger el documento PDF. Por favor intenta más tarde.',
+      success: false,
+    });
+  }
+}
+
+export async function downloadProtectPdfHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { fileId } = req.params;
+    if (!fileId) {
+      res.status(400).json({ error: 'Identificador de archivo no proporcionado.', success: false });
+      return;
+    }
+
+    const item = await getProtectPdfResult(fileId);
+    if (!item) {
+      res.status(404).json({ error: 'El archivo solicitado ha expirado o no existe.', success: false });
+      return;
+    }
+
+    res.setHeader('Content-Type', item.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(item.filename)}"`);
+    res.send(item.buffer);
+  } catch (err: unknown) {
+    logger.app.error('Fallo al descargar PDF protegido', err);
+    res.status(500).json({
+      error: 'Error al descargar el archivo PDF protegido.',
+      success: false,
+    });
+  }
+}

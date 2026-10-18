@@ -1,0 +1,112 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="to-pdf-converter-wrapper">
+  <div class="tool-layout" data-ref="to-pdf-converter-layout">
+    <main class="tool-layout__workspace" data-ref="to-pdf-converter-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-source-file" type="file" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="converter-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="converter-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="converter-dropzone-title">Convertir a PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="converter-dropzone-desc">Transforma tu documento en un archivo PDF listo para visualizar o descargar.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar Archivo</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta tu archivo aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="converter-selected-card" style="display: none;">
+        <div class="pdf-doc-card-container" data-ref="doc-card-container">
+          <div class="pdf-doc-card-toolbar">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+              <span>Cambiar archivo</span>
+            </button>
+          </div>
+          <div class="pdf-doc-card" data-ref="selected-file-panel">
+            <div class="pdf-doc-card__sheet-wrapper">
+              <div class="pdf-doc-card__sheet">
+                <img class="pdf-doc-card__img" data-ref="doc-preview-img" style="display: none; object-fit: contain; width: 100%; height: 100%;" />
+                <div class="pdf-doc-card__icon-box" data-ref="doc-preview-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                  <svg class="component-icon" data-ref="selected-file-symbol" style="width: 48px; height: 48px; color: var(--text-tertiary);" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
+                </div>
+              </div>
+            </div>
+            <span class="pdf-doc-card__name" data-ref="selected-file-name">documento</span>
+            <span class="pdf-doc-card__meta" data-ref="selected-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="converter-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="converter-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="converter-processing-title">Procesando conversión a PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="converter-processing-subtitle">Generando documento PDF de alta fidelidad</p>
+        <div class="tool-progress-card__track" data-ref="converter-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="converter-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="to-pdf-converter-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="converter-sidebar-title">Convertir a PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="converter-sidebar-subtitle">Transforma tu documento en un archivo PDF listo para visualizar o descargar.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Detalles de la Conversión</span>
+          <div class="tool-summary-card" data-ref="converter-summary-card">
+            <div class="tool-summary-card__row tool-summary-row">
+              <span class="tool-summary-card__label tool-summary-label">Formato de origen</span>
+              <span class="tool-summary-card__value tool-summary-value" data-ref="sidebar-source-badge">ORIGEN</span>
+            </div>
+            <div class="tool-summary-card__row tool-summary-row">
+              <span class="tool-summary-card__label tool-summary-label">Formato de destino</span>
+              <span class="tool-summary-card__value tool-summary-value tool-summary-value--accent">PDF</span>
+            </div>
+            <div class="tool-summary-card__row tool-summary-row">
+              <span class="tool-summary-card__label tool-summary-label">Estado</span>
+              <span class="tool-summary-card__value tool-summary-value" data-ref="sidebar-file-status">Ninguno</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-convert-action" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
+          <span data-ref="txt-convert-action">Convertir a PDF</span>
+        </button>
+        <div class="banner banner--danger" data-ref="converter-global-error" style="display: none; margin-top: 12px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

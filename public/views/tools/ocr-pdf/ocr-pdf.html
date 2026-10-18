@@ -1,0 +1,168 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="ocr-pdf-wrapper">
+  <div class="tool-layout" data-ref="ocr-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="ocr-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="ocr-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="ocr-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="ocr-dropzone-title">OCR PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="ocr-dropzone-desc">Convierte documentos PDF escaneados en archivos con texto seleccionable y editable.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="ocr-selected-card" style="display: none;">
+        <div class="pdf-doc-card-container" data-ref="doc-card-container">
+          <div class="pdf-doc-card-toolbar">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+              <span>Cambiar archivo</span>
+            </button>
+          </div>
+          <div class="pdf-doc-card" data-ref="selected-file-panel">
+            <div class="pdf-doc-card__sheet-wrapper">
+              <div class="pdf-doc-card__sheet">
+                <canvas class="pdf-doc-card__canvas" data-ref="doc-preview-canvas"></canvas>
+              </div>
+            </div>
+            <span class="pdf-doc-card__name" data-ref="selected-file-name">documento.pdf</span>
+            <span class="pdf-doc-card__meta" data-ref="selected-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="ocr-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="ocr-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="ocr-processing-title">Reconociendo texto óptico (OCR)...</h3>
+        <p class="tool-progress-card__meta" data-ref="ocr-processing-subtitle">Escaneando páginas y generando capa de texto indexable y seleccionable</p>
+        <div class="tool-progress-card__track" data-ref="ocr-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="ocr-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="ocr-result-card" style="display: none;">
+        <div class="pdf-ocr-result-card" data-ref="result-card-inner">
+          <div class="pdf-ocr-result__icon-box" data-ref="result-icon-box">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+          </div>
+          <h2 class="pdf-ocr-result__title" data-ref="result-title">¡Documento con OCR generado con éxito!</h2>
+          <div class="pdf-ocr-result__meta" data-ref="result-meta">
+            <div class="pdf-ocr-result__meta-item" data-ref="meta-pages">
+              <span class="pdf-ocr-result__meta-label">Páginas Procesadas</span>
+              <span class="pdf-ocr-result__meta-value" data-ref="val-ocr-pages">0</span>
+            </div>
+            <div class="pdf-ocr-result__meta-item" data-ref="meta-lang">
+              <span class="pdf-ocr-result__meta-label">Idioma Detectado</span>
+              <span class="pdf-ocr-result__meta-value" data-ref="val-ocr-lang">Español</span>
+            </div>
+            <div class="pdf-ocr-result__meta-item" data-ref="meta-size">
+              <span class="pdf-ocr-result__meta-label">Tamaño Final</span>
+              <span class="pdf-ocr-result__meta-value" data-ref="val-ocr-size">0 KB</span>
+            </div>
+          </div>
+          <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full" data-ref="btn-download-result">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+            <span data-ref="txt-download-result">Descargar PDF con OCR</span>
+          </button>
+          <button type="button" class="component-button component-button--secondary component-button--h40" data-ref="btn-ocr-another">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+            <span>Reconocer otro archivo</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="ocr-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="ocr-sidebar-title">OCR PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="ocr-sidebar-subtitle">Convierte documentos PDF escaneados en archivos con texto seleccionable y editable.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Idioma del Documento</span>
+          <div class="pdf-ocr-languages" data-ref="ocr-languages-container">
+            <label class="pdf-ocr-lang-option is-active" data-ref="opt-lang-spa" data-lang="spa">
+              <input class="pdf-ocr-lang-option__radio" data-ref="radio-lang-spa" type="radio" name="ocr-lang" value="spa" checked />
+              <span class="pdf-ocr-lang-option__text">Español</span>
+            </label>
+
+            <label class="pdf-ocr-lang-option" data-ref="opt-lang-eng" data-lang="eng">
+              <input class="pdf-ocr-lang-option__radio" data-ref="radio-lang-eng" type="radio" name="ocr-lang" value="eng" />
+              <span class="pdf-ocr-lang-option__text">Inglés (English)</span>
+            </label>
+
+            <label class="pdf-ocr-lang-option" data-ref="opt-lang-multilingual" data-lang="spa+eng">
+              <input class="pdf-ocr-lang-option__radio" data-ref="radio-lang-multilingual" type="radio" name="ocr-lang" value="spa+eng" />
+              <span class="pdf-ocr-lang-option__text">Español + Inglés (Bilingüe)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Opciones de Digitalización</span>
+          <div class="pdf-ocr-toggle-card" data-ref="card-deskew-toggle">
+            <div class="pdf-ocr-toggle-label">
+              <span>Enderezar páginas (Deskew)</span>
+              <span class="pdf-ocr-toggle-subtext">Corrige inclinaciones en escaneos</span>
+            </div>
+            <input class="component-checkbox" data-ref="check-deskew" type="checkbox" checked />
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Detalles del Archivo</span>
+          <div class="tool-summary-card" data-ref="ocr-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Archivo Seleccionado</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-status">Ninguno</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Tamaño Original</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-size">0 KB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-ocr-action" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#center_focus_strong"></use></svg>
+          <span data-ref="txt-ocr-action">Reconocer Texto (OCR)</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="ocr-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

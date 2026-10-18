@@ -1,0 +1,62 @@
+{
+  "name": "project-aurora",
+  "version": "1.0.0",
+  "description": "ProjectAurora - SPA Application with modular design system",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "dev:watch": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" src/index.ts",
+    "dev:client": "vite",
+    "infra:up": "docker compose up -d mysql redis downloader",
+    "infra:stop": "docker compose stop mysql redis downloader",
+    "infra:logs": "docker compose logs -f mysql redis downloader",
+    "docker:dev": "docker compose up -d",
+    "docker:prod": "docker compose -f docker-compose.yml up -d --build",
+    "docker:down": "docker compose down",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build:client": "vite build",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "typecheck:all": "npm run typecheck",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "archiver": "^8.0.0",
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.6",
+    "nodemailer": "^10.1.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.6.205",
+    "qr-code-styling": "^1.9.2",
+    "rolldown": "^1.2.7",
+    "sharp": "^0.35.5",
+    "sortablejs": "^1.15.7",
+    "stripe": "^23.0.0",
+    "svgo": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/archiver": "^8.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^20.17.10",
+    "@types/nodemailer": "^8.0.2",
+    "@types/sortablejs": "^1.15.9",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^8.2.2"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.2.7"
+  }
+}

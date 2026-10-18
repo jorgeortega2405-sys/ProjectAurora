@@ -1,0 +1,102 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="settings-wrapper">
+    <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="settings-scrollable">
+      <div class="settings-layout" data-ref="settings-layout">
+      <div class="settings-header" data-ref="settings-header">
+        <h1 class="settings-title" data-ref="settings-title" data-i18n="settings.accessibility.title"></h1>
+        <p class="settings-subtitle" data-ref="settings-subtitle" data-i18n="settings.accessibility.subtitle"></p>
+      </div>
+
+      <!-- Grupo 1: Tema visual -->
+      <div class="settings-group" data-ref="group-theme-settings">
+        <!-- Item: Tema -->
+        <div class="settings-item settings-item--stacked" data-ref="item-theme">
+          <div class="settings-item__content" data-ref="item-theme-content">
+            <div class="settings-item__text" data-ref="item-theme-text">
+              <h2 class="settings-item__title" data-ref="item-theme-title" data-i18n="settings.accessibility.theme_title"></h2>
+              <p class="settings-item__desc" data-ref="item-theme-desc" data-i18n="settings.accessibility.theme_desc"></p>
+            </div>
+          </div>
+          <div class="settings-dropdown-wrapper" data-ref="dropdown-wrapper-theme">
+            <button type="button" class="dropdown-trigger" data-ref="btn-trigger-theme" data-i18n-aria="settings.accessibility.theme_trigger_aria">
+              <div class="dropdown-trigger__left">
+                <span class="material-symbols-rounded dropdown-trigger__icon" data-ref="theme-selected-icon">light_mode</span>
+                <span class="dropdown-trigger__text" data-ref="theme-selected-text"></span>
+              </div>
+              <span class="material-symbols-rounded dropdown-trigger__chevron">expand_more</span>
+            </button>
+
+            <div class="dropdown-backdrop" data-ref="dropdown-backdrop-theme">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="dropdown-menu-theme">
+                <div class="menu-panel__drag-zone" data-ref="drag-zone-theme" aria-hidden="true">
+                  <div class="menu-panel__drag-handle"></div>
+                </div>
+                <div class="menu-panel__list" data-ref="list-themes">
+                  <button type="button" class="menu-item is-active" data-ref="option-theme-light" data-theme-value="light">
+                    <span class="material-symbols-rounded menu-item__icon">light_mode</span>
+                    <span class="menu-item__text" data-i18n="settings.accessibility.theme_light"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grupo 2: Opciones de interacción -->
+      <div class="settings-group" data-ref="group-accessibility-options">
+        <!-- Item 1: Reducir animaciones -->
+        <div class="settings-item" data-ref="item-reduce-motion">
+          <div class="settings-item__content" data-ref="item-reduce-motion-content">
+            <div class="settings-item__text" data-ref="item-reduce-motion-text">
+              <h2 class="settings-item__title" data-ref="item-reduce-motion-title" data-i18n="settings.accessibility.reduce_motion_title"></h2>
+              <p class="settings-item__desc" data-ref="item-reduce-motion-desc" data-i18n="settings.accessibility.reduce_motion_desc"></p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-reduce-motion-actions">
+            <label class="toggle-switch" data-ref="label-toggle-reduce-motion">
+              <input class="toggle-switch__input" data-ref="toggle-reduce-motion" type="checkbox" />
+              <span class="toggle-switch__slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <hr class="settings-divider" />
+
+        <!-- Item 2: Alto contraste -->
+        <div class="settings-item" data-ref="item-high-contrast">
+          <div class="settings-item__content" data-ref="item-high-contrast-content">
+            <div class="settings-item__text" data-ref="item-high-contrast-text">
+              <h2 class="settings-item__title" data-ref="item-high-contrast-title" data-i18n="settings.accessibility.high_contrast_title"></h2>
+              <p class="settings-item__desc" data-ref="item-high-contrast-desc" data-i18n="settings.accessibility.high_contrast_desc"></p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-high-contrast-actions">
+            <label class="toggle-switch" data-ref="label-toggle-high-contrast">
+              <input class="toggle-switch__input" data-ref="toggle-high-contrast" type="checkbox" />
+              <span class="toggle-switch__slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <hr class="settings-divider" />
+
+        <!-- Item 3: Notificaciones extendidas -->
+        <div class="settings-item" data-ref="item-extended-alerts">
+          <div class="settings-item__content" data-ref="item-extended-alerts-content">
+            <div class="settings-item__text" data-ref="item-extended-alerts-text">
+              <h2 class="settings-item__title" data-ref="item-extended-alerts-title" data-i18n="settings.accessibility.extended_alerts_title"></h2>
+              <p class="settings-item__desc" data-ref="item-extended-alerts-desc" data-i18n="settings.accessibility.extended_alerts_desc"></p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-extended-alerts-actions">
+            <label class="toggle-switch" data-ref="label-toggle-extended-alerts">
+              <input class="toggle-switch__input" data-ref="toggle-extended-alerts" type="checkbox" />
+              <span class="toggle-switch__slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+

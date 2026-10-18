@@ -1,0 +1,75 @@
+<div class="login-container" data-ref="login-wrapper">
+  <a class="login-header-logo" data-ref="login-home-link" href="/" data-i18n-aria="nav.go_home" data-i18n-title="app.name">
+    <svg class="component-icon" style="width: 28px; height: 28px;" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+    <span style="font-weight: 700; font-size: 18px; color: var(--text-primary); letter-spacing: -0.3px;">ProjectAurora</span>
+  </a>
+
+  <div class="card card--w-400" data-ref="login-card">
+    <div class="auth-step" data-ref="login-step-main">
+      <div class="card__header" data-ref="login-header">
+        <h1 class="card__title" data-ref="login-title" data-i18n="auth.login.title">Bienvenido de vuelta</h1>
+        <p class="card__subtitle" data-ref="login-subtitle" data-i18n="auth.login.subtitle">Ingresa tus credenciales para acceder a tu cuenta</p>
+      </div>
+
+      <div class="card__body" data-ref="login-form">
+        <label class="field" data-ref="field-login-email">
+          <input class="field__input" data-ref="login-email" type="email" maxlength="254" placeholder=" " autocomplete="email" />
+          <span class="field__label" data-ref="label-login-email" data-i18n="auth.login.email_label">Correo electrónico</span>
+        </label>
+
+        <label class="field" data-ref="field-login-password">
+          <input class="field__input field__input--has-action" data-ref="login-password" type="password" maxlength="128" placeholder=" " autocomplete="current-password" />
+          <span class="field__label" data-ref="label-login-password" data-i18n="auth.login.password_label">Contraseña</span>
+          <button type="button" class="field__action" data-ref="toggle-login-password" data-i18n-tooltip="auth.login.show_password" data-i18n-aria="auth.login.toggle_password">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+          </button>
+        </label>
+
+        <div class="link-row" data-ref="login-forgot-row">
+          <a class="link" data-ref="btn-forgot-password" href="/forgot-password" data-i18n="auth.login.forgot_password">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="button" class="component-button component-button--h55 component-button--black component-button--w-full" data-ref="btn-submit-login" data-i18n="auth.login.submit_btn">
+          Iniciar sesión
+        </button>
+
+        <button type="button" class="component-button component-button--h55 component-button--w-full" data-ref="btn-google-login">
+          <svg class="google-icon" data-ref="google-icon" width="20" height="20" aria-hidden="true"><use href="/icons.svg#google_colored"></use></svg>
+          <span class="component-button__text" data-ref="google-btn-text" data-i18n="auth.login.google_btn">Continuar con Google</span>
+        </button>
+
+        <div class="banner banner--danger" data-ref="login-error" style="display: none;"></div>
+
+        <p class="footer-note" data-ref="login-footer">
+          <span data-i18n="auth.login.no_account">¿No tienes una cuenta?</span> <a class="link link--primary" data-ref="btn-to-register" href="/register" data-i18n="auth.login.create_account">Crear cuenta</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="auth-step" data-ref="login-step-2fa" style="display: none;">
+      <div class="card__header" data-ref="login-2fa-header">
+        <h1 class="card__title" data-ref="login-2fa-title" data-i18n="auth.login_2fa.title">Verificación de dos pasos</h1>
+        <p class="card__subtitle" data-ref="login-2fa-subtitle">
+          <span data-ref="verify-2fa-subtitle-text" data-i18n="auth.login_2fa.subtitle">Ingresa el código de 6 dígitos de tu aplicación de autenticación o usa un código de respaldo.</span>
+        </p>
+      </div>
+
+      <div class="card__body" data-ref="login-2fa-form">
+        <label class="field" data-ref="field-login-2fa-code">
+          <input class="field__input field__input--code" data-ref="input-login-2fa-code" type="text" maxlength="9" placeholder=" " autocomplete="one-time-code" />
+          <span class="field__label" data-ref="label-login-2fa-code" data-i18n="auth.login_2fa.code_label">Código de verificación</span>
+        </label>
+
+        <button type="button" class="component-button component-button--h55 component-button--black component-button--w-full" data-ref="btn-submit-2fa" data-i18n="auth.login_2fa.submit_btn">
+          Verificar
+        </button>
+
+        <div class="banner banner--danger" data-ref="login-2fa-error" style="display: none;"></div>
+
+        <div class="link-row" data-ref="login-2fa-back-row" style="justify-content: center; margin-top: 14px;">
+          <a class="link" data-ref="btn-back-to-login" href="/login" data-i18n="auth.login_2fa.back_to_login">Volver a iniciar sesión</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="settings-wrapper">
+  <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="settings-scrollable">
+    <div class="settings-layout" data-ref="settings-layout">
+      <div class="settings-header" data-ref="settings-header">
+        <h1 class="settings-title" data-ref="settings-title" data-i18n="settings.billing.title">Facturación</h1>
+        <p class="settings-subtitle" data-ref="settings-subtitle" data-i18n="settings.billing.subtitle">Administra tu plan de suscripción, ciclo de cobro y opciones de renovación.</p>
+      </div>
+
+      <div class="settings-group" data-ref="group-subscription-plan">
+        <div class="settings-item" data-ref="item-current-plan">
+          <div class="settings-item__content" data-ref="item-current-plan-content">
+            <div class="settings-item__icon-box" data-ref="item-current-plan-icon-box">
+              <span class="material-symbols-rounded">workspace_premium</span>
+            </div>
+            <div class="settings-item__text" data-ref="item-current-plan-text">
+              <div class="settings-item__title-row" data-ref="plan-title-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h2 class="settings-item__title" data-ref="current-plan-name">-</h2>
+                <span class="component-badge component-badge--sm" data-ref="current-plan-status-badge" style="display: none;"></span>
+              </div>
+              <p class="settings-item__desc" data-ref="current-plan-desc">-</p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-current-plan-actions">
+            <button type="button" class="component-button component-button--h34 component-button--black" data-ref="btn-upgrade-plan" data-i18n="settings.billing.btn_upgrade_plan">Mejorar plan</button>
+          </div>
+        </div>
+
+        <hr class="settings-divider" data-ref="divider-auto-renewal" style="display: none;" />
+
+        <div class="settings-item" data-ref="item-auto-renewal" style="display: none;">
+          <div class="settings-item__content" data-ref="item-auto-renewal-content">
+            <div class="settings-item__icon-box" data-ref="item-auto-renewal-icon-box">
+              <span class="material-symbols-rounded">autorenew</span>
+            </div>
+            <div class="settings-item__text" data-ref="item-auto-renewal-text">
+              <h2 class="settings-item__title" data-ref="item-auto-renewal-title" data-i18n="settings.billing.auto_renewal_title">Renovación automática</h2>
+              <p class="settings-item__desc" data-ref="auto-renewal-desc" data-i18n="settings.billing.auto_renewal_desc">Tu suscripción se renovará automáticamente al finalizar cada ciclo.</p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-auto-renewal-actions">
+            <button type="button" class="component-button component-button--h34" data-ref="btn-toggle-auto-renewal">Cancelar renovación</button>
+          </div>
+        </div>
+
+        <hr class="settings-divider" data-ref="divider-cancel-sub" style="display: none;" />
+
+        <div class="settings-item" data-ref="item-cancel-subscription" style="display: none;">
+          <div class="settings-item__content" data-ref="item-cancel-subscription-content">
+            <div class="settings-item__icon-box" data-ref="item-cancel-subscription-icon-box">
+              <span class="material-symbols-rounded">cancel</span>
+            </div>
+            <div class="settings-item__text" data-ref="item-cancel-subscription-text">
+              <h2 class="settings-item__title" data-ref="item-cancel-subscription-title" data-i18n="settings.billing.cancel_sub_title">Cancelar suscripción</h2>
+              <p class="settings-item__desc" data-ref="item-cancel-subscription-desc" data-i18n="settings.billing.cancel_sub_desc">Cancela tu suscripción inmediatamente y vuelve al plan gratuito.</p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-cancel-subscription-actions">
+            <button type="button" class="component-button component-button--h34 component-button--danger" data-ref="btn-cancel-subscription-immediate" data-i18n="settings.billing.btn_cancel_subscription">Cancelar ahora</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,151 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="repair-pdf-wrapper">
+  <div class="tool-layout" data-ref="repair-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="repair-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="repair-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="repair-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="repair-dropzone-title">Reparar PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="repair-dropzone-desc">Recupera y repara datos de documentos PDF dañados o corruptos de forma rápida y segura.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="repair-selected-card" style="display: none;">
+        <div class="pdf-doc-card-container" data-ref="doc-card-container">
+          <div class="pdf-doc-card-toolbar">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+              <span>Cambiar archivo</span>
+            </button>
+          </div>
+          <div class="pdf-doc-card" data-ref="selected-file-panel">
+            <div class="pdf-doc-card__sheet-wrapper">
+              <div class="pdf-doc-card__sheet">
+                <canvas class="pdf-doc-card__canvas" data-ref="doc-preview-canvas"></canvas>
+              </div>
+            </div>
+            <span class="pdf-doc-card__name" data-ref="selected-file-name">documento.pdf</span>
+            <span class="pdf-doc-card__meta" data-ref="selected-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="repair-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="repair-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="repair-processing-title">Analizando y reparando archivo PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="repair-processing-subtitle">Reconstruyendo la tabla de referencias cruzadas y flujos de contenido</p>
+        <div class="tool-progress-card__track" data-ref="repair-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="repair-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="repair-result-card" style="display: none;">
+        <div class="pdf-repair-result-card" data-ref="result-card-inner">
+          <div class="pdf-repair-result__icon-box" data-ref="result-icon-box">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+          </div>
+          <h2 class="pdf-repair-result__title" data-ref="result-title">¡Documento PDF reparado con éxito!</h2>
+          <div class="pdf-repair-result__stats" data-ref="result-stats">
+            <div class="pdf-repair-result__stat" data-ref="stat-pages">
+              <span class="pdf-repair-result__stat-label">Páginas Recuperadas</span>
+              <span class="pdf-repair-result__stat-value" data-ref="val-recovered-pages">0</span>
+            </div>
+            <div class="pdf-repair-result__stat" data-ref="stat-size">
+              <span class="pdf-repair-result__stat-label">Tamaño Final</span>
+              <span class="pdf-repair-result__stat-value" data-ref="val-repaired-size">0 KB</span>
+            </div>
+          </div>
+          <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full" data-ref="btn-download-result">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+            <span data-ref="txt-download-result">Descargar PDF Reparado</span>
+          </button>
+          <button type="button" class="component-button component-button--secondary component-button--h40" data-ref="btn-repair-another">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+            <span>Reparar otro archivo</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="repair-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="repair-sidebar-title">Reparar PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="repair-sidebar-subtitle">Recupera y repara datos de documentos PDF dañados o corruptos.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Diagnóstico y Reparación</span>
+          <div class="pdf-repair-info-box" data-ref="repair-diagnostics-box">
+            <div class="pdf-repair-info-box__item">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check"></use></svg>
+              <span>Reconstrucción de índices y xrefs dañados</span>
+            </div>
+            <div class="pdf-repair-info-box__item">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check"></use></svg>
+              <span>Recuperación de páginas y catálogos rotos</span>
+            </div>
+            <div class="pdf-repair-info-box__item">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check"></use></svg>
+              <span>Sanitización y normalización de objetos PDF</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Detalles del Archivo</span>
+          <div class="tool-summary-card" data-ref="repair-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Archivo Seleccionado</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-status">Ninguno</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Tamaño Original</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-size">0 KB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-repair-action" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#build"></use></svg>
+          <span data-ref="txt-repair-action">Reparar PDF</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="repair-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

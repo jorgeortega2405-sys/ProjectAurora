@@ -1,0 +1,109 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="unlock-pdf-wrapper">
+  <div class="tool-layout" data-ref="unlock-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="unlock-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="unlock-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="unlock-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="unlock-dropzone-title">Desbloquear PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="unlock-dropzone-desc">Elimina la contraseña de seguridad de tu documento PDF para poder abrirlo, editarlo e imprimirlo libremente.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-pdf">
+              <span>Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="unlock-workspace-card" style="display: none;">
+        <div class="pdf-doc-card-container" data-ref="doc-card-container">
+          <div class="pdf-doc-card-toolbar">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+          </div>
+          <div class="pdf-doc-card" data-ref="security-doc-card">
+            <div class="pdf-doc-card__sheet-wrapper">
+              <div class="pdf-doc-card__sheet">
+                <canvas class="pdf-doc-card__canvas" data-ref="unlock-doc-canvas"></canvas>
+                <div class="security-doc-card__locked-placeholder" data-ref="unlock-locked-placeholder" style="display: none;">
+                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg>
+                  <span class="security-doc-card__locked-text">Archivo protegido</span>
+                </div>
+              </div>
+            </div>
+            <span class="pdf-doc-card__name" data-ref="txt-file-name">documento.pdf</span>
+            <span class="pdf-doc-card__meta" data-ref="txt-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="unlock-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="unlock-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="unlock-processing-title">Desbloqueando documento PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="unlock-processing-subtitle">Eliminando contraseñas y restaurando permisos de edición e impresión</p>
+        <div class="tool-progress-card__track" data-ref="unlock-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="unlock-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="unlock-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="unlock-sidebar-title">Desbloquear PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="unlock-sidebar-subtitle">Elimina la contraseña de seguridad de tu documento PDF.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section" style="display: flex; flex-direction: column; gap: 16px;">
+          <label class="field" data-ref="field-password">
+            <input class="field__input field__input--has-action" data-ref="input-unlock-password" type="password" placeholder=" " autocomplete="current-password" />
+            <span class="field__label">Contraseña (si se requiere para abrir)</span>
+            <button type="button" class="field__action" data-ref="btn-toggle-password" data-tooltip="Mostrar contraseña" aria-label="Mostrar contraseña">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+            </button>
+          </label>
+
+          <div class="banner banner--info" data-ref="unlock-info-banner" style="font-size: 13px; line-height: 1.4; margin-top: 4px;">
+            <span>Si el documento únicamente cuenta con restricciones de edición o impresión (sin contraseña de lectura), puedes dejar el campo vacío.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-unlock" disabled>
+          <span>Desbloquear PDF</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#lock_open"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="unlock-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

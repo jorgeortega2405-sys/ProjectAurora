@@ -1,0 +1,164 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="settings-wrapper">
+  <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="settings-scrollable">
+    <div class="settings-layout" data-ref="settings-layout">
+      <div class="settings-header" data-ref="settings-header">
+        <h1 class="settings-title" data-ref="settings-title" data-i18n="settings.your_account.title"></h1>
+        <p class="settings-subtitle" data-ref="settings-subtitle" data-i18n="settings.your_account.subtitle"></p>
+      </div>
+
+      <div class="banner banner--info" data-ref="protected-account-banner" style="display: none; margin-bottom: 24px;">
+        <span class="material-symbols-rounded">shield</span>
+        <div class="banner__text">
+          <strong data-i18n="settings.your_account.account_protected_banner_title"></strong>
+          <span data-i18n="settings.your_account.account_protected_banner_desc"></span>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="group-profile-data">
+        <div class="settings-item" data-ref="item-avatar">
+          <div class="settings-item__content" data-ref="item-avatar-content">
+            <div class="settings-item__avatar" data-ref="avatar-preview-box" data-i18n-tooltip="settings.your_account.avatar_change_tooltip">
+              <img class="avatar-preview-img image-lazy-fade" data-ref="profile-avatar-img" src="" alt="Avatar" referrerpolicy="no-referrer" onload="this.classList.add('image-loaded')" onerror="this.classList.add('image-loaded')" />
+              <div class="avatar-preview-overlay" data-ref="avatar-preview-overlay">
+                <span class="material-symbols-rounded">photo_camera</span>
+              </div>
+            </div>
+            <div class="settings-item__text" data-ref="item-avatar-text">
+              <h2 class="settings-item__title" data-ref="item-avatar-title" data-i18n="settings.your_account.avatar_title"></h2>
+              <p class="settings-item__desc" data-ref="item-avatar-desc" data-i18n="settings.your_account.avatar_desc"></p>
+              <input class="settings-file-input" data-ref="input-avatar-file" type="file" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" />
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-avatar-actions">
+            <button type="button" class="component-button component-button--h34 component-button--black" data-ref="btn-upload-avatar" data-i18n="settings.your_account.btn_upload_photo"></button>
+            <button type="button" class="component-button component-button--h34 component-button--black" data-ref="btn-change-avatar" data-i18n="settings.your_account.btn_change_photo" style="display: none;"></button>
+            <button type="button" class="component-button component-button--h34" data-ref="btn-delete-avatar" data-i18n="settings.your_account.btn_delete_photo" style="display: none;"></button>
+            <button type="button" class="component-button component-button--h34" data-ref="btn-cancel-avatar" data-i18n="settings.your_account.btn_cancel" style="display: none;"></button>
+            <button type="button" class="component-button component-button--h34 component-button--black" data-ref="btn-save-avatar" data-i18n="settings.your_account.btn_save" style="display: none;"></button>
+          </div>
+        </div>
+        <div class="banner banner--danger" data-ref="avatar-error" style="display: none; margin: 0 24px 16px 24px;"></div>
+
+        <hr class="settings-divider" />
+
+        <div class="settings-item" data-ref="item-username">
+          <div class="settings-item__content" data-ref="item-username-content">
+            <div class="settings-item__text" data-ref="item-username-text">
+              <h2 class="settings-item__title" data-ref="item-username-title" data-i18n="settings.your_account.username_title"></h2>
+              <div class="settings-item__view-box" data-ref="username-view-box">
+                <span class="settings-item__value" data-ref="display-username">-</span>
+              </div>
+              <div class="settings-edit-row" data-ref="username-edit-row" style="display: none;">
+                <label class="field" data-ref="field-username">
+                  <input class="field__input field__input--simple" data-ref="input-username" data-i18n-placeholder="settings.your_account.username_placeholder" type="text" maxlength="30" autocomplete="username" />
+                </label>
+                <div class="settings-item__actions">
+                  <button type="button" class="component-button component-button--h34" data-ref="btn-cancel-username" data-i18n="settings.your_account.btn_cancel"></button>
+                  <button type="button" class="component-button component-button--h34 component-button--black" data-ref="btn-save-username" data-i18n="settings.your_account.btn_save"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="username-view-actions">
+            <button type="button" class="component-button component-button--h34" data-ref="btn-edit-username" data-i18n="settings.your_account.btn_edit"></button>
+          </div>
+        </div>
+        <div class="banner banner--danger" data-ref="username-error" style="display: none; margin: 0 24px 16px 24px;"></div>
+
+        <hr class="settings-divider" />
+
+        <div class="settings-item" data-ref="item-email">
+          <div class="settings-item__content" data-ref="item-email-content">
+            <div class="settings-item__text" data-ref="item-email-text">
+              <h2 class="settings-item__title" data-ref="item-email-title" data-i18n="settings.your_account.email_title"></h2>
+              <div class="settings-item__view-box" data-ref="email-view-box">
+                <span class="settings-item__value" data-ref="display-email">-</span>
+              </div>
+              <div class="settings-edit-row" data-ref="email-edit-row" style="display: none;">
+                <label class="field" data-ref="field-email">
+                  <input class="field__input field__input--simple" data-ref="input-email" data-i18n-placeholder="settings.your_account.email_placeholder" type="email" maxlength="254" autocomplete="email" />
+                </label>
+                <div class="settings-item__actions">
+                  <button type="button" class="component-button component-button--h34" data-ref="btn-cancel-email" data-i18n="settings.your_account.btn_cancel"></button>
+                  <button type="button" class="component-button component-button--h34 component-button--black" data-ref="btn-save-email" data-i18n="settings.your_account.btn_save"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="email-view-actions">
+            <button type="button" class="component-button component-button--h34" data-ref="btn-edit-email" data-i18n="settings.your_account.btn_edit"></button>
+          </div>
+        </div>
+        <div class="banner banner--danger" data-ref="email-error" style="display: none; margin: 0 24px 16px 24px;"></div>
+      </div>
+
+      <div class="settings-group" data-ref="group-connected-accounts">
+        <div class="settings-item" data-ref="item-google">
+          <div class="settings-item__content" data-ref="item-google-content">
+            <div class="settings-item__icon-box" data-ref="item-google-icon-box">
+              <svg class="google-icon" data-ref="google-icon" width="22" height="22" aria-hidden="true"><use href="/icons.svg#google_colored"></use></svg>
+            </div>
+            <div class="settings-item__text" data-ref="item-google-text">
+              <h2 class="settings-item__title" data-ref="item-google-title" data-i18n="settings.your_account.google_title"></h2>
+              <p class="settings-item__desc" data-ref="google-account-status"></p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-google-actions">
+            <button type="button" class="component-button component-button--h34" data-ref="btn-google-account-action" data-i18n="settings.your_account.btn_connect"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="group-language">
+        <div class="settings-item settings-item--stacked" data-ref="item-language">
+          <div class="settings-item__content" data-ref="item-language-content">
+            <div class="settings-item__text" data-ref="item-language-text">
+              <h2 class="settings-item__title" data-ref="item-language-title" data-i18n="settings.your_account.language_title"></h2>
+              <p class="settings-item__desc" data-ref="item-language-desc" data-i18n="settings.your_account.language_desc"></p>
+            </div>
+          </div>
+          <div class="settings-dropdown-wrapper" data-ref="dropdown-wrapper-language">
+            <button type="button" class="dropdown-trigger" data-ref="btn-trigger-language" data-i18n-aria="settings.your_account.language_trigger_aria">
+              <div class="dropdown-trigger__left">
+                <svg class="component-icon dropdown-trigger__icon" aria-hidden="true"><use href="/icons.svg#language"></use></svg>
+                <span class="dropdown-trigger__text" data-ref="language-selected-text"></span>
+              </div>
+              <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+
+            <div class="dropdown-backdrop" data-ref="dropdown-backdrop-language">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="dropdown-menu-language">
+                <div class="menu-panel__drag-zone" data-ref="drag-zone-language" aria-hidden="true">
+                  <div class="menu-panel__drag-handle"></div>
+                </div>
+                <div class="menu-panel__search" data-ref="search-wrapper-language">
+                  <svg class="component-icon menu-panel__search-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+                  <input class="menu-panel__search-input" data-ref="input-search-language" data-i18n-placeholder="settings.your_account.search_language_placeholder" type="text" maxlength="50" autocomplete="off" />
+                </div>
+                <div class="menu-panel__list menu-panel__list--scrollable" data-ref="list-languages"></div>
+                <div class="menu-panel__empty" data-ref="empty-languages" data-i18n="settings.your_account.no_languages_found" style="display: none;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="group-navigation-preferences">
+        <div class="settings-item" data-ref="item-open-links">
+          <div class="settings-item__content" data-ref="item-open-links-content">
+            <div class="settings-item__text" data-ref="item-open-links-text">
+              <h2 class="settings-item__title" data-ref="item-open-links-title" data-i18n="settings.your_account.links_new_tab_title"></h2>
+              <p class="settings-item__desc" data-ref="item-open-links-desc" data-i18n="settings.your_account.links_new_tab_desc"></p>
+            </div>
+          </div>
+          <div class="settings-item__actions" data-ref="item-open-links-actions">
+            <label class="toggle-switch" data-ref="label-toggle-open-links">
+              <input class="toggle-switch__input" data-ref="toggle-open-links" type="checkbox" checked />
+              <span class="toggle-switch__slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,298 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="watermark-pdf-wrapper">
+  <div class="tool-layout" data-ref="watermark-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="watermark-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
+      <input class="tool-dropzone__input" data-ref="input-watermark-image" type="file" accept="image/png,image/jpeg,image/webp" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="wm-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="wm-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="wm-dropzone-title">Insertar marca de agua</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="wm-dropzone-desc">Añade marcas de agua personalizadas de texto o imágenes a tus documentos PDF con total precisión.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-pdf">
+              <span>Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="wm-workspace-card" style="display: none;">
+        <div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 16px;">
+          <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+            <span>Cambiar PDF</span>
+          </button>
+        </div>
+
+        <div class="wm-pages-grid" data-ref="wm-pages-grid"></div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="wm-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="wm-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="wm-processing-title">Insertando marca de agua en el PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="wm-processing-subtitle">Estampando elementos con la opacidad y posición configuradas</p>
+        <div class="tool-progress-card__track" data-ref="wm-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="wm-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="watermark-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="wm-sidebar-title">Opciones de Marca de agua</h1>
+        <p class="tool-sidebar__subtitle" data-ref="wm-sidebar-subtitle">Añade marcas de agua personalizadas de texto o imágenes a tus páginas PDF.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="wm-tabs" data-ref="wm-tabs">
+          <button type="button" class="wm-tab-btn is-active" data-ref="tab-text" data-tab="text">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#text_fields"></use></svg>
+            <span>Agregar texto</span>
+          </button>
+          <button type="button" class="wm-tab-btn" data-ref="tab-image" data-tab="image">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#image"></use></svg>
+            <span>Agregar imagen</span>
+          </button>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-text-options">
+          <span class="tool-sidebar__section-title" style="margin-bottom: 6px;">Texto:</span>
+          <div class="field" data-ref="field-wm-text" style="margin-bottom: 12px;">
+            <input class="field__input field__input--h36" data-ref="input-wm-text" type="text" value="CONFIDENCIAL" placeholder="Texto de marca de agua..." style="font-size: 13px;" />
+          </div>
+
+          <span class="tool-sidebar__section-title" style="margin-bottom: 6px;">Formato de texto:</span>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-wm-font" style="margin: 0; flex: 1;">
+              <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-wm-font" aria-label="Fuente">
+                <div class="dropdown-trigger__left">
+                  <span class="dropdown-trigger__text" data-ref="txt-selected-wm-font">Arial / Helvetica</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="backdrop-wm-font">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-wm-font">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-wm-font" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list" data-ref="list-wm-font">
+                    <button type="button" class="menu-item is-active" data-ref="opt-wm-font-helvetica" data-value="Helvetica">
+                      <span class="menu-item__text">Arial / Helvetica</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-wm-font-helvetica-bold" data-value="Helvetica-Bold">
+                      <span class="menu-item__text">Helvetica (Negrita)</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-wm-font-times-roman" data-value="Times-Roman">
+                      <span class="menu-item__text">Times New Roman</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-wm-font-courier" data-value="Courier">
+                      <span class="menu-item__text">Courier</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-wm-size" style="margin: 0; width: 85px; min-width: 85px;">
+              <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-wm-size" aria-label="Tamaño">
+                <div class="dropdown-trigger__left">
+                  <span class="dropdown-trigger__text" data-ref="txt-selected-wm-size">36 pt</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="backdrop-wm-size">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-wm-size">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-wm-size" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list" data-ref="list-wm-size">
+                    <button type="button" class="menu-item" data-ref="opt-wm-size-24" data-value="24">
+                      <span class="menu-item__text">24 pt</span>
+                    </button>
+                    <button type="button" class="menu-item is-active" data-ref="opt-wm-size-36" data-value="36">
+                      <span class="menu-item__text">36 pt</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-wm-size-48" data-value="48">
+                      <span class="menu-item__text">48 pt</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-wm-size-72" data-value="72">
+                      <span class="menu-item__text">72 pt</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-image-options" style="display: none;">
+          <span class="tool-sidebar__section-title" style="margin-bottom: 6px;">Imagen de marca de agua:</span>
+          <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-pick-image">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+            <span data-ref="txt-picked-image">Añadir Imagen (PNG/JPG)</span>
+          </button>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="tool-sidebar__section-title" style="margin: 0;">Posición:</span>
+              <div class="wm-position-box" data-ref="wm-position-box">
+                <div class="wm-position-cell" data-pos="top-left" title="Superior Izquierda"></div>
+                <div class="wm-position-cell" data-pos="top-center" title="Superior Centro"></div>
+                <div class="wm-position-cell" data-pos="top-right" title="Superior Derecha"></div>
+                <div class="wm-position-cell" data-pos="center-left" title="Centro Izquierda"></div>
+                <div class="wm-position-cell is-selected" data-pos="center" title="Centro"></div>
+                <div class="wm-position-cell" data-pos="center-right" title="Centro Derecha"></div>
+                <div class="wm-position-cell" data-pos="bottom-left" title="Inferior Izquierda"></div>
+                <div class="wm-position-cell" data-pos="bottom-center" title="Inferior Centro"></div>
+                <div class="wm-position-cell" data-pos="bottom-right" title="Inferior Derecha"></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 22px;">
+              <label class="pn-checkbox-label" data-ref="label-mosaic">
+                <input class="pn-checkbox-input" data-ref="check-mosaic" type="checkbox" />
+                <span>Mosaico</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span class="tool-sidebar__section-title" style="margin: 0;">Transparencia:</span>
+              <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-transparency" style="margin: 0;">
+                <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-transparency" aria-label="Transparencia">
+                  <div class="dropdown-trigger__left">
+                    <span class="dropdown-trigger__text" data-ref="txt-selected-transparency">Sin transparencia</span>
+                  </div>
+                  <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+                </button>
+                <div class="dropdown-backdrop" data-ref="backdrop-transparency">
+                  <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-transparency">
+                    <div class="menu-panel__drag-zone" data-ref="drag-zone-transparency" aria-hidden="true">
+                      <div class="menu-panel__drag-handle"></div>
+                    </div>
+                    <div class="menu-panel__list" data-ref="list-transparency">
+                      <button type="button" class="menu-item is-active" data-ref="opt-transparency-0" data-value="0">
+                        <span class="menu-item__text">Sin transparencia</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-transparency-25" data-value="25">
+                        <span class="menu-item__text">25%</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-transparency-50" data-value="50">
+                        <span class="menu-item__text">50%</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-transparency-75" data-value="75">
+                        <span class="menu-item__text">75%</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span class="tool-sidebar__section-title" style="margin: 0;">Rotación:</span>
+              <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-rotation" style="margin: 0;">
+                <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-rotation" aria-label="Rotación">
+                  <div class="dropdown-trigger__left">
+                    <span class="dropdown-trigger__text" data-ref="txt-selected-rotation">No rotar</span>
+                  </div>
+                  <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+                </button>
+                <div class="dropdown-backdrop" data-ref="backdrop-rotation">
+                  <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-rotation">
+                    <div class="menu-panel__drag-zone" data-ref="drag-zone-rotation" aria-hidden="true">
+                      <div class="menu-panel__drag-handle"></div>
+                    </div>
+                    <div class="menu-panel__list" data-ref="list-rotation">
+                      <button type="button" class="menu-item is-active" data-ref="opt-rotation-0" data-value="0">
+                        <span class="menu-item__text">No rotar</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-rotation-45" data-value="45">
+                        <span class="menu-item__text">45°</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-rotation-90" data-value="90">
+                        <span class="menu-item__text">90°</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-rotation-180" data-value="180">
+                        <span class="menu-item__text">180°</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-rotation-270" data-value="270">
+                        <span class="menu-item__text">270°</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Páginas:</span>
+          <div class="pn-range-row">
+            <span style="font-size: 12.5px; color: var(--text-secondary);">de la página</span>
+            <div class="field" data-ref="field-from-page" style="margin: 0; width: 70px;">
+              <input class="field__input field__input--h36" data-ref="input-from-page" type="number" min="1" value="1" style="text-align: center; font-size: 13px;" />
+            </div>
+            <span style="font-size: 12.5px; color: var(--text-secondary);">a</span>
+            <div class="field" data-ref="field-to-page" style="margin: 0; width: 70px;">
+              <input class="field__input field__input--h36" data-ref="input-to-page" type="number" min="1" value="1" style="text-align: center; font-size: 13px;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Capa:</span>
+          <div class="wm-layers-group">
+            <div class="wm-layer-card is-selected" data-ref="layer-card-over" data-layer="over">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#layers"></use></svg>
+              <span>Por encima del contenido</span>
+            </div>
+            <div class="wm-layer-card" data-ref="layer-card-under" data-layer="under">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#layers_clear"></use></svg>
+              <span>Por debajo del contenido</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-watermark" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#branding_watermark"></use></svg>
+          <span data-ref="txt-execute-watermark">Insertar marca de agua</span>
+        </button>
+        <div class="banner banner--danger" data-ref="wm-global-error" style="display: none; margin-top: 12px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,44 @@
+import cloudRoutes from '../tools/cloud/cloud.routes.js';
+import compressPdfRoutes from '../tools/compress-pdf/compress-pdf.routes.js';
+import cropPdfRoutes from '../tools/crop-pdf/crop-pdf.routes.js';
+import editPdfRoutes from '../tools/edit-pdf/edit-pdf.routes.js';
+import mergePdfRoutes from '../tools/merge-pdf/merge-pdf.routes.js';
+import ocrPdfRoutes from '../tools/ocr-pdf/ocr-pdf.routes.js';
+import organizePdfRoutes from '../tools/organize-pdf/organize-pdf.routes.js';
+import pageNumbersRoutes from '../tools/page-numbers/page-numbers.routes.js';
+import pdfConverterRoutes from '../tools/pdf-converter/pdf-converter.routes.js';
+import protectPdfRoutes from '../tools/protect-pdf/protect-pdf.routes.js';
+import removePdfPagesRoutes from '../tools/remove-pdf-pages/remove-pdf-pages.routes.js';
+import repairPdfRoutes from '../tools/repair-pdf/repair-pdf.routes.js';
+import rotatePdfRoutes from '../tools/rotate-pdf/rotate-pdf.routes.js';
+import splitPdfRoutes from '../tools/split-pdf/split-pdf.routes.js';
+import summarizePdfRoutes from '../tools/summarize-pdf/summarize-pdf.routes.js';
+import toPdfConverterRoutes from '../tools/to-pdf-converter/to-pdf-converter.routes.js';
+import translatePdfRoutes from '../tools/translate-pdf/translate-pdf.routes.js';
+import unlockPdfRoutes from '../tools/unlock-pdf/unlock-pdf.routes.js';
+import watermarkPdfRoutes from '../tools/watermark-pdf/watermark-pdf.routes.js';
+import { Router } from 'express';
+
+const router = Router();
+
+router.use(cloudRoutes);
+router.use(compressPdfRoutes);
+router.use(cropPdfRoutes);
+router.use(editPdfRoutes);
+router.use(mergePdfRoutes);
+router.use(ocrPdfRoutes);
+router.use(organizePdfRoutes);
+router.use(pageNumbersRoutes);
+router.use(pdfConverterRoutes);
+router.use(protectPdfRoutes);
+router.use(removePdfPagesRoutes);
+router.use(repairPdfRoutes);
+router.use(rotatePdfRoutes);
+router.use(splitPdfRoutes);
+router.use(summarizePdfRoutes);
+router.use(toPdfConverterRoutes);
+router.use(translatePdfRoutes);
+router.use(unlockPdfRoutes);
+router.use(watermarkPdfRoutes);
+
+export default router;

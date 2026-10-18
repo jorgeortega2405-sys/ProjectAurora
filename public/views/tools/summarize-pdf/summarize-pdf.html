@@ -1,0 +1,167 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="summarize-pdf-wrapper">
+  <div class="tool-layout" data-ref="summarize-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="summarize-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="summarize-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="summarize-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="summarize-dropzone-title">Resumir con IA</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="summarize-dropzone-desc">Lee, comprende y sintetiza cualquier documento PDF con inteligencia artificial.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar Archivo PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="pdf-viewer-workspace" data-ref="summarize-viewer-card" style="display: none;">
+        <div class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-info-group">
+            <span class="pdf-viewer-toolbar__title" data-ref="viewer-file-name">documento.pdf</span>
+            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-page-count">0 páginas</span>
+          </div>
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-actions-group">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-out" title="Reducir zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+            </button>
+            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" title="Aumentar zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pdf-viewer-scroll" data-ref="viewer-scroll-container">
+          <!-- Páginas del PDF se renderizan aquí dinámicamente -->
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="summarize-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="summarize-sidebar-title">Resumir con IA</h1>
+        <p class="tool-sidebar__subtitle" data-ref="summarize-sidebar-subtitle">Lee, comprende y sintetiza cualquier documento PDF con inteligencia artificial.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Tipo de Resumen</span>
+          <div class="ai-mode-options" data-ref="ai-mode-options">
+            <label class="ai-mode-option is-active" data-ref="opt-mode-executive" data-mode="executive">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-executive" type="radio" name="summary-mode" value="executive" checked />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Resumen Ejecutivo</span>
+                <p class="ai-mode-option__desc">Visión general condensada, puntos clave y conclusiones fundamentales.</p>
+              </div>
+            </label>
+
+            <label class="ai-mode-option" data-ref="opt-mode-detailed" data-mode="detailed">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-detailed" type="radio" name="summary-mode" value="detailed" />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Análisis Detallado</span>
+                <p class="ai-mode-option__desc">Desglose exhaustivo por secciones, datos y evidencia relevante.</p>
+              </div>
+            </label>
+
+            <label class="ai-mode-option" data-ref="opt-mode-key-points" data-mode="key_points">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-key-points" type="radio" name="summary-mode" value="key_points" />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Puntos Clave y Acciones</span>
+                <p class="ai-mode-option__desc">Lista directa de hallazgos más importantes y conclusiones clave.</p>
+              </div>
+            </label>
+
+            <label class="ai-mode-option" data-ref="opt-mode-qa" data-mode="qa">
+              <input class="ai-mode-option__radio" data-ref="radio-mode-qa" type="radio" name="summary-mode" value="qa" />
+              <div class="ai-mode-option__body">
+                <span class="ai-mode-option__title">Preguntas y Respuestas</span>
+                <p class="ai-mode-option__desc">Guía esencial de preguntas frecuentes respondidas con el documento.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-processing" style="display: none;">
+          <div class="ai-pulse-bar" data-ref="ai-pulse-bar"></div>
+          <p class="tool-sidebar__subtitle" data-ref="ai-processing-status" style="margin-top: 10px; font-weight: 500;">Leyendo documento y sintetizando con Gemini AI...</p>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-summary-result" style="display: none;">
+          <div class="ai-summary-result-panel" data-ref="summary-result-panel">
+            <div class="ai-summary-header" data-ref="summary-result-header">
+              <div class="ai-summary-meta">
+                <span class="ai-summary-badge" data-ref="summary-badge-model">Gemini 3.5 Flash</span>
+                <span class="ai-summary-badge" data-ref="summary-badge-words">0 palabras</span>
+              </div>
+              <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-copy-summary" title="Copiar resumen al portapapeles">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_copy"></use></svg>
+                <span>Copiar</span>
+              </button>
+            </div>
+            <div class="ai-summary-content" data-ref="summary-rendered-text"></div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Información del Archivo</span>
+          <div class="tool-summary-card" data-ref="summarize-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Archivo</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-status">Ninguno</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Tamaño</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-size">0 KB</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label">Páginas</span>
+              <span class="tool-summary-card__value" data-ref="sidebar-file-pages">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-summarize-action" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+          <span data-ref="txt-summarize-action">Generar Resumen con IA</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <div class="banner banner--danger" data-ref="summarize-global-error" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

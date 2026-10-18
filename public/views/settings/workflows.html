@@ -1,0 +1,99 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="settings-wrapper">
+  <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="settings-scrollable">
+    <div class="settings-layout settings-layout--wide" data-ref="settings-layout">
+
+      <div class="workflows-list-view" data-ref="workflows-list-view">
+        <div class="settings-header" data-ref="settings-header" style="flex-direction: row; justify-content: space-between; text-align: left; align-items: center;">
+          <div data-ref="settings-header-text">
+            <h1 class="settings-title" data-ref="settings-title" style="text-align: left;">Flujos de trabajo</h1>
+            <p class="settings-subtitle" data-ref="settings-subtitle" style="text-align: left;">Automatiza tus tareas recurrentes encadenando herramientas de PDF en una secuencia continua.</p>
+          </div>
+          <button type="button" class="component-button component-button--primary component-button--h40" data-ref="btn-open-create-workflow" style="flex-shrink: 0;">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <span>Crear flujo de trabajo</span>
+          </button>
+        </div>
+
+        <div class="workflows-container" data-ref="workflows-container" style="margin-top: 16px;">
+          <div class="workflows-empty-state" data-ref="workflows-empty-state" style="display: none; padding: 48px 24px; text-align: center; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-xl);">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-hover); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 28px; height: 28px; color: var(--text-secondary);"><use href="/icons.svg#account_tree"></use></svg>
+            </div>
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Aún no tienes ningún flujo de trabajo</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); max-width: 440px; margin: 0 auto 20px auto;">Crea tu primer flujo personalizado combinando varias herramientas para optimizar y transformar tus archivos de forma automática.</p>
+            <button type="button" class="component-button component-button--secondary component-button--h40" data-ref="btn-empty-create-workflow">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+              <span>Crear mi primer flujo</span>
+            </button>
+          </div>
+
+          <div class="workflows-grid" data-ref="workflows-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px;"></div>
+        </div>
+      </div>
+
+      <div class="workflows-builder-view" data-ref="workflows-builder-view" style="display: none;">
+        <div class="settings-header" data-ref="builder-header" style="flex-direction: row; justify-content: space-between; text-align: left; align-items: center; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button type="button" class="component-button component-button--icon-only component-button--h36" data-ref="btn-back-to-list" aria-label="Volver">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_back"></use></svg>
+            </button>
+            <div>
+              <h1 class="settings-title" data-ref="builder-title" style="text-align: left; font-size: 18px;">Nuevo flujo de trabajo</h1>
+              <p class="settings-subtitle" data-ref="builder-subtitle" style="text-align: left;">Configura los pasos y herramientas que se ejecutarán secuencialmente.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-columns" data-ref="builder-columns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+          <div class="settings-group builder-col-left" data-ref="builder-col-left" style="padding: 20px;">
+            <h2 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Selección de herramienta</h2>
+
+            <div class="field" data-ref="field-workflow-name" style="margin-bottom: 16px; width: 100%;">
+              <label class="field__label" data-ref="label-workflow-name">Nombre del flujo de trabajo:</label>
+              <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 8px 0; line-height: 1.4;">Indica el nombre del flujo de trabajo para que puedas encontrarlo en las herramientas y en la página de inicio.</p>
+              <input class="field__input field__input--h44" data-ref="input-workflow-name" type="text" placeholder="Ej: Mi flujo de facturas" style="width: 100%;" />
+            </div>
+
+            <div class="field" data-ref="field-workflow-tool" style="margin-bottom: 16px; width: 100%;">
+              <label class="field__label" data-ref="label-workflow-tool">Selecciona una herramienta:</label>
+              <select class="field__input field__input--h44" data-ref="select-workflow-tool" style="width: 100%;">
+                <option value="" disabled selected>Herramientas disponibles...</option>
+              </select>
+            </div>
+
+            <div class="workflow-tool-options" data-ref="workflow-tool-options" style="margin-bottom: 20px; display: none;"></div>
+
+            <div style="display: flex; justify-content: flex-start;">
+              <button type="button" class="component-button component-button--secondary component-button--h44" data-ref="btn-add-step" style="gap: 8px;">
+                <span>Añadir paso</span>
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-group builder-col-right" data-ref="builder-col-right" style="padding: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <h2 style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Previsualización del flujo de trabajo</h2>
+              <button type="button" class="component-button component-button--ghost component-button--danger" data-ref="btn-clear-pipeline" style="font-size: 13px;">Borrar todo</button>
+            </div>
+
+            <div class="pipeline-steps-list" data-ref="pipeline-steps-list" style="display: flex; flex-direction: column; gap: 12px; min-height: 120px;"></div>
+
+            <div class="banner banner--danger pipeline-terminal-alert" data-ref="pipeline-terminal-alert" style="display: none; margin-top: 16px;">
+              <svg class="component-icon" aria-hidden="true" style="color: var(--danger, #ef4444); flex-shrink: 0;"><use href="/icons.svg#block"></use></svg>
+              <span style="font-size: 13px; font-weight: 500;">No es posible añadir herramientas compatibles después de este paso.</span>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 28px;">
+              <button type="button" class="component-button component-button--secondary component-button--h44" data-ref="btn-cancel-builder">Cancelar</button>
+              <button type="button" class="component-button component-button--primary component-button--h44" data-ref="btn-save-workflow">Guardar flujo de trabajo</button>
+            </div>
+
+            <div class="banner banner--danger is-hidden" data-ref="builder-error-banner" style="margin-top: 14px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

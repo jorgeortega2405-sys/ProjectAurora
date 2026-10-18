@@ -1,0 +1,238 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="pdf-splitter-wrapper">
+  <div class="tool-layout" data-ref="pdf-splitter-layout">
+    <main class="tool-layout__workspace" data-ref="pdf-splitter-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="pdf-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="pdf-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="pdf-dropzone-title" data-i18n="tools.split_pdf_title">Dividir PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="pdf-dropzone-desc" data-i18n="tools.split_pdf_subtitle">Extrae una o varias páginas, define rangos o divide por tamaño.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-pdf">
+              <span data-i18n="tools.split_pdf_btn_select">Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="pdf-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner" data-ref="pdf-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="pdf-processing-title" data-i18n="tools.split_pdf_splitting">Dividiendo documento PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="pdf-processing-subtitle" data-i18n="tools.split_pdf_splitting_subtitle">Extrayendo y procesando las páginas seleccionadas</p>
+        <div class="tool-progress-card__track" data-ref="pdf-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="pdf-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="pdf-items-view" data-ref="pdf-items-card" style="display: none;">
+        <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title" data-ref="pdf-file-title">Documento (<span data-ref="pdf-count-badge">0 págs.</span>)</h2>
+          </div>
+          <div class="tool-workspace__toolbar-actions">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="split-instruction-hint" data-ref="split-instruction-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <span data-ref="split-instruction-text">Configura los rangos o páginas a extraer en el panel derecho.</span>
+        </div>
+
+        <div class="split-pages-grid" data-ref="split-pages-grid"></div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="pdf-splitter-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="pdf-hero-title" data-i18n="tools.split_pdf_title">Dividir PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="pdf-hero-subtitle" data-i18n="tools.split_pdf_subtitle">Extrae una o varias páginas, define rangos o divide por tamaño.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="split-tabs-nav" data-ref="split-tabs-nav">
+          <button type="button" class="split-tab is-active" data-ref="tab-range" data-mode="range">
+            <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#view_column"></use></svg>
+            <span class="split-tab__label" data-i18n="tools.split_pdf_tab_range">Rango</span>
+          </button>
+          <button type="button" class="split-tab" data-ref="tab-pages" data-mode="pages">
+            <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#filter_none"></use></svg>
+            <span class="split-tab__label" data-i18n="tools.split_pdf_tab_pages">Páginas</span>
+          </button>
+          <button type="button" class="split-tab" data-ref="tab-size" data-mode="size">
+            <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#straighten"></use></svg>
+            <span class="split-tab__label" data-i18n="tools.split_pdf_tab_size">Tamaño</span>
+          </button>
+        </div>
+
+        <div class="split-mode-panel" data-ref="panel-mode-range">
+          <div class="tool-sidebar__section">
+            <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_range_mode">Modo de rango:</span>
+            <div class="split-submode-toggles">
+              <button type="button" class="split-submode-btn is-active" data-ref="btn-range-submode-custom" data-i18n="tools.split_pdf_range_custom">Personalizado</button>
+              <button type="button" class="split-submode-btn" data-ref="btn-range-submode-fixed" data-i18n="tools.split_pdf_range_fixed">Fijo</button>
+            </div>
+          </div>
+
+          <div class="split-submode-view" data-ref="section-range-custom">
+            <div class="split-ranges-list" data-ref="split-ranges-list"></div>
+            <button type="button" class="component-button component-button--secondary component-button--h36 component-button--w-full split-btn-add-range" data-ref="btn-add-range">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+              <span data-i18n="tools.split_pdf_add_range">Añadir Rango</span>
+            </button>
+          </div>
+
+          <div class="split-submode-view" data-ref="section-range-fixed" style="display: none;">
+            <div class="tool-sidebar__section">
+              <span class="tool-sidebar__section-title">Páginas por archivo dividido:</span>
+              <label class="field" data-ref="field-fixed-pages">
+                <input class="field__input" data-ref="input-fixed-pages" type="number" min="1" max="999" value="1" />
+                <span class="field__label">Dividir en bloques de N páginas</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="split-option-box" data-ref="box-merge-ranges">
+            <label class="split-checkbox-label" data-ref="label-merge-ranges">
+              <input class="split-checkbox" data-ref="check-merge-ranges" type="checkbox" />
+              <span class="split-checkbox-text" data-i18n="tools.split_pdf_merge_ranges">Unir todos los rangos en un único PDF.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="split-mode-panel" data-ref="panel-mode-pages" style="display: none;">
+          <div class="tool-sidebar__section">
+            <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_extract_mode">Modo de extracción:</span>
+            <div class="split-submode-toggles">
+              <button type="button" class="split-submode-btn is-active" data-ref="btn-pages-submode-all" data-i18n="tools.split_pdf_extract_all">Extraer todas las páginas</button>
+              <button type="button" class="split-submode-btn" data-ref="btn-pages-submode-custom" data-i18n="tools.split_pdf_select_pages">Seleccionar páginas</button>
+            </div>
+          </div>
+
+          <div class="split-submode-view" data-ref="section-pages-custom" style="display: none;">
+            <div class="tool-sidebar__section">
+              <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_pages_to_extract">Páginas para extraer:</span>
+              <label class="field" data-ref="field-pages-selection">
+                <input class="field__input" data-ref="input-pages-selection" type="text" placeholder=" " value="" autocomplete="off" />
+                <span class="field__label">ejemplo: 1, 3-5, 8</span>
+              </label>
+              <span class="split-field-hint">También puedes hacer clic directamente en las tarjetas de página a la izquierda.</span>
+            </div>
+
+            <div class="split-option-box" data-ref="box-merge-pages">
+              <label class="split-checkbox-label" data-ref="label-merge-pages">
+                <input class="split-checkbox" data-ref="check-merge-pages" type="checkbox" />
+                <span class="split-checkbox-text" data-i18n="tools.split_pdf_merge_pages">Unir las páginas extraídas en un archivo PDF.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="split-info-notice" data-ref="pages-info-notice">
+            <svg class="component-icon split-info-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+            <span class="split-info-notice__text" data-ref="txt-pages-info-notice">Cada página se convertirá en un archivo PDF independiente.</span>
+          </div>
+        </div>
+
+        <div class="split-mode-panel" data-ref="panel-mode-size" style="display: none;">
+          <div class="tool-summary-card" data-ref="card-size-original-info" style="margin-bottom: 16px;">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_original_size">Tamaño del archivo original:</span>
+              <span class="tool-summary-card__value" data-ref="val-size-orig-bytes">0 KB</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_total_pages">Páginas totales:</span>
+              <span class="tool-summary-card__value" data-ref="val-size-orig-pages">0</span>
+            </div>
+          </div>
+
+          <div class="tool-sidebar__section">
+            <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_max_size">Tamaño máximo por archivo:</span>
+            <div class="split-size-input-row">
+              <label class="field split-size-input-field" data-ref="field-max-size">
+                <input class="field__input" data-ref="input-max-size" type="number" min="10" max="99999" value="200" />
+                <span class="field__label">Límite por parte</span>
+              </label>
+              <div class="split-unit-selector" data-ref="split-unit-selector">
+                <button type="button" class="split-unit-btn is-active" data-ref="btn-unit-kb" data-unit="KB">KB</button>
+                <button type="button" class="split-unit-btn" data-ref="btn-unit-mb" data-unit="MB">MB</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="split-info-notice" data-ref="size-info-notice">
+            <svg class="component-icon split-info-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+            <span class="split-info-notice__text" data-ref="txt-size-info-notice">Este PDF se dividirá en archivos de no más de 200 KB cada uno.</span>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-output-filename" style="margin-top: 14px;">
+          <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_output_name_label">Nombre del archivo final</span>
+          <label class="field" data-ref="field-output-name">
+            <input class="field__input" data-ref="input-output-name" type="text" placeholder=" " value="documento_dividido.pdf" autocomplete="off" />
+            <span class="field__label">Nombre del documento</span>
+          </label>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_summary_title">Resumen de División</span>
+          <div class="tool-summary-card" data-ref="pdf-split-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_summary_files">Archivos a generar</span>
+              <span class="tool-summary-card__value" data-ref="val-summary-files">1</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_summary_pages">Páginas totales</span>
+              <span class="tool-summary-card__value" data-ref="val-summary-pages">0</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.split_pdf_summary_size">Tamaño original</span>
+              <span class="tool-summary-card__value" data-ref="val-summary-size">0 B</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-main-action">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#call_split"></use></svg>
+          <span data-ref="txt-main-action" data-i18n="tools.split_pdf_btn_select">Seleccionar PDF</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-sidebar-reset" style="display: none;">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+          <span data-i18n="tools.split_pdf_btn_split_more">Dividir otro archivo</span>
+        </button>
+        <div class="banner banner--danger" data-ref="split-pdf-error" style="display: none; margin-top: 6px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

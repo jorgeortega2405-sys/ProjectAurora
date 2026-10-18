@@ -1,0 +1,139 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="crop-pdf-wrapper">
+  <div class="tool-layout" data-ref="crop-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="crop-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="crop-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="crop-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="crop-dropzone-title">Recortar PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="crop-dropzone-desc">Recorta las páginas de tu documento PDF de forma interactiva y ajusta los márgenes a tu medida.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-pdf">
+              <span>Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="crop-workspace-card" style="display: none;">
+        <div class="crop-workspace-container">
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 600px;">
+            <div class="crop-page-nav" data-ref="crop-page-nav">
+              <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-prev-page">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_left"></use></svg>
+              </button>
+              <span class="tool-preview__page-info" data-ref="txt-page-info">Página 1 de 1</span>
+              <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-next-page">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_right"></use></svg>
+              </button>
+            </div>
+
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+          </div>
+
+          <div class="crop-preview-wrap" data-ref="crop-preview-wrap">
+            <canvas class="crop-canvas" data-ref="crop-canvas"></canvas>
+            <div class="crop-mask crop-mask--top" data-ref="mask-top"></div>
+            <div class="crop-mask crop-mask--bottom" data-ref="mask-bottom"></div>
+            <div class="crop-mask crop-mask--left" data-ref="mask-left"></div>
+            <div class="crop-mask crop-mask--right" data-ref="mask-right"></div>
+
+            <div class="crop-box" data-ref="crop-box">
+              <div class="crop-handle crop-handle--nw" data-handle="nw"></div>
+              <div class="crop-handle crop-handle--n" data-handle="n"></div>
+              <div class="crop-handle crop-handle--ne" data-handle="ne"></div>
+              <div class="crop-handle crop-handle--e" data-handle="e"></div>
+              <div class="crop-handle crop-handle--se" data-handle="se"></div>
+              <div class="crop-handle crop-handle--s" data-handle="s"></div>
+              <div class="crop-handle crop-handle--sw" data-handle="sw"></div>
+              <div class="crop-handle crop-handle--w" data-handle="w"></div>
+            </div>
+
+            <div class="crop-overlay" data-ref="crop-overlay"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="crop-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="crop-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="crop-processing-title">Recortando páginas del documento PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="crop-processing-subtitle">Ajustando los márgenes visuales y vectoriales del documento</p>
+        <div class="tool-progress-card__track" data-ref="crop-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="crop-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="crop-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="crop-sidebar-title">Recortar PDF</h1>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="banner banner--info" data-ref="crop-info-banner" style="margin-bottom: 16px; font-size: 13px;">
+          <div style="display: flex; gap: 8px;">
+            <svg class="component-icon" style="flex-shrink: 0; width: 18px; height: 18px;" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+            <span>Haz clic y arrastra sobre el documento para crear el área de recorte. Podrás redimensionarla si lo necesitas.</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+          <button type="button" class="component-button component-button--ghost component-button--danger component-button--h32" data-ref="btn-reset-crop">
+            <span>Restablecer</span>
+          </button>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Páginas:</span>
+          <div class="pn-mode-radios" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+            <label class="pn-radio-label" data-ref="label-all-pages">
+              <input class="pn-radio-input" data-ref="radio-all-pages" type="radio" name="crop-pages-mode" value="all" checked />
+              <span>Todas las páginas</span>
+            </label>
+            <label class="pn-radio-label" data-ref="label-current-page">
+              <input class="pn-radio-input" data-ref="radio-current-page" type="radio" name="crop-pages-mode" value="current" />
+              <span>Página actual</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-crop" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#crop"></use></svg>
+          <span data-ref="txt-execute-crop">Recortar PDF</span>
+        </button>
+        <div class="banner banner--danger" data-ref="crop-global-error" style="display: none; margin-top: 12px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,5 @@
+@import './tool-layout.css';
+
+[data-ref="pdf-converter-wrapper"] .pdf-selected-file__icon {
+  color: var(--color-danger);
+}

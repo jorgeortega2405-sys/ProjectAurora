@@ -1,0 +1,44 @@
+# Dependencias
+node_modules/
+
+# Compilacion y distribucion
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Entorno, secretos y credenciales de prueba
+.env
+.env.local
+.env.*.local
+*.pem
+test_cookies.txt
+
+# Almacenamiento temporal y subidas en tiempo de ejecucion
+data/
+temp_storage/
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Archivos binarios, mapas de fuentes y documentos generados
+*.bcmap
+*.pdf
+*.mp4
+public/vendor/pdfjs/cmaps/
+
+# Espacio de trabajo y rastros de agentes de IA
+.agents/
+
+# Resultados de pruebas y benchmarks
+tests/benchmark-*.json
+coverage/
+
+# Archivos del sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,275 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="page-numbers-wrapper">
+  <div class="tool-layout" data-ref="page-numbers-layout">
+    <main class="tool-layout__workspace" data-ref="page-numbers-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="pn-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="pn-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="pn-dropzone-title">Insertar números de página</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="pn-dropzone-desc">Añade numeración de páginas en cualquier posición, formato y tipografía a tu documento PDF.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-pdf">
+              <span>Seleccionar PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="pn-workspace-card" style="display: none;">
+        <div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 16px;">
+          <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+            <span>Cambiar PDF</span>
+          </button>
+        </div>
+
+        <div class="pn-pages-grid" data-ref="pn-pages-grid"></div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="pn-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="pn-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="pn-processing-title">Insertando números de página...</h3>
+        <p class="tool-progress-card__meta" data-ref="pn-processing-subtitle">Renderizando y estampando las numeraciones en el documento PDF</p>
+        <div class="tool-progress-card__track" data-ref="pn-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="pn-progress-fill"></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="page-numbers-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="pn-sidebar-title">Opciones de números de página</h1>
+        <p class="tool-sidebar__subtitle" data-ref="pn-sidebar-subtitle">Configura el modo de página, posición, márgenes y formato para numerar tu PDF.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Modo de página</span>
+          <div class="pn-mode-radios">
+            <label class="pn-radio-label" data-ref="label-mode-single">
+              <input class="pn-radio-input" data-ref="radio-mode-single" type="radio" name="page-mode" value="single" checked />
+              <span>Página única</span>
+            </label>
+            <label class="pn-radio-label" data-ref="label-mode-double">
+              <input class="pn-radio-input" data-ref="radio-mode-double" type="radio" name="page-mode" value="double" />
+              <span>Doble cara</span>
+            </label>
+          </div>
+          <div>
+            <label class="pn-checkbox-label" data-ref="label-cover-check">
+              <input class="pn-checkbox-input" data-ref="check-cover" type="checkbox" />
+              <span>La primera página es la portada</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <div class="pn-pos-and-margin">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span class="tool-sidebar__section-title" style="margin: 0;">Posición:</span>
+              <div class="pn-position-box" data-ref="pn-position-box">
+                <div class="pn-position-cell" data-ref="pos-cell-top-left" data-pos="top-left" title="Superior Izquierda"></div>
+                <div class="pn-position-cell" data-ref="pos-cell-top-center" data-pos="top-center" title="Superior Centro"></div>
+                <div class="pn-position-cell" data-ref="pos-cell-top-right" data-pos="top-right" title="Superior Derecha"></div>
+                <div class="pn-position-cell is-disabled" title="No disponible"></div>
+                <div class="pn-position-cell is-disabled" title="No disponible"></div>
+                <div class="pn-position-cell is-disabled" title="No disponible"></div>
+                <div class="pn-position-cell" data-ref="pos-cell-bottom-left" data-pos="bottom-left" title="Inferior Izquierda"></div>
+                <div class="pn-position-cell" data-ref="pos-cell-bottom-center" data-pos="bottom-center" title="Inferior Centro"></div>
+                <div class="pn-position-cell is-selected" data-ref="pos-cell-bottom-right" data-pos="bottom-right" title="Inferior Derecha"></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+              <span class="tool-sidebar__section-title" style="margin: 0;">Margen:</span>
+              <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-margin" style="margin: 0;">
+                <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-margin" aria-label="Margen">
+                  <div class="dropdown-trigger__left">
+                    <span class="dropdown-trigger__text" data-ref="txt-selected-margin">Recomendado</span>
+                  </div>
+                  <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+                </button>
+                <div class="dropdown-backdrop" data-ref="backdrop-margin">
+                  <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-margin">
+                    <div class="menu-panel__drag-zone" data-ref="drag-zone-margin" aria-hidden="true">
+                      <div class="menu-panel__drag-handle"></div>
+                    </div>
+                    <div class="menu-panel__list" data-ref="list-margin">
+                      <button type="button" class="menu-item is-active" data-ref="opt-margin-recommended" data-value="recommended">
+                        <span class="menu-item__text">Recomendado</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-margin-small" data-value="small">
+                        <span class="menu-item__text">Pequeño</span>
+                      </button>
+                      <button type="button" class="menu-item" data-ref="opt-margin-large" data-value="large">
+                        <span class="menu-item__text">Grande</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Páginas</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px;">
+            <span style="font-size: 13px; color: var(--text-secondary);">Primer número:</span>
+            <div class="field" data-ref="field-start-number" style="margin: 0; width: 80px;">
+              <input class="field__input field__input--h36" data-ref="input-start-number" type="number" min="1" value="1" style="text-align: center; font-size: 13px;" />
+            </div>
+          </div>
+
+          <span style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px;">¿Qué páginas quieres numerar?</span>
+          <div class="pn-range-row">
+            <span style="font-size: 12.5px; color: var(--text-secondary);">de la página</span>
+            <div class="field" data-ref="field-from-page" style="margin: 0; width: 70px;">
+              <input class="field__input field__input--h36" data-ref="input-from-page" type="number" min="1" value="1" style="text-align: center; font-size: 13px;" />
+            </div>
+            <span style="font-size: 12.5px; color: var(--text-secondary);">a</span>
+            <div class="field" data-ref="field-to-page" style="margin: 0; width: 70px;">
+              <input class="field__input field__input--h36" data-ref="input-to-page" type="number" min="1" value="1" style="text-align: center; font-size: 13px;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Texto:</span>
+          <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-format" style="margin-bottom: 8px;">
+            <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-format" aria-label="Formato de numeración">
+              <div class="dropdown-trigger__left">
+                <span class="dropdown-trigger__text" data-ref="txt-selected-format">Inserta solo números de página (recomendado)</span>
+              </div>
+              <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="dropdown-backdrop" data-ref="backdrop-format">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-format">
+                <div class="menu-panel__drag-zone" data-ref="drag-zone-format" aria-hidden="true">
+                  <div class="menu-panel__drag-handle"></div>
+                </div>
+                <div class="menu-panel__list" data-ref="list-format">
+                  <button type="button" class="menu-item is-active" data-ref="opt-format-n" data-value="{n}">
+                    <span class="menu-item__text">Inserta solo números de página (recomendado)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-format-pag-n" data-value="Página {n}">
+                    <span class="menu-item__text">Página {n}</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-format-pag-n-p" data-value="Página {n} de {p}">
+                    <span class="menu-item__text">Página {n} de {p}</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-format-custom" data-value="custom">
+                    <span class="menu-item__text">Personalizado</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pn-custom-text-box" data-ref="box-custom-text" style="display: none;">
+            <span style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Texto personalizado:</span>
+            <div class="field" data-ref="field-custom-text" style="margin-bottom: 4px;">
+              <input class="field__input field__input--h36" data-ref="input-custom-text" type="text" value="Página {n} de {p}" placeholder="Página {n} de {p}" style="font-size: 13px;" />
+            </div>
+            <span class="tool-field-hint" data-ref="txt-pn-format-hint">Ejemplos de texto: {n}, Página {n}, Página {n} de {p}</span>
+          </div>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title">Formato de texto:</span>
+          <div style="display: flex; gap: 8px;">
+            <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-font-family" style="margin: 0; flex: 1;">
+              <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-font-family" aria-label="Familia tipográfica">
+                <div class="dropdown-trigger__left">
+                  <span class="dropdown-trigger__text" data-ref="txt-selected-font-family">Arial / Helvetica</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="backdrop-font-family">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-font-family">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-font-family" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list" data-ref="list-font-family">
+                    <button type="button" class="menu-item is-active" data-ref="opt-font-family-helvetica" data-value="Helvetica">
+                      <span class="menu-item__text">Arial / Helvetica</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-font-family-helvetica-bold" data-value="Helvetica-Bold">
+                      <span class="menu-item__text">Helvetica (Negrita)</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-font-family-times-roman" data-value="Times-Roman">
+                      <span class="menu-item__text">Times New Roman</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-font-family-courier" data-value="Courier">
+                      <span class="menu-item__text">Courier</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="dropdown-wrapper-font-size" style="margin: 0; width: 90px; min-width: 90px;">
+              <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-font-size" aria-label="Tamaño tipográfico">
+                <div class="dropdown-trigger__left">
+                  <span class="dropdown-trigger__text" data-ref="txt-selected-font-size">11 pt</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="backdrop-font-size">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-font-size">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-font-size" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list" data-ref="list-font-size">
+                    <button type="button" class="menu-item" data-ref="opt-font-size-9" data-value="9">
+                      <span class="menu-item__text">9 pt</span>
+                    </button>
+                    <button type="button" class="menu-item is-active" data-ref="opt-font-size-11" data-value="11">
+                      <span class="menu-item__text">11 pt</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="opt-font-size-14" data-value="14">
+                      <span class="menu-item__text">14 pt</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-page-numbers" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#format_list_numbered"></use></svg>
+          <span data-ref="txt-execute-page-numbers">Insertar números de página</span>
+        </button>
+        <div class="banner banner--danger" data-ref="pn-global-error" style="display: none; margin-top: 12px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

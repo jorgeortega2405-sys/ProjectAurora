@@ -1,0 +1,135 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="pdf-merger-wrapper">
+  <div class="tool-layout" data-ref="pdf-merger-layout">
+    <main class="tool-layout__workspace" data-ref="pdf-merger-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-files" type="file" multiple accept="application/pdf,.pdf" />
+      <input class="pdf-dropzone__input" data-ref="input-add-more-pdf" type="file" multiple accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+
+        <div class="tool-fab-more" data-ref="tool-fab-more" style="display: none;">
+          <button type="button" class="tool-fab-more__btn tool-fab-more__btn--main" data-ref="btn-fab-add-more" data-tooltip="Añadir más archivos" aria-label="Añadir más archivos">
+            <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <span class="tool-fab-more__badge" data-ref="badge-fab-count">1</span>
+          </button>
+          <div class="tool-fab-more__options" data-ref="tool-fab-options">
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+            </button>
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="pdf-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="pdf-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="pdf-dropzone-title" data-i18n="tools.merge_pdf_title">Unir archivos PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="pdf-dropzone-desc" data-i18n="tools.merge_pdf_subtitle">Une PDFs y ponlos en el orden que prefieras. ¡Rápido y fácil!</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-pdfs">
+              <span data-i18n="tools.merge_pdf_btn_select">Seleccionar archivos PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta los PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="pdf-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner" data-ref="pdf-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="pdf-processing-title" data-i18n="tools.merge_pdf_merging">Uniendo documentos PDF...</h3>
+        <p class="tool-progress-card__meta" data-ref="pdf-processing-subtitle" data-i18n="tools.merge_pdf_merging_subtitle">Combinando páginas en el orden especificado</p>
+        <div class="tool-progress-card__track" data-ref="pdf-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="pdf-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="pdf-items-view" data-ref="pdf-items-card" style="display: none;">
+        <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title">Documentos seleccionados (<span data-ref="pdf-count-badge">0</span>)</h2>
+          </div>
+        </div>
+
+        <div class="pdf-reorder-hint" data-ref="pdf-reorder-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#swap_vert"></use></svg>
+          <span>Arrastra y suelta las tarjetas para reorganizar el orden en que se unirán los PDFs.</span>
+        </div>
+
+        <div class="pdf-items-grid" data-ref="pdf-items-grid"></div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="pdf-merger-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="pdf-hero-title" data-i18n="tools.merge_pdf_title">Unir PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="pdf-hero-subtitle" data-i18n="tools.merge_pdf_subtitle">Une y reorganiza múltiples documentos PDF en un único archivo ordenado.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="tool-sidebar__section" data-ref="section-output-filename">
+          <span class="tool-sidebar__section-title" data-i18n="tools.merge_pdf_output_name_label">Nombre del archivo final</span>
+          <label class="field" data-ref="field-output-name">
+            <input class="field__input" data-ref="input-output-name" type="text" placeholder=" " value="documento_unido.pdf" autocomplete="off" />
+            <span class="field__label">Nombre del documento</span>
+          </label>
+        </div>
+
+        <div class="tool-sidebar__section">
+          <span class="tool-sidebar__section-title" data-i18n="tools.merge_pdf_summary_title">Resumen de Unión</span>
+          <div class="tool-summary-card" data-ref="pdf-summary-card">
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.merge_pdf_summary_files">Archivos totales</span>
+              <span class="tool-summary-card__value" data-ref="val-total-files">0</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.merge_pdf_summary_pages">Páginas totales</span>
+              <span class="tool-summary-card__value" data-ref="val-total-pages">0</span>
+            </div>
+            <div class="tool-summary-card__row">
+              <span class="tool-summary-card__label" data-i18n="tools.merge_pdf_summary_size">Tamaño total</span>
+              <span class="tool-summary-card__value" data-ref="val-total-size">0 B</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-main-action">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
+          <span data-ref="txt-main-action" data-i18n="tools.merge_pdf_btn_select">Seleccionar PDFs</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-sidebar-reset" style="display: none;">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+          <span data-i18n="tools.merge_pdf_btn_merge_more">Unir más archivos</span>
+        </button>
+        <div class="banner banner--danger" data-ref="merge-pdf-error" style="display: none; margin-top: 6px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>

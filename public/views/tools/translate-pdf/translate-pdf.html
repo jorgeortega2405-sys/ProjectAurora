@@ -1,0 +1,271 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="translate-pdf-wrapper">
+  <div class="tool-layout" data-ref="translate-pdf-layout">
+    <main class="tool-layout__workspace" data-ref="translate-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="translate-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="translate-dropzone">
+          <h1 class="tool-hero-dropzone__title" data-ref="translate-dropzone-title">Traducir PDF con IA</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="translate-dropzone-desc">Traduce documentos completos conservando tablas, imágenes, columnas y el diseño original con DeepL AI.</p>
+
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <span data-ref="txt-browse-file">Seleccionar Archivo PDF</span>
+            </button>
+            <div class="tool-hero-dropzone__cloud-btns">
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-drive" data-tooltip="Google Drive" aria-label="Google Drive">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+              </button>
+              <button type="button" class="tool-hero-dropzone__cloud-btn" data-ref="btn-hero-dropbox" data-tooltip="Dropbox" aria-label="Dropbox">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="pdf-viewer-workspace" data-ref="translate-viewer-card" style="display: none;">
+        <div class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-info-group">
+            <span class="pdf-viewer-toolbar__title" data-ref="viewer-file-name">documento.pdf</span>
+            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-page-count">0 páginas</span>
+            <span class="pdf-viewer-toolbar__badge pdf-viewer-toolbar__badge--active" data-ref="viewer-doc-state">Original</span>
+          </div>
+          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-actions-group">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-out" title="Reducir zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+            </button>
+            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" title="Aumentar zoom">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+              <span>Cambiar PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pdf-viewer-scroll" data-ref="viewer-scroll-container">
+          <!-- Páginas del PDF se renderizan aquí dinámicamente -->
+        </div>
+      </div>
+    </main>
+
+    <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
+
+    <aside class="tool-layout__sidebar" data-ref="translate-pdf-sidebar" style="display: none;">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="tool-sidebar__header">
+        <h1 class="tool-sidebar__title" data-ref="translate-sidebar-title">Traducir PDF con IA</h1>
+        <p class="tool-sidebar__subtitle" data-ref="translate-sidebar-subtitle">Traduce documentos completos conservando tablas, imágenes, columnas y el diseño original con DeepL AI.</p>
+      </div>
+
+      <div class="tool-sidebar__body">
+        <div class="translate-language-group" data-ref="group-source-lang">
+          <label class="translate-language-label" data-ref="label-source-lang">Idioma de Origen</label>
+          <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="wrapper-source-lang">
+            <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-source-lang" aria-label="Idioma de Origen">
+              <div class="dropdown-trigger__left">
+                <span class="dropdown-trigger__text" data-ref="txt-selected-source-lang">Detección automática (Recomendado)</span>
+              </div>
+              <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="dropdown-backdrop" data-ref="backdrop-source-lang">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-source-lang">
+                <div class="menu-panel__drag-zone" data-ref="drag-zone-source-lang" aria-hidden="true">
+                  <div class="menu-panel__drag-handle"></div>
+                </div>
+                <div class="menu-panel__list menu-panel__list--scrollable" data-ref="list-source-lang" style="max-height: 240px; overflow-y: auto;">
+                  <button type="button" class="menu-item is-active" data-ref="opt-source-auto" data-value="">
+                    <span class="menu-item__text">Detección automática (Recomendado)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-en" data-value="EN">
+                    <span class="menu-item__text">Inglés</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-es" data-value="ES">
+                    <span class="menu-item__text">Español</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-fr" data-value="FR">
+                    <span class="menu-item__text">Francés</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-de" data-value="DE">
+                    <span class="menu-item__text">Alemán</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-it" data-value="IT">
+                    <span class="menu-item__text">Italiano</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-pt" data-value="PT">
+                    <span class="menu-item__text">Portugués</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-zh" data-value="ZH">
+                    <span class="menu-item__text">Chino</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-ja" data-value="JA">
+                    <span class="menu-item__text">Japonés</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-ru" data-value="RU">
+                    <span class="menu-item__text">Ruso</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-nl" data-value="NL">
+                    <span class="menu-item__text">Neerlandés</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-source-pl" data-value="PL">
+                    <span class="menu-item__text">Polaco</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="translate-language-group" data-ref="group-target-lang">
+          <label class="translate-language-label" data-ref="label-target-lang">Idioma de Destino *</label>
+          <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="wrapper-target-lang">
+            <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-target-lang" aria-label="Idioma de Destino">
+              <div class="dropdown-trigger__left">
+                <span class="dropdown-trigger__text" data-ref="txt-selected-target-lang">Español (ES)</span>
+              </div>
+              <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="dropdown-backdrop" data-ref="backdrop-target-lang">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-target-lang">
+                <div class="menu-panel__drag-zone" data-ref="drag-zone-target-lang" aria-hidden="true">
+                  <div class="menu-panel__drag-handle"></div>
+                </div>
+                <div class="menu-panel__list menu-panel__list--scrollable" data-ref="list-target-lang" style="max-height: 240px; overflow-y: auto;">
+                  <button type="button" class="menu-item is-active" data-ref="opt-target-es" data-value="ES">
+                    <span class="menu-item__text">Español (ES)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-en-us" data-value="EN-US">
+                    <span class="menu-item__text">Inglés Americano (EN-US)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-en-gb" data-value="EN-GB">
+                    <span class="menu-item__text">Inglés Británico (EN-GB)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-fr" data-value="FR">
+                    <span class="menu-item__text">Francés (FR)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-de" data-value="DE">
+                    <span class="menu-item__text">Alemán (DE)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-it" data-value="IT">
+                    <span class="menu-item__text">Italiano (IT)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-pt-br" data-value="PT-BR">
+                    <span class="menu-item__text">Portugués Brasileño (PT-BR)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-pt-pt" data-value="PT-PT">
+                    <span class="menu-item__text">Portugués Europeo (PT-PT)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-zh" data-value="ZH">
+                    <span class="menu-item__text">Chino Simplificado (ZH)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-ja" data-value="JA">
+                    <span class="menu-item__text">Japonés (JA)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-ru" data-value="RU">
+                    <span class="menu-item__text">Ruso (RU)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-nl" data-value="NL">
+                    <span class="menu-item__text">Neerlandés (NL)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-pl" data-value="PL">
+                    <span class="menu-item__text">Polaco (PL)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-ko" data-value="KO">
+                    <span class="menu-item__text">Coreano (KO)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-sv" data-value="SV">
+                    <span class="menu-item__text">Sueco (SV)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-da" data-value="DA">
+                    <span class="menu-item__text">Danés (DA)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-fi" data-value="FI">
+                    <span class="menu-item__text">Finés (FI)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-tr" data-value="TR">
+                    <span class="menu-item__text">Turco (TR)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-target-uk" data-value="UK">
+                    <span class="menu-item__text">Ucraniano (UK)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="translate-doc-meta" data-ref="translate-doc-meta" style="display: none;">
+          <div class="translate-doc-meta__row">
+            <span class="translate-doc-meta__key">Documento:</span>
+            <span class="translate-doc-meta__val" data-ref="doc-meta-name">-</span>
+          </div>
+          <div class="translate-doc-meta__row">
+            <span class="translate-doc-meta__key">Tamaño:</span>
+            <span class="translate-doc-meta__val" data-ref="doc-meta-size">-</span>
+          </div>
+          <div class="translate-doc-meta__row">
+            <span class="translate-doc-meta__key">Páginas:</span>
+            <span class="translate-doc-meta__val" data-ref="doc-meta-pages">-</span>
+          </div>
+        </div>
+
+        <div class="translate-result-card" data-ref="translate-result-card" style="display: none;">
+          <div class="translate-result-card__header">
+            <div class="translate-result-card__icon">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+            </div>
+            <div>
+              <h3 class="translate-result-card__title">¡Traducción completada!</h3>
+              <p class="translate-result-card__desc" data-ref="translate-result-summary">Formato y diseño preservados con éxito.</p>
+            </div>
+          </div>
+
+          <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-download-translated">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+            <span>Descargar PDF Traducido</span>
+          </button>
+
+          <button type="button" class="component-button component-button--secondary component-button--h36 component-button--w-full" data-ref="btn-toggle-viewer-doc">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+            <span data-ref="txt-toggle-viewer-doc">Ver traducción en el visor</span>
+          </button>
+
+          <button type="button" class="component-button component-button--secondary component-button--h36 component-button--w-full" data-ref="btn-reset-tool">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+            <span>Traducir otro documento</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-translate-action">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#translate"></use></svg>
+          <span data-ref="txt-translate-action">Traducir Documento</span>
+        </button>
+
+        <div class="banner banner--danger" data-ref="translate-error-banner" style="display: none; margin-top: 12px;">
+          <span data-ref="translate-error-text"></span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { RepairResultData } from './repair-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -68,7 +68,7 @@ export class RepairPdfController implements ViewController {
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
+    const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
     const repairBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-repair-action"]');
     const downloadBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const anotherBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-repair-another"]');
@@ -98,10 +98,9 @@ export class RepairPdfController implements ViewController {
       fileInput?.click();
     }, { signal });
 
-    changeBtn?.addEventListener('click', (e) => {
+    removeBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.resetSelectedFile();
-      fileInput?.click();
     }, { signal });
 
     fileInput?.addEventListener('change', () => {
@@ -111,26 +110,18 @@ export class RepairPdfController implements ViewController {
       }
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="repair-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
           this.handleFileSelected(files[0]);
         }
-      }, { signal });
-    }
+      },
+      signal,
+    });
 
     repairBtn?.addEventListener('click', () => {
       void this.handleRepair(repairBtn);
@@ -172,7 +163,7 @@ export class RepairPdfController implements ViewController {
 
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
-    if (selectedCard) selectedCard.style.display = '';
+    if (selectedCard) selectedCard.style.display = 'flex';
 
     if (sidebar) sidebar.style.display = 'flex';
     if (settingsBtn) settingsBtn.classList.add('is-visible');

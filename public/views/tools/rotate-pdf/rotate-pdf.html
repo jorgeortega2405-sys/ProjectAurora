@@ -33,15 +33,18 @@
       </div>
 
       <div class="pdf-items-view" data-ref="rotate-workspace-card" style="display: none;">
-        <div class="rotate-toolbar" data-ref="rotate-toolbar">
-          <div class="rotate-toolbar__group">
+        <div class="tool-workspace__toolbar" data-ref="rotate-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title">Páginas seleccionadas (<span data-ref="pdf-count-badge">0</span>)</h2>
+          </div>
+          <div class="tool-workspace__toolbar-actions">
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-rotate-all-right">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_right"></use></svg>
-              <span>Rotar todas a la derecha</span>
+              <span>Rotar a la derecha</span>
             </button>
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-rotate-all-left">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_left"></use></svg>
-              <span>Rotar todas a la izquierda</span>
+              <span>Rotar a la izquierda</span>
             </button>
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-reset-rotations">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
@@ -50,7 +53,7 @@
           </div>
         </div>
 
-        <div class="rotate-pages-grid" data-ref="rotate-pages-grid"></div>
+        <div class="pdf-items-grid rotate-pages-grid" data-ref="rotate-pages-grid"></div>
       </div>
 
       <div class="tool-progress-card" data-ref="rotate-processing-card" style="display: none;">

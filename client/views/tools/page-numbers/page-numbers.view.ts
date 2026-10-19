@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupDropdown, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupDropdown, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { PageNumberMargin, PageNumberMode, PageNumberPosition, PageNumberResponseData, PageThumbnailItem } from './page-numbers.types.js';
 
 export class PageNumbersController implements ViewController {
@@ -123,6 +123,8 @@ export class PageNumbersController implements ViewController {
     const checkCover = this.container.querySelector<HTMLInputElement>('[data-ref="check-cover"]');
     const customTextBox = this.container.querySelector<HTMLElement>('[data-ref="box-custom-text"]');
 
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pn-dropzone-card"]');
+
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;
       fileInput?.click();
@@ -136,25 +138,15 @@ export class PageNumbersController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const file = e.dataTransfer?.files?.[0];
-        if (file) {
-          void this.handleFileSelected(file);
-        }
-      }, { signal });
+    if (dropzoneCard) {
+      bindFileDropzone({
+        dropTarget: dropzoneCard,
+        onFiles: (files) => {
+          if (files.length > 0) void this.handleFileSelected(files[0]);
+        },
+        signal,
+        visualTarget: dropzoneCard,
+      });
     }
 
     radioSingle?.addEventListener('change', () => {
@@ -290,8 +282,11 @@ export class PageNumbersController implements ViewController {
       }
 
       if (dropzoneCard) dropzoneCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = '';
+      if (workspaceCard) workspaceCard.style.display = 'flex';
       if (executeBtn) executeBtn.disabled = false;
+
+      const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
+      if (countBadge) countBadge.textContent = String(count);
 
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="page-numbers-sidebar"]');
       const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');

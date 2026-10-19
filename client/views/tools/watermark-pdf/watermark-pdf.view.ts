@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupDropdown, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupDropdown, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { PageThumbnailItem, WatermarkPdfResponseData, WatermarkPosition, WatermarkType } from './watermark-pdf.types.js';
 
 export class WatermarkPdfController implements ViewController {
@@ -131,6 +131,8 @@ export class WatermarkPdfController implements ViewController {
     const layerOver = this.container.querySelector<HTMLElement>('[data-ref="layer-card-over"]');
     const layerUnder = this.container.querySelector<HTMLElement>('[data-ref="layer-card-under"]');
 
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="wm-dropzone-card"]');
+
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;
       fileInput?.click();
@@ -144,25 +146,15 @@ export class WatermarkPdfController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const file = e.dataTransfer?.files?.[0];
-        if (file) {
-          void this.handleFileSelected(file);
-        }
-      }, { signal });
+    if (dropzoneCard) {
+      bindFileDropzone({
+        dropTarget: dropzoneCard,
+        onFiles: (files) => {
+          if (files.length > 0) void this.handleFileSelected(files[0]);
+        },
+        signal,
+        visualTarget: dropzoneCard,
+      });
     }
 
     tabText?.addEventListener('click', () => {
@@ -320,8 +312,11 @@ export class WatermarkPdfController implements ViewController {
       }
 
       if (dropzoneCard) dropzoneCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = '';
+      if (workspaceCard) workspaceCard.style.display = 'flex';
       if (executeBtn) executeBtn.disabled = false;
+
+      const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
+      if (countBadge) countBadge.textContent = String(count);
 
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="watermark-pdf-sidebar"]');
       const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');

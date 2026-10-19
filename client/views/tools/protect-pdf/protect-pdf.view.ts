@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { ProtectPdfResponseData } from './protect-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -66,9 +66,11 @@ export class ProtectPdfController implements ViewController {
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone"]');
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-pdf"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
+    const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
     const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-password"]');
     const confirmInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-confirm-password"]');
     const togglePasswordBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-toggle-password"]');
@@ -98,6 +100,11 @@ export class ProtectPdfController implements ViewController {
       fileInput?.click();
     }, { signal });
 
+    removeBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.resetToInitial();
+    }, { signal });
+
     fileInput?.addEventListener('change', () => {
       const file = fileInput.files?.[0];
       if (file) {
@@ -106,25 +113,15 @@ export class ProtectPdfController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const file = e.dataTransfer?.files?.[0];
-        if (file) {
-          void this.handleFileSelected(file);
-        }
-      }, { signal });
+    if (dropzoneCard) {
+      bindFileDropzone({
+        dropTarget: dropzoneCard,
+        onFiles: (files) => {
+          if (files.length > 0) void this.handleFileSelected(files[0]);
+        },
+        signal,
+        visualTarget: dropzoneCard,
+      });
     }
 
     togglePasswordBtn?.addEventListener('click', () => {
@@ -211,7 +208,7 @@ export class ProtectPdfController implements ViewController {
       const workspace = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]');
 
       if (dropzoneCard) dropzoneCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = '';
+      if (workspaceCard) workspaceCard.style.display = 'flex';
 
       if (sidebar) sidebar.style.display = 'flex';
       if (settingsBtn) settingsBtn.classList.add('is-visible');

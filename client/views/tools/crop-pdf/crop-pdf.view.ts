@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { CropBoxPercent, CropPdfResponseData } from './crop-pdf.types.js';
 
 export class CropPdfController implements ViewController {
@@ -113,6 +113,8 @@ export class CropPdfController implements ViewController {
       void this.handleDropboxImport();
     }, { signal });
 
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="crop-dropzone-card"]');
+
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;
       fileInput?.click();
@@ -126,25 +128,15 @@ export class CropPdfController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const file = e.dataTransfer?.files?.[0];
-        if (file) {
-          void this.handleFileSelected(file);
-        }
-      }, { signal });
+    if (dropzoneCard) {
+      bindFileDropzone({
+        dropTarget: dropzoneCard,
+        onFiles: (files) => {
+          if (files.length > 0) void this.handleFileSelected(files[0]);
+        },
+        signal,
+        visualTarget: dropzoneCard,
+      });
     }
 
     prevPageBtn?.addEventListener('click', () => {
@@ -351,7 +343,7 @@ export class CropPdfController implements ViewController {
       const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-crop"]');
 
       if (dropzoneCard) dropzoneCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = '';
+      if (workspaceCard) workspaceCard.style.display = 'flex';
       if (executeBtn) executeBtn.disabled = false;
 
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');

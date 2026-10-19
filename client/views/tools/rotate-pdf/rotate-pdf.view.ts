@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { RotatePageItem, RotatePdfResponseData } from './rotate-pdf.types.js';
 
 export class RotatePdfController implements ViewController {
@@ -75,6 +75,7 @@ export class RotatePdfController implements ViewController {
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="rotate-dropzone"]');
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="rotate-dropzone-card"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-pdf"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
@@ -127,25 +128,15 @@ export class RotatePdfController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const file = e.dataTransfer?.files?.[0];
-        if (file) {
-          void this.handleFileSelected(file);
-        }
-      }, { signal });
+    if (dropzoneCard) {
+      bindFileDropzone({
+        dropTarget: dropzoneCard,
+        onFiles: (files) => {
+          if (files.length > 0) void this.handleFileSelected(files[0]);
+        },
+        signal,
+        visualTarget: dropzoneCard,
+      });
     }
 
     rotateAllRightBtn?.addEventListener('click', () => this.rotateAll(90), { signal });
@@ -225,8 +216,11 @@ export class RotatePdfController implements ViewController {
       const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-rotate"]');
 
       if (dropzoneCard) dropzoneCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = '';
+      if (workspaceCard) workspaceCard.style.display = 'flex';
       if (executeBtn) executeBtn.disabled = false;
+
+      const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
+      if (countBadge) countBadge.textContent = String(count);
 
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-sidebar"]');
       const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');

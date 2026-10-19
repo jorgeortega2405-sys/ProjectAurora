@@ -32,25 +32,33 @@
         </div>
       </div>
 
-      <div class="tool-workspace__canvas" data-ref="converter-selected-card" style="display: none;">
-        <div class="pdf-doc-card-container" data-ref="doc-card-container">
-          <div class="pdf-doc-card-toolbar">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
-              <span>Cambiar archivo</span>
-            </button>
+      <div class="pdf-items-view" data-ref="converter-selected-card" style="display: none;">
+        <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title">Documentos seleccionados (<span data-ref="pdf-count-badge">1</span>)</h2>
           </div>
-          <div class="pdf-doc-card" data-ref="selected-file-panel">
-            <div class="pdf-doc-card__sheet-wrapper">
-              <div class="pdf-doc-card__sheet">
-                <img class="pdf-doc-card__img" data-ref="doc-preview-img" style="display: none; object-fit: contain; width: 100%; height: 100%;" />
-                <div class="pdf-doc-card__icon-box" data-ref="doc-preview-icon" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-                  <svg class="component-icon" data-ref="selected-file-symbol" style="width: 48px; height: 48px; color: var(--text-tertiary);" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
+        </div>
+
+        <div class="pdf-items-grid" data-ref="pdf-items-grid">
+          <div class="pdf-card" data-ref="selected-file-card">
+            <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-file" title="Eliminar archivo" aria-label="Eliminar archivo">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
+            <div class="pdf-card__sheet-wrapper" data-ref="sheet-wrapper">
+              <div class="pdf-card__sheet" data-ref="sheet">
+                <img class="pdf-card__preview-img" data-ref="doc-preview-img" style="display: none;" alt="Vista previa" />
+                <div class="pdf-card__placeholder" data-ref="doc-preview-icon">
+                  <svg class="component-icon pdf-card__placeholder-icon" data-ref="selected-file-symbol" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
+                  <div class="pdf-card__placeholder-lines">
+                    <span class="pdf-card__placeholder-line"></span>
+                    <span class="pdf-card__placeholder-line pdf-card__placeholder-line--short"></span>
+                    <span class="pdf-card__placeholder-line"></span>
+                  </div>
                 </div>
               </div>
             </div>
-            <span class="pdf-doc-card__name" data-ref="selected-file-name">documento</span>
-            <span class="pdf-doc-card__meta" data-ref="selected-file-size">0 KB</span>
+            <span class="pdf-card__filename" data-ref="selected-file-name">documento</span>
+            <span class="pdf-card__meta" data-ref="selected-file-size">0 KB</span>
           </div>
         </div>
       </div>

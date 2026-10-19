@@ -8,7 +8,7 @@ import { renderIcons } from '../../../services/icon.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { TO_PDF_CONFIGS, ToPdfRouteConfig, ToPdfSourceType } from './to-pdf-converter.types.js';
 
 function formatBytes(bytes: number): string {
@@ -103,7 +103,7 @@ export class ToPdfConverterController implements ViewController {
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
+    const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
     const convertBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
 
     browseBtn?.addEventListener('click', (e) => {
@@ -131,10 +131,9 @@ export class ToPdfConverterController implements ViewController {
       fileInput?.click();
     }, { signal });
 
-    changeBtn?.addEventListener('click', (e) => {
+    removeBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.resetSelectedFile();
-      fileInput?.click();
     }, { signal });
 
     fileInput?.addEventListener('change', () => {
@@ -144,26 +143,18 @@ export class ToPdfConverterController implements ViewController {
       }
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="converter-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
           this.handleFileSelected(files[0]);
         }
-      }, { signal });
-    }
+      },
+      signal,
+    });
 
     convertBtn?.addEventListener('click', () => {
       void this.handleConvert(convertBtn);
@@ -217,7 +208,7 @@ export class ToPdfConverterController implements ViewController {
     }
 
     if (dropzoneCard) dropzoneCard.style.display = 'none';
-    if (selectedCard) selectedCard.style.display = '';
+    if (selectedCard) selectedCard.style.display = 'flex';
 
     if (sidebar) sidebar.style.display = 'flex';
     if (settingsBtn) settingsBtn.classList.add('is-visible');

@@ -80,7 +80,7 @@ services:
       - S3_REGION=us-east-1
       - S3_ACCESS_KEY=minioadmin
       - S3_SECRET_KEY=minioadmin
-      - S3_BUCKET_NAME=aurora-temp-files
+      - S3_BUCKET_NAME=aurora-storage
       - S3_FORCE_PATH_STYLE=true
       - DOWNLOADER_SERVICE_URL=http://downloader:4050
     volumes:

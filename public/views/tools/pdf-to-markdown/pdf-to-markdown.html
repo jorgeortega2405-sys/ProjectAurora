@@ -34,29 +34,22 @@
 
       <div class="pdf-viewer-workspace" data-ref="markdown-viewer-card" style="display: none;">
         <header class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
-          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-info-group">
-            <span class="pdf-viewer-toolbar__title" data-ref="viewer-file-name">documento.pdf</span>
-            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-page-count">0 páginas</span>
-          </div>
-
           <div class="pdf-viewer-toolbar__group" data-ref="toolbar-workspace-tabs" style="display: none;">
-            <button type="button" class="component-button component-button--secondary component-button--h36 is-active" data-ref="btn-tab-view-pdf">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
-              <span>PDF Original</span>
+            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn is-active" data-ref="btn-tab-view-pdf" data-tooltip="PDF Original" aria-label="PDF Original">
+              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
             </button>
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-tab-view-markdown">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
-              <span>Markdown Generado</span>
+            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-tab-view-markdown" data-tooltip="Markdown Generado" aria-label="Markdown Generado">
+              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
             </button>
           </div>
 
-          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-actions-group">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-out" title="Reducir zoom">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+          <div class="pdf-viewer-toolbar__group pdf-viewer-toolbar__group--actions" data-ref="toolbar-actions-group">
+            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
             </button>
             <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" title="Aumentar zoom">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
             </button>
           </div>
         </header>

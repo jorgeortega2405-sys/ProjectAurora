@@ -1798,6 +1798,11 @@
   gap: 8px;
 }
 
+.pdf-viewer-toolbar__group--actions,
+.pdf-viewer-toolbar__group[data-ref="toolbar-actions-group"] {
+  margin-left: auto;
+}
+
 .pdf-viewer-toolbar__title,
 .pdf-editor-toolbar__title {
   color: var(--text-primary);

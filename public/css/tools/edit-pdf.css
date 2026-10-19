@@ -220,7 +220,7 @@
 }
 
 .pdf-editor-canvas-container {
-  background-color: var(--bg-app);
+  background-color: #f5f5fa;
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -228,6 +228,11 @@
   overflow: auto;
   padding: 32px 24px;
   position: relative;
+}
+
+[data-theme='dark'] .pdf-editor-canvas-container,
+.theme-dark .pdf-editor-canvas-container {
+  background-color: var(--bg-card);
 }
 
 .pdf-editor-pages-wrapper {

@@ -641,29 +641,37 @@ html.dark-theme .component-badge--interactive:hover .component-badge__icon--colo
 }
 
 .banner--info {
-  background-color: var(--color-surface-card, rgba(0, 0, 0, 0.03));
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
+  align-items: flex-start;
+  background-color: rgba(37, 99, 235, 0.08);
+  border: 1.5px solid var(--color-brand-blue, #2563eb);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .banner--info .banner__text {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  line-height: 1.45;
 }
 
 .banner--info .banner__text strong {
-  font-weight: 600;
-  font-size: 13px;
   color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .banner--info .banner__text span {
-  font-size: 12px;
   color: var(--text-secondary);
+  font-size: 12px;
+}
+
+[data-theme='dark'] .banner--info,
+.theme-dark .banner--info {
+  background-color: rgba(59, 130, 246, 0.14);
+  border-color: #3b82f6;
 }
 
 .banner.is-hidden,

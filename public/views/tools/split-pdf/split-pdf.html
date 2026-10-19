@@ -44,13 +44,7 @@
       <div class="pdf-items-view" data-ref="pdf-items-card" style="display: none;">
         <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
           <div class="tool-workspace__toolbar-left">
-            <h2 class="tool-workspace__toolbar-title" data-ref="pdf-file-title">Documento (<span data-ref="pdf-count-badge">0 págs.</span>)</h2>
-          </div>
-          <div class="tool-workspace__toolbar-actions">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_upload"></use></svg>
-              <span>Cambiar PDF</span>
-            </button>
+            <h2 class="tool-workspace__toolbar-title" data-ref="pdf-file-title">Páginas del documento (<span data-ref="pdf-count-badge">0</span>)</h2>
           </div>
         </div>
 
@@ -120,6 +114,10 @@
                 <span class="field__label">Dividir en bloques de N páginas</span>
               </label>
             </div>
+            <div class="split-info-notice" data-ref="fixed-info-notice">
+              <svg class="component-icon split-info-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+              <span class="split-info-notice__text" data-ref="txt-fixed-info-notice">Este PDF se dividirá en archivos de 1 página. <strong>1 PDF será creado.</strong></span>
+            </div>
           </div>
 
           <div class="split-option-box" data-ref="box-merge-ranges">
@@ -159,7 +157,7 @@
 
           <div class="split-info-notice" data-ref="pages-info-notice">
             <svg class="component-icon split-info-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
-            <span class="split-info-notice__text" data-ref="txt-pages-info-notice">Cada página se convertirá en un archivo PDF independiente.</span>
+            <span class="split-info-notice__text" data-ref="txt-pages-info-notice">Las páginas seleccionadas se convertirán en diferentes archivos PDF. <strong>0 PDF</strong> serán creados.</span>
           </div>
         </div>
 

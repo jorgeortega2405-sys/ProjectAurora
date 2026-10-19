@@ -83,7 +83,6 @@ export class RotatePdfController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
 
     this.sidebarModal = setupToolSidebarModal({
       backdrop: sidebarBackdrop,
@@ -114,9 +113,6 @@ export class RotatePdfController implements ViewController {
     const resetRotationsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-reset-rotations"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-rotate"]');
     const pagesGrid = this.container.querySelector<HTMLElement>('[data-ref="rotate-pages-grid"]');
-
-    browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;

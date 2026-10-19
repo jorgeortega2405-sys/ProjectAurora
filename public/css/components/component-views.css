@@ -277,7 +277,7 @@ html.dark-theme .category-pill.is-active {
   display: flex;
   flex-direction: column;
   margin: 36px 0 0;
-  padding: 0 32px 64px;
+  padding: 0 32px 18px;
   position: relative;
   width: 100%;
   z-index: 1;
@@ -286,8 +286,8 @@ html.dark-theme .category-pill.is-active {
 .tools-grid {
   box-sizing: border-box;
   display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   width: 100%;
 }
 
@@ -297,16 +297,17 @@ html.dark-theme .category-pill.is-active {
     padding: 0 16px;
   }
   .tools-section {
-    padding: 0 16px 48px;
+    padding: 0 16px 18px;
   }
   .tools-grid {
     gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .tools-grid {
+    gap: 12px;
     grid-template-columns: 1fr;
   }
 }
@@ -560,6 +561,48 @@ html.dark-theme .tool-card__icon-box--cyan {
   margin: 0;
 }
 
+@media (max-width: 640px) {
+  .tool-card {
+    align-items: center;
+    column-gap: 14px;
+    display: grid;
+    grid-template-areas:
+      "icon title"
+      "desc desc";
+    grid-template-columns: 48px 1fr;
+    min-height: auto;
+    padding: 16px;
+    row-gap: 10px;
+  }
+
+  .tool-card__icon-box {
+    grid-area: icon;
+    margin: 0;
+  }
+
+  .tool-card__title {
+    align-self: center;
+    grid-area: title;
+    margin: 0;
+    text-align: left;
+  }
+
+  .tool-card:has(.tool-card__badge) .tool-card__title {
+    padding-right: 46px;
+  }
+
+  .tool-card__desc {
+    grid-area: desc;
+    margin: 0;
+    text-align: left;
+  }
+
+  .tool-card__badge {
+    right: 14px;
+    top: 14px;
+  }
+}
+
 .canvas-section {
   align-items: center;
   box-sizing: border-box;
@@ -740,7 +783,7 @@ html.dark-theme .canvas-card__icon-wrap {
 .home-feature-section {
   box-sizing: border-box;
   margin: 0;
-  padding: 0 32px 56px;
+  padding: 0 32px 18px;
   position: relative;
   width: 100%;
   z-index: 1;
@@ -1130,7 +1173,7 @@ html.dark-theme .site-footer__copyright {
 
 @media (max-width: 640px) {
   .home-feature-section {
-    padding: 0 16px 40px;
+    padding: 0 16px 18px;
   }
   .site-footer {
     border-radius: 18px;

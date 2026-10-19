@@ -77,9 +77,7 @@ export class RedactPdfController implements ViewController {
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
     const clearAllBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-clear-redactions"]');
-    const headerApplyBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-header-apply"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-redact"]');
 
     const toolSelectBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-select"]');
@@ -93,9 +91,6 @@ export class RedactPdfController implements ViewController {
 
     if (browseBtn && fileInput) {
       browseBtn.addEventListener('click', () => fileInput.click(), { signal });
-    }
-    if (changeBtn && fileInput) {
-      changeBtn.addEventListener('click', () => fileInput.click(), { signal });
     }
 
     if (fileInput) {
@@ -177,12 +172,6 @@ export class RedactPdfController implements ViewController {
           e.preventDefault();
           this.handleSearchAndRedact(searchInput.value);
         }
-      }, { signal });
-    }
-
-    if (headerApplyBtn) {
-      headerApplyBtn.addEventListener('click', async () => {
-        await this.executeRedaction();
       }, { signal });
     }
 

@@ -27,7 +27,7 @@
   display: inline-block;
   background-color: var(--bg-surface);
   border-radius: 4px;
-  box-shadow: var(--sl-shadow-large);
+  box-shadow: var(--sl-shadow-medium);
   user-select: none;
   touch-action: none;
   overflow: hidden;
@@ -82,3 +82,12 @@
 .crop-handle--s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
 .crop-handle--sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
 .crop-handle--w { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
+
+[data-ref="crop-pdf-workspace"] {
+  background-color: #f5f5fa;
+}
+
+[data-theme='dark'] [data-ref="crop-pdf-workspace"],
+.theme-dark [data-ref="crop-pdf-workspace"] {
+  background-color: var(--bg-card);
+}

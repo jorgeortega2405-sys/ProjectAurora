@@ -188,6 +188,7 @@ function renderMarkdownToHtml(md: string): string {
 
 export class PdfToMarkdownController implements ViewController {
   private abortController: AbortController | null = null;
+  private activePageIndex = 0;
   private activeWorkspaceTab: 'markdown' | 'pdf' = 'pdf';
   private container: HTMLElement;
   private currentFile: File | null = null;
@@ -248,7 +249,6 @@ export class PdfToMarkdownController implements ViewController {
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
     const zoomInBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-in"]');
     const zoomOutBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-out"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
@@ -282,12 +282,6 @@ export class PdfToMarkdownController implements ViewController {
       e.preventDefault();
       e.stopPropagation();
       void this.handleDropboxImport();
-    }, { signal });
-
-    changeBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.resetSelectedFile();
-      fileInput?.click();
     }, { signal });
 
     fileInput?.addEventListener('change', () => {
@@ -397,6 +391,7 @@ export class PdfToMarkdownController implements ViewController {
       this.pdfDocument = await loadingTask.promise;
 
       this.renderViewerState(file);
+      await this.renderThumbnails();
       await this.renderAllPages();
     } catch {
       this.showError('No se pudo leer el archivo PDF seleccionado. Asegúrate de que no esté protegido o dañado.');
@@ -409,6 +404,7 @@ export class PdfToMarkdownController implements ViewController {
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-viewer-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-file-name"]');
     const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-page-count"]');
+    const pagesCountBadge = this.container.querySelector<HTMLElement>('[data-ref="pages-count-badge"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-action"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
@@ -423,7 +419,68 @@ export class PdfToMarkdownController implements ViewController {
     const numPages = this.pdfDocument?.numPages || 1;
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (pageCountEl) pageCountEl.textContent = `${numPages} página${numPages === 1 ? '' : 's'}`;
+    if (pagesCountBadge) pagesCountBadge.textContent = `${numPages}`;
     if (actionBtn) actionBtn.disabled = false;
+  }
+
+  private async renderThumbnails(): Promise<void> {
+    if (!this.pdfDocument) return;
+    const container = this.container.querySelector<HTMLElement>('[data-ref="thumbnails-container"]');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const numPages = this.pdfDocument.numPages;
+    for (let i = 1; i <= numPages; i++) {
+      const pageIndex = i - 1;
+      const thumbItem = document.createElement('div');
+      thumbItem.className = `pdf-viewer-thumbnail ${pageIndex === this.activePageIndex ? 'is-active' : ''}`;
+      thumbItem.setAttribute('data-ref', `thumb-page-${pageIndex}`);
+
+      const sheet = document.createElement('div');
+      sheet.className = 'pdf-viewer-thumbnail__sheet';
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-viewer-thumbnail__canvas';
+      sheet.appendChild(canvas);
+
+      const badge = document.createElement('span');
+      badge.className = 'pdf-viewer-thumbnail__badge';
+      badge.textContent = `#${i}`;
+
+      thumbItem.appendChild(sheet);
+      thumbItem.appendChild(badge);
+      container.appendChild(thumbItem);
+
+      thumbItem.addEventListener('click', () => {
+        this.activePageIndex = pageIndex;
+        this.container.querySelectorAll('.pdf-viewer-thumbnail').forEach((t) => t.classList.remove('is-active'));
+        thumbItem.classList.add('is-active');
+
+        const targetPageCard = this.container.querySelector<HTMLElement>(`[data-page-index="${pageIndex}"]`);
+        if (targetPageCard) {
+          targetPageCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+
+      try {
+        const page = await this.pdfDocument.getPage(i);
+        const origVp = page.getViewport({ scale: 1 });
+        const thumbScale = 100 / origVp.width;
+        const vp = page.getViewport({ scale: thumbScale });
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(vp.width * dpr);
+        canvas.height = Math.floor(vp.height * dpr);
+        canvas.style.width = `${vp.width}px`;
+        canvas.style.height = `${vp.height}px`;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(dpr, dpr);
+          await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        }
+      } catch {}
+    }
   }
 
   private async renderAllPages(): Promise<void> {
@@ -431,30 +488,33 @@ export class PdfToMarkdownController implements ViewController {
     this.isRenderingPages = true;
 
     const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
-    if (!scrollContainer) {
+    const pagesWrapper = this.container.querySelector<HTMLElement>('[data-ref="pages-wrapper"]') || scrollContainer;
+    if (!pagesWrapper) {
       this.isRenderingPages = false;
       return;
     }
 
-    scrollContainer.innerHTML = '';
+    pagesWrapper.innerHTML = '';
     const numPages = this.pdfDocument.numPages;
 
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const pageIndex = pageNum - 1;
       const pageCard = document.createElement('div');
-      pageCard.className = 'pdf-page-card';
+      pageCard.className = 'pdf-viewer-page-card';
       pageCard.setAttribute('data-ref', `page-card-${pageNum}`);
+      pageCard.setAttribute('data-page-index', `${pageIndex}`);
 
       const canvas = document.createElement('canvas');
-      canvas.className = 'pdf-page-card__canvas';
+      canvas.className = 'pdf-viewer-page-canvas';
       canvas.setAttribute('data-ref', `page-canvas-${pageNum}`);
       pageCard.appendChild(canvas);
 
       const footer = document.createElement('span');
-      footer.className = 'pdf-page-card__footer';
+      footer.className = 'pdf-viewer-page-card__footer';
       footer.textContent = `Pág. ${pageNum} de ${numPages}`;
       pageCard.appendChild(footer);
 
-      scrollContainer.appendChild(pageCard);
+      pagesWrapper.appendChild(pageCard);
 
       try {
         const page = await this.pdfDocument.getPage(pageNum);
@@ -462,7 +522,7 @@ export class PdfToMarkdownController implements ViewController {
         const pageWidth = baseViewport.width;
         const pageHeight = baseViewport.height;
 
-        const containerWidth = scrollContainer.clientWidth > 100 ? scrollContainer.clientWidth : 700;
+        const containerWidth = scrollContainer ? (scrollContainer.clientWidth > 100 ? scrollContainer.clientWidth : 700) : 700;
         const baseDisplayWidth = Math.min(680, Math.max(300, containerWidth - 48));
         const displayWidth = Math.round(baseDisplayWidth * this.zoomScale);
         const displayHeight = Math.round((pageHeight / pageWidth) * displayWidth);
@@ -497,6 +557,7 @@ export class PdfToMarkdownController implements ViewController {
     this.currentResult = null;
     this.pdfDocument = null;
     this.zoomScale = 1.0;
+    this.activePageIndex = 0;
     this.activeWorkspaceTab = 'pdf';
     this.updateZoomDisplay();
 
@@ -506,6 +567,8 @@ export class PdfToMarkdownController implements ViewController {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-dropzone-card"]');
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-viewer-card"]');
     const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
+    const pagesWrapper = this.container.querySelector<HTMLElement>('[data-ref="pages-wrapper"]');
+    const thumbnailsContainer = this.container.querySelector<HTMLElement>('[data-ref="thumbnails-container"]');
     const previewWorkspace = this.container.querySelector<HTMLElement>('[data-ref="markdown-preview-workspace"]');
     const workspaceTabs = this.container.querySelector<HTMLElement>('[data-ref="toolbar-workspace-tabs"]');
     const resultSection = this.container.querySelector<HTMLElement>('[data-ref="section-markdown-result"]');
@@ -520,7 +583,9 @@ export class PdfToMarkdownController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
-    if (scrollContainer) scrollContainer.innerHTML = '';
+    if (pagesWrapper) pagesWrapper.innerHTML = '';
+    else if (scrollContainer) scrollContainer.innerHTML = '';
+    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
     if (previewWorkspace) previewWorkspace.style.display = 'none';
     if (workspaceTabs) workspaceTabs.style.display = 'none';
     if (resultSection) resultSection.style.display = 'none';

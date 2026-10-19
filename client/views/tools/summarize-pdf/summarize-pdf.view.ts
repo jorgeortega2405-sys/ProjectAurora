@@ -10,7 +10,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { ClientSummaryMode, SummarizePdfResultData } from './summarize-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -94,6 +94,7 @@ function formatInlineMarkdown(text: string): string {
 
 export class SummarizePdfController implements ViewController {
   private abortController: AbortController | null = null;
+  private activePageIndex = 0;
   private container: HTMLElement;
   private currentFile: File | null = null;
   private currentResult: SummarizePdfResultData | null = null;
@@ -133,7 +134,6 @@ export class SummarizePdfController implements ViewController {
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="summarize-dropzone"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-summarize-action"]');
     const copyBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-copy-summary"]');
     const zoomInBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-in"]');
@@ -176,12 +176,6 @@ export class SummarizePdfController implements ViewController {
       void this.handleDropboxImport();
     }, { signal });
 
-    changeBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.resetSelectedFile();
-      fileInput?.click();
-    }, { signal });
-
     fileInput?.addEventListener('change', () => {
       const files = fileInput.files;
       if (files && files.length > 0) {
@@ -189,26 +183,18 @@ export class SummarizePdfController implements ViewController {
       }
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('is-dragover');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('is-dragover');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('is-dragover');
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="summarize-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
           void this.handleFileSelected(files[0]);
         }
-      }, { signal });
-    }
+      },
+      signal,
+    });
 
     const modeOptions = this.container.querySelectorAll<HTMLElement>('.ai-mode-option');
     modeOptions.forEach((opt) => {
@@ -324,6 +310,7 @@ export class SummarizePdfController implements ViewController {
       this.pdfDocument = await loadingTask.promise;
 
       this.renderViewerState(file);
+      await this.renderThumbnails();
       await this.renderAllPages();
     } catch {
       this.showError('No se pudo leer el archivo PDF seleccionado. Asegúrate de que no esté protegido o dañado.');
@@ -336,6 +323,7 @@ export class SummarizePdfController implements ViewController {
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="summarize-viewer-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-file-name"]');
     const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-page-count"]');
+    const pagesCountBadge = this.container.querySelector<HTMLElement>('[data-ref="pages-count-badge"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-summarize-action"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="summarize-pdf-sidebar"]');
@@ -350,7 +338,68 @@ export class SummarizePdfController implements ViewController {
     const numPages = this.pdfDocument?.numPages || 1;
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (pageCountEl) pageCountEl.textContent = `${numPages} página${numPages === 1 ? '' : 's'}`;
+    if (pagesCountBadge) pagesCountBadge.textContent = `${numPages}`;
     if (actionBtn) actionBtn.disabled = false;
+  }
+
+  private async renderThumbnails(): Promise<void> {
+    if (!this.pdfDocument) return;
+    const container = this.container.querySelector<HTMLElement>('[data-ref="thumbnails-container"]');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const numPages = this.pdfDocument.numPages;
+    for (let i = 1; i <= numPages; i++) {
+      const pageIndex = i - 1;
+      const thumbItem = document.createElement('div');
+      thumbItem.className = `pdf-viewer-thumbnail ${pageIndex === this.activePageIndex ? 'is-active' : ''}`;
+      thumbItem.setAttribute('data-ref', `thumb-page-${pageIndex}`);
+
+      const sheet = document.createElement('div');
+      sheet.className = 'pdf-viewer-thumbnail__sheet';
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-viewer-thumbnail__canvas';
+      sheet.appendChild(canvas);
+
+      const badge = document.createElement('span');
+      badge.className = 'pdf-viewer-thumbnail__badge';
+      badge.textContent = `#${i}`;
+
+      thumbItem.appendChild(sheet);
+      thumbItem.appendChild(badge);
+      container.appendChild(thumbItem);
+
+      thumbItem.addEventListener('click', () => {
+        this.activePageIndex = pageIndex;
+        this.container.querySelectorAll('.pdf-viewer-thumbnail').forEach((t) => t.classList.remove('is-active'));
+        thumbItem.classList.add('is-active');
+
+        const targetPageCard = this.container.querySelector<HTMLElement>(`[data-page-index="${pageIndex}"]`);
+        if (targetPageCard) {
+          targetPageCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+
+      try {
+        const page = await this.pdfDocument.getPage(i);
+        const origVp = page.getViewport({ scale: 1 });
+        const thumbScale = 100 / origVp.width;
+        const vp = page.getViewport({ scale: thumbScale });
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(vp.width * dpr);
+        canvas.height = Math.floor(vp.height * dpr);
+        canvas.style.width = `${vp.width}px`;
+        canvas.style.height = `${vp.height}px`;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(dpr, dpr);
+          await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        }
+      } catch {}
+    }
   }
 
   private async renderAllPages(): Promise<void> {
@@ -358,30 +407,33 @@ export class SummarizePdfController implements ViewController {
     this.isRenderingPages = true;
 
     const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
-    if (!scrollContainer) {
+    const pagesWrapper = this.container.querySelector<HTMLElement>('[data-ref="pages-wrapper"]') || scrollContainer;
+    if (!pagesWrapper) {
       this.isRenderingPages = false;
       return;
     }
 
-    scrollContainer.innerHTML = '';
+    pagesWrapper.innerHTML = '';
     const numPages = this.pdfDocument.numPages;
 
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const pageIndex = pageNum - 1;
       const pageCard = document.createElement('div');
-      pageCard.className = 'pdf-page-card';
+      pageCard.className = 'pdf-viewer-page-card';
       pageCard.setAttribute('data-ref', `page-card-${pageNum}`);
+      pageCard.setAttribute('data-page-index', `${pageIndex}`);
 
       const canvas = document.createElement('canvas');
-      canvas.className = 'pdf-page-card__canvas';
+      canvas.className = 'pdf-viewer-page-canvas';
       canvas.setAttribute('data-ref', `page-canvas-${pageNum}`);
       pageCard.appendChild(canvas);
 
       const footer = document.createElement('span');
-      footer.className = 'pdf-page-card__footer';
+      footer.className = 'pdf-viewer-page-card__footer';
       footer.textContent = `Pág. ${pageNum} de ${numPages}`;
       pageCard.appendChild(footer);
 
-      scrollContainer.appendChild(pageCard);
+      pagesWrapper.appendChild(pageCard);
 
       try {
         const page = await this.pdfDocument.getPage(pageNum);
@@ -389,7 +441,7 @@ export class SummarizePdfController implements ViewController {
         const pageWidth = baseViewport.width;
         const pageHeight = baseViewport.height;
 
-        const containerWidth = scrollContainer.clientWidth > 100 ? scrollContainer.clientWidth : 700;
+        const containerWidth = scrollContainer ? (scrollContainer.clientWidth > 100 ? scrollContainer.clientWidth : 700) : 700;
         const baseDisplayWidth = Math.min(680, Math.max(300, containerWidth - 48));
         const displayWidth = Math.round(baseDisplayWidth * this.zoomScale);
         const displayHeight = Math.round((pageHeight / pageWidth) * displayWidth);
@@ -424,14 +476,21 @@ export class SummarizePdfController implements ViewController {
     this.currentResult = null;
     this.pdfDocument = null;
     this.zoomScale = 1.0;
+    this.activePageIndex = 0;
     this.updateZoomDisplay();
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     if (fileInput) fileInput.value = '';
 
+    const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
+    const pagesWrapper = this.container.querySelector<HTMLElement>('[data-ref="pages-wrapper"]');
+    const thumbnailsContainer = this.container.querySelector<HTMLElement>('[data-ref="thumbnails-container"]');
+    if (pagesWrapper) pagesWrapper.innerHTML = '';
+    else if (scrollContainer) scrollContainer.innerHTML = '';
+    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
+
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="summarize-dropzone-card"]');
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="summarize-viewer-card"]');
-    const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
     const resultSection = this.container.querySelector<HTMLElement>('[data-ref="section-summary-result"]');
     const processingSection = this.container.querySelector<HTMLElement>('[data-ref="section-processing"]');
     const actionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-summarize-action"]');

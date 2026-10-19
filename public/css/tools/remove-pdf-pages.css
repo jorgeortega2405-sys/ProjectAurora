@@ -1,4 +1,12 @@
 
+.pdf-items-view {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  width: 100%;
+}
+
 .remove-instruction-hint {
   align-items: center;
   background-color: var(--bg-hover);
@@ -24,8 +32,8 @@
 .remove-pages-grid {
   box-sizing: border-box;
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   padding: 4px 2px;
   width: 100%;
 }
@@ -33,23 +41,23 @@
 .remove-page-card {
   align-items: center;
   background-color: var(--bg-surface);
-  border: 1.5px solid var(--border-color);
-  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
   box-shadow: var(--sl-shadow-x-small);
   box-sizing: border-box;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  padding: 12px 10px 10px 10px;
+  padding: 16px 14px 14px 14px;
   position: relative;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
   user-select: none;
   width: 100%;
 }
 
 .remove-page-card:hover {
   border-color: var(--border-color-hover);
-  box-shadow: var(--sl-shadow-small);
+  box-shadow: var(--sl-shadow-medium);
   transform: translateY(-2px);
 }
 
@@ -61,9 +69,9 @@
 .remove-page-card__overlay {
   align-items: center;
   background-color: var(--action-danger-bg);
-  border-radius: 8px;
+  border-radius: 4px;
   display: none;
-  inset: 10px 10px 34px 10px;
+  inset: 0;
   justify-content: center;
   pointer-events: none;
   position: absolute;
@@ -81,14 +89,14 @@
   box-shadow: var(--sl-shadow-small);
   color: var(--action-primary-text);
   display: flex;
-  height: 32px;
+  height: 36px;
   justify-content: center;
-  width: 32px;
+  width: 36px;
 }
 
 .remove-page-card__remove-badge .component-icon {
-  height: 18px;
-  width: 18px;
+  height: 20px;
+  width: 20px;
 }
 
 .remove-page-card__action-badge {
@@ -97,13 +105,13 @@
   border-radius: 50%;
   color: var(--text-inverse);
   display: none;
-  height: 22px;
+  height: 24px;
   justify-content: center;
   position: absolute;
-  right: 8px;
-  top: 8px;
+  right: 10px;
+  top: 10px;
   transition: background-color 0.15s ease;
-  width: 22px;
+  width: 24px;
   z-index: 3;
 }
 
@@ -124,7 +132,7 @@
 .remove-page-card__sheet-wrapper {
   align-items: center;
   display: flex;
-  height: 160px;
+  height: 200px;
   justify-content: center;
   position: relative;
   width: 100%;
@@ -134,16 +142,20 @@
   align-items: center;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
+  border-radius: 4px;
   box-shadow: var(--sl-shadow-small);
   box-sizing: border-box;
   display: flex;
-  height: 155px;
+  height: 195px;
   justify-content: center;
-  max-width: 120px;
   overflow: hidden;
   position: relative;
-  width: 100%;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  width: 138px;
+}
+
+.remove-page-card:hover .remove-page-card__sheet {
+  box-shadow: var(--sl-shadow-medium);
 }
 
 .remove-page-card.is-marked-remove .remove-page-card__sheet {
@@ -177,14 +189,14 @@
   align-items: center;
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 10px;
   width: 100%;
 }
 
 .remove-page-card__page-num {
   color: var(--text-secondary);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: color 0.15s ease;
 }
 
@@ -196,8 +208,8 @@
 
 .remove-info-box {
   align-items: flex-start;
-  background-color: var(--bg-hover);
-  border: 1px solid var(--border-lighter, var(--border-color));
+  background-color: rgba(37, 99, 235, 0.08);
+  border: 1.5px solid var(--color-brand-blue, #2563eb);
   border-radius: 10px;
   box-sizing: border-box;
   color: var(--text-primary);
@@ -211,7 +223,7 @@
 }
 
 .remove-info-box__icon {
-  color: var(--text-secondary);
+  color: var(--color-brand-blue, #2563eb);
   flex-shrink: 0;
   height: 18px;
   margin-top: 1px;
@@ -220,6 +232,22 @@
 
 .remove-info-box__text {
   flex: 1;
+  line-height: 1.45;
+}
+
+.remove-info-box__text strong {
+  font-weight: 600;
+}
+
+[data-theme='dark'] .remove-info-box,
+.theme-dark .remove-info-box {
+  background-color: rgba(59, 130, 246, 0.14);
+  border-color: #3b82f6;
+}
+
+[data-theme='dark'] .remove-info-box__icon,
+.theme-dark .remove-info-box__icon {
+  color: #60a5fa;
 }
 
 .remove-stat-row {

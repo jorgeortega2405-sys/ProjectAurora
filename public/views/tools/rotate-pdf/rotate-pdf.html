@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="tool-workspace__canvas" data-ref="rotate-workspace-card" style="display: none;">
+      <div class="pdf-items-view" data-ref="rotate-workspace-card" style="display: none;">
         <div class="rotate-toolbar" data-ref="rotate-toolbar">
           <div class="rotate-toolbar__group">
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-rotate-all-right">
@@ -46,12 +46,6 @@
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-reset-rotations">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
               <span>Restablecer</span>
-            </button>
-          </div>
-          <div class="rotate-toolbar__group">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-pdf">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
-              <span>Cambiar PDF</span>
             </button>
           </div>
         </div>
@@ -85,6 +79,10 @@
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="rotate-info-box" data-ref="rotate-info-box">
+          <svg class="component-icon rotate-info-box__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <span class="rotate-info-box__text">Pasa el cursor por encima de una página para rotarla individualmente, o usa los botones para rotar todas a la vez.</span>
+        </div>
 
         <div class="tool-sidebar__section">
           <span class="tool-sidebar__section-title">Acciones Rápidas</span>

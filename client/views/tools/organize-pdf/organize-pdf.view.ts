@@ -101,7 +101,6 @@ export class OrganizePdfController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="organize-pdf-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
 
     this.sidebarModal = setupToolSidebarModal({
       backdrop: sidebarBackdrop,
@@ -131,7 +130,6 @@ export class OrganizePdfController implements ViewController {
     const pagesGrid = this.container.querySelector<HTMLElement>('[data-ref="organize-pages-grid"]');
 
     browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     fileInput?.addEventListener('change', () => {
       const file = fileInput.files?.[0];
@@ -316,11 +314,8 @@ export class OrganizePdfController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.add('is-visible');
 
-    const fileTitle = this.container.querySelector<HTMLElement>('[data-ref="pdf-file-title"]');
     const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
-    if (fileTitle && this.currentFile) {
-      fileTitle.innerHTML = `${this.escapeHtml(this.currentFile.name)} (<span data-ref="pdf-count-badge">${this.pages.length} págs.</span>)`;
-    } else if (countBadge) {
+    if (countBadge) {
       countBadge.textContent = `${this.pages.length} págs.`;
     }
 

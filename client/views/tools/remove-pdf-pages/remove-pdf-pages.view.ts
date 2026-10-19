@@ -10,7 +10,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { RemovePageItem, RemovePdfResponseData } from './remove-pdf-pages.types.js';
 
 function formatBytes(bytes: number): string {
@@ -143,7 +143,6 @@ export class RemovePdfPagesController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
     const downloadResultBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const restartRemoveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-restart-remove"]');
@@ -173,8 +172,6 @@ export class RemovePdfPagesController implements ViewController {
       void this.handleDropboxImport();
     }, { signal });
 
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
-
     fileInput?.addEventListener('change', () => {
       const file = fileInput.files?.[0];
       if (file) {
@@ -183,31 +180,23 @@ export class RemovePdfPagesController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const file = e.dataTransfer?.files?.[0];
-        if (file) {
-          void this.handleFileSelected(file);
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
+          void this.handleFileSelected(files[0]);
         }
-      }, { signal });
+      },
+      signal,
+    });
 
-      dropzone.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('button')) return;
-        fileInput?.click();
-      }, { signal });
-    }
+    dropzone?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      fileInput?.click();
+    }, { signal });
 
     inputPagesToRemove?.addEventListener('input', () => {
       if (this.pages.length === 0) return;
@@ -382,11 +371,8 @@ export class RemovePdfPagesController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.add('is-visible');
 
-    const fileTitle = this.container.querySelector<HTMLElement>('[data-ref="pdf-file-title"]');
     const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
-    if (fileTitle && this.currentFile) {
-      fileTitle.innerHTML = `${this.escapeHtml(this.currentFile.name)} (<span data-ref="pdf-count-badge">${this.pages.length} págs.</span>)`;
-    } else if (countBadge) {
+    if (countBadge) {
       countBadge.textContent = `${this.pages.length} págs.`;
     }
 

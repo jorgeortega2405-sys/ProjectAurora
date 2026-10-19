@@ -93,7 +93,6 @@ export class PageNumbersController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="page-numbers-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-page-numbers"]');
 
     this.sidebarModal = setupToolSidebarModal({
@@ -123,9 +122,6 @@ export class PageNumbersController implements ViewController {
     const radioDouble = this.container.querySelector<HTMLInputElement>('[data-ref="radio-mode-double"]');
     const checkCover = this.container.querySelector<HTMLInputElement>('[data-ref="check-cover"]');
     const customTextBox = this.container.querySelector<HTMLElement>('[data-ref="box-custom-text"]');
-
-    browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;

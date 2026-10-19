@@ -33,8 +33,8 @@
         </div>
       </div>
 
-      <div class="pdf-editor-workspace compare-editor-workspace" data-ref="compare-workspace-card" style="display: none;">
-        <header class="pdf-editor-toolbar compare-toolbar" data-ref="compare-toolbar">
+      <div class="pdf-viewer-workspace pdf-editor-workspace compare-editor-workspace" data-ref="compare-workspace-card" style="display: none;">
+        <header class="pdf-viewer-toolbar pdf-editor-toolbar compare-toolbar" data-ref="compare-toolbar">
           <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
             <button type="button" class="compare-toolbar-btn is-active" data-ref="btn-pan-tool" data-tooltip="Herramienta de desplazamiento" aria-label="Desplazamiento">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#pan_tool"></use></svg>
@@ -52,16 +52,7 @@
             </div>
           </div>
 
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-right">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-files" data-tooltip="Cambiar archivos">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-              <span>Cambiar archivos</span>
-            </button>
-            <button type="button" class="component-button component-button--black component-button--h36" data-ref="btn-header-report">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
-              <span>Descargar informe</span>
-            </button>
-          </div>
+          <div class="pdf-editor-toolbar__section" data-ref="toolbar-right"></div>
         </header>
 
         <div class="compare-split-layout" data-ref="split-layout">

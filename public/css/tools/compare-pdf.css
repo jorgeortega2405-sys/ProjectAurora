@@ -140,14 +140,19 @@
 }
 
 .compare-scroll-container {
-  background-color: var(--bg-app);
+  background-color: #f5f5fa;
   box-sizing: border-box;
   display: flex;
   flex: 1;
   justify-content: center;
   overflow: auto;
-  padding: 32px 16px;
+  padding: 32px 24px;
   position: relative;
+}
+
+[data-theme='dark'] .compare-scroll-container,
+.theme-dark .compare-scroll-container {
+  background-color: var(--bg-card);
 }
 
 .compare-pages-wrapper {

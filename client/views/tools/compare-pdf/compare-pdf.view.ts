@@ -84,7 +84,6 @@ export class ComparePdfController implements ViewController {
 
     const removeDoc1Btn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-doc1"]');
     const removeDoc2Btn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-doc2"]');
-    const changeFilesBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-files"]');
     const syncScrollBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sync-scroll"]');
 
     const zoomOutBtn1 = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-out-left"]');
@@ -97,7 +96,6 @@ export class ComparePdfController implements ViewController {
     const opacitySlider = this.container.querySelector<HTMLInputElement>('[data-ref="input-overlay-opacity"]');
     const searchInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-search-changes"]');
 
-    const headerReportBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-header-report"]');
     const downloadReportBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-report"]');
 
     if (browseBtn1 && fileInput1) {
@@ -203,12 +201,6 @@ export class ComparePdfController implements ViewController {
       }, { signal });
     }
 
-    if (changeFilesBtn) {
-      changeFilesBtn.addEventListener('click', () => {
-        this.resetAll();
-      }, { signal });
-    }
-
     if (syncScrollBtn) {
       syncScrollBtn.addEventListener('click', () => {
         this.syncScroll = !this.syncScroll;
@@ -260,12 +252,6 @@ export class ComparePdfController implements ViewController {
       searchInput.addEventListener('input', () => {
         this.searchQuery = searchInput.value.trim().toLowerCase();
         this.renderChangesList();
-      }, { signal });
-    }
-
-    if (headerReportBtn) {
-      headerReportBtn.addEventListener('click', async () => {
-        await this.handleDownloadReport();
       }, { signal });
     }
 

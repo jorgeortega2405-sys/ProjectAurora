@@ -11,7 +11,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { PageItem, RangeItem, SplitMode, SplitPdfResponseData } from './split-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -160,7 +160,6 @@ export class SplitPdfController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-splitter-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
     const downloadResultBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const restartSplitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-restart-split"]');
@@ -191,28 +190,18 @@ export class SplitPdfController implements ViewController {
       void this.handleDropboxImport();
     }, { signal });
 
-    changeBtn?.addEventListener('click', () => {
-      fileInput?.click();
-    }, { signal });
-
-    dropzone?.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('is-dragover');
-    }, { signal });
-
-    dropzone?.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('is-dragover');
-    }, { signal });
-
-    dropzone?.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('is-dragover');
-      const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        void this.handleFileSelected(files[0]);
-      }
-    }, { signal });
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
+          void this.handleFileSelected(files[0]);
+        }
+      },
+      signal,
+    });
 
     fileInput?.addEventListener('change', () => {
       if (fileInput.files && fileInput.files.length > 0) {
@@ -518,13 +507,40 @@ export class SplitPdfController implements ViewController {
     if (rangeFixed) rangeFixed.style.display = this.rangeSubmode === 'fixed' ? 'block' : 'none';
 
     const pagesCustom = this.container.querySelector<HTMLElement>('[data-ref="section-pages-custom"]');
-    const notice = this.container.querySelector<HTMLElement>('[data-ref="txt-pages-info-notice"]');
     if (pagesCustom) pagesCustom.style.display = this.pagesSubmode === 'custom' ? 'block' : 'none';
-    if (notice) {
-      notice.textContent = this.pagesSubmode === 'all'
-        ? `Cada una de las ${this.pages.length} páginas se extraerá como un archivo PDF individual.`
-        : 'Las páginas seleccionadas se extraerán según la opción seleccionada.';
+
+    this.updatePagesNotice();
+    this.updateFixedNotice();
+  }
+
+  private updatePagesNotice(): void {
+    const notice = this.container.querySelector<HTMLElement>('[data-ref="txt-pages-info-notice"]');
+    if (!notice) return;
+
+    const checkMerge = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-pages"]');
+    const isMerged = checkMerge?.checked || false;
+    const totalSelected = this.pagesSubmode === 'all' ? this.pages.length : this.selectedPages.size;
+
+    if (isMerged) {
+      notice.innerHTML = 'Las páginas seleccionadas se convertirán en un único archivo PDF. <strong>1 PDF</strong> será creado.';
+    } else if (totalSelected === 1) {
+      notice.innerHTML = 'Las páginas seleccionadas se convertirán en un archivo PDF. <strong>1 PDF</strong> será creado.';
+    } else {
+      notice.innerHTML = `Las páginas seleccionadas se convertirán en diferentes archivos PDF. <strong>${totalSelected} PDF</strong> serán creados.`;
     }
+  }
+
+  private updateFixedNotice(): void {
+    const notice = this.container.querySelector<HTMLElement>('[data-ref="txt-fixed-info-notice"]');
+    if (!notice) return;
+
+    const totalPages = this.pages.length || 1;
+    const blockSize = Math.max(1, this.fixedPageBlock || 1);
+    const expectedFiles = Math.ceil(totalPages / blockSize);
+    const pageText = blockSize === 1 ? '1 página' : `${blockSize} páginas`;
+    const pdfText = expectedFiles === 1 ? '1 PDF será creado' : `${expectedFiles} PDFs serán creados`;
+
+    notice.innerHTML = `Este PDF se dividirá en archivos de ${pageText}. <strong>${pdfText}.</strong>`;
   }
 
   private updateSizeNotice(): void {
@@ -653,9 +669,6 @@ export class SplitPdfController implements ViewController {
     if (settingsBtn) settingsBtn.classList.add('is-visible');
 
     if (badge) badge.textContent = `${this.pages.length} págs.`;
-    if (title && this.currentFile) {
-      title.innerHTML = `${this.currentFile.name} (<span data-ref="pdf-count-badge">${this.pages.length} págs.</span>)`;
-    }
 
     const valOrigBytes = this.container.querySelector<HTMLElement>('[data-ref="val-size-orig-bytes"]');
     const valOrigPages = this.container.querySelector<HTMLElement>('[data-ref="val-size-orig-pages"]');
@@ -777,6 +790,8 @@ export class SplitPdfController implements ViewController {
       summarySizeEl.textContent = formatBytes(this.currentFile.size);
     }
 
+    this.updatePagesNotice();
+    this.updateFixedNotice();
     this.updateActionButtons();
   }
 

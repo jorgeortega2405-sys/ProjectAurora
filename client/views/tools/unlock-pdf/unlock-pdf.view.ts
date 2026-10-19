@@ -69,7 +69,6 @@ export class UnlockPdfController implements ViewController {
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-pdf"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-unlock-password"]');
     const togglePasswordBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-toggle-password"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-unlock"]');
@@ -91,8 +90,6 @@ export class UnlockPdfController implements ViewController {
         void this.handleFileSelected(files[0]);
       }
     }, { signal });
-
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;

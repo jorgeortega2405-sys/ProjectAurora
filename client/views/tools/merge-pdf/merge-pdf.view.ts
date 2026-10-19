@@ -12,7 +12,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController } from '../../../utils/dom.util.js';
 import { MergePdfResponseData, SelectedPdfItem } from './merge-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -115,24 +115,18 @@ export class MergePdfController implements ViewController {
       fileInput?.click();
     }, { signal });
 
-    dropzone?.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('is-dragover');
-    }, { signal });
-
-    dropzone?.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('is-dragover');
-    }, { signal });
-
-    dropzone?.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('is-dragover');
-      const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        void this.handleFilesAdded(files);
-      }
-    }, { signal });
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
+          void this.handleFilesAdded(files);
+        }
+      },
+      signal,
+    });
 
     fileInput?.addEventListener('change', () => {
       if (fileInput.files && fileInput.files.length > 0) {
@@ -175,11 +169,20 @@ export class MergePdfController implements ViewController {
       }
     }, { signal });
 
+    const mergeNotice = this.container.querySelector<HTMLElement>('[data-ref="merge-info-notice"]');
+    mergeNotice?.addEventListener('click', () => {
+      if (this.selectedFiles.length < 2) {
+        addMoreInput?.click();
+      }
+    }, { signal });
+
     mainActionBtn?.addEventListener('click', () => {
       if (this.currentResult) {
         this.downloadMergedResult();
       } else if (this.selectedFiles.length === 0) {
         fileInput?.click();
+      } else if (this.selectedFiles.length === 1) {
+        addMoreInput?.click();
       } else {
         this.sidebarModal?.close();
         void this.startMergeProcess();
@@ -484,39 +487,39 @@ export class MergePdfController implements ViewController {
     this.updateSummary();
   }
 
-  private updateSummary(): void {
-    const filesEl = this.container.querySelector<HTMLElement>('[data-ref="val-total-files"]');
-    const pagesEl = this.container.querySelector<HTMLElement>('[data-ref="val-total-pages"]');
-    const sizeEl = this.container.querySelector<HTMLElement>('[data-ref="val-total-size"]');
-
-    const totalFiles = this.selectedFiles.length;
-    const totalPages = this.selectedFiles.reduce((acc, curr) => acc + curr.pageCount, 0);
-    const totalBytes = this.selectedFiles.reduce((acc, curr) => acc + curr.size, 0);
-
-    if (filesEl) filesEl.textContent = `${totalFiles} ${totalFiles === 1 ? 'archivo' : 'archivos'}`;
-    if (pagesEl) pagesEl.textContent = `${totalPages} ${totalPages === 1 ? 'página' : 'páginas'}`;
-    if (sizeEl) sizeEl.textContent = formatBytes(totalBytes);
-  }
+  private updateSummary(): void {}
 
   private updateActionButtons(): void {
     const mainBtnText = this.container.querySelector<HTMLElement>('[data-ref="txt-main-action"]');
     const mainBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
     const resetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-reset"]');
+    const noticeEl = this.container.querySelector<HTMLElement>('[data-ref="merge-info-notice"]');
+    const noticeText = this.container.querySelector<HTMLElement>('[data-ref="txt-merge-info-notice"]');
 
     if (!mainBtnText || !mainBtn) return;
 
     if (this.currentResult) {
       mainBtnText.textContent = t('tools.merge_pdf_btn_download') || 'Descargar PDF Unido';
       if (resetBtn) resetBtn.style.display = '';
+      if (noticeEl) noticeEl.style.display = 'none';
     } else if (this.selectedFiles.length >= 2) {
       mainBtnText.textContent = t('tools.merge_pdf_btn_merge') || 'Unir PDF';
       if (resetBtn) resetBtn.style.display = '';
+      if (noticeEl) noticeEl.style.display = 'flex';
+      if (noticeText) {
+        noticeText.innerHTML = 'Para cambiar el orden de tus PDFs, arrastra y suelta los archivos cómo quieras.';
+      }
     } else if (this.selectedFiles.length === 1) {
-      mainBtnText.textContent = t('tools.merge_pdf_btn_merge') || 'Unir PDF (Falta 1 archivo)';
+      mainBtnText.textContent = 'Unir PDF';
       if (resetBtn) resetBtn.style.display = '';
+      if (noticeEl) noticeEl.style.display = 'flex';
+      if (noticeText) {
+        noticeText.innerHTML = `Por favor, selecciona más archivos PDF haciendo click en 'Seleccionar archivos PDF'.<br>Selecciona múltiples archivos manteniendo pulsado ’Ctrl’`;
+      }
     } else {
       mainBtnText.textContent = t('tools.merge_pdf_btn_select') || 'Seleccionar PDFs';
       if (resetBtn) resetBtn.style.display = 'none';
+      if (noticeEl) noticeEl.style.display = 'none';
     }
   }
 

@@ -9,7 +9,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { EditDrawingStroke, EditImageItem, EditPdfMode, EditPdfResponseData, EditPdfTool, EditorProperties, EditShapeItem, EditShapeType, EditTextAddition, EditTextReplacement, NativeTextItem } from './edit-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -92,8 +92,6 @@ export class EditPdfController implements ViewController {
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
-    const saveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-save-pdf"]');
     const sidebarSaveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-save-pdf"]');
 
     const btnModeAnnotate = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-mode-annotate"]');
@@ -129,12 +127,6 @@ export class EditPdfController implements ViewController {
       fileInput?.click();
     }, { signal });
 
-    changeBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.resetSelectedFile();
-      fileInput?.click();
-    }, { signal });
-
     fileInput?.addEventListener('change', () => {
       const files = fileInput.files;
       if (files && files.length > 0) {
@@ -142,26 +134,18 @@ export class EditPdfController implements ViewController {
       }
     }, { signal });
 
-    if (dropzone) {
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-      }, { signal });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('tool-dropzone--active');
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="edit-dropzone-card"]');
+    const dropTarget = dropzoneCard || dropzone;
+    bindFileDropzone({
+      dropTarget,
+      visualTarget: dropTarget,
+      onFiles: (files) => {
+        if (files.length > 0) {
           void this.handleFileSelected(files[0]);
         }
-      }, { signal });
-    }
+      },
+      signal,
+    });
 
     btnModeAnnotate?.addEventListener('click', () => {
       this.setMode('annotate');
@@ -260,10 +244,9 @@ export class EditPdfController implements ViewController {
     });
 
     const executeSave = () => {
-      if (saveBtn) void this.handleSavePdf(saveBtn);
+      if (sidebarSaveBtn) void this.handleSavePdf(sidebarSaveBtn);
     };
 
-    saveBtn?.addEventListener('click', executeSave, { signal });
     sidebarSaveBtn?.addEventListener('click', executeSave, { signal });
   }
 

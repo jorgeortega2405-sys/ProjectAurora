@@ -96,7 +96,6 @@ export class WatermarkPdfController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="watermark-pdf-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const pickImageBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-pick-image"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-watermark"]');
 
@@ -131,9 +130,6 @@ export class WatermarkPdfController implements ViewController {
     const checkMosaic = this.container.querySelector<HTMLInputElement>('[data-ref="check-mosaic"]');
     const layerOver = this.container.querySelector<HTMLElement>('[data-ref="layer-card-over"]');
     const layerUnder = this.container.querySelector<HTMLElement>('[data-ref="layer-card-under"]');
-
-    browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;

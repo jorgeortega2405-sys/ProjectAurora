@@ -50,6 +50,13 @@ export async function switchLanguage(newLang: string): Promise<void> {
   navigate(`${targetBase}${searchAndHash}`);
 }
 
+export interface RenderOptions {
+  updateHistory?: {
+    fullUrl: string;
+    replace: boolean;
+  };
+}
+
 export function navigate(url: string, replace = false): void {
   const { pathname } = parseRouteUrl(url);
   const searchAndHash = url.includes('?') || url.includes('#') ? url.replace(/^[^?#]*/, '') : '';
@@ -74,24 +81,11 @@ export function navigate(url: string, replace = false): void {
   }
 
   previousPath = window.location.pathname;
-
-  if (replace) {
-    window.history.replaceState({}, '', fullUrl);
-  } else {
-    window.history.pushState({}, '', fullUrl);
-  }
-
-  const internalPath = matched ? matched.internalPath : targetPathname;
-  const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
-  if (sidebar && !internalPath.startsWith('/login') && !internalPath.startsWith('/register') && !internalPath.startsWith('/forgot-password') && !internalPath.startsWith('/reset-password')) {
-    updateSidebarActiveState(sidebar, internalPath);
-  }
-
-  void render(targetPathname);
+  void render(targetPathname, { updateHistory: { fullUrl, replace } });
 }
 
-export async function render(rawPath = window.location.pathname): Promise<void> {
-  const { pathname: path } = parseRouteUrl(rawPath);
+export async function render(rawPath = window.location.pathname, options?: RenderOptions): Promise<void> {
+  const { pathname: path, query: targetQuery } = parseRouteUrl(options?.updateHistory?.fullUrl || rawPath);
   closeAllModals();
   hideTooltip();
 
@@ -152,7 +146,7 @@ export async function render(rawPath = window.location.pathname): Promise<void> 
         params: matched.params,
         path: matched.internalPath,
         previousPath,
-        query: new URLSearchParams(window.location.search),
+        query: targetQuery || new URLSearchParams(window.location.search),
       });
       updateDomSeo(matched.routeId, matched.lang);
     } else {
@@ -198,6 +192,20 @@ export async function render(rawPath = window.location.pathname): Promise<void> 
   activeViewElement = nextViewElement;
   translateElement(nextViewElement);
   layoutContent.appendChild(nextViewElement);
+
+  if (options?.updateHistory) {
+    if (options.updateHistory.replace) {
+      window.history.replaceState({}, '', options.updateHistory.fullUrl);
+    } else {
+      window.history.pushState({}, '', options.updateHistory.fullUrl);
+    }
+  }
+
+  const internalPath = matched ? matched.internalPath : path;
+  const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
+  if (sidebar && !internalPath.startsWith('/login') && !internalPath.startsWith('/register') && !internalPath.startsWith('/forgot-password') && !internalPath.startsWith('/reset-password')) {
+    updateSidebarActiveState(sidebar, internalPath);
+  }
 
   const pendingTransfer = consumeTransferFile();
   if (pendingTransfer && nextViewElement) {

@@ -33,14 +33,9 @@
         </div>
       </div>
 
-      <div class="pdf-editor-workspace" data-ref="edit-editor-card" style="display: none;">
-        <header class="pdf-editor-toolbar" data-ref="editor-toolbar">
+      <div class="pdf-viewer-workspace pdf-editor-workspace" data-ref="edit-editor-card" style="display: none;">
+        <header class="pdf-viewer-toolbar pdf-editor-toolbar" data-ref="editor-toolbar">
           <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file" data-tooltip="Cambiar archivo">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-              <span>Cambiar PDF</span>
-            </button>
-
             <div class="pdf-editor-mode-switcher" data-ref="mode-switcher">
               <button type="button" class="pdf-editor-mode-btn is-active" data-ref="btn-mode-annotate" data-mode="annotate">
                 <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
@@ -101,26 +96,21 @@
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
             </button>
-
-            <button type="button" class="component-button component-button--black component-button--h36" data-ref="btn-save-pdf">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
-              <span>Descargar PDF</span>
-            </button>
           </div>
         </header>
 
-        <div class="pdf-editor-main-layout" data-ref="editor-main-layout">
-          <aside class="pdf-editor-pages-sidebar" data-ref="pages-sidebar">
-            <div class="pdf-editor-pages-sidebar__header">
+        <div class="pdf-viewer-main-layout pdf-editor-main-layout" data-ref="editor-main-layout">
+          <aside class="pdf-viewer-pages-sidebar pdf-editor-pages-sidebar" data-ref="pages-sidebar">
+            <div class="pdf-viewer-pages-sidebar__header pdf-editor-pages-sidebar__header">
               <span>Páginas (<span data-ref="pages-count-badge">0</span>)</span>
             </div>
-            <div class="pdf-editor-thumbnails-scroll" data-ref="thumbnails-container">
+            <div class="pdf-viewer-thumbnails-scroll pdf-editor-thumbnails-scroll" data-ref="thumbnails-container">
               <!-- Miniaturas verticales renderizadas con PDF.js -->
             </div>
           </aside>
 
-          <div class="pdf-editor-canvas-container" data-ref="editor-scroll-container">
-            <div class="pdf-editor-pages-wrapper" data-ref="pages-wrapper">
+          <div class="pdf-viewer-canvas-container pdf-editor-canvas-container" data-ref="editor-scroll-container">
+            <div class="pdf-viewer-pages-wrapper pdf-editor-pages-wrapper" data-ref="pages-wrapper">
               <!-- Páginas del PDF y capas de edición se renderizan aquí dinámicamente -->
             </div>
           </div>

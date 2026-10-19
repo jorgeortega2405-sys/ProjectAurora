@@ -22,6 +22,7 @@ function formatBytes(bytes: number): string {
 
 export class TranslatePdfViewController implements ViewController {
   private abortController: AbortController | null = null;
+  private activePageIndex = 0;
   private container: HTMLElement;
   private currentFile: File | null = null;
   private dropdownControllers: Array<{ destroy: () => void }> = [];
@@ -70,7 +71,6 @@ export class TranslatePdfViewController implements ViewController {
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="translate-dropzone"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
-    const changeFileBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-file"]');
     const zoomInBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-in"]');
     const zoomOutBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-out"]');
     const translateBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-translate-action"]');
@@ -108,10 +108,6 @@ export class TranslatePdfViewController implements ViewController {
       e.preventDefault();
       e.stopPropagation();
       void this.handleDropboxImport();
-    }, { signal });
-
-    changeFileBtn?.addEventListener('click', () => {
-      fileInput?.click();
     }, { signal });
 
     fileInput?.addEventListener('change', () => {
@@ -290,6 +286,7 @@ export class TranslatePdfViewController implements ViewController {
       this.pdfDocument = await loadingTask.promise;
 
       this.renderViewerState(file);
+      await this.renderThumbnails();
       await this.renderAllPages();
     } catch {
       this.showError('No se pudo procesar la vista previa del archivo PDF.');
@@ -301,6 +298,7 @@ export class TranslatePdfViewController implements ViewController {
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="translate-viewer-card"]');
     const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-file-name"]');
     const pageCountEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-page-count"]');
+    const pagesCountBadge = this.container.querySelector<HTMLElement>('[data-ref="pages-count-badge"]');
     const docStateEl = this.container.querySelector<HTMLElement>('[data-ref="viewer-doc-state"]');
 
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="translate-result-card"]');
@@ -320,9 +318,71 @@ export class TranslatePdfViewController implements ViewController {
 
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (pageCountEl) pageCountEl.textContent = `${numPages} ${numPages === 1 ? 'página' : 'páginas'}`;
+    if (pagesCountBadge) pagesCountBadge.textContent = `${numPages}`;
     if (docStateEl) {
       docStateEl.textContent = 'Original';
       docStateEl.classList.remove('pdf-viewer-toolbar__badge--active');
+    }
+  }
+
+  private async renderThumbnails(): Promise<void> {
+    const activeDoc = this.showingTranslated ? this.translatedPdfDocument : this.pdfDocument;
+    if (!activeDoc) return;
+    const container = this.container.querySelector<HTMLElement>('[data-ref="thumbnails-container"]');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const numPages = activeDoc.numPages;
+    for (let i = 1; i <= numPages; i++) {
+      const pageIndex = i - 1;
+      const thumbItem = document.createElement('div');
+      thumbItem.className = `pdf-viewer-thumbnail ${pageIndex === this.activePageIndex ? 'is-active' : ''}`;
+      thumbItem.setAttribute('data-ref', `thumb-page-${pageIndex}`);
+
+      const sheet = document.createElement('div');
+      sheet.className = 'pdf-viewer-thumbnail__sheet';
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-viewer-thumbnail__canvas';
+      sheet.appendChild(canvas);
+
+      const badge = document.createElement('span');
+      badge.className = 'pdf-viewer-thumbnail__badge';
+      badge.textContent = `#${i}`;
+
+      thumbItem.appendChild(sheet);
+      thumbItem.appendChild(badge);
+      container.appendChild(thumbItem);
+
+      thumbItem.addEventListener('click', () => {
+        this.activePageIndex = pageIndex;
+        this.container.querySelectorAll('.pdf-viewer-thumbnail').forEach((t) => t.classList.remove('is-active'));
+        thumbItem.classList.add('is-active');
+
+        const targetPageCard = this.container.querySelector<HTMLElement>(`[data-page-index="${pageIndex}"]`);
+        if (targetPageCard) {
+          targetPageCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+
+      try {
+        const page = await activeDoc.getPage(i);
+        const origVp = page.getViewport({ scale: 1 });
+        const thumbScale = 100 / origVp.width;
+        const vp = page.getViewport({ scale: thumbScale });
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(vp.width * dpr);
+        canvas.height = Math.floor(vp.height * dpr);
+        canvas.style.width = `${vp.width}px`;
+        canvas.style.height = `${vp.height}px`;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(dpr, dpr);
+          await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        }
+      } catch {}
     }
   }
 
@@ -331,27 +391,30 @@ export class TranslatePdfViewController implements ViewController {
     if (!activeDoc) return;
 
     const scrollContainer = this.container.querySelector<HTMLElement>('[data-ref="viewer-scroll-container"]');
-    if (!scrollContainer) return;
+    const pagesWrapper = this.container.querySelector<HTMLElement>('[data-ref="pages-wrapper"]') || scrollContainer;
+    if (!pagesWrapper) return;
 
-    scrollContainer.innerHTML = '';
+    pagesWrapper.innerHTML = '';
     const numPages = activeDoc.numPages;
 
     for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const pageIndex = pageNum - 1;
       const pageCard = document.createElement('div');
-      pageCard.className = 'pdf-page-card';
+      pageCard.className = 'pdf-viewer-page-card';
       pageCard.setAttribute('data-ref', `page-card-${pageNum}`);
+      pageCard.setAttribute('data-page-index', `${pageIndex}`);
 
       const canvas = document.createElement('canvas');
-      canvas.className = 'pdf-page-card__canvas';
+      canvas.className = 'pdf-viewer-page-canvas';
       canvas.setAttribute('data-ref', `canvas-page-${pageNum}`);
       pageCard.appendChild(canvas);
 
       const footer = document.createElement('div');
-      footer.className = 'pdf-page-card__footer';
+      footer.className = 'pdf-viewer-page-card__footer';
       footer.textContent = `Página ${pageNum} de ${numPages}`;
       pageCard.appendChild(footer);
 
-      scrollContainer.appendChild(pageCard);
+      pagesWrapper.appendChild(pageCard);
 
       try {
         const page = await activeDoc.getPage(pageNum);
@@ -359,7 +422,7 @@ export class TranslatePdfViewController implements ViewController {
         const pageWidth = baseViewport.width;
         const pageHeight = baseViewport.height;
 
-        const containerWidth = scrollContainer.clientWidth > 100 ? scrollContainer.clientWidth : 700;
+        const containerWidth = scrollContainer ? (scrollContainer.clientWidth > 100 ? scrollContainer.clientWidth : 700) : 700;
         const baseDisplayWidth = Math.min(680, Math.max(300, containerWidth - 48));
         const displayWidth = Math.round(baseDisplayWidth * this.zoomScale);
         const displayHeight = Math.round((pageHeight / pageWidth) * displayWidth);
@@ -516,6 +579,7 @@ export class TranslatePdfViewController implements ViewController {
       }
     }
 
+    await this.renderThumbnails();
     await this.renderAllPages();
   }
 
@@ -526,6 +590,7 @@ export class TranslatePdfViewController implements ViewController {
     this.translatedPdfBuffer = null;
     this.translatedResult = null;
     this.showingTranslated = false;
+    this.activePageIndex = 0;
     this.selectedMode = 'standard';
     this.sourceLang = '';
     this.targetLang = 'ES';
@@ -537,7 +602,11 @@ export class TranslatePdfViewController implements ViewController {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="translate-dropzone-card"]');
     const viewerCard = this.container.querySelector<HTMLElement>('[data-ref="translate-viewer-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="translate-result-card"]');
+    const thumbnailsContainer = this.container.querySelector<HTMLElement>('[data-ref="thumbnails-container"]');
+    const pagesWrapper = this.container.querySelector<HTMLElement>('[data-ref="pages-wrapper"]');
 
+    if (thumbnailsContainer) thumbnailsContainer.innerHTML = '';
+    if (pagesWrapper) pagesWrapper.innerHTML = '';
     if (dropzoneCard) dropzoneCard.style.display = 'flex';
     if (viewerCard) viewerCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';

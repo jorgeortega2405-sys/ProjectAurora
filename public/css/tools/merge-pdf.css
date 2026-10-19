@@ -228,3 +228,14 @@
   width: 100%;
 }
 
+.tool-sidebar-notice[data-ref="merge-info-notice"] {
+  cursor: pointer;
+  transition: border-color var(--sl-transition-fast), background-color var(--sl-transition-fast), transform var(--sl-transition-fast);
+}
+
+.tool-sidebar-notice[data-ref="merge-info-notice"]:hover {
+  background-color: rgba(37, 99, 235, 0.12);
+  border-color: var(--color-brand-blue-hover, #1d4ed8);
+  transform: translateY(-1px);
+}
+

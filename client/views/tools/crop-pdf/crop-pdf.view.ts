@@ -85,7 +85,6 @@ export class CropPdfController implements ViewController {
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');
-    const changeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-change-pdf"]');
     const resetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-reset-crop"]');
     const prevPageBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-prev-page"]');
     const nextPageBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-next-page"]');
@@ -113,8 +112,6 @@ export class CropPdfController implements ViewController {
       e.stopPropagation();
       void this.handleDropboxImport();
     }, { signal });
-
-    changeBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     dropzone?.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;

@@ -848,3 +848,84 @@ export function setupToolSidebarModal(options: {
   };
 }
 
+export function bindFileDropzone(options: {
+  dropTarget: HTMLElement | null;
+  visualTarget?: HTMLElement | null;
+  onFiles: (files: FileList) => void;
+  signal?: AbortSignal;
+}): void {
+  const { dropTarget, visualTarget, onFiles, signal } = options;
+  if (!dropTarget) return;
+  const visual = visualTarget || dropTarget.closest<HTMLElement>('.tool-workspace__canvas') || dropTarget;
+
+  let dragCounter = 0;
+
+  const addActive = () => {
+    visual.classList.add('is-dragover');
+    visual.classList.add('tool-dropzone--active');
+  };
+
+  const removeActive = () => {
+    dragCounter = 0;
+    visual.classList.remove('is-dragover');
+    visual.classList.remove('tool-dropzone--active');
+  };
+
+  const handleDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    dragCounter++;
+    if (dragCounter === 1) {
+      addActive();
+    }
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    dragCounter--;
+
+    const rect = dropTarget.getBoundingClientRect();
+    const isOutside =
+      e.clientX <= rect.left ||
+      e.clientX >= rect.right ||
+      e.clientY <= rect.top ||
+      e.clientY >= rect.bottom;
+
+    const hasCoords = typeof e.clientX === 'number' && (e.clientX !== 0 || e.clientY !== 0);
+    if (hasCoords && !isOutside) {
+      return;
+    }
+
+    if (dragCounter <= 0 || isOutside || !hasCoords) {
+      removeActive();
+    }
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    removeActive();
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      onFiles(files);
+    }
+  };
+
+  dropTarget.addEventListener('dragenter', handleDragEnter, { signal });
+  dropTarget.addEventListener('dragover', handleDragOver, { signal });
+  dropTarget.addEventListener('dragleave', handleDragLeave, { signal });
+  dropTarget.addEventListener('drop', handleDrop, { signal });
+
+  window.addEventListener('drop', () => {
+    removeActive();
+  }, { signal });
+
+  window.addEventListener('dragend', () => {
+    removeActive();
+  }, { signal });
+}

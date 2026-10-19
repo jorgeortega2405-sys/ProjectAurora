@@ -249,7 +249,7 @@
     "remove_pdf_pages_completed_title": "¡Páginas eliminadas con éxito!",
     "remove_pdf_pages_drop_desc": "o haz clic para explorar tu documento (archivo PDF de hasta 50 MB)",
     "remove_pdf_pages_drop_title": "Arrastra y suelta tu archivo PDF aquí",
-    "remove_pdf_pages_info_hint": "Haz clic en las páginas que quieres eliminar de tu documento. Presiona 'Shift' para establecer rangos.",
+    "remove_pdf_pages_info_hint": "Haz click en las páginas que quieres eliminar de tu documento. Presiona 'Shift' para establecer rangos.",
     "remove_pdf_pages_max_badge": "1 archivo PDF",
     "remove_pdf_pages_max_size": "Tamaño máximo por archivo:",
     "remove_pdf_pages_output_name_label": "Nombre del archivo final",

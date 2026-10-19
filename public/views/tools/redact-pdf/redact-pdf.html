@@ -32,13 +32,9 @@
         </div>
       </div>
 
-      <div class="pdf-editor-workspace redact-editor-workspace" data-ref="redact-workspace-card" style="display: none;">
-        <header class="pdf-editor-toolbar redact-toolbar" data-ref="redact-toolbar">
+      <div class="pdf-viewer-workspace pdf-editor-workspace redact-editor-workspace" data-ref="redact-workspace-card" style="display: none;">
+        <header class="pdf-viewer-toolbar pdf-editor-toolbar redact-toolbar" data-ref="redact-toolbar">
           <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file" data-tooltip="Cambiar archivo">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-              <span>Cambiar PDF</span>
-            </button>
             <div class="pdf-editor-status-pill redact-doc-name-pill" data-ref="val-doc-title">Documento</div>
           </div>
 
@@ -68,23 +64,19 @@
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
               <span>Limpiar todo</span>
             </button>
-            <button type="button" class="component-button component-button--black component-button--h36" data-ref="btn-header-apply">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility_off"></use></svg>
-              <span>Aplicar y Descargar</span>
-            </button>
           </div>
         </header>
 
-        <div class="pdf-editor-main-layout" data-ref="editor-main-layout">
-          <aside class="pdf-editor-pages-sidebar redact-pages-sidebar" data-ref="pages-sidebar">
-            <div class="pdf-editor-pages-sidebar__header">
+        <div class="pdf-viewer-main-layout pdf-editor-main-layout" data-ref="editor-main-layout">
+          <aside class="pdf-viewer-pages-sidebar pdf-editor-pages-sidebar redact-pages-sidebar" data-ref="pages-sidebar">
+            <div class="pdf-viewer-pages-sidebar__header pdf-editor-pages-sidebar__header">
               <span>Páginas (<span data-ref="pages-count-badge">0</span>)</span>
             </div>
-            <div class="pdf-editor-thumbnails-scroll" data-ref="thumbnails-container"></div>
+            <div class="pdf-viewer-thumbnails-scroll pdf-editor-thumbnails-scroll" data-ref="thumbnails-container"></div>
           </aside>
 
-          <div class="pdf-editor-canvas-container redact-canvas-container" data-ref="editor-scroll-container">
-            <div class="pdf-editor-pages-wrapper" data-ref="pages-wrapper"></div>
+          <div class="pdf-viewer-canvas-container pdf-editor-canvas-container redact-canvas-container" data-ref="editor-scroll-container">
+            <div class="pdf-viewer-pages-wrapper pdf-editor-pages-wrapper" data-ref="pages-wrapper"></div>
           </div>
         </div>
       </div>

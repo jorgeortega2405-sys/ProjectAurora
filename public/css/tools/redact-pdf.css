@@ -178,7 +178,7 @@
 }
 
 .redact-canvas-container {
-  background-color: var(--bg-app);
+  background-color: #f5f5fa;
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -186,6 +186,11 @@
   overflow: auto;
   padding: 32px 24px;
   position: relative;
+}
+
+[data-theme='dark'] .redact-canvas-container,
+.theme-dark .redact-canvas-container {
+  background-color: var(--bg-card);
 }
 
 .pdf-redact-page-card {

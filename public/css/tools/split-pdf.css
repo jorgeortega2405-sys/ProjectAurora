@@ -1,4 +1,12 @@
 
+.pdf-items-view {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  width: 100%;
+}
+
 .split-instruction-hint {
   align-items: center;
   background-color: var(--bg-hover);
@@ -54,33 +62,34 @@
 
 .split-range-block__pages,
 .split-pages-plain-grid {
+  box-sizing: border-box;
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  padding: 4px 2px;
   width: 100%;
 }
-
 
 .split-page-card {
   align-items: center;
   background-color: var(--bg-surface);
-  border: 1.5px solid var(--border-color);
-  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
   box-shadow: var(--sl-shadow-x-small);
   box-sizing: border-box;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  padding: 12px 10px 10px 10px;
+  padding: 16px 14px 14px 14px;
   position: relative;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   user-select: none;
   width: 100%;
 }
 
 .split-page-card:hover {
   border-color: var(--border-color-hover);
-  box-shadow: var(--sl-shadow-small);
+  box-shadow: var(--sl-shadow-medium);
   transform: translateY(-2px);
 }
 
@@ -96,16 +105,16 @@
 .split-page-card__order-badge {
   align-items: center;
   background-color: var(--action-primary);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--action-primary-text);
   display: flex;
   font-size: 0.75rem;
   font-weight: 700;
   justify-content: center;
-  left: 8px;
-  padding: 1px 6px;
+  left: 10px;
+  padding: 2px 7px;
   position: absolute;
-  top: 8px;
+  top: 10px;
   z-index: 3;
 }
 
@@ -115,12 +124,12 @@
   border-radius: 50%;
   color: var(--action-primary-text);
   display: none;
-  height: 22px;
+  height: 24px;
   justify-content: center;
   position: absolute;
-  right: 8px;
-  top: 8px;
-  width: 22px;
+  right: 10px;
+  top: 10px;
+  width: 24px;
   z-index: 3;
 }
 
@@ -136,7 +145,7 @@
 .split-page-card__sheet-wrapper {
   align-items: center;
   display: flex;
-  height: 160px;
+  height: 200px;
   justify-content: center;
   position: relative;
   width: 100%;
@@ -146,15 +155,20 @@
   align-items: center;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
+  border-radius: 4px;
   box-shadow: var(--sl-shadow-small);
   box-sizing: border-box;
   display: flex;
-  height: 155px;
+  height: 195px;
   justify-content: center;
   overflow: hidden;
   position: relative;
-  width: 110px;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  width: 138px;
+}
+
+.split-page-card:hover .split-page-card__sheet {
+  box-shadow: var(--sl-shadow-medium);
 }
 
 .split-page-card__preview-img {
@@ -188,7 +202,7 @@
   color: var(--text-secondary);
   font-size: 0.8125rem;
   font-weight: 600;
-  margin-top: 8px;
+  margin-top: 10px;
   text-align: center;
 }
 
@@ -383,21 +397,22 @@
 
 .split-info-notice {
   align-items: flex-start;
-  background-color: var(--bg-hover);
-  border: 1px solid var(--border-lighter, var(--border-color));
-  border-radius: 9px;
+  background-color: rgba(37, 99, 235, 0.08);
+  border: 1.5px solid var(--color-brand-blue, #2563eb);
+  border-radius: 10px;
   box-sizing: border-box;
   color: var(--text-primary);
   display: flex;
   font-size: 0.8125rem;
   gap: 10px;
+  line-height: 1.45;
   margin-top: 14px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   width: 100%;
 }
 
 .split-info-notice__icon {
-  color: var(--text-secondary);
+  color: var(--color-brand-blue, #2563eb);
   flex-shrink: 0;
   height: 18px;
   margin-top: 1px;
@@ -406,7 +421,22 @@
 
 .split-info-notice__text {
   flex: 1;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.split-info-notice__text strong {
+  font-weight: 600;
+}
+
+[data-theme='dark'] .split-info-notice,
+.theme-dark .split-info-notice {
+  background-color: rgba(59, 130, 246, 0.14);
+  border-color: #3b82f6;
+}
+
+[data-theme='dark'] .split-info-notice__icon,
+.theme-dark .split-info-notice__icon {
+  color: #60a5fa;
 }
 
 .split-size-input-row {

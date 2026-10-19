@@ -33,7 +33,7 @@
       </div>
 
       <div class="pdf-viewer-workspace" data-ref="translate-viewer-card" style="display: none;">
-        <div class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
+        <header class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
           <div class="pdf-viewer-toolbar__group" data-ref="toolbar-info-group">
             <span class="pdf-viewer-toolbar__title" data-ref="viewer-file-name">documento.pdf</span>
             <span class="pdf-viewer-toolbar__badge" data-ref="viewer-page-count">0 páginas</span>
@@ -47,15 +47,24 @@
             <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-zoom-in" title="Aumentar zoom">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
             </button>
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-change-file">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-              <span>Cambiar PDF</span>
-            </button>
           </div>
-        </div>
+        </header>
 
-        <div class="pdf-viewer-scroll" data-ref="viewer-scroll-container">
-          <!-- Páginas del PDF se renderizan aquí dinámicamente -->
+        <div class="pdf-viewer-main-layout" data-ref="viewer-main-layout">
+          <aside class="pdf-viewer-pages-sidebar" data-ref="pages-sidebar">
+            <div class="pdf-viewer-pages-sidebar__header">
+              <span>Páginas (<span data-ref="pages-count-badge">0</span>)</span>
+            </div>
+            <div class="pdf-viewer-thumbnails-scroll" data-ref="thumbnails-container">
+              <!-- Miniaturas verticales renderizadas con PDF.js -->
+            </div>
+          </aside>
+
+          <div class="pdf-viewer-canvas-container" data-ref="viewer-scroll-container">
+            <div class="pdf-viewer-pages-wrapper" data-ref="pages-wrapper">
+              <!-- Páginas del PDF se renderizan aquí dinámicamente -->
+            </div>
+          </div>
         </div>
       </div>
     </main>

@@ -1,6 +1,7 @@
 import { SVG_TOOL_COMPARE_PDF, SVG_TOOL_COMPRESS_PDF, SVG_TOOL_CROP_PDF, SVG_TOOL_EDIT_PDF, SVG_TOOL_EXCEL_TO_PDF, SVG_TOOL_EXTRACT_PDF_PAGES, SVG_TOOL_HTML_TO_PDF, SVG_TOOL_JPG_TO_PDF, SVG_TOOL_MERGE_PDF, SVG_TOOL_OCR_PDF, SVG_TOOL_ORGANIZE_PDF, SVG_TOOL_PAGE_NUMBERS, SVG_TOOL_PDF_TO_EXCEL, SVG_TOOL_PDF_TO_JPG, SVG_TOOL_PDF_TO_MARKDOWN, SVG_TOOL_PDF_TO_PDFA, SVG_TOOL_PDF_TO_POWERPOINT, SVG_TOOL_PDF_TO_WORD, SVG_TOOL_POWERPOINT_TO_PDF, SVG_TOOL_PROTECT_PDF, SVG_TOOL_REDACT_PDF, SVG_TOOL_REMOVE_PDF_PAGES, SVG_TOOL_REPAIR_PDF, SVG_TOOL_ROTATE_PDF, SVG_TOOL_SPLIT_PDF, SVG_TOOL_SUMMARIZE_PDF, SVG_TOOL_TRANSLATE_PDF, SVG_TOOL_UNLOCK_PDF, SVG_TOOL_WATERMARK_PDF, SVG_TOOL_WORD_TO_PDF } from '../graphics/tool-icons.graphics.js';
 
 export interface ToolItem {
+  activatedAt?: string;
   category: string;
   cssPath: string;
   customSvg?: string;
@@ -13,8 +14,25 @@ export interface ToolItem {
   path: string;
 }
 
+export function isToolNew(toolOrDate?: ToolItem | string): boolean {
+  if (!toolOrDate) return false;
+  const dateStr = typeof toolOrDate === 'string' ? toolOrDate : toolOrDate.activatedAt;
+  if (!dateStr) return false;
+  const activated = new Date(dateStr);
+  if (isNaN(activated.getTime())) return false;
+
+  const now = new Date();
+  if (activated.getTime() > now.getTime() + 86400000) return false;
+
+  const oneMonthAgo = new Date(now);
+  oneMonthAgo.setMonth(now.getMonth() - 1);
+
+  return activated.getTime() >= oneMonthAgo.getTime() || (now.getTime() - activated.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+}
+
 export const TOOLS_REGISTRY: ToolItem[] = [
   {
+    activatedAt: '2026-01-15',
     category: 'organize',
     cssPath: '/css/tools/merge-pdf.css',
     customSvg: SVG_TOOL_MERGE_PDF,
@@ -27,6 +45,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/merge-pdf',
   },
   {
+    activatedAt: '2026-01-15',
     category: 'organize',
     cssPath: '/css/tools/split-pdf.css',
     customSvg: SVG_TOOL_SPLIT_PDF,
@@ -39,6 +58,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/split-pdf',
   },
   {
+    activatedAt: '2026-02-01',
     category: 'organize',
     cssPath: '/css/tools/remove-pdf-pages.css',
     customSvg: SVG_TOOL_REMOVE_PDF_PAGES,
@@ -51,6 +71,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/remove-pdf-pages',
   },
   {
+    activatedAt: '2026-02-01',
     category: 'organize',
     cssPath: '/css/tools/split-pdf.css',
     customSvg: SVG_TOOL_EXTRACT_PDF_PAGES,
@@ -63,6 +84,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/extract-pdf-pages',
   },
   {
+    activatedAt: '2026-02-15',
     category: 'organize',
     cssPath: '/css/tools/organize-pdf.css',
     customSvg: SVG_TOOL_ORGANIZE_PDF,
@@ -75,6 +97,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/organize-pdf',
   },
   {
+    activatedAt: '2026-03-01',
     category: 'optimize',
     cssPath: '/css/tools/compress-pdf.css',
     customSvg: SVG_TOOL_COMPRESS_PDF,
@@ -87,6 +110,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/compress-pdf',
   },
   {
+    activatedAt: '2026-03-15',
     category: 'optimize',
     cssPath: '/css/tools/repair-pdf.css',
     customSvg: SVG_TOOL_REPAIR_PDF,
@@ -99,6 +123,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/repair-pdf',
   },
   {
+    activatedAt: '2026-04-01',
     category: 'optimize',
     cssPath: '/css/tools/ocr-pdf.css',
     customSvg: SVG_TOOL_OCR_PDF,
@@ -111,6 +136,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/ocr-pdf',
   },
   {
+    activatedAt: '2026-04-15',
     category: 'convert-to-pdf',
     cssPath: '/css/tools/to-pdf-converter.css',
     customSvg: SVG_TOOL_JPG_TO_PDF,
@@ -123,6 +149,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/jpg-to-pdf',
   },
   {
+    activatedAt: '2026-05-01',
     category: 'convert-to-pdf',
     cssPath: '/css/tools/to-pdf-converter.css',
     customSvg: SVG_TOOL_WORD_TO_PDF,
@@ -135,6 +162,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/word-to-pdf',
   },
   {
+    activatedAt: '2026-05-15',
     category: 'convert-to-pdf',
     cssPath: '/css/tools/to-pdf-converter.css',
     customSvg: SVG_TOOL_POWERPOINT_TO_PDF,
@@ -147,6 +175,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/powerpoint-to-pdf',
   },
   {
+    activatedAt: '2026-06-01',
     category: 'convert-to-pdf',
     cssPath: '/css/tools/to-pdf-converter.css',
     customSvg: SVG_TOOL_EXCEL_TO_PDF,
@@ -159,6 +188,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/excel-to-pdf',
   },
   {
+    activatedAt: '2026-06-15',
     category: 'convert-to-pdf',
     cssPath: '/css/tools/to-pdf-converter.css',
     customSvg: SVG_TOOL_HTML_TO_PDF,
@@ -171,6 +201,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/html-to-pdf',
   },
   {
+    activatedAt: '2026-07-01',
     category: 'convert-from-pdf',
     cssPath: '/css/tools/pdf-converter.css',
     customSvg: SVG_TOOL_PDF_TO_JPG,
@@ -183,6 +214,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/pdf-to-jpg',
   },
   {
+    activatedAt: '2026-07-15',
     category: 'convert-from-pdf',
     cssPath: '/css/tools/pdf-converter.css',
     customSvg: SVG_TOOL_PDF_TO_WORD,
@@ -195,6 +227,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/pdf-to-word',
   },
   {
+    activatedAt: '2026-08-01',
     category: 'convert-from-pdf',
     cssPath: '/css/tools/pdf-converter.css',
     customSvg: SVG_TOOL_PDF_TO_POWERPOINT,
@@ -207,6 +240,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/pdf-to-powerpoint',
   },
   {
+    activatedAt: '2026-08-15',
     category: 'convert-from-pdf',
     cssPath: '/css/tools/pdf-converter.css',
     customSvg: SVG_TOOL_PDF_TO_EXCEL,
@@ -219,6 +253,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/pdf-to-excel',
   },
   {
+    activatedAt: '2026-08-20',
     category: 'convert-from-pdf',
     cssPath: '/css/tools/pdf-converter.css',
     customSvg: SVG_TOOL_PDF_TO_PDFA,
@@ -231,6 +266,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/pdf-to-pdfa',
   },
   {
+    activatedAt: '2026-08-25',
     category: 'edit',
     cssPath: '/css/tools/rotate-pdf.css',
     customSvg: SVG_TOOL_ROTATE_PDF,
@@ -243,6 +279,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/rotate-pdf',
   },
   {
+    activatedAt: '2026-08-28',
     category: 'edit',
     cssPath: '/css/tools/page-numbers.css',
     customSvg: SVG_TOOL_PAGE_NUMBERS,
@@ -255,6 +292,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/page-numbers',
   },
   {
+    activatedAt: '2026-09-01',
     category: 'edit',
     cssPath: '/css/tools/watermark-pdf.css',
     customSvg: SVG_TOOL_WATERMARK_PDF,
@@ -267,6 +305,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/watermark-pdf',
   },
   {
+    activatedAt: '2026-09-05',
     category: 'edit',
     cssPath: '/css/tools/crop-pdf.css',
     customSvg: SVG_TOOL_CROP_PDF,
@@ -279,6 +318,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/crop-pdf',
   },
   {
+    activatedAt: '2026-09-10',
     category: 'edit',
     cssPath: '/css/tools/edit-pdf.css',
     customSvg: SVG_TOOL_EDIT_PDF,
@@ -291,6 +331,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/edit-pdf',
   },
   {
+    activatedAt: '2026-09-12',
     category: 'security',
     cssPath: '/css/tools/unlock-pdf.css',
     customSvg: SVG_TOOL_UNLOCK_PDF,
@@ -303,6 +344,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/unlock-pdf',
   },
   {
+    activatedAt: '2026-09-15',
     category: 'security',
     cssPath: '/css/tools/protect-pdf.css',
     customSvg: SVG_TOOL_PROTECT_PDF,
@@ -315,6 +357,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/protect-pdf',
   },
   {
+    activatedAt: '2026-10-01',
     category: 'security',
     cssPath: '/css/tools/redact-pdf.css',
     customSvg: SVG_TOOL_REDACT_PDF,
@@ -327,6 +370,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/redact-pdf',
   },
   {
+    activatedAt: '2026-10-05',
     category: 'security',
     cssPath: '/css/tools/compare-pdf.css',
     customSvg: SVG_TOOL_COMPARE_PDF,
@@ -339,6 +383,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/compare-pdf',
   },
   {
+    activatedAt: '2026-10-10',
     category: 'pdf-intelligence',
     cssPath: '/css/tools/summarize-pdf.css',
     customSvg: SVG_TOOL_SUMMARIZE_PDF,
@@ -351,6 +396,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/summarize-pdf',
   },
   {
+    activatedAt: '2026-10-12',
     category: 'pdf-intelligence',
     cssPath: '/css/tools/translate-pdf.css',
     customSvg: SVG_TOOL_TRANSLATE_PDF,
@@ -363,6 +409,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     path: '/translate-pdf',
   },
   {
+    activatedAt: '2026-10-15',
     category: 'pdf-intelligence',
     cssPath: '/css/tools/pdf-to-markdown.css',
     customSvg: SVG_TOOL_PDF_TO_MARKDOWN,

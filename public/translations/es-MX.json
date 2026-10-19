@@ -134,6 +134,7 @@
   },
   "home": {
     "badge": "ProjectAurora",
+    "badge_new": "Nueva",
     "cat_all": "Todos",
     "cat_convert": "Convertir desde PDF",
     "cat_convert_from_pdf": "Convertir desde PDF",

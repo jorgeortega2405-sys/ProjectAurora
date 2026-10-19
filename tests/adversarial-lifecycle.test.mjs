@@ -294,7 +294,7 @@ describe('Adversarial Challenge Suite 4: PBAC & Permission Compliance in Tool Ha
 describe('Adversarial Challenge Suite 5: DOM Tag & Attribute Ordering Stress Test', () => {
   it('No element in public/views/tools/ may contain id attributes or forbidden attribute order', () => {
     const htmlFiles = getAllFiles(PUBLIC_VIEWS_DIR, ['.html']);
-    assert.strictEqual(htmlFiles.length, 17, 'Must find exactly 17 tool HTML views');
+    assert.strictEqual(htmlFiles.length, 21, 'Must find exactly 21 tool HTML views');
 
     const violations = [];
     const idRegex = /\sid=["'][^"']*["']/i;

@@ -26,6 +26,7 @@ const FALLBACK_TRANSLATIONS: Record<string, unknown> = {
   },
   home: {
     badge: 'ProjectAurora',
+    badge_new: 'Nueva',
     card_desc: 'El sistema base se encuentra inicializado y listo para recibir nuevos módulos y componentes.',
     card_title: 'Página de Inicio',
     subtitle: 'Layout y arquitectura SPA modular con diseño enterprise.',

@@ -1,7 +1,7 @@
 import { navigate } from '../app-router.js';
 import { mountSiteFooter } from '../components/footer.component.js';
 import { getLocalizedPath } from '../config/seo.config.js';
-import { TOOLS_REGISTRY } from '../config/tools.registry.js';
+import { isToolNew, TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
 import { currentUser, getApi } from '../services/api.service.js';
 import { getCurrentLanguage, t } from '../services/i18n.service.js';
@@ -83,7 +83,7 @@ export class HomeController {
           <div class="tool-card__icon-box" data-ref="icon-box-workflow-${wf.id}">
             ${SVG_TOOL_WORKFLOW}
           </div>
-          <span class="component-badge component-badge--sm" data-ref="badge-workflow-${wf.id}" style="font-size: 10.5px; position: absolute; right: 20px; top: 20px;">${wf.steps.length} pasos</span>
+          <span class="component-badge component-badge--sm tool-card__badge" data-ref="badge-workflow-${wf.id}">${wf.steps.length} pasos</span>
           <h3 class="tool-card__title" data-ref="title-workflow-${wf.id}">${this.escape(wf.name)}</h3>
           <p class="tool-card__desc" data-ref="desc-workflow-${wf.id}">${this.escape(stepNames || 'Flujo de trabajo personalizado')}</p>
         </div>
@@ -91,15 +91,23 @@ export class HomeController {
     }).join('');
 
     const currentLang = getCurrentLanguage();
-    const standardToolsHtml = featuredTools.map((tool) => `
+    const standardToolsHtml = featuredTools.map((tool) => {
+      const isNew = isToolNew(tool);
+      const newBadgeHtml = isNew
+        ? `<span class="component-badge component-badge--sm tool-card__badge tool-card__badge--new" data-ref="badge-tool-new-${tool.id}" data-i18n="home.badge_new">${t('home.badge_new', 'Nueva')}</span>`
+        : '';
+
+      return `
       <div class="tool-card" data-ref="card-tool-${tool.id}" data-category="${tool.category}" data-tool-path="${getLocalizedPath(tool.id, currentLang)}">
+        ${newBadgeHtml}
         <div class="tool-card__icon-box" data-ref="icon-box-${tool.id}">
           ${tool.customSvg || `<svg class="component-icon tool-card__icon" aria-hidden="true"><use href="/icons.svg#${tool.icon}"></use></svg>`}
         </div>
         <h3 class="tool-card__title" data-ref="title-tool-${tool.id}" data-i18n="${tool.nameKey}">${t(tool.nameKey)}</h3>
         <p class="tool-card__desc" data-ref="desc-tool-${tool.id}" data-i18n="${tool.descKey}">${t(tool.descKey)}</p>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     grid.innerHTML = standardToolsHtml + userWorkflowsHtml + createWorkflowCardHtml;
   }

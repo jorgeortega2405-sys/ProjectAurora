@@ -86,8 +86,19 @@
 
 .tool-top__filename-field {
   align-items: center;
-  display: flex;
+  display: none;
   min-width: 0;
+}
+
+.tool-top:has(.tool-top__btn-settings.is-visible) .tool-top__filename-field,
+.tool-layout-wrapper:has(.tool-top__btn-settings.is-visible) .tool-top__filename-field,
+.tool-layout-wrapper:has(.tool-layout__workspace--top-aligned) .tool-top__filename-field,
+.tool-top__filename-field.is-visible {
+  display: flex;
+}
+
+.tool-layout-wrapper:has([data-ref*="dropzone-card"]:not([style*="display: none"]):not([style*="display:none"])) .tool-top__filename-field {
+  display: none !important;
 }
 
 .tool-top__filename-label {

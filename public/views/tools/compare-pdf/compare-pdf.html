@@ -1,14 +1,42 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="compare-pdf-wrapper">
-  <div class="tool-layout" data-ref="compare-pdf-layout">
-    <main class="tool-layout__workspace" data-ref="compare-pdf-workspace">
+  <header class="component-top tool-top" data-ref="component-top">
+    <div class="tool-top__left" data-ref="tool-top-left">
+      <div class="tool-top__filename-field" data-ref="tool-filename-container">
+        <label class="tool-top__filename-label" data-ref="label-output-filename">
+          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
+          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="comparacion_pdf.pdf" placeholder="comparacion_pdf.pdf" autocomplete="off" spellcheck="false" />
+        </label>
+      </div>
+    </div>
+
+    <div class="tool-top__center" data-ref="tool-top-center">
+      <div class="compare-top-controls" data-ref="compare-top-controls" style="display: none;">
+        <button type="button" class="compare-toolbar-btn is-active" data-ref="btn-pan-tool" data-tooltip="Herramienta de desplazamiento" aria-label="Desplazamiento">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#pan_tool"></use></svg>
+        </button>
+        <button type="button" class="component-button component-button--secondary component-button--h36 compare-sync-btn is-active" data-ref="btn-sync-scroll" data-tooltip="Sincronizar desplazamiento entre ambos documentos" aria-label="Sincronizar desplazamiento">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#sync_alt"></use></svg>
+          <span>Sincronizar el desplazamiento</span>
+        </button>
+
+        <div class="pdf-editor-status-pill compare-sim-pill" data-ref="pill-similarity">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+          <span>Similitud: <strong data-ref="txt-similarity-val">-</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="component-top-right tool-top__right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Panel de cambios" aria-label="Panel de cambios">
+        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#compare_arrows"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="component-bottom tool-bottom tool-bottom--viewer tool-layout tool-layout--viewer" data-ref="compare-pdf-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--viewer" data-ref="compare-pdf-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file1" type="file" accept="application/pdf,.pdf" />
       <input class="pdf-dropzone__input" data-ref="input-pdf-file2" type="file" accept="application/pdf,.pdf" />
-
-      <div class="tool-fab-container" data-ref="tool-fab-container">
-        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Panel de cambios" aria-label="Panel de cambios">
-          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#compare_arrows"></use></svg>
-        </button>
-      </div>
 
       <div class="tool-workspace__canvas" data-ref="compare-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="compare-dropzone">
@@ -34,27 +62,6 @@
       </div>
 
       <div class="pdf-viewer-workspace pdf-editor-workspace compare-editor-workspace" data-ref="compare-workspace-card" style="display: none;">
-        <header class="pdf-viewer-toolbar pdf-editor-toolbar compare-toolbar" data-ref="compare-toolbar">
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
-            <button type="button" class="compare-toolbar-btn is-active" data-ref="btn-pan-tool" data-tooltip="Herramienta de desplazamiento" aria-label="Desplazamiento">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#pan_tool"></use></svg>
-            </button>
-            <button type="button" class="component-button component-button--secondary component-button--h36 compare-sync-btn is-active" data-ref="btn-sync-scroll" data-tooltip="Sincronizar desplazamiento entre ambos documentos" aria-label="Sincronizar desplazamiento">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#sync_alt"></use></svg>
-              <span>Sincronizar el desplazamiento</span>
-            </button>
-          </div>
-
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-center">
-            <div class="pdf-editor-status-pill compare-sim-pill" data-ref="pill-similarity">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
-              <span>Similitud: <strong data-ref="txt-similarity-val">-</strong></span>
-            </div>
-          </div>
-
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-right"></div>
-        </header>
-
         <div class="compare-split-layout" data-ref="split-layout">
           <section class="compare-pane compare-pane--left" data-ref="pane-left">
             <button type="button" class="compare-pane__close-btn" data-ref="btn-remove-doc1" data-tooltip="Quitar archivo antiguo" aria-label="Quitar archivo">

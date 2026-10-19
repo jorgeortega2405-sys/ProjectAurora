@@ -193,6 +193,12 @@ export class OcrPdfController implements ViewController {
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
     if (ocrBtn) ocrBtn.disabled = false;
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const base = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}_ocr.pdf`;
+    }
+
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
     if (canvas) {
       void this.renderThumbnail(file, canvas);
@@ -257,6 +263,9 @@ export class OcrPdfController implements ViewController {
       canvas.height = 0;
     }
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_ocr.pdf';
+
     this.hideError();
   }
 
@@ -278,10 +287,16 @@ export class OcrPdfController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
         formData.append('language', this.selectedLanguage);
         formData.append('deskew', deskewCheckbox?.checked ? 'true' : 'false');
+        if (customFilename) {
+          formData.append('filename', customFilename);
+        }
 
         const response = await postFormApi(API_ROUTES.tools.ocrPdf.process, formData);
         const result = (await response.json()) as { data?: OcrResultData; error?: string; success: boolean };
@@ -295,7 +310,7 @@ export class OcrPdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.processedSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Reconocer texto en otro PDF',
           returnUrl: '/ocr-pdf',
           subtitle: `Se ha aplicado reconocimiento óptico de texto exitosamente a "${this.currentFile?.name}".`,

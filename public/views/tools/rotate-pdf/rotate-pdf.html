@@ -1,13 +1,41 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="rotate-pdf-wrapper">
-  <div class="tool-layout" data-ref="rotate-pdf-layout">
-    <main class="tool-layout__workspace" data-ref="rotate-pdf-workspace">
-      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
+  <header class="component-top tool-top" data-ref="component-top">
+    <div class="component-top-left tool-top__left" data-ref="component-top-left">
+      <div class="tool-top__filename-field" data-ref="field-output-filename">
+        <label class="tool-top__filename-label" data-ref="label-output-filename" aria-label="Nombre del documento a exportar">
+          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
+          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_rotado.pdf" placeholder="documento_rotado.pdf" autocomplete="off" spellcheck="false" />
+        </label>
+      </div>
+    </div>
 
-      <div class="tool-fab-container" data-ref="tool-fab-container">
-        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+    <div class="tool-top__center" data-ref="tool-top-center">
+      <div class="rotate-top-actions" data-ref="rotate-top-actions" style="display: none; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-rotate-all-right">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_right"></use></svg>
+          <span>Rotar derecha</span>
+        </button>
+        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-rotate-all-left">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_left"></use></svg>
+          <span>Rotar izquierda</span>
+        </button>
+        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-reset-rotations">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+          <span>Restablecer</span>
         </button>
       </div>
+    </div>
+
+    <div class="component-top-right tool-top__right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="component-bottom tool-bottom tool-bottom--grid tool-layout tool-layout--grid" data-ref="rotate-pdf-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="rotate-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
 
       <div class="tool-workspace__canvas" data-ref="rotate-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="rotate-dropzone">
@@ -36,20 +64,6 @@
         <div class="tool-workspace__toolbar" data-ref="rotate-toolbar">
           <div class="tool-workspace__toolbar-left">
             <h2 class="tool-workspace__toolbar-title">Páginas seleccionadas (<span data-ref="pdf-count-badge">0</span>)</h2>
-          </div>
-          <div class="tool-workspace__toolbar-actions">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-rotate-all-right">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_right"></use></svg>
-              <span>Rotar a la derecha</span>
-            </button>
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-rotate-all-left">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_left"></use></svg>
-              <span>Rotar a la izquierda</span>
-            </button>
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-reset-rotations">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-              <span>Restablecer</span>
-            </button>
           </div>
         </div>
 

@@ -60,7 +60,8 @@ export async function editPdfDocument(
   pdfBuffer: Buffer,
   originalFilename: string,
   modifications: EditPdfModifications,
-  imageBuffers: Buffer[] = []
+  imageBuffers: Buffer[] = [],
+  customFilename?: string
 ): Promise<EditPdfResult> {
   const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
   const fontHelvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -239,7 +240,7 @@ export async function editPdfDocument(
   const outputBuffer = Buffer.from(modifiedPdfBytes);
 
   const baseName = originalFilename.replace(/\.[^/.]+$/, '');
-  const finalFilename = sanitizePdfFilename(`${baseName}_editado.pdf`);
+  const finalFilename = sanitizePdfFilename(customFilename || `${baseName}_editado.pdf`);
   const token = crypto.randomUUID();
 
   await storeTempFile(token, {

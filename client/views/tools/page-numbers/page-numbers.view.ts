@@ -295,6 +295,12 @@ export class PageNumbersController implements ViewController {
       if (settingsBtn) settingsBtn.classList.add('is-visible');
       if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
 
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+      if (outputNameInput) {
+        const base = file.name.replace(/\.[^/.]+$/, '');
+        outputNameInput.value = `${base}_numerado.pdf`;
+      }
+
       this.renderPagesGrid();
     } catch {
       this.showError('No se pudo procesar el archivo PDF. Asegúrate de que no esté dañado ni protegido por contraseña.');
@@ -433,7 +439,7 @@ export class PageNumbersController implements ViewController {
       format = customTextInput?.value.trim() || 'Página {n} de {p}';
     }
 
-    const optionsPayload = {
+    let optionsPayload: any = {
       firstPageIsCover: this.firstPageIsCover,
       fontFamily: this.fontFamily,
       fontSize: this.fontSize,
@@ -452,8 +458,14 @@ export class PageNumbersController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
+        if (customFilename) {
+          optionsPayload = { ...optionsPayload, filename: customFilename } as any;
+        }
         formData.append('options', JSON.stringify(optionsPayload));
 
         const response = await postFormApi(API_ROUTES.tools.pageNumbers.process, formData);
@@ -471,7 +483,7 @@ export class PageNumbersController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.fileSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Numerar otro documento PDF',
           returnUrl: '/page-numbers',
           subtitle: `Se han insertado exitosamente los números de página en "${this.currentFile?.name}".`,
@@ -516,6 +528,8 @@ export class PageNumbersController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_numerado.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
     this.hideError();
   }

@@ -314,6 +314,14 @@ export class TranslatePdfViewController implements ViewController {
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-workspace"]');
     if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const baseName = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${baseName}_traducido.pdf`;
+    }
+    const zoomActions = this.container.querySelector<HTMLElement>('[data-ref="toolbar-actions-group"]');
+    if (zoomActions) zoomActions.style.display = 'flex';
+
     const numPages = this.pdfDocument?.numPages || 1;
 
     if (fileNameEl) fileNameEl.textContent = file.name;
@@ -617,6 +625,12 @@ export class TranslatePdfViewController implements ViewController {
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-workspace"]');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      outputNameInput.value = 'documento_traducido.pdf';
+    }
+    const zoomActions = this.container.querySelector<HTMLElement>('[data-ref="toolbar-actions-group"]');
+    if (zoomActions) zoomActions.style.display = 'none';
     if (this.sidebarModal) this.sidebarModal.close();
   }
 

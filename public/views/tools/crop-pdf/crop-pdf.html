@@ -1,13 +1,36 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="crop-pdf-wrapper">
-  <div class="tool-layout" data-ref="crop-pdf-layout">
-    <main class="tool-layout__workspace" data-ref="crop-pdf-workspace">
-      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
+  <header class="component-top tool-top" data-ref="component-top">
+    <div class="tool-top__left" data-ref="tool-top-left">
+      <div class="tool-top__filename-field" data-ref="tool-filename-container">
+        <label class="tool-top__filename-label" data-ref="label-output-filename">
+          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
+          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_recortado.pdf" placeholder="documento_recortado.pdf" autocomplete="off" spellcheck="false" />
+        </label>
+      </div>
+    </div>
 
-      <div class="tool-fab-container" data-ref="tool-fab-container">
-        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+    <div class="tool-top__center" data-ref="tool-top-center">
+      <div class="crop-page-nav" data-ref="crop-page-nav" style="display: none;">
+        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-prev-page">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_left"></use></svg>
+        </button>
+        <span class="tool-preview__page-info" data-ref="txt-page-info">Página 1 de 1</span>
+        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-next-page">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_right"></use></svg>
         </button>
       </div>
+    </div>
+
+    <div class="component-top-right tool-top__right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="component-bottom tool-bottom tool-bottom--viewer tool-layout tool-layout--viewer" data-ref="crop-pdf-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--viewer" data-ref="crop-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
 
       <div class="tool-workspace__canvas" data-ref="crop-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="crop-dropzone">
@@ -34,16 +57,6 @@
 
       <div class="tool-workspace__canvas" data-ref="crop-workspace-card" style="display: none;">
         <div class="crop-workspace-container">
-          <div class="crop-page-nav" data-ref="crop-page-nav">
-            <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-prev-page">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_left"></use></svg>
-            </button>
-            <span class="tool-preview__page-info" data-ref="txt-page-info">Página 1 de 1</span>
-            <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-next-page">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_right"></use></svg>
-            </button>
-          </div>
-
           <div class="crop-preview-wrap" data-ref="crop-preview-wrap">
             <canvas class="crop-canvas" data-ref="crop-canvas"></canvas>
             <div class="crop-mask crop-mask--top" data-ref="mask-top"></div>

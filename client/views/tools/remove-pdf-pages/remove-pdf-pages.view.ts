@@ -371,6 +371,12 @@ export class RemovePdfPagesController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.add('is-visible');
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput && this.currentFile) {
+      const base = this.currentFile.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}_sin_paginas.pdf`;
+    }
+
     const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
     if (countBadge) {
       countBadge.textContent = `${this.pages.length} págs.`;
@@ -476,7 +482,8 @@ export class RemovePdfPagesController implements ViewController {
       return;
     }
 
-    const customFilename = `${this.currentFile.name.replace(/\.pdf$/i, '')}_sin_paginas.pdf`;
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    const customFilename = outputNameInput?.value.trim() || `${this.currentFile.name.replace(/\.pdf$/i, '')}_sin_paginas.pdf`;
 
     const formData = new FormData();
     formData.append('pdf', this.currentFile);
@@ -605,6 +612,8 @@ export class RemovePdfPagesController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_sin_paginas.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
 
     this.updateSummary();

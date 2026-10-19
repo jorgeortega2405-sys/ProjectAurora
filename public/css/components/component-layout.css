@@ -339,9 +339,9 @@ html.dark-theme .layout-content:not(.is-embedded-canvas):has(.layout-nav) {
   touch-action: pan-y;
 }
 
-.layout-content:has(.layout-nav) .view-wrapper .component-bottom,
+.layout-content:has(.layout-nav) .view-wrapper .component-bottom:not(.tool-layout):not(.tool-bottom),
 .layout-content:has(.layout-nav) .home-wrapper .component-bottom,
-.layout-content:has(.layout-nav) .component-wrapper:not(.no-padding) .component-bottom {
+.layout-content:has(.layout-nav) .component-wrapper:not(.no-padding) .component-bottom:not(.tool-layout):not(.tool-bottom) {
   overflow: hidden !important;
   height: 100% !important;
   flex: 1 1 auto;
@@ -1353,9 +1353,12 @@ html.dark-theme .component-wrapper {
   border-top-right-radius: 15px;
 }
 
-.component-wrapper:has(.component-bottom--canvas) > .component-top {
+.component-wrapper:has(.component-bottom--canvas) > .component-top,
+.component-wrapper:has(.tool-bottom) > .component-top,
+.view-wrapper:has(.tool-bottom) > .component-top,
+.component-top.tool-top {
   background: var(--bg-surface);
-  border-bottom: none;
+  border-bottom: none !important;
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
 }

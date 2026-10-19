@@ -1,13 +1,45 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="pdf-to-markdown-wrapper">
-  <div class="tool-layout" data-ref="pdf-to-markdown-layout">
-    <main class="tool-layout__workspace" data-ref="pdf-to-markdown-workspace">
-      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+  <header class="component-top tool-top" data-ref="component-top">
+    <div class="tool-top__left" data-ref="tool-top-left">
+      <div class="tool-top__filename-field" data-ref="tool-filename-container">
+        <label class="tool-top__filename-label" data-ref="label-output-filename">
+          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
+          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento.md" placeholder="documento.md" autocomplete="off" spellcheck="false" />
+        </label>
+      </div>
+    </div>
 
-      <div class="tool-fab-container" data-ref="tool-fab-container">
-        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+    <div class="tool-top__center" data-ref="tool-top-center">
+      <div class="pdf-viewer-toolbar__group" data-ref="toolbar-workspace-tabs" style="display: none;">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn is-active" data-ref="btn-tab-view-pdf" data-tooltip="PDF Original" aria-label="PDF Original">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
+        </button>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-tab-view-markdown" data-tooltip="Markdown Generado" aria-label="Markdown Generado">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
         </button>
       </div>
+    </div>
+
+    <div class="component-top-right tool-top__right" data-ref="component-top-right">
+      <div class="pdf-viewer-toolbar__group pdf-viewer-toolbar__group--actions" data-ref="toolbar-actions-group" style="display: none;">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+        </button>
+        <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+        </button>
+      </div>
+
+      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
+        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="component-bottom tool-bottom tool-bottom--viewer tool-layout tool-layout--viewer" data-ref="pdf-to-markdown-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--viewer" data-ref="pdf-to-markdown-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
 
       <div class="tool-workspace__canvas" data-ref="markdown-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="markdown-dropzone">
@@ -33,41 +65,13 @@
       </div>
 
       <div class="pdf-viewer-workspace" data-ref="markdown-viewer-card" style="display: none;">
-        <header class="pdf-viewer-toolbar" data-ref="viewer-toolbar">
-          <div class="pdf-viewer-toolbar__group" data-ref="toolbar-workspace-tabs" style="display: none;">
-            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn is-active" data-ref="btn-tab-view-pdf" data-tooltip="PDF Original" aria-label="PDF Original">
-              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
-            </button>
-            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-tab-view-markdown" data-tooltip="Markdown Generado" aria-label="Markdown Generado">
-              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
-            </button>
-          </div>
-
-          <div class="pdf-viewer-toolbar__group pdf-viewer-toolbar__group--actions" data-ref="toolbar-actions-group">
-            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
-              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
-            </button>
-            <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
-            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
-              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-            </button>
-          </div>
-        </header>
-
         <div class="pdf-viewer-main-layout" data-ref="viewer-main-layout">
           <aside class="pdf-viewer-pages-sidebar" data-ref="pages-sidebar">
-            <div class="pdf-viewer-pages-sidebar__header">
-              <span>Páginas (<span data-ref="pages-count-badge">0</span>)</span>
-            </div>
-            <div class="pdf-viewer-thumbnails-scroll" data-ref="thumbnails-container">
-              <!-- Miniaturas verticales renderizadas con PDF.js -->
-            </div>
+            <div class="pdf-viewer-thumbnails-scroll" data-ref="thumbnails-container"></div>
           </aside>
 
           <div class="pdf-viewer-canvas-container" data-ref="viewer-scroll-container">
-            <div class="pdf-viewer-pages-wrapper" data-ref="pages-wrapper">
-              <!-- Páginas del PDF se renderizan aquí dinámicamente -->
-            </div>
+            <div class="pdf-viewer-pages-wrapper" data-ref="pages-wrapper"></div>
           </div>
         </div>
 

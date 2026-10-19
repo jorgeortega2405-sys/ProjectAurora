@@ -195,6 +195,12 @@ export class CompressPdfController implements ViewController {
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
     if (compressBtn) compressBtn.disabled = false;
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const base = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}_comprimido.pdf`;
+    }
+
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
     if (canvas) {
       void this.renderThumbnail(file, canvas);
@@ -260,6 +266,9 @@ export class CompressPdfController implements ViewController {
       canvas.height = 0;
     }
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_comprimido.pdf';
+
     this.hideError();
   }
 
@@ -280,9 +289,15 @@ export class CompressPdfController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
         formData.append('level', this.selectedLevel);
+        if (customFilename) {
+          formData.append('filename', customFilename);
+        }
 
         const response = await postFormApi(API_ROUTES.tools.compressPdf.compress, formData);
         const result = (await response.json()) as { data?: CompressResultData; error?: string; success: boolean };
@@ -296,7 +311,7 @@ export class CompressPdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.compressedSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Comprimir otro documento PDF',
           returnUrl: '/compress-pdf',
           subtitle: `El archivo "${this.currentFile?.name}" se ha comprimido exitosamente.`,

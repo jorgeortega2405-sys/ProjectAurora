@@ -314,6 +314,15 @@ export class OrganizePdfController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.add('is-visible');
 
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="organize-top-actions"]');
+    if (topActions) topActions.style.display = 'flex';
+
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput && this.currentFile) {
+      const base = this.currentFile.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}_organizado.pdf`;
+    }
+
     const countBadge = this.container.querySelector<HTMLElement>('[data-ref="pdf-count-badge"]');
     if (countBadge) {
       countBadge.textContent = `${this.pages.length} págs.`;
@@ -520,7 +529,8 @@ export class OrganizePdfController implements ViewController {
       return;
     }
 
-    const customFilename = `${this.currentFile.name.replace(/\.pdf$/i, '')}_organizado.pdf`;
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    const customFilename = outputNameInput?.value.trim() || `${this.currentFile.name.replace(/\.pdf$/i, '')}_organizado.pdf`;
 
     const pagesOrder = this.pages.map((p) => ({
       pageIndex: p.originalIndex,
@@ -652,6 +662,10 @@ export class OrganizePdfController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="organize-top-actions"]');
+    if (topActions) topActions.style.display = 'none';
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_organizado.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
 
     this.updateSummary();

@@ -217,6 +217,12 @@ export class ProtectPdfController implements ViewController {
       if (fileNameEl) fileNameEl.textContent = file.name;
       if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
 
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+      if (outputNameInput) {
+        const base = file.name.replace(/\.[^/.]+$/, '');
+        outputNameInput.value = `${base}_protegido.pdf`;
+      }
+
       void this.renderThumbnail();
       this.validateInputs();
     } catch {
@@ -278,9 +284,15 @@ export class ProtectPdfController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
         formData.append('options', JSON.stringify({ password }));
+        if (customFilename) {
+          formData.append('filename', customFilename);
+        }
 
         const response = await postFormApi(API_ROUTES.tools.protectPdf.process, formData);
         const result = (await response.json()) as {
@@ -297,7 +309,7 @@ export class ProtectPdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.fileSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Proteger otro documento PDF',
           returnUrl: '/protect-pdf',
           subtitle: `Se ha protegido y cifrado exitosamente el documento "${this.currentFile?.name}".`,
@@ -344,6 +356,8 @@ export class ProtectPdfController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_protegido.pdf';
     this.sidebarModal?.close();
 
     if (executeBtn) executeBtn.disabled = true;

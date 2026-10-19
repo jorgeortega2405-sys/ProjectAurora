@@ -335,6 +335,14 @@ export class SummarizePdfController implements ViewController {
     if (settingsBtn) settingsBtn.classList.add('is-visible');
     if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const baseName = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${baseName}_resumen.pdf`;
+    }
+    const zoomActions = this.container.querySelector<HTMLElement>('[data-ref="toolbar-actions-group"]');
+    if (zoomActions) zoomActions.style.display = 'flex';
+
     const numPages = this.pdfDocument?.numPages || 1;
     if (fileNameEl) fileNameEl.textContent = file.name;
     if (pageCountEl) pageCountEl.textContent = `${numPages} página${numPages === 1 ? '' : 's'}`;
@@ -506,6 +514,12 @@ export class SummarizePdfController implements ViewController {
     if (scrollContainer) scrollContainer.innerHTML = '';
     if (resultSection) resultSection.style.display = 'none';
     if (processingSection) processingSection.style.display = 'none';
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      outputNameInput.value = 'resumen.pdf';
+    }
+    const zoomActions = this.container.querySelector<HTMLElement>('[data-ref="toolbar-actions-group"]');
+    if (zoomActions) zoomActions.style.display = 'none';
     this.sidebarModal?.close();
 
     if (actionBtn) actionBtn.disabled = true;

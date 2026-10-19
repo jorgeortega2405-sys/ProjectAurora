@@ -387,6 +387,11 @@ export class ComparePdfController implements ViewController {
     if (workspaceCard) workspaceCard.style.display = 'flex';
     if (sidebar) sidebar.style.display = 'flex';
 
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="compare-top-controls"]');
+    const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    if (topControls) topControls.style.display = 'flex';
+    if (settingsBtn) settingsBtn.classList.add('is-visible');
+
     try {
       const pdfjsLib = await loadPdfJs();
       const buffer = await file.arrayBuffer();
@@ -508,6 +513,11 @@ export class ComparePdfController implements ViewController {
     if (dropzoneHero) dropzoneHero.style.display = '';
     if (workspaceCard) workspaceCard.style.display = 'none';
     if (sidebar) sidebar.style.display = 'none';
+
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="compare-top-controls"]');
+    const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    if (topControls) topControls.style.display = 'none';
+    if (settingsBtn) settingsBtn.classList.remove('is-visible');
 
     this.updateSimilarityPill(null);
     this.renderChangesList();

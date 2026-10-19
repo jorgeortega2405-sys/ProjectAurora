@@ -349,9 +349,16 @@ export class CropPdfController implements ViewController {
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');
       const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
       const workspace = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-workspace"]');
+      const pageNav = this.container.querySelector<HTMLElement>('[data-ref="crop-page-nav"]');
+      const filenameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
       if (sidebar) sidebar.style.display = 'flex';
       if (settingsBtn) settingsBtn.classList.add('is-visible');
       if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+      if (pageNav) pageNav.style.display = 'flex';
+      if (filenameInput) {
+        const base = file.name.replace(/\.[^/.]+$/, '');
+        filenameInput.value = `${base}_recortado.pdf`;
+      }
 
       await this.renderCurrentPage();
       this.updateCropDisplay();
@@ -467,9 +474,13 @@ export class CropPdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-workspace"]');
+    const pageNav = this.container.querySelector<HTMLElement>('[data-ref="crop-page-nav"]');
+    const filenameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    if (pageNav) pageNav.style.display = 'none';
+    if (filenameInput) filenameInput.value = 'documento_recortado.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
     this.hideError();
   }

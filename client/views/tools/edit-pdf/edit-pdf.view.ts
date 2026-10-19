@@ -101,6 +101,8 @@ export class EditPdfController implements ViewController {
     const btnZoomOut = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-out"]');
     const btnUndo = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-undo"]');
     const btnRedo = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-redo"]');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    outputNameInput?.addEventListener('input', () => this.hideError(), { signal });
 
     browseBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -331,6 +333,17 @@ export class EditPdfController implements ViewController {
     if (sidebar) sidebar.style.display = 'flex';
     if (settingsBtn) settingsBtn.classList.add('is-visible');
     if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
+    if (topControls) topControls.style.display = 'flex';
+    if (topActions) topActions.style.display = 'flex';
+
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const baseName = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${baseName}_editado.pdf`;
+    }
 
     try {
       const pdfjs = await loadPdfJs();
@@ -1262,6 +1275,15 @@ export class EditPdfController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
+    if (topControls) topControls.style.display = 'none';
+    if (topActions) topActions.style.display = 'none';
+
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      outputNameInput.value = 'documento_editado.pdf';
+    }
     this.sidebarModal?.close();
 
     this.hideError();
@@ -1273,15 +1295,23 @@ export class EditPdfController implements ViewController {
 
     const processingCard = this.container.querySelector<HTMLElement>('[data-ref="edit-processing-card"]');
     const editorCard = this.container.querySelector<HTMLElement>('[data-ref="edit-editor-card"]');
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
 
     this.isProcessing = true;
     if (editorCard) editorCard.style.display = 'none';
+    if (topControls) topControls.style.display = 'none';
+    if (topActions) topActions.style.display = 'none';
     if (processingCard) processingCard.style.display = '';
 
     await withButtonLoading(button, async () => {
       try {
         const formData = new FormData();
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
+
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value?.trim() || `${this.currentFile?.name.replace(/\.[^/.]+$/, '')}_editado.pdf`;
+        formData.append('filename', customFilename);
 
         const imagesMeta: any[] = [];
         this.images.forEach((imgItem, idx) => {
@@ -1331,6 +1361,8 @@ export class EditPdfController implements ViewController {
         navigate(`/download/${token}`);
       } catch (err: unknown) {
         if (editorCard) editorCard.style.display = 'flex';
+        if (topControls) topControls.style.display = 'flex';
+        if (topActions) topActions.style.display = 'flex';
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al guardar el PDF editado.';
         this.showError(errorMessage);
       } finally {

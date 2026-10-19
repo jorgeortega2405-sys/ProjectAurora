@@ -173,6 +173,12 @@ export class RepairPdfController implements ViewController {
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
     if (repairBtn) repairBtn.disabled = false;
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const base = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}_reparado.pdf`;
+    }
+
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
     if (canvas) {
       void this.renderThumbnail(file, canvas);
@@ -237,6 +243,9 @@ export class RepairPdfController implements ViewController {
       canvas.height = 0;
     }
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_reparado.pdf';
+
     this.hideError();
   }
 
@@ -257,8 +266,14 @@ export class RepairPdfController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
+        if (customFilename) {
+          formData.append('filename', customFilename);
+        }
 
         const response = await postFormApi(API_ROUTES.tools.repairPdf.repair, formData);
         const result = (await response.json()) as { data?: RepairResultData; error?: string; success: boolean };
@@ -272,7 +287,7 @@ export class RepairPdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.repairedSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Reparar otro documento PDF',
           returnUrl: '/repair-pdf',
           subtitle: `Se ha reparado exitosamente el archivo "${this.currentFile?.name}".`,

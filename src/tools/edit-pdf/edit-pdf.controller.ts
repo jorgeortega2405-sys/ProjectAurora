@@ -40,11 +40,14 @@ export async function editPdfHandler(req: Request, res: Response): Promise<void>
       }
     }
 
+    const customFilename = typeof req.body?.filename === 'string' ? req.body.filename : undefined;
+
     const result = await editPdfDocument(
       pdfFile.buffer,
       pdfFile.originalname,
       modifications,
-      imageBuffers
+      imageBuffers,
+      customFilename
     );
 
     res.json({ data: result, success: true });

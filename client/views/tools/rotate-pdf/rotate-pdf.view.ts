@@ -225,9 +225,16 @@ export class RotatePdfController implements ViewController {
       const sidebar = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-sidebar"]');
       const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
       const workspace = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-workspace"]');
+      const topActions = this.container.querySelector<HTMLElement>('[data-ref="rotate-top-actions"]');
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
       if (sidebar) sidebar.style.display = 'flex';
       if (settingsBtn) settingsBtn.classList.add('is-visible');
       if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+      if (topActions) topActions.style.display = 'flex';
+      if (outputNameInput) {
+        const base = file.name.replace(/\.[^/.]+$/, '');
+        outputNameInput.value = `${base}_rotado.pdf`;
+      }
 
       this.renderPagesGrid();
 
@@ -325,8 +332,14 @@ export class RotatePdfController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
+        if (customFilename) {
+          formData.append('filename', customFilename);
+        }
 
         const optionsPayload = {
           pages: this.pages.map((p) => ({
@@ -352,7 +365,7 @@ export class RotatePdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.fileSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Rotar otro archivo PDF',
           returnUrl: '/rotate-pdf',
           subtitle: `Las orientaciones de página para "${this.currentFile?.name}" se han aplicado correctamente.`,
@@ -394,9 +407,13 @@ export class RotatePdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="rotate-pdf-workspace"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="rotate-top-actions"]');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    if (topActions) topActions.style.display = 'none';
+    if (outputNameInput) outputNameInput.value = 'documento_rotado.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
     this.hideError();
   }

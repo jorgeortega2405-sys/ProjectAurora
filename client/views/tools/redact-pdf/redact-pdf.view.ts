@@ -270,6 +270,18 @@ export class RedactPdfController implements ViewController {
     if (workspaceCard) workspaceCard.style.display = 'flex';
     if (sidebar) sidebar.style.display = 'flex';
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const baseName = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${baseName}_censurado.pdf`;
+    }
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="redact-top-controls"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="redact-top-actions"]');
+    const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    if (topControls) topControls.style.display = 'flex';
+    if (topActions) topActions.style.display = 'flex';
+    if (settingsBtn) settingsBtn.classList.add('is-visible');
+
     try {
       const pdfjsLib = await loadPdfJs();
       const buffer = await file.arrayBuffer();
@@ -313,6 +325,17 @@ export class RedactPdfController implements ViewController {
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (workspaceCard) workspaceCard.style.display = 'none';
     if (sidebar) sidebar.style.display = 'none';
+
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      outputNameInput.value = 'documento_censurado.pdf';
+    }
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="redact-top-controls"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="redact-top-actions"]');
+    const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
+    if (topControls) topControls.style.display = 'none';
+    if (topActions) topActions.style.display = 'none';
+    if (settingsBtn) settingsBtn.classList.remove('is-visible');
   }
 
   private async renderThumbnails(): Promise<void> {

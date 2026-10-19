@@ -536,7 +536,11 @@ export class MergePdfController implements ViewController {
     this.showProcessingState();
 
     try {
-      const customFilename = 'documento_unido.pdf';
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+      let customFilename = outputNameInput?.value?.trim() || 'documento_unido.pdf';
+      if (!customFilename.toLowerCase().endsWith('.pdf')) {
+        customFilename = `${customFilename}.pdf`;
+      }
       const formData = new FormData();
       formData.append('filename', customFilename);
 

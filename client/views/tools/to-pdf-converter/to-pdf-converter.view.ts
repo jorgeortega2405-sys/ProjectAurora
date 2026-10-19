@@ -213,6 +213,12 @@ export class ToPdfConverterController implements ViewController {
     if (sidebar) sidebar.style.display = 'flex';
     if (settingsBtn) settingsBtn.classList.add('is-visible');
     if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const base = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}.pdf`;
+    }
   }
 
   private resetSelectedFile(): void {
@@ -281,10 +287,12 @@ export class ToPdfConverterController implements ViewController {
         }
 
         const token = (result.data as any).downloadToken || (result.data as any).fileId;
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.fileSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Convertir otro archivo',
           returnUrl: window.location.pathname,
           subtitle: `Tu archivo "${this.currentFile?.name}" ha sido transformado exitosamente en PDF.`,

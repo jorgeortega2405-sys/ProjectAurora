@@ -668,6 +668,12 @@ export class SplitPdfController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.add('is-visible');
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput && this.currentFile) {
+      const base = this.currentFile.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}_dividido.pdf`;
+    }
+
     if (badge) badge.textContent = `${this.pages.length} págs.`;
 
     const valOrigBytes = this.container.querySelector<HTMLElement>('[data-ref="val-size-orig-bytes"]');
@@ -818,9 +824,10 @@ export class SplitPdfController implements ViewController {
     this.showProcessingState();
 
     try {
-      const customFilename = this.currentFile
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+      const customFilename = outputNameInput?.value.trim() || (this.currentFile
         ? this.currentFile.name.replace(/\.pdf$/i, '') + '_dividido.pdf'
-        : 'documento_dividido.pdf';
+        : 'documento_dividido.pdf');
 
       const checkMergeRanges = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-ranges"]');
       const checkMergePages = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-pages"]');
@@ -977,6 +984,8 @@ export class SplitPdfController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     const settingsBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-tool-settings"]');
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_dividido.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
 
     this.updateSummary();

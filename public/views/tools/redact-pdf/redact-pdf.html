@@ -1,13 +1,54 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="redact-pdf-wrapper">
-  <div class="tool-layout" data-ref="redact-pdf-layout">
-    <main class="tool-layout__workspace" data-ref="redact-pdf-workspace">
-      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
+  <header class="component-top tool-top" data-ref="component-top">
+    <div class="tool-top__left" data-ref="tool-top-left">
+      <div class="tool-top__filename-field" data-ref="tool-filename-container">
+        <label class="tool-top__filename-label" data-ref="label-output-filename">
+          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
+          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_censurado.pdf" placeholder="documento_censurado.pdf" autocomplete="off" spellcheck="false" />
+        </label>
+      </div>
+    </div>
 
-      <div class="tool-fab-container" data-ref="tool-fab-container">
-        <button type="button" class="tool-fab-settings" data-ref="btn-tool-settings" data-tooltip="Opciones de censura" aria-label="Opciones de censura">
-          <svg class="component-icon tool-fab-settings__icon" aria-hidden="true"><use href="/icons.svg#visibility_off"></use></svg>
+    <div class="tool-top__center" data-ref="tool-top-center">
+      <div class="redact-top-controls" data-ref="redact-top-controls" style="display: none;">
+        <div class="redact-mode-switcher" data-ref="tool-switcher">
+          <button type="button" class="redact-tool-btn is-active" data-ref="btn-tool-select" data-tool="select" data-tooltip="Seleccionar y censurar texto" aria-label="Seleccionar y censurar texto">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#format_color_text"></use></svg>
+            <span>Seleccionar texto</span>
+          </button>
+          <button type="button" class="redact-tool-btn" data-ref="btn-tool-draw" data-tool="draw" data-tooltip="Dibujar rectángulo de censura" aria-label="Dibujar rectángulo de censura">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#crop_square"></use></svg>
+            <span>Dibujar área</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="component-top-right tool-top__right" data-ref="component-top-right">
+      <div class="redact-top-actions" data-ref="redact-top-actions" style="display: none;">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+        </button>
+        <span class="pdf-editor-status-pill" data-ref="val-zoom-level">100%</span>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-clear-redactions" data-tooltip="Limpiar todas las censuras" aria-label="Limpiar todas las censuras">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
+          <span>Limpiar</span>
         </button>
       </div>
+
+      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Opciones de censura" aria-label="Opciones de censura">
+        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="component-bottom tool-bottom tool-bottom--viewer tool-layout tool-layout--viewer" data-ref="redact-pdf-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--viewer" data-ref="redact-pdf-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
 
       <div class="tool-workspace__canvas" data-ref="redact-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="redact-dropzone">
@@ -33,45 +74,8 @@
       </div>
 
       <div class="pdf-viewer-workspace pdf-editor-workspace redact-editor-workspace" data-ref="redact-workspace-card" style="display: none;">
-        <header class="pdf-viewer-toolbar pdf-editor-toolbar redact-toolbar" data-ref="redact-toolbar">
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-left">
-            <div class="pdf-editor-status-pill redact-doc-name-pill" data-ref="val-doc-title">Documento</div>
-          </div>
-
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-center">
-            <div class="redact-mode-switcher" data-ref="tool-switcher">
-              <button type="button" class="redact-tool-btn is-active" data-ref="btn-tool-select" data-tool="select" data-tooltip="Seleccionar y censurar texto" aria-label="Seleccionar y censurar texto">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#format_color_text"></use></svg>
-                <span>Seleccionar texto</span>
-              </button>
-              <button type="button" class="redact-tool-btn" data-ref="btn-tool-draw" data-tool="draw" data-tooltip="Dibujar rectángulo de censura" aria-label="Dibujar rectángulo de censura">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#crop_square"></use></svg>
-                <span>Dibujar área</span>
-              </button>
-            </div>
-
-            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
-              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
-            </button>
-            <span class="pdf-editor-status-pill" data-ref="val-zoom-level">100%</span>
-            <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
-              <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-            </button>
-          </div>
-
-          <div class="pdf-editor-toolbar__section" data-ref="toolbar-right">
-            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-clear-redactions" data-tooltip="Limpiar todas las censuras" aria-label="Limpiar todas las censuras">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
-              <span>Limpiar todo</span>
-            </button>
-          </div>
-        </header>
-
         <div class="pdf-viewer-main-layout pdf-editor-main-layout" data-ref="editor-main-layout">
           <aside class="pdf-viewer-pages-sidebar pdf-editor-pages-sidebar redact-pages-sidebar" data-ref="pages-sidebar">
-            <div class="pdf-viewer-pages-sidebar__header pdf-editor-pages-sidebar__header">
-              <span>Páginas (<span data-ref="pages-count-badge">0</span>)</span>
-            </div>
             <div class="pdf-viewer-thumbnails-scroll pdf-editor-thumbnails-scroll" data-ref="thumbnails-container"></div>
           </aside>
 

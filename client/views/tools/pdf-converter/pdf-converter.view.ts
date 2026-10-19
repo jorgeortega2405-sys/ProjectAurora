@@ -191,6 +191,12 @@ export class PdfConverterController implements ViewController {
     if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
     if (convertBtn) convertBtn.disabled = false;
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) {
+      const base = file.name.replace(/\.[^/.]+$/, '');
+      outputNameInput.value = `${base}.${this.config.targetType}`;
+    }
+
     const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="doc-preview-canvas"]');
     if (canvas) {
       void this.renderThumbnail(file, canvas);
@@ -252,6 +258,9 @@ export class PdfConverterController implements ViewController {
       canvas.height = 0;
     }
 
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_convertido';
+
     this.hideError();
   }
 
@@ -281,8 +290,10 @@ export class PdfConverterController implements ViewController {
 
         const token = result.data.downloadToken;
         const targetExt = this.config.targetType;
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
         const baseName = this.currentFile?.name.replace(/\.[^/.]+$/, '') || 'documento';
-        const finalFilename = `${baseName}.${targetExt}`;
+        const finalFilename = customFilename || `${baseName}.${targetExt}`;
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           filename: finalFilename,

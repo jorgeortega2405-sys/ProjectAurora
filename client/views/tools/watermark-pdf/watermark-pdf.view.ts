@@ -325,6 +325,12 @@ export class WatermarkPdfController implements ViewController {
       if (settingsBtn) settingsBtn.classList.add('is-visible');
       if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
 
+      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+      if (outputNameInput) {
+        const base = file.name.replace(/\.[^/.]+$/, '');
+        outputNameInput.value = `${base}_marca_de_agua.pdf`;
+      }
+
       this.renderPagesGrid();
     } catch {
       this.showError('No se pudo procesar el archivo PDF. Asegúrate de que no esté dañado ni protegido.');
@@ -393,7 +399,7 @@ export class WatermarkPdfController implements ViewController {
     const fromPageInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-from-page"]');
     const toPageInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-to-page"]');
 
-    const optionsPayload = {
+    let optionsPayload: any = {
       fontFamily: this.fontFamily,
       fontSize: this.fontSize,
       fromPage: Math.max(1, Number(fromPageInput?.value) || 1),
@@ -413,10 +419,16 @@ export class WatermarkPdfController implements ViewController {
 
     await withButtonLoading(button, async () => {
       try {
+        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+        const customFilename = outputNameInput?.value.trim();
+
         const formData = new FormData();
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
         if (this.activeTab === 'image' && this.watermarkImageFile) {
           formData.append('watermarkImage', this.watermarkImageFile, this.watermarkImageFile.name);
+        }
+        if (customFilename) {
+          optionsPayload = { ...optionsPayload, filename: customFilename } as any;
         }
         formData.append('options', JSON.stringify(optionsPayload));
 
@@ -435,7 +447,7 @@ export class WatermarkPdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.fileSize,
-          filename: result.data.filename,
+          filename: customFilename || result.data.filename,
           returnText: 'Insertar otra marca de agua',
           returnUrl: '/watermark-pdf',
           subtitle: `Se ha aplicado exitosamente la marca de agua en "${this.currentFile?.name}".`,
@@ -485,6 +497,8 @@ export class WatermarkPdfController implements ViewController {
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
+    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
+    if (outputNameInput) outputNameInput.value = 'documento_marca_de_agua.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
     this.hideError();
   }

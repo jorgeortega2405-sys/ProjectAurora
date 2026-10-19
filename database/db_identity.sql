@@ -179,10 +179,12 @@ CREATE TABLE IF NOT EXISTS organizations (
     slug VARCHAR(100) NOT NULL UNIQUE,
     owner_id VARCHAR(36) NOT NULL,
     seat_limit INT NOT NULL DEFAULT 5,
+    org_type ENUM('business', 'education') NOT NULL DEFAULT 'business',
     subscription_status ENUM('active', 'trial', 'past_due', 'suspended') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_organizations_owner (owner_id),
+    INDEX idx_organizations_type (org_type),
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -246,5 +248,45 @@ CREATE TABLE IF NOT EXISTS student_verifications (
     FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS institution_inquiries (
+    id VARCHAR(36) PRIMARY KEY,
+    school_name VARCHAR(200) NOT NULL,
+    website_domain VARCHAR(255) NULL,
+    contact_name VARCHAR(150) NOT NULL,
+    contact_role VARCHAR(100) NOT NULL,
+    contact_email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NULL,
+    estimated_students VARCHAR(50) NOT NULL,
+    country_city VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    status ENUM('pending', 'contacted', 'partner_approved', 'rejected') NOT NULL DEFAULT 'pending',
+    admin_notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_inst_inquiries_email (contact_email),
+    INDEX idx_inst_inquiries_status (status),
+    INDEX idx_inst_inquiries_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS educational_partner_domains (
+    id VARCHAR(36) PRIMARY KEY,
+    school_name VARCHAR(200) NOT NULL,
+    domain VARCHAR(255) NOT NULL UNIQUE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_edu_domains_domain (domain),
+    INDEX idx_edu_domains_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+INSERT IGNORE INTO educational_partner_domains (id, school_name, domain, is_active) VALUES
+('d1a10001-0000-4000-8000-000000000001', 'Universidad Nacional Autónoma de México (UNAM)', 'unam.mx', 1),
+('d1a10001-0000-4000-8000-000000000002', 'Instituto Politécnico Nacional (IPN)', 'ipn.mx', 1),
+('d1a10001-0000-4000-8000-000000000003', 'Instituto Tecnológico y de Estudios Superiores de Monterrey (ITESM)', 'itesm.mx', 1),
+('d1a10001-0000-4000-8000-000000000004', 'Universidad Autónoma Metropolitana (UAM)', 'uam.mx', 1),
+('d1a10001-0000-4000-8000-000000000005', 'Universidad de Guadalajara (UDG)', 'udg.mx', 1),
+('d1a10001-0000-4000-8000-000000000006', 'Universidad Autónoma de Nuevo León (UANL)', 'uanl.mx', 1),
+('d1a10001-0000-4000-8000-000000000007', 'Tecnológico Nacional de México (TecNM)', 'tecnm.mx', 1),
+('d1a10001-0000-4000-8000-000000000008', 'Universidad Veracruzana (UV)', 'uv.mx', 1),
+('d1a10001-0000-4000-8000-000000000009', 'Benemérita Universidad Autónoma de Puebla (BUAP)', 'buap.mx', 1),
+('d1a10001-0000-4000-8000-000000000010', 'Dominio de Prueba Educativo', 'test-school.edu', 1);

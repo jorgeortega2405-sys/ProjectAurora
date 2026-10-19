@@ -8,6 +8,7 @@ interface OrgDbRow extends RowDataPacket {
   created_at: Date | string;
   id: string;
   name: string;
+  org_type: 'business' | 'education';
   owner_id: string;
   seat_limit: number;
   slug: string;
@@ -47,6 +48,7 @@ export async function createOrganization(dto: CreateOrganizationDto): Promise<Or
   let slug = baseSlug;
   const ownerId = dto.ownerId;
   const seatLimit = typeof dto.seatLimit === 'number' && dto.seatLimit > 0 ? dto.seatLimit : 5;
+  const orgType = dto.orgType || 'business';
 
   const [existingSlugs] = await pool.query<OrgDbRow[]>(
     'SELECT id FROM organizations WHERE slug = ? LIMIT 1',
@@ -61,8 +63,8 @@ export async function createOrganization(dto: CreateOrganizationDto): Promise<Or
     await conn.beginTransaction();
 
     await conn.execute(
-      'INSERT INTO organizations (id, name, slug, owner_id, seat_limit, subscription_status) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, name, slug, ownerId, seatLimit, 'active']
+      'INSERT INTO organizations (id, name, slug, owner_id, seat_limit, org_type, subscription_status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, name, slug, ownerId, seatLimit, orgType, 'active']
     );
 
     const memberId = randomUUID();
@@ -92,6 +94,7 @@ export async function createOrganization(dto: CreateOrganizationDto): Promise<Or
     logger.db.info('Organización creada exitosamente', {
       id,
       name,
+      orgType,
       ownerId,
       seatLimit,
       slug,
@@ -113,7 +116,7 @@ export async function createOrganization(dto: CreateOrganizationDto): Promise<Or
 
 export async function getOrganizationById(id: string): Promise<Organization | null> {
   const [rows] = await pool.query<OrgDbRow[]>(
-    'SELECT id, name, slug, owner_id, seat_limit, subscription_status, created_at, updated_at FROM organizations WHERE id = ? LIMIT 1',
+    'SELECT id, name, slug, owner_id, seat_limit, org_type, subscription_status, created_at, updated_at FROM organizations WHERE id = ? LIMIT 1',
     [id]
   );
   if (!rows.length) return null;
@@ -123,6 +126,7 @@ export async function getOrganizationById(id: string): Promise<Organization | nu
     created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
     id: r.id,
     name: r.name,
+    org_type: r.org_type || 'business',
     owner_id: r.owner_id,
     seat_limit: r.seat_limit,
     slug: r.slug,
@@ -133,7 +137,7 @@ export async function getOrganizationById(id: string): Promise<Organization | nu
 
 export async function getOrganizationBySlug(slug: string): Promise<Organization | null> {
   const [rows] = await pool.query<OrgDbRow[]>(
-    'SELECT id, name, slug, owner_id, seat_limit, subscription_status, created_at, updated_at FROM organizations WHERE slug = ? LIMIT 1',
+    'SELECT id, name, slug, owner_id, seat_limit, org_type, subscription_status, created_at, updated_at FROM organizations WHERE slug = ? LIMIT 1',
     [slug]
   );
   if (!rows.length) return null;
@@ -143,6 +147,7 @@ export async function getOrganizationBySlug(slug: string): Promise<Organization 
     created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
     id: r.id,
     name: r.name,
+    org_type: r.org_type || 'business',
     owner_id: r.owner_id,
     seat_limit: r.seat_limit,
     slug: r.slug,
@@ -153,7 +158,7 @@ export async function getOrganizationBySlug(slug: string): Promise<Organization 
 
 export async function getUserOrganization(userId: string): Promise<{ memberRole: string; organization: Organization } | null> {
   const [rows] = await pool.query<(OrgDbRow & { member_role: string })[]>(
-    `SELECT o.id, o.name, o.slug, o.owner_id, o.seat_limit, o.subscription_status, o.created_at, o.updated_at, m.role AS member_role
+    `SELECT o.id, o.name, o.slug, o.owner_id, o.seat_limit, o.org_type, o.subscription_status, o.created_at, o.updated_at, m.role AS member_role
      FROM organization_members m
      INNER JOIN organizations o ON m.organization_id = o.id
      WHERE m.user_id = ? AND m.status = 'active'
@@ -169,6 +174,7 @@ export async function getUserOrganization(userId: string): Promise<{ memberRole:
       created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
       id: r.id,
       name: r.name,
+      org_type: r.org_type || 'business',
       owner_id: r.owner_id,
       seat_limit: r.seat_limit,
       slug: r.slug,
@@ -177,6 +183,57 @@ export async function getUserOrganization(userId: string): Promise<{ memberRole:
     },
   };
 }
+
+export async function createCampusOrganizationFromInquiry(params: {
+  inquiryId: string;
+  ownerUserId: string;
+  seatLimit?: number;
+}): Promise<Organization> {
+  const [inquiryRows] = await pool.query<RowDataPacket[]>(
+    'SELECT * FROM institution_inquiries WHERE id = ? LIMIT 1',
+    [params.inquiryId]
+  );
+  if (!inquiryRows.length) {
+    throw new Error('Solicitud institucional no encontrada');
+  }
+  const inquiry = inquiryRows[0];
+  const seatLimit = params.seatLimit || 1000;
+
+  const org = await createOrganization({
+    domain: inquiry.website_domain || undefined,
+    name: inquiry.school_name,
+    orgType: 'education',
+    ownerId: params.ownerUserId,
+    seatLimit,
+  });
+
+  if (inquiry.website_domain) {
+    const domain = inquiry.website_domain.trim().toLowerCase().replace(/^@+/, '');
+    await pool.execute(
+      'INSERT IGNORE INTO educational_partner_domains (id, school_name, domain, is_active) VALUES (UUID(), ?, ?, 1)',
+      [inquiry.school_name, domain]
+    );
+  }
+
+  await pool.execute(
+    'UPDATE institution_inquiries SET status = ? WHERE id = ?',
+    ['partner_approved', params.inquiryId]
+  );
+
+  await pool.execute(
+    'UPDATE users SET subscription_tier = ?, subscription_origin = ?, is_student = TRUE, subscription_status = ?, subscription_period_end = DATE_ADD(NOW(), INTERVAL 1 YEAR) WHERE id = ?',
+    ['enterprise', 'education', 'active', params.ownerUserId]
+  );
+
+  logger.db.info('Campus educativo Enterprise creado a partir de solicitud', {
+    inquiryId: params.inquiryId,
+    orgId: org.id,
+    seatLimit,
+  });
+
+  return org;
+}
+
 
 export async function countActiveMembers(organizationId: string): Promise<number> {
   const [rows] = await pool.query<CountDbRow[]>(

@@ -690,6 +690,18 @@ export const SERVER_SEO_ROUTES: Record<string, ServerRouteSeoInfo> = {
       es: 'Verificar Estado de Estudiante | ProjectAurora',
     },
   },
+  'education-institutions': {
+    descriptions: {
+      en: 'Partner with ProjectAurora to empower your school or university with enterprise document processing and campus licenses.',
+      es: 'Convenios educativos y soluciones integrales de gestión documental para escuelas, colegios y universidades con ProjectAurora.',
+    },
+    routeId: 'education-institutions',
+    slugs: { en: 'education/institutions', es: 'educacion/instituciones' },
+    titles: {
+      en: 'Education for Institutions & Universities | ProjectAurora',
+      es: 'Educación para Instituciones y Universidades | ProjectAurora',
+    },
+  },
 };
 
 const SERVER_SLUG_MAP = new Map<string, string>();
@@ -732,6 +744,8 @@ SERVER_SLUG_MAP.set('education', 'education');
 SERVER_SLUG_MAP.set('educacion', 'education');
 SERVER_SLUG_MAP.set('education/verify', 'education-verify');
 SERVER_SLUG_MAP.set('educacion/verificar', 'education-verify');
+SERVER_SLUG_MAP.set('education/institutions', 'education-institutions');
+SERVER_SLUG_MAP.set('educacion/instituciones', 'education-institutions');
 
 export function getServerCanonicalSlug(routeId: string, lang = DEFAULT_LANGUAGE): string {
   const norm = normalizeLanguageCode(lang);

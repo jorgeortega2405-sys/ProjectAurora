@@ -10,7 +10,7 @@ export async function createOrganizationHandler(req: Request, res: Response): Pr
       return;
     }
 
-    const { domain, name, seatLimit, slug } = req.body || {};
+    const { domain, name, orgType, seatLimit, slug } = req.body || {};
     if (typeof name !== 'string' || name.trim().length < 2) {
       res.status(400).json({ error: 'El nombre de la organización debe tener al menos 2 caracteres.', success: false });
       return;
@@ -21,6 +21,7 @@ export async function createOrganizationHandler(req: Request, res: Response): Pr
     const organization = await createOrganization({
       domain,
       name,
+      orgType: orgType === 'education' ? 'education' : 'business',
       ownerId: user.id,
       seatLimit: parsedLimit,
       slug,

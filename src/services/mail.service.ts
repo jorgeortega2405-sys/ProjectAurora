@@ -139,3 +139,19 @@ export async function sendEmailChangeCodeEmail(
   });
 }
 
+export async function sendEducationVerificationEmail(
+  toEmail: string,
+  username: string,
+  schoolName: string,
+  code: string,
+  expiresInMinutes = 15
+): Promise<void> {
+  await sendTemplateEmail('education_verification_code', toEmail, {
+    code,
+    expiresIn: expiresInMinutes,
+    schoolName,
+    username,
+  });
+}
+
+

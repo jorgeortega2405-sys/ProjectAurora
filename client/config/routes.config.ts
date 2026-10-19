@@ -550,11 +550,20 @@ export const APP_ROUTES: RouteDefinition[] = [
   {
     handler: async () => {
       await loadStylesheet('/css/components/component-views.css');
+      const { createEducationInstitutionsView } = await import('../views/education-institutions.view.js');
+      return await createEducationInstitutionsView();
+    },
+    id: 'education-institutions',
+    match: (path) => path === '/education/institutions' || path === '/educacion/instituciones' || path === '/solutions/education/institutions' || path === '/soluciones/educacion/instituciones' || path.startsWith('/education/institutions') || path.startsWith('/educacion/instituciones'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
       const { createEducationView } = await import('../views/education.view.js');
       return await createEducationView();
     },
     id: 'education',
-    match: (path) => (path === '/education' || path === '/educacion' || path === '/solutions/education' || path === '/soluciones/educacion' || path.startsWith('/education') || path.startsWith('/educacion')) && !path.startsWith('/education/verify') && !path.startsWith('/educacion/verificar'),
+    match: (path) => (path === '/education' || path === '/educacion' || path === '/solutions/education' || path === '/soluciones/educacion' || path.startsWith('/education') || path.startsWith('/educacion')) && !path.startsWith('/education/verify') && !path.startsWith('/educacion/verificar') && !path.startsWith('/education/institutions') && !path.startsWith('/educacion/instituciones'),
   },
   {
     handler: async ({ path }) => {

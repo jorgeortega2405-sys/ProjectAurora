@@ -53,6 +53,18 @@ export class EducationController implements ViewController {
       );
     }
 
+    const institutionsButton = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-institutions"]');
+    if (institutionsButton) {
+      institutionsButton.addEventListener(
+        'click',
+        (e: MouseEvent) => {
+          e.preventDefault();
+          navigate('/education/institutions');
+        },
+        { signal: this.abortController?.signal }
+      );
+    }
+
     const navigateLinks = this.container.querySelectorAll<HTMLAnchorElement>('[data-navigate]');
     navigateLinks.forEach((link) => {
       link.addEventListener(

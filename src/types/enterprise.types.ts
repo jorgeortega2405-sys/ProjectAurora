@@ -4,6 +4,7 @@ export interface Organization {
   name: string;
   owner_id: string;
   seat_limit: number;
+  org_type?: 'business' | 'education';
   slug: string;
   subscription_status: 'active' | 'trial' | 'past_due' | 'suspended';
   updated_at: string;
@@ -48,6 +49,7 @@ export interface OrganizationSsoConfig {
 export interface CreateOrganizationDto {
   domain?: string;
   name: string;
+  orgType?: 'business' | 'education';
   ownerId: string;
   seatLimit?: number;
   slug?: string;

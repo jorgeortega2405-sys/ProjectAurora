@@ -118,7 +118,9 @@ export class OrganizationViewController implements ViewController {
 
     if (nameEl) nameEl.textContent = data.organization.name;
     if (roleBadge) {
-      const roleLabel = data.memberRole === 'ORG_OWNER' ? 'Propietario' : data.memberRole === 'ORG_ADMIN' ? 'Administrador' : 'Miembro';
+      const isEdu = data.organization.org_type === 'education';
+      const prefix = isEdu ? 'Campus Escolar · ' : '';
+      const roleLabel = data.memberRole === 'ORG_OWNER' ? `${prefix}Propietario` : data.memberRole === 'ORG_ADMIN' ? `${prefix}Administrador` : `${prefix}Miembro`;
       roleBadge.textContent = roleLabel;
     }
 
@@ -127,7 +129,10 @@ export class OrganizationViewController implements ViewController {
     const remaining = Math.max(0, limit - used);
 
     if (seatDesc) {
-      seatDesc.textContent = `${used} de ${limit} asientos utilizados (${remaining} disponibles)`;
+      const isEdu = data.organization.org_type === 'education';
+      seatDesc.textContent = isEdu
+        ? `${used} de ${limit} licencias de campus utilizadas (${remaining} disponibles)`
+        : `${used} de ${limit} asientos utilizados (${remaining} disponibles)`;
     }
 
     if (seatProgressFill) {

@@ -1,4 +1,5 @@
-import { getStudentVerificationStatusHandler, submitStudentVerificationHandler } from '../controllers/education.controller.js';
+import { checkEducationalEmailHandler, getStudentVerificationStatusHandler, requestEducationalOtpHandler, submitStudentVerificationHandler, verifyEducationalOtpHandler } from '../controllers/education.controller.js';
+import { submitInstitutionInquiryHandler } from '../controllers/institution.controller.js';
 import { requireAuth } from '../middlewares/auth.middleware.js';
 import { NextFunction, Request, Response, Router } from 'express';
 import multer from 'multer';
@@ -40,5 +41,9 @@ function uploadDocumentMiddleware(req: Request, res: Response, next: NextFunctio
 
 router.post('/education/verify', requireAuth, uploadDocumentMiddleware, submitStudentVerificationHandler);
 router.get('/education/status', requireAuth, getStudentVerificationStatusHandler);
+router.post('/education/check-email', requireAuth, checkEducationalEmailHandler);
+router.post('/education/request-otp', requireAuth, requestEducationalOtpHandler);
+router.post('/education/verify-otp', requireAuth, verifyEducationalOtpHandler);
+router.post('/education/institution-inquiry', submitInstitutionInquiryHandler);
 
 export default router;

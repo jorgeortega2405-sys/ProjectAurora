@@ -284,5 +284,29 @@ export async function processSsoLoginSuccess(params: {
     }
   }
 
+  const [orgRows] = await pool.query<RowDataPacket[]>(
+    'SELECT id, name, org_type FROM organizations WHERE id = ? LIMIT 1',
+    [organizationId]
+  );
+  if (orgRows.length > 0 && orgRows[0].org_type === 'education') {
+    await pool.execute(
+      'UPDATE users SET subscription_tier = ?, subscription_origin = ?, is_student = TRUE, subscription_status = ?, subscription_period_end = DATE_ADD(NOW(), INTERVAL 1 YEAR) WHERE id = ?',
+      ['pro', 'education', 'active', userId]
+    );
+
+    const verificationId = randomUUID();
+    const docUrl = `campus_sso:${cleanEmail}`;
+    await pool.execute(
+      'INSERT IGNORE INTO student_verifications (id, user_id, full_name, school_name, document_url, status, admin_notes, reviewed_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+      [verificationId, userId, cleanEmail, orgRows[0].name, docUrl, 'approved', 'Auto-aprobado mediante Campus SSO Institucional']
+    );
+
+    logger.security.info('Usuario activado con Pro Educativo mediante Campus SSO', {
+      email: cleanEmail,
+      schoolName: orgRows[0].name,
+      userId,
+    });
+  }
+
   return { id: userId, role, username };
 }

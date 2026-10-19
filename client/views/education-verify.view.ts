@@ -1,11 +1,12 @@
 import { navigate } from '../app-router.js';
 import { getFooterHtml, mountSiteFooter } from '../components/footer.component.js';
-import { currentUser, getApi, postFormApi } from '../services/api.service.js';
+import { currentUser, getApi, postApi, postFormApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { withButtonLoading } from '../utils/dom.util.js';
+import { validateEmail } from '../utils/validators.util.js';
 
 export class EducationVerifyController implements ViewController {
   private abortController: AbortController | null = null;
@@ -132,6 +133,59 @@ export class EducationVerifyController implements ViewController {
       );
     });
 
+    const tabInstant = this.container.querySelector<HTMLButtonElement>('[data-ref="tab-btn-instant"]');
+    const tabManual = this.container.querySelector<HTMLButtonElement>('[data-ref="tab-btn-manual"]');
+    const boxInstant = this.container.querySelector<HTMLElement>('[data-ref="box-mode-instant"]');
+    const boxManual = this.container.querySelector<HTMLElement>('[data-ref="box-mode-manual"]');
+
+    if (tabInstant && tabManual && boxInstant && boxManual) {
+      tabInstant.addEventListener(
+        'click',
+        () => {
+          tabInstant.classList.add('education-tab-btn--active');
+          tabManual.classList.remove('education-tab-btn--active');
+          boxInstant.style.display = 'block';
+          boxManual.style.display = 'none';
+        },
+        { signal: this.abortController?.signal }
+      );
+
+      tabManual.addEventListener(
+        'click',
+        () => {
+          tabManual.classList.add('education-tab-btn--active');
+          tabInstant.classList.remove('education-tab-btn--active');
+          boxManual.style.display = 'block';
+          boxInstant.style.display = 'none';
+        },
+        { signal: this.abortController?.signal }
+      );
+    }
+
+    const formInstantEmail = this.container.querySelector<HTMLFormElement>('[data-ref="form-instant-email"]');
+    if (formInstantEmail) {
+      formInstantEmail.addEventListener(
+        'submit',
+        (e: Event) => {
+          e.preventDefault();
+          void this.handleInstantEmailSubmit(formInstantEmail);
+        },
+        { signal: this.abortController?.signal }
+      );
+    }
+
+    const formVerifyOtp = this.container.querySelector<HTMLFormElement>('[data-ref="form-verify-otp"]');
+    if (formVerifyOtp) {
+      formVerifyOtp.addEventListener(
+        'submit',
+        (e: Event) => {
+          e.preventDefault();
+          void this.handleVerifyOtpSubmit(formVerifyOtp);
+        },
+        { signal: this.abortController?.signal }
+      );
+    }
+
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="dropzone"]');
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-file"]');
     const removeFileBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
@@ -218,20 +272,23 @@ export class EducationVerifyController implements ViewController {
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      this.showError('El archivo no debe superar los 10 MB.');
+      this.showError('El archivo excede el tamaño máximo permitido de 10 MB.');
       return;
     }
 
-    this.hideError();
     this.selectedFile = file;
+    this.renderSelectedFilePreview(file);
+    this.hideError();
+  }
 
-    const emptyBox = this.container.querySelector<HTMLElement>('[data-ref="dropzone-empty"]');
-    const selectedBox = this.container.querySelector<HTMLElement>('[data-ref="dropzone-selected"]');
+  private renderSelectedFilePreview(file: File): void {
+    const emptyEl = this.container.querySelector<HTMLElement>('[data-ref="dropzone-empty"]');
+    const selectedEl = this.container.querySelector<HTMLElement>('[data-ref="dropzone-selected"]');
     const nameEl = this.container.querySelector<HTMLElement>('[data-ref="file-name"]');
     const sizeEl = this.container.querySelector<HTMLElement>('[data-ref="file-size"]');
 
-    if (emptyBox) emptyBox.style.display = 'none';
-    if (selectedBox) selectedBox.style.display = 'flex';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (selectedEl) selectedEl.style.display = 'flex';
     if (nameEl) nameEl.textContent = file.name;
     if (sizeEl) sizeEl.textContent = this.formatFileSize(file.size);
   }
@@ -241,31 +298,136 @@ export class EducationVerifyController implements ViewController {
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-file"]');
     if (fileInput) fileInput.value = '';
 
-    const emptyBox = this.container.querySelector<HTMLElement>('[data-ref="dropzone-empty"]');
-    const selectedBox = this.container.querySelector<HTMLElement>('[data-ref="dropzone-selected"]');
-
-    if (emptyBox) emptyBox.style.display = 'flex';
-    if (selectedBox) selectedBox.style.display = 'none';
+    const emptyEl = this.container.querySelector<HTMLElement>('[data-ref="dropzone-empty"]');
+    const selectedEl = this.container.querySelector<HTMLElement>('[data-ref="dropzone-selected"]');
+    if (emptyEl) emptyEl.style.display = 'flex';
+    if (selectedEl) selectedEl.style.display = 'none';
   }
 
   private formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   private showError(msg: string): void {
-    const banner = this.container.querySelector<HTMLElement>('[data-ref="banner-error"]');
-    const text = this.container.querySelector<HTMLElement>('[data-ref="text-error"]');
-    if (banner && text) {
-      text.textContent = msg;
-      banner.style.display = 'flex';
+    const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-error"]');
+    const errorText = this.container.querySelector<HTMLElement>('[data-ref="text-error"]');
+    if (errorBanner) {
+      if (errorText) errorText.textContent = msg;
+      errorBanner.style.display = 'flex';
     }
   }
 
   private hideError(): void {
-    const banner = this.container.querySelector<HTMLElement>('[data-ref="banner-error"]');
-    if (banner) banner.style.display = 'none';
+    const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-error"]');
+    if (errorBanner) {
+      errorBanner.style.display = 'none';
+    }
+  }
+
+  private showSuccess(msg: string): void {
+    const successBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-success"]');
+    const successText = this.container.querySelector<HTMLElement>('[data-ref="text-success"]');
+    if (successBanner) {
+      if (successText) successText.textContent = msg;
+      successBanner.style.display = 'flex';
+    }
+  }
+
+  private showInstantError(msg: string): void {
+    const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-error-instant"]');
+    const successBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-success-instant"]');
+    if (successBanner) successBanner.style.display = 'none';
+    if (errorBanner) {
+      errorBanner.textContent = msg;
+      errorBanner.style.display = 'block';
+    }
+  }
+
+  private showInstantSuccess(msg: string): void {
+    const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-error-instant"]');
+    const successBanner = this.container.querySelector<HTMLElement>('[data-ref="banner-success-instant"]');
+    if (errorBanner) errorBanner.style.display = 'none';
+    if (successBanner) {
+      successBanner.textContent = msg;
+      successBanner.style.display = 'block';
+    }
+  }
+
+  private async handleInstantEmailSubmit(form: HTMLFormElement): Promise<void> {
+    const emailInput = form.querySelector<HTMLInputElement>('[data-ref="input-instant-email"]');
+    const submitBtn = form.querySelector<HTMLButtonElement>('[data-ref="btn-submit-instant-email"]');
+    const email = (emailInput?.value || '').trim();
+
+    if (!validateEmail(email)) {
+      this.showInstantError('Por favor ingresa un correo institucional válido.');
+      emailInput?.focus();
+      return;
+    }
+
+    if (!submitBtn) return;
+
+    await withButtonLoading(submitBtn, async () => {
+      try {
+        const res = await postApi('/api/education/request-otp', { email });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          this.showInstantError(data.error || 'No se pudo enviar el código al correo indicado.');
+          return;
+        }
+
+        const otpBox = this.container.querySelector<HTMLElement>('[data-ref="box-otp-step"]');
+        const schoolText = this.container.querySelector<HTMLElement>('[data-ref="text-detected-school"]');
+        if (schoolText) schoolText.textContent = data.schoolName || 'Institución Educativa Verificada';
+        if (otpBox) otpBox.style.display = 'block';
+
+        this.showInstantSuccess(data.message || 'Código de verificación enviado. Revisa tu correo institucional.');
+      } catch {
+        this.showInstantError('Error de conexión al solicitar el código. Por favor intenta más tarde.');
+      }
+    });
+  }
+
+  private async handleVerifyOtpSubmit(form: HTMLFormElement): Promise<void> {
+    const codeInput = form.querySelector<HTMLInputElement>('[data-ref="input-otp-code"]');
+    const submitBtn = form.querySelector<HTMLButtonElement>('[data-ref="btn-submit-otp"]');
+    const code = (codeInput?.value || '').trim();
+
+    if (code.length !== 6) {
+      this.showInstantError('Por favor ingresa el código de 6 dígitos.');
+      codeInput?.focus();
+      return;
+    }
+
+    if (!submitBtn) return;
+
+    await withButtonLoading(submitBtn, async () => {
+      try {
+        const res = await postApi('/api/education/verify-otp', { code });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          this.showInstantError(data.error || 'Código incorrecto o expirado.');
+          return;
+        }
+
+        if (currentUser) {
+          currentUser.is_student = true;
+          currentUser.subscription_tier = 'pro';
+          currentUser.subscription_origin = 'education';
+        }
+
+        showToast('¡Estado de estudiante verificado exitosamente!', 'success');
+        this.renderApprovedState({ school_name: data.schoolName });
+        this.showCard('card-approved');
+      } catch {
+        this.showInstantError('Error de conexión al verificar el código. Por favor intenta más tarde.');
+      }
+    });
   }
 
   private async handleSubmit(form: HTMLFormElement): Promise<void> {
@@ -275,8 +437,8 @@ export class EducationVerifyController implements ViewController {
     const schoolNameInput = form.querySelector<HTMLInputElement>('[data-ref="input-school-name"]');
     const submitBtn = form.querySelector<HTMLButtonElement>('[data-ref="btn-submit-verify"]');
 
-    const fullName = fullNameInput?.value.trim() || '';
-    const schoolName = schoolNameInput?.value.trim() || '';
+    const fullName = (fullNameInput?.value || '').trim();
+    const schoolName = (schoolNameInput?.value || '').trim();
 
     if (fullName.length < 3) {
       this.showError('Por favor ingresa tu nombre completo (mínimo 3 caracteres).');
@@ -291,32 +453,40 @@ export class EducationVerifyController implements ViewController {
     }
 
     if (!this.selectedFile) {
-      this.showError('Debes adjuntar una foto o documento de tu credencial o constancia de estudios.');
+      this.showError('Por favor adjunta una fotografía o documento de tu credencial o constancia.');
       return;
     }
 
     if (!submitBtn) return;
 
     await withButtonLoading(submitBtn, async () => {
-      const formData = new FormData();
-      formData.append('fullName', fullName);
-      formData.append('schoolName', schoolName);
-      formData.append('document', this.selectedFile as Blob);
-
       try {
+        const formData = new FormData();
+        formData.append('fullName', fullName);
+        formData.append('schoolName', schoolName);
+        formData.append('document', this.selectedFile as Blob);
+
         const res = await postFormApi('/api/education/verify', formData);
         const data = await res.json().catch(() => ({}));
 
-        if (!res.ok || !data.success) {
+        if (!res.ok) {
           this.showError(data.error || 'Ocurrió un error al procesar la solicitud. Por favor intenta de nuevo.');
           return;
         }
 
-        showToast(data.message || 'Solicitud enviada exitosamente.', 'success');
-        this.renderPendingState(data.verification || { full_name: fullName, school_name: schoolName, created_at: new Date().toISOString() });
-        this.showCard('card-pending');
+        this.showSuccess('Tu solicitud ha sido enviada con éxito. Nuestro equipo la revisará a la brevedad.');
+        showToast('Solicitud enviada a revisión', 'success');
+
+        setTimeout(() => {
+          this.renderPendingState({
+            created_at: new Date().toISOString(),
+            full_name: fullName,
+            school_name: schoolName,
+          });
+          this.showCard('card-pending');
+        }, 1200);
       } catch {
-        this.showError('No se pudo conectar con el servidor. Revisa tu conexión a internet.');
+        this.showError('Error de conexión al enviar los datos. Por favor intenta de nuevo.');
       }
     });
   }

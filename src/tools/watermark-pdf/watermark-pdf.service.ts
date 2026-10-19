@@ -111,11 +111,18 @@ export async function addWatermarkToPdf(
   let imgDims = { height: 100, width: 100 };
 
   if (isImageWatermark && imageBuffer) {
+    const isPng = imageBuffer.length >= 8 && imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50;
     try {
-      embeddedImage = await doc.embedPng(imageBuffer);
+      if (isPng) {
+        embeddedImage = await doc.embedPng(new Uint8Array(imageBuffer));
+      } else {
+        embeddedImage = await doc.embedJpg(new Uint8Array(imageBuffer));
+      }
     } catch {
       try {
-        embeddedImage = await doc.embedJpg(imageBuffer);
+        embeddedImage = isPng
+          ? await doc.embedJpg(new Uint8Array(imageBuffer))
+          : await doc.embedPng(new Uint8Array(imageBuffer));
       } catch {
         throw new Error('Formato de imagen no compatible para la marca de agua. Utiliza PNG o JPG.');
       }

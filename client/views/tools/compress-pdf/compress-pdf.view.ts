@@ -8,6 +8,7 @@ import { renderIcons } from '../../../services/icon.service.js';
 import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
+import { consumeTransferFile } from '../../../services/transfer.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { ClientPdfCompressLevel, CompressResultData } from './compress-pdf.types.js';
@@ -37,6 +38,10 @@ export class CompressPdfController implements ViewController {
     this.abortController = new AbortController();
     renderIcons(this.container);
     this.bindEvents();
+    const transferred = consumeTransferFile();
+    if (transferred) {
+      this.handleFileSelected(transferred);
+    }
   }
 
   public destroy(): void {

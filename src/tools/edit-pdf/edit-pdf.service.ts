@@ -95,10 +95,21 @@ export async function editPdfDocument(
   const pages = pdfDoc.getPages();
   const pageCount = pages.length;
 
+  const resolvePageIndex = (item: any): number => {
+    if (!item || typeof item !== 'object') return -1;
+    const idx = typeof item.pageIndex === 'number'
+      ? item.pageIndex
+      : typeof item.page === 'number'
+        ? item.page - 1
+        : -1;
+    return idx >= 0 && idx < pageCount ? idx : -1;
+  };
+
   if (modifications.replacements && modifications.replacements.length > 0) {
     for (const rep of modifications.replacements) {
-      if (rep.pageIndex < 0 || rep.pageIndex >= pageCount) continue;
-      const page = pages[rep.pageIndex];
+      const pageIdx = resolvePageIndex(rep);
+      if (pageIdx < 0) continue;
+      const page = pages[pageIdx];
       const pageHeight = page.getHeight();
 
       const coverX = Math.max(0, rep.x - 1);
@@ -131,8 +142,9 @@ export async function editPdfDocument(
 
   if (modifications.drawings && modifications.drawings.length > 0) {
     for (const stroke of modifications.drawings) {
-      if (stroke.pageIndex < 0 || stroke.pageIndex >= pageCount || stroke.points.length < 2) continue;
-      const page = pages[stroke.pageIndex];
+      const pageIdx = resolvePageIndex(stroke);
+      if (pageIdx < 0 || !Array.isArray(stroke.points) || stroke.points.length < 2) continue;
+      const page = pages[pageIdx];
       const pageHeight = page.getHeight();
       const colorRgb = parseHexColor(stroke.color || '#000000');
       const thickness = Math.max(1, stroke.width || 2);
@@ -152,8 +164,9 @@ export async function editPdfDocument(
 
   if (modifications.shapes && modifications.shapes.length > 0) {
     for (const shape of modifications.shapes) {
-      if (shape.pageIndex < 0 || shape.pageIndex >= pageCount) continue;
-      const page = pages[shape.pageIndex];
+      const pageIdx = resolvePageIndex(shape);
+      if (pageIdx < 0) continue;
+      const page = pages[pageIdx];
       const pageHeight = page.getHeight();
       const strokeRgb = parseHexColor(shape.strokeColor || '#000000');
       const strokeWidth = Math.max(1, shape.strokeWidth || 2);
@@ -201,8 +214,9 @@ export async function editPdfDocument(
 
   if (modifications.texts && modifications.texts.length > 0) {
     for (const item of modifications.texts) {
-      if (item.pageIndex < 0 || item.pageIndex >= pageCount || !item.text) continue;
-      const page = pages[item.pageIndex];
+      const pageIdx = resolvePageIndex(item);
+      if (pageIdx < 0 || !item.text) continue;
+      const page = pages[pageIdx];
       const pageHeight = page.getHeight();
       const font = resolveFont(item.fontFamily);
       const colorRgb = parseHexColor(item.color || '#000000');
@@ -213,18 +227,19 @@ export async function editPdfDocument(
         color: rgb(colorRgb.r, colorRgb.g, colorRgb.b),
         font,
         size: fontSize,
-        x: item.x,
-        y: pageHeight - item.y - fontSize * 0.85,
+        x: item.x || 50,
+        y: pageHeight - (item.y || 50) - fontSize * 0.85,
       });
     }
   }
 
   if (modifications.images && modifications.images.length > 0) {
     for (const imgItem of modifications.images) {
-      if (imgItem.pageIndex < 0 || imgItem.pageIndex >= pageCount) continue;
+      const pageIdx = resolvePageIndex(imgItem);
+      if (pageIdx < 0) continue;
       const embeddedImg = embeddedImages[imgItem.imageIndex];
       if (!embeddedImg) continue;
-      const page = pages[imgItem.pageIndex];
+      const page = pages[pageIdx];
       const pageHeight = page.getHeight();
 
       page.drawImage(embeddedImg, {

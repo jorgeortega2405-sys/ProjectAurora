@@ -78,13 +78,12 @@ export class LocalConverterEngine implements IConverterEngine {
   private async convertPdfToPdfA(inputPath: string, outputDir: string, filename: string): Promise<EngineConversionResult> {
     const outputPath = path.join(outputDir, filename);
     await this.execProcess('gs', [
-      '-dPDFA=2',
-      '-dBATCH',
-      '-dNOPAUSE',
-      '-sProcessColorModel=DeviceRGB',
+      '-dPDFA=1',
+      '-sColorConversionStrategy=UseDeviceIndependentColor',
+      '-dPDFACompatibilityPolicy=1',
       '-sDEVICE=pdfwrite',
-      '-sPDFACompatibilityPolicy=1',
-      `-sOutputFile=${outputPath}`,
+      '-o',
+      outputPath,
       inputPath,
     ]);
 

@@ -22,7 +22,7 @@ export async function translatePdf(params: TranslatePdfParams): Promise<Translat
   const formData = new FormData();
   formData.append('file', new Blob([buffer], { type: 'application/pdf' }), originalname);
   formData.append('target_lang', targetLang.toUpperCase());
-  if (sourceLang && sourceLang.trim().length > 0) {
+  if (sourceLang && sourceLang.trim().length > 0 && sourceLang.trim().toLowerCase() !== 'auto') {
     formData.append('source_lang', sourceLang.trim().toUpperCase());
   }
 

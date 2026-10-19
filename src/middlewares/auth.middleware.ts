@@ -29,11 +29,14 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
-  const user = getCurrentUser(req);
-  if (user) {
-    (req as any).user = user;
-  }
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = (await getSessionUser(req)) || getCurrentUser(req);
+    if (user) {
+      const permissions = user.permissions || (await getUserEffectivePermissions(user));
+      (req as any).user = { ...user, permissions };
+    }
+  } catch {}
   next();
 }
 

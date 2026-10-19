@@ -101,9 +101,17 @@ export async function redactPdfDocument(params: RedactPdfParams): Promise<Redact
 
   if (Array.isArray(redactions)) {
     for (const item of redactions) {
-      if (item.pageIndex < 0 || item.pageIndex >= totalPages) continue;
+      const pageIdx = typeof item.pageIndex === 'number'
+        ? item.pageIndex
+        : typeof (item as any).pageNumber === 'number'
+          ? (item as any).pageNumber - 1
+          : (typeof (item as any).page === 'number' ? (item as any).page - 1 : -1);
 
-      const page = pages[item.pageIndex];
+      if (pageIdx < 0 || pageIdx >= totalPages) continue;
+
+      const page = pages[pageIdx];
+      if (!page) continue;
+
       const pageWidth = page.getWidth();
       const pageHeight = page.getHeight();
 
@@ -125,11 +133,14 @@ export async function redactPdfDocument(params: RedactPdfParams): Promise<Redact
       }
 
       let pageHadRedaction = false;
+      const boxes = Array.isArray(item.boxes) && item.boxes.length > 0
+        ? item.boxes
+        : ((item as any).width && (item as any).height ? [{ height: (item as any).height, text: (item as any).text, width: (item as any).width, x: (item as any).x, y: (item as any).y }] : []);
 
-      if (Array.isArray(item.boxes) && item.boxes.length > 0) {
+      if (boxes.length > 0) {
         const textsToPurge: string[] = [];
 
-        for (const box of item.boxes) {
+        for (const box of boxes) {
           const boxX = Number(box.x) || 0;
           const boxY = Number(box.y) || 0;
           const boxW = Number(box.width) || 0;

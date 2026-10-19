@@ -8,6 +8,7 @@ import { renderIcons } from '../../../services/icon.service.js';
 import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
+import { consumeTransferFile } from '../../../services/transfer.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { ProtectPdfResponseData } from './protect-pdf.types.js';
@@ -36,6 +37,10 @@ export class ProtectPdfController implements ViewController {
     this.abortController = new AbortController();
     renderIcons(this.container);
     this.bindEvents();
+    const transferred = consumeTransferFile();
+    if (transferred) {
+      void this.handleFileSelected(transferred);
+    }
   }
 
   public destroy(): void {

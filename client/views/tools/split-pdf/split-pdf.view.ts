@@ -689,44 +689,47 @@ export class SplitPdfController implements ViewController {
     const grid = this.container.querySelector<HTMLElement>('[data-ref="split-pages-grid"]');
     if (!grid) return;
 
-    if (this.activeMode === 'range' && this.rangeSubmode === 'custom') {
-      grid.innerHTML = this.ranges.map((range, idx) => {
-        const from = Math.max(1, range.from);
-        const to = Math.min(this.pages.length, Math.max(from, range.to));
-        const pagesInRange = this.pages.filter((p) => p.num >= from && p.num <= to);
+    grid.innerHTML = this.pages.map((p) => {
+      let isSelected = false;
+      let isDimmed = false;
+      let rangeLabel = '';
 
-        return `
-          <div class="split-range-block" data-ref="range-block-${range.id}">
-            <div class="split-range-block__header">
-              <span>Rango ${idx + 1} (Páginas ${from} a ${to})</span>
-              <span class="tool-badge">${pagesInRange.length} ${pagesInRange.length === 1 ? 'pág.' : 'págs.'}</span>
-            </div>
-            <div class="split-range-block__pages">
-              ${pagesInRange.map((p) => this.renderPageCardHtml(p, false)).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
-    } else {
-      grid.innerHTML = `
-        <div class="split-pages-plain-grid">
-          ${this.pages.map((p) => {
-            let isSelected = false;
-            let isDimmed = false;
-            if (this.activeMode === 'pages') {
-              isSelected = this.pagesSubmode === 'all' || this.selectedPages.has(p.num);
-              isDimmed = this.pagesSubmode === 'custom' && !this.selectedPages.has(p.num);
+      if (this.activeMode === 'range') {
+        if (this.rangeSubmode === 'custom') {
+          const matchedRanges: number[] = [];
+          this.ranges.forEach((r, idx) => {
+            const from = Math.max(1, r.from);
+            const to = Math.min(this.pages.length, Math.max(from, r.to));
+            if (p.num >= from && p.num <= to) {
+              matchedRanges.push(idx + 1);
             }
-            return this.renderPageCardHtml(p, isSelected, isDimmed);
-          }).join('')}
-        </div>
-      `;
-    }
+          });
+          isSelected = matchedRanges.length > 0;
+          isDimmed = !isSelected;
+          if (matchedRanges.length > 0) {
+            rangeLabel = matchedRanges.length === 1 ? `Rango ${matchedRanges[0]}` : `Rangos ${matchedRanges.join(', ')}`;
+          }
+        } else if (this.rangeSubmode === 'fixed') {
+          isSelected = true;
+          isDimmed = false;
+          const blockIdx = Math.floor((p.num - 1) / Math.max(1, this.fixedPageBlock)) + 1;
+          rangeLabel = `Parte ${blockIdx}`;
+        }
+      } else if (this.activeMode === 'pages') {
+        isSelected = this.pagesSubmode === 'all' || this.selectedPages.has(p.num);
+        isDimmed = this.pagesSubmode === 'custom' && !this.selectedPages.has(p.num);
+      } else if (this.activeMode === 'size') {
+        isSelected = true;
+        isDimmed = false;
+      }
+
+      return this.renderPageCardHtml(p, isSelected, isDimmed, rangeLabel);
+    }).join('');
 
     renderIcons(grid);
   }
 
-  private renderPageCardHtml(page: PageItem, isSelected: boolean, isDimmed = false): string {
+  private renderPageCardHtml(page: PageItem, isSelected: boolean, isDimmed = false, rangeLabel = ''): string {
     const sheetContent = page.thumbnailDataUrl
       ? `<img class="split-page-card__preview-img" data-ref="img-page-${page.num}" src="${page.thumbnailDataUrl}" alt="Página ${page.num}" />`
       : `
@@ -738,9 +741,10 @@ export class SplitPdfController implements ViewController {
 
     const selectedClass = isSelected ? 'is-selected' : '';
     const dimmedClass = isDimmed ? 'is-dimmed' : '';
+    const pageLabel = rangeLabel ? `${rangeLabel} · Pág. ${page.num}` : `Página ${page.num}`;
 
     return `
-      <div class="split-page-card ${selectedClass} ${dimmedClass}" data-ref="card-page-${page.num}" data-page="${page.num}">
+      <div class="pdf-card split-page-card ${selectedClass} ${dimmedClass}" data-ref="card-page-${page.num}" data-page="${page.num}">
         <div class="split-page-card__order-badge">#${page.num}</div>
         <div class="split-page-card__check-badge">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check"></use></svg>
@@ -750,7 +754,7 @@ export class SplitPdfController implements ViewController {
             ${sheetContent}
           </div>
         </div>
-        <span class="split-page-card__page-num">Página ${page.num}</span>
+        <span class="split-page-card__page-num">${pageLabel}</span>
       </div>
     `;
   }

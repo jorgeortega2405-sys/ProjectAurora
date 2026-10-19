@@ -133,6 +133,89 @@ export async function postFormApi(url: string, formData: FormData): Promise<Resp
   });
 }
 
+export interface UploadProgressInfo {
+  etaSeconds: number;
+  loaded: number;
+  percent: number;
+  speedBytesPerSec: number;
+  total: number;
+}
+
+export async function postFormWithProgress(
+  url: string,
+  formData: FormData,
+  onProgress?: (info: UploadProgressInfo) => void,
+  signal?: AbortSignal
+): Promise<Response> {
+  const token = await ensureCsrfToken();
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('x-csrf-token', token);
+
+    const startTime = Date.now();
+
+    if (xhr.upload && onProgress) {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && e.total > 0) {
+          const elapsedSec = Math.max(0.05, (Date.now() - startTime) / 1000);
+          const speedBytesPerSec = e.loaded / elapsedSec;
+          const remainingBytes = Math.max(0, e.total - e.loaded);
+          const etaSeconds = speedBytesPerSec > 0 ? Math.round(remainingBytes / speedBytesPerSec) : 0;
+          const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
+
+          onProgress({
+            etaSeconds,
+            loaded: e.loaded,
+            percent,
+            speedBytesPerSec,
+            total: e.total,
+          });
+        }
+      });
+    }
+
+    if (signal) {
+      signal.addEventListener('abort', () => {
+        xhr.abort();
+        reject(new DOMException('Upload aborted', 'AbortError'));
+      });
+    }
+
+    xhr.onload = () => {
+      const headers = new Headers();
+      const rawHeaders = xhr.getAllResponseHeaders().trim().split(/[\r\n]+/);
+      rawHeaders.forEach((line) => {
+        const parts = line.split(': ');
+        const header = parts.shift();
+        const value = parts.join(': ');
+        if (header) headers.append(header, value);
+      });
+
+      const response = new Response(xhr.response || xhr.responseText, {
+        headers,
+        status: xhr.status,
+        statusText: xhr.statusText,
+      });
+
+      resolve(response);
+    };
+
+    xhr.onerror = () => {
+      reject(new TypeError('Network request failed'));
+    };
+
+    xhr.ontimeout = () => {
+      reject(new TypeError('Network request timed out'));
+    };
+
+    xhr.send(formData);
+  });
+}
+
 export function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')

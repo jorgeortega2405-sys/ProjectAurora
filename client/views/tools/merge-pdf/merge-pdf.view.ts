@@ -1,9 +1,10 @@
 import Sortable from 'sortablejs';
 import { navigate } from '../../../app-router.js';
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
@@ -51,6 +52,7 @@ export class MergePdfController implements ViewController {
   private selectedFiles: SelectedPdfItem[] = [];
   private sidebarModal: ToolSidebarModalController | null = null;
   private sortable: Sortable | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -58,6 +60,14 @@ export class MergePdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]') || this.container;
+    this.statusManager = new ToolStatusManager({
+      container: workspace,
+      onRetry: () => {
+        this.renderFilesList();
+      },
+      toolName: 'Unir PDF',
+    });
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -66,6 +76,10 @@ export class MergePdfController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.sortable) {
       this.sortable.destroy();
@@ -295,16 +309,20 @@ export class MergePdfController implements ViewController {
     const newItems: SelectedPdfItem[] = [];
 
     for (const file of validPdfs) {
-      const initialPages = await estimatePdfPages(file);
-      const item: SelectedPdfItem = {
-        file,
-        id: `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        name: file.name,
-        pageCount: initialPages,
-        size: file.size,
-      };
-      this.selectedFiles.push(item);
-      newItems.push(item);
+      try {
+        const initialPages = await estimatePdfPages(file);
+        const item: SelectedPdfItem = {
+          file,
+          id: `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          name: file.name,
+          pageCount: initialPages,
+          size: file.size,
+        };
+        this.selectedFiles.push(item);
+        newItems.push(item);
+      } catch {
+        this.showError(`El archivo "${file.name}" está dañado, protegido con contraseña o en un formato no compatible.`);
+      }
     }
 
     this.renderFilesList();
@@ -382,6 +400,8 @@ export class MergePdfController implements ViewController {
       this.resetToInitial();
       return;
     }
+
+    this.statusManager?.hide();
 
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (processingCard) processingCard.style.display = 'none';
@@ -534,6 +554,7 @@ export class MergePdfController implements ViewController {
     this.isProcessing = true;
     this.hideError();
     this.showProcessingState();
+    this.statusManager?.showUploading(1, this.selectedFiles.length);
 
     try {
       const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
@@ -548,14 +569,26 @@ export class MergePdfController implements ViewController {
         formData.append('pdfs', item.file, item.name);
       }
 
-      const response = await postFormApi(API_ROUTES.tools.mergePdf.merge, formData);
+      const response = await postFormWithProgress(
+        API_ROUTES.tools.mergePdf.merge,
+        formData,
+        (progress) => {
+          this.statusManager?.updateUploadProgress(progress, 1);
+        },
+        this.abortController?.signal
+      );
 
       const json = await response.json();
 
       if (!response.ok || !json.success) {
         const errorMsg = json.error || 'No se pudieron unir los documentos PDF. Intenta nuevamente.';
-        this.showError(errorMsg);
-        this.renderFilesList();
+        this.statusManager?.showError({
+          boxText: 'Uno o más archivos seleccionados están dañados, protegidos o en un formato no compatible. Verifica que se puedan abrir en tu lector de PDF y vuelve a intentarlo.',
+          boxTitle: 'Archivo dañado o no compatible',
+          desc: errorMsg,
+          retryText: 'Reintentar Unir PDF',
+          title: '¡Oh no! No hemos podido unir tus archivos.',
+        });
         return;
       }
 
@@ -575,8 +608,13 @@ export class MergePdfController implements ViewController {
       showToast('¡Documentos PDF unidos exitosamente!', 'success');
       navigate(`/download/${token}`);
     } catch {
-      this.showError('Ha ocurrido un error inesperado al procesar los archivos. Por favor intenta más tarde.');
-      this.renderFilesList();
+      this.statusManager?.showError({
+        boxText: 'Comprueba tu conexión a internet o intenta con archivos de menor tamaño. Si el problema persiste, intenta reparar los documentos antes de unirlos.',
+        boxTitle: 'Error en la conexión o procesamiento',
+        desc: 'Ha ocurrido un error inesperado al procesar los archivos. Por favor intenta más tarde.',
+        retryText: 'Reintentar Unir PDF',
+        title: '¡Oh no! No hemos podido unir tus archivos.',
+      });
     } finally {
       this.isProcessing = false;
     }
@@ -599,7 +637,7 @@ export class MergePdfController implements ViewController {
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'flex';
+    if (processingCard) processingCard.style.display = 'none';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
   }
 
@@ -682,6 +720,7 @@ export class MergePdfController implements ViewController {
     if (processingCard) processingCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
+    this.statusManager?.hide();
     if (dropzoneCard) dropzoneCard.style.display = 'flex';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
 

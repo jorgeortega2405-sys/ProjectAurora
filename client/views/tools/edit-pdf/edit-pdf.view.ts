@@ -1,7 +1,8 @@
 import { navigate } from '../../../app-router.js';
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -46,6 +47,7 @@ export class EditPdfController implements ViewController {
   private selectedElement: { el: HTMLElement; id: string; type: string } | null = null;
   private shapes: EditShapeItem[] = [];
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
   private texts: EditTextAddition[] = [];
   private undoStack: any[] = [];
   private zoomLevel = 1.0;
@@ -56,6 +58,14 @@ export class EditPdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-workspace"]') || this.container;
+    this.statusManager = new ToolStatusManager({
+      container: workspace,
+      onRetry: () => {
+        this.restoreEditorFromError();
+      },
+      toolName: 'Editar PDF',
+    });
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -64,6 +74,10 @@ export class EditPdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -327,17 +341,8 @@ export class EditPdfController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-workspace"]');
-
-    if (dropzoneCard) dropzoneCard.style.display = 'none';
-    if (editorCard) editorCard.style.display = 'flex';
-    if (sidebar) sidebar.style.display = 'flex';
-    if (settingsBtn) settingsBtn.classList.add('is-visible');
-    if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
-
     const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
     const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
-    if (topControls) topControls.style.display = 'flex';
-    if (topActions) topActions.style.display = 'flex';
 
     const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
     if (outputNameInput) {
@@ -365,9 +370,19 @@ export class EditPdfController implements ViewController {
       await this.renderThumbnails();
       await this.renderDocumentPages();
       this.setMode('annotate');
+
+      if (dropzoneCard) dropzoneCard.style.display = 'none';
+      if (editorCard) editorCard.style.display = 'flex';
+      if (sidebar) sidebar.style.display = 'flex';
+      if (settingsBtn) settingsBtn.classList.add('is-visible');
+      if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+      if (topControls) topControls.style.display = 'flex';
+      if (topActions) topActions.style.display = 'flex';
     } catch {
-      this.showError('Error al leer el archivo PDF. Verifica que no esté dañado o protegido.');
-      this.resetSelectedFile();
+      this.showError('El archivo seleccionado no se pudo abrir porque estaba dañado o contiene errores en su estructura.');
+      if (dropzoneCard) dropzoneCard.style.display = '';
+      if (editorCard) editorCard.style.display = 'none';
+      if (sidebar) sidebar.style.display = 'none';
     }
   }
 
@@ -1298,11 +1313,16 @@ export class EditPdfController implements ViewController {
     const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
     const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
 
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-sidebar"]');
+
     this.isProcessing = true;
     if (editorCard) editorCard.style.display = 'none';
     if (topControls) topControls.style.display = 'none';
     if (topActions) topActions.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    if (processingCard) processingCard.style.display = 'none';
+
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
@@ -1337,7 +1357,14 @@ export class EditPdfController implements ViewController {
 
         formData.append('modifications', JSON.stringify(modifications));
 
-        const response = await postFormApi(API_ROUTES.tools.editPdf.process, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.editPdf.process,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress, 1);
+          },
+          this.abortController?.signal
+        );
         const result = (await response.json()) as { data?: EditPdfResponseData; error?: string; success: boolean };
 
         if (!response.ok || !result.success || !result.data) {
@@ -1360,16 +1387,39 @@ export class EditPdfController implements ViewController {
         showToast('PDF editado y guardado con éxito.', 'success');
         navigate(`/download/${token}`);
       } catch (err: unknown) {
-        if (editorCard) editorCard.style.display = 'flex';
-        if (topControls) topControls.style.display = 'flex';
-        if (topActions) topActions.style.display = 'flex';
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al guardar el PDF editado.';
-        this.showError(errorMessage);
+        this.statusManager?.showError({
+          boxText: 'Uno o más trazos, textos o imágenes agregados superan los límites del visor o el archivo base es ilegible. Revisa las anotaciones e inténtalo de nuevo.',
+          boxTitle: 'Error al procesar la edición',
+          desc: errorMessage,
+          retryText: 'Reintentar Guardar PDF',
+          title: '¡Oh no! No hemos podido guardar tu archivo.',
+        });
       } finally {
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
       }
     });
+  }
+
+  private restoreEditorFromError(): void {
+    this.statusManager?.hide();
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="edit-dropzone-card"]');
+    const editorCard = this.container.querySelector<HTMLElement>('[data-ref="edit-editor-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-sidebar"]');
+    const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
+    const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-workspace"]');
+
+    if (this.currentFile && this.pdfDocument) {
+      if (dropzoneCard) dropzoneCard.style.display = 'none';
+      if (editorCard) editorCard.style.display = 'flex';
+      if (sidebar) sidebar.style.display = 'flex';
+      if (topControls) topControls.style.display = 'flex';
+      if (topActions) topActions.style.display = 'flex';
+      if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
+    } else {
+      this.resetSelectedFile();
+    }
   }
 
   private showError(message: string): void {

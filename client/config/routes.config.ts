@@ -40,7 +40,7 @@ export const APP_ROUTES: RouteDefinition[] = [
 
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/pdf-to-markdown.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createPdfToMarkdownView } = await import('../views/tools/pdf-to-markdown/pdf-to-markdown.view.js');
       return await createPdfToMarkdownView();
     },
@@ -49,7 +49,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/summarize-pdf.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createSummarizePdfView } = await import('../views/tools/summarize-pdf/summarize-pdf.view.js');
       return await createSummarizePdfView();
     },
@@ -58,7 +58,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/translate-pdf.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createTranslatePdfView } = await import('../views/tools/translate-pdf/translate-pdf.view.js');
       return await createTranslatePdfView();
     },
@@ -67,7 +67,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/merge-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createMergePdfView } = await import('../views/tools/merge-pdf/merge-pdf.view.js');
       return await createMergePdfView();
     },
@@ -76,7 +76,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/split-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createSplitPdfView } = await import('../views/tools/split-pdf/split-pdf.view.js');
       return await createSplitPdfView();
     },
@@ -85,7 +85,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/split-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createSplitPdfView } = await import('../views/tools/split-pdf/split-pdf.view.js');
       return await createSplitPdfView('pages');
     },
@@ -94,7 +94,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/remove-pdf-pages.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createRemovePdfPagesView } = await import('../views/tools/remove-pdf-pages/remove-pdf-pages.view.js');
       return await createRemovePdfPagesView();
     },
@@ -103,7 +103,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/organize-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createOrganizePdfView } = await import('../views/tools/organize-pdf/organize-pdf.view.js');
       return await createOrganizePdfView();
     },
@@ -112,7 +112,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/rotate-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createRotatePdfView } = await import('../views/tools/rotate-pdf/rotate-pdf.view.js');
       return await createRotatePdfView();
     },
@@ -121,7 +121,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/page-numbers.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPageNumbersView } = await import('../views/tools/page-numbers/page-numbers.view.js');
       return await createPageNumbersView();
     },
@@ -130,7 +130,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/crop-pdf.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createCropPdfView } = await import('../views/tools/crop-pdf/crop-pdf.view.js');
       return await createCropPdfView();
     },
@@ -139,7 +139,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/watermark-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createWatermarkPdfView } = await import('../views/tools/watermark-pdf/watermark-pdf.view.js');
       return await createWatermarkPdfView();
     },
@@ -148,7 +148,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/edit-pdf.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createEditPdfView } = await import('../views/tools/edit-pdf/edit-pdf.view.js');
       return await createEditPdfView();
     },
@@ -157,7 +157,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/protect-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createProtectPdfView } = await import('../views/tools/protect-pdf/protect-pdf.view.js');
       return await createProtectPdfView();
     },
@@ -166,7 +166,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/redact-pdf.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createRedactPdfView } = await import('../views/tools/redact-pdf/redact-pdf.view.js');
       return await createRedactPdfView();
     },
@@ -175,7 +175,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/unlock-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createUnlockPdfView } = await import('../views/tools/unlock-pdf/unlock-pdf.view.js');
       return await createUnlockPdfView();
     },
@@ -184,7 +184,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPdfConverterView } = await import('../views/tools/pdf-converter/pdf-converter.view.js');
       return await createPdfConverterView('pdf-to-jpg');
     },
@@ -193,7 +193,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPdfConverterView } = await import('../views/tools/pdf-converter/pdf-converter.view.js');
       return await createPdfConverterView('pdf-to-word');
     },
@@ -202,7 +202,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPdfConverterView } = await import('../views/tools/pdf-converter/pdf-converter.view.js');
       return await createPdfConverterView('pdf-to-powerpoint');
     },
@@ -211,7 +211,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPdfConverterView } = await import('../views/tools/pdf-converter/pdf-converter.view.js');
       return await createPdfConverterView('pdf-to-excel');
     },
@@ -220,7 +220,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPdfConverterView } = await import('../views/tools/pdf-converter/pdf-converter.view.js');
       return await createPdfConverterView('pdf-to-pdfa');
     },
@@ -229,7 +229,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/to-pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createToPdfConverterView } = await import('../views/tools/to-pdf-converter/to-pdf-converter.view.js');
       return await createToPdfConverterView('jpg-to-pdf');
     },
@@ -238,7 +238,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/to-pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createToPdfConverterView } = await import('../views/tools/to-pdf-converter/to-pdf-converter.view.js');
       return await createToPdfConverterView('word-to-pdf');
     },
@@ -247,7 +247,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/to-pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createToPdfConverterView } = await import('../views/tools/to-pdf-converter/to-pdf-converter.view.js');
       return await createToPdfConverterView('powerpoint-to-pdf');
     },
@@ -256,7 +256,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/to-pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createToPdfConverterView } = await import('../views/tools/to-pdf-converter/to-pdf-converter.view.js');
       return await createToPdfConverterView('excel-to-pdf');
     },
@@ -265,17 +265,16 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/to-pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createToPdfConverterView } = await import('../views/tools/to-pdf-converter/to-pdf-converter.view.js');
       return await createToPdfConverterView('html-to-pdf');
     },
     id: 'html-to-pdf',
     match: (path) => path === '/html-to-pdf' || path.startsWith('/html-to-pdf'),
   },
-
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/compare-pdf.css');
+      await loadStylesheet('/css/tools/tool-viewer.css');
       const { createComparePdfView } = await import('../views/tools/compare-pdf/compare-pdf.view.js');
       return await createComparePdfView();
     },
@@ -284,7 +283,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/compress-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createCompressPdfView } = await import('../views/tools/compress-pdf/compress-pdf.view.js');
       return await createCompressPdfView();
     },
@@ -293,7 +292,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/repair-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createRepairPdfView } = await import('../views/tools/repair-pdf/repair-pdf.view.js');
       return await createRepairPdfView();
     },
@@ -302,7 +301,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/ocr-pdf.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createOcrPdfView } = await import('../views/tools/ocr-pdf/ocr-pdf.view.js');
       return await createOcrPdfView();
     },
@@ -373,10 +372,7 @@ export const APP_ROUTES: RouteDefinition[] = [
         const { createLoginView } = await import('../views/auth.view.js');
         return await createLoginView();
       }
-      await loadStylesheet('/css/tools/organize-pdf.css');
-      await loadStylesheet('/css/tools/split-pdf.css');
-      await loadStylesheet('/css/tools/compress-pdf.css');
-      await loadStylesheet('/css/tools/pdf-converter.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createWorkflowRunnerView } = await import('../views/workflow/workflow-runner.view.js');
       return await createWorkflowRunnerView(params.id || '');
     },

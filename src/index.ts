@@ -1,12 +1,15 @@
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import express, { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
+import { Readable } from 'stream';
 import { checkDbConnection, closeDbPools } from './config/database.config.js';
 import { config } from './config/env.config.js';
 import { checkRedisConnection, redis } from './config/redis.config.js';
+import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from './config/s3.config.js';
 import { injectHtmlSeo, isSupportedLanguage, normalizeLanguageCode } from './config/seo.config.js';
 import { csrfProtection } from './middlewares/csrf.middleware.js';
 import { requestLogger } from './middlewares/request-logger.middleware.js';
@@ -183,6 +186,7 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
 async function startServer(): Promise<void> {
   void checkRedisConnection();
   void checkDbConnection();
+  void ensureBucketExists();
   const app = express();
   const server = http.createServer(app);
 
@@ -223,6 +227,23 @@ async function startServer(): Promise<void> {
       return;
     }
 
+    if (isS3Configured()) {
+      try {
+        const s3Res = await s3Client.send(
+          new GetObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: `avatars/${filename}`,
+          })
+        );
+        if (s3Res.Body) {
+          res.setHeader('Content-Type', s3Res.ContentType || 'image/jpeg');
+          res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000');
+          (s3Res.Body as Readable).pipe(res);
+          return;
+        }
+      } catch {}
+    }
+
     try {
       if (redis.status === 'ready') {
         const [buffer, mimeType] = await Promise.all([
@@ -247,6 +268,35 @@ async function startServer(): Promise<void> {
       }
     } catch (err) {
       logger.app.warn('Error al recuperar avatar distribuido desde Redis', err);
+    }
+
+    next();
+  });
+
+  app.get('/uploads/student_verifications/:filename', async (req: Request, res: Response, next: NextFunction) => {
+    const filename = path.basename(req.params.filename);
+    const localPath = path.join(process.cwd(), 'public/uploads/student_verifications', filename);
+
+    if (fs.existsSync(localPath)) {
+      next();
+      return;
+    }
+
+    if (isS3Configured()) {
+      try {
+        const s3Res = await s3Client.send(
+          new GetObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: `student_verifications/${filename}`,
+          })
+        );
+        if (s3Res.Body) {
+          res.setHeader('Content-Type', s3Res.ContentType || 'application/octet-stream');
+          res.setHeader('Cache-Control', 'private, max-age=3600');
+          (s3Res.Body as Readable).pipe(res);
+          return;
+        }
+      } catch {}
     }
 
     next();

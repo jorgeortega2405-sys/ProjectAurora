@@ -1,9 +1,11 @@
-import { getCurrentUser } from '../services/auth.service.js';
-import { checkEducationalDomain, createStudentVerification, getLatestStudentVerification, requestInstitutionalEmailOtp, verifyInstitutionalEmailOtp } from '../services/education.service.js';
-import { logger } from '../services/logger.service.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
+import { getCurrentUser } from '../services/auth.service.js';
+import { checkEducationalDomain, createStudentVerification, getLatestStudentVerification, requestInstitutionalEmailOtp, verifyInstitutionalEmailOtp } from '../services/education.service.js';
+import { logger } from '../services/logger.service.js';
 
 const VERIFICATIONS_DIR = path.resolve(process.cwd(), 'public/uploads/student_verifications');
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,6 +66,22 @@ export async function submitStudentVerificationHandler(req: Request, res: Respon
     const fileName = `student_${currentUser.id}_${Date.now()}.${ext}`;
     const filePath = path.join(VERIFICATIONS_DIR, fileName);
     fs.writeFileSync(filePath, req.file.buffer);
+
+    if (isS3Configured()) {
+      try {
+        await ensureBucketExists();
+        await s3Client.send(
+          new PutObjectCommand({
+            Body: req.file.buffer,
+            Bucket: S3_BUCKET_NAME,
+            ContentType: req.file.mimetype,
+            Key: `student_verifications/${fileName}`,
+          })
+        );
+      } catch (s3Err) {
+        logger.db.warn('Error al subir verificación estudiantil a S3/MinIO', s3Err);
+      }
+    }
 
     const documentUrl = `/uploads/student_verifications/${fileName}`;
 

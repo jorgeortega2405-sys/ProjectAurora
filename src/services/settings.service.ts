@@ -1,8 +1,10 @@
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import type { RowDataPacket } from 'mysql2';
 import path from 'path';
 import { pool } from '../config/database.config.js';
 import { redis } from '../config/redis.config.js';
+import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
 import { validatePassword } from '../utils/validators.util.js';
 import { hashPassword, verifyPassword } from './auth.service.js';
 import { logger } from './logger.service.js';
@@ -151,6 +153,19 @@ export async function updateAvatar(
       if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
     } catch {}
 
+    if (isS3Configured()) {
+      try {
+        await s3Client.send(
+          new DeleteObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: `avatars/${oldFileName}`,
+          })
+        );
+      } catch (s3Err) {
+        logger.db.warn('Error al eliminar avatar anterior de S3/MinIO', s3Err);
+      }
+    }
+
     if (redis.status === 'ready') {
       try {
         await Promise.all([
@@ -172,6 +187,22 @@ export async function updateAvatar(
   } catch (err) {
     logger.app.error('Error al guardar avatar en disco', err);
     return { error: 'Error al guardar la imagen en el servidor.', success: false };
+  }
+
+  if (isS3Configured()) {
+    try {
+      await ensureBucketExists();
+      await s3Client.send(
+        new PutObjectCommand({
+          Body: file.buffer,
+          Bucket: S3_BUCKET_NAME,
+          ContentType: file.mimetype,
+          Key: `avatars/${newFileName}`,
+        })
+      );
+    } catch (s3Err) {
+      logger.db.warn('Error al persistir avatar en S3/MinIO', s3Err);
+    }
   }
 
   if (redis.status === 'ready') {
@@ -205,6 +236,19 @@ export async function deleteAvatar(
     try {
       if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
     } catch {}
+
+    if (isS3Configured()) {
+      try {
+        await s3Client.send(
+          new DeleteObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: `avatars/${oldFileName}`,
+          })
+        );
+      } catch (s3Err) {
+        logger.db.warn('Error al eliminar avatar de S3/MinIO', s3Err);
+      }
+    }
 
     if (redis.status === 'ready') {
       try {

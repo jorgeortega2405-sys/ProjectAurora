@@ -1,5 +1,7 @@
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { pool } from '../config/database.config.js';
 import { getTierBorderColor } from '../config/plans.config.js';
+import { isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
 import { SessionAccount, UserPayload, UserRecord } from '../types/auth.types.js';
 import { decryptAtRest, encryptAtRest } from './crypto.service.js';
 import { deleteUserPreferences } from './settings.service.js';
@@ -295,6 +297,17 @@ export async function deleteUserPermanently(userId: string): Promise<boolean> {
         fs.unlinkSync(filePath);
       }
     } catch {}
+
+    if (isS3Configured()) {
+      try {
+        await s3Client.send(
+          new DeleteObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: `avatars/${fileName}`,
+          })
+        );
+      } catch {}
+    }
   }
 
   await clearPending2FASetup(userId);

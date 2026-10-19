@@ -28,6 +28,14 @@ export const config = {
     password: process.env.REDIS_PASSWORD || undefined,
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
   },
+  s3: {
+    accessKeyId: process.env.S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID || '',
+    bucket: process.env.S3_BUCKET_NAME || '',
+    endpoint: process.env.S3_ENDPOINT || undefined,
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
+    region: process.env.S3_REGION || process.env.AWS_REGION || 'us-east-1',
+    secretAccessKey: process.env.S3_SECRET_KEY || process.env.AWS_SECRET_ACCESS_KEY || '',
+  },
   sessionSecret: process.env.SESSION_SECRET || 'aurora_session_secret_key_2026',
   smtp: {
     fromEmail: process.env.SMTP_FROM_EMAIL || '',

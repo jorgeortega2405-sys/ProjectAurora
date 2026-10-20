@@ -1,6 +1,16 @@
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { config } from '../config/env.config.js';
 import { logger } from './logger.service.js';
+
+export async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
 
 const PREFIX = 'v1:enc:';
 const ALGORITHM = 'aes-256-gcm';

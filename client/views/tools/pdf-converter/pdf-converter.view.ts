@@ -204,10 +204,11 @@ export class PdfConverterController implements ViewController {
   }
 
   private async renderThumbnail(file: File, canvas: HTMLCanvasElement): Promise<void> {
+    let pdf: any = null;
     try {
       const pdfjs = await loadPdfJs();
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       const page = await pdf.getPage(1);
       const targetWidth = 180;
       const origViewport = page.getViewport({ scale: 1 });
@@ -227,6 +228,10 @@ export class PdfConverterController implements ViewController {
       }
     } catch {
       // Ignore preview errors
+    } finally {
+      try {
+        if (pdf) await pdf.destroy();
+      } catch {}
     }
   }
 

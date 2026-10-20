@@ -58,8 +58,18 @@ export class TranslatePdfViewController implements ViewController {
     this.dropdownControllers.forEach((ctrl) => ctrl.destroy());
     this.dropdownControllers = [];
     this.currentFile = null;
-    this.pdfDocument = null;
-    this.translatedPdfDocument = null;
+    if (this.pdfDocument) {
+      try {
+        void this.pdfDocument.destroy();
+      } catch {}
+      this.pdfDocument = null;
+    }
+    if (this.translatedPdfDocument) {
+      try {
+        void this.translatedPdfDocument.destroy();
+      } catch {}
+      this.translatedPdfDocument = null;
+    }
     this.translatedPdfBuffer = null;
     this.translatedResult = null;
   }
@@ -371,7 +381,7 @@ export class TranslatePdfViewController implements ViewController {
         if (targetPageCard) {
           targetPageCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      });
+      }, { signal: this.abortController?.signal });
 
       try {
         const page = await activeDoc.getPage(i);
@@ -593,8 +603,18 @@ export class TranslatePdfViewController implements ViewController {
 
   private handleReset(): void {
     this.currentFile = null;
-    this.pdfDocument = null;
-    this.translatedPdfDocument = null;
+    if (this.pdfDocument) {
+      try {
+        void this.pdfDocument.destroy();
+      } catch {}
+      this.pdfDocument = null;
+    }
+    if (this.translatedPdfDocument) {
+      try {
+        void this.translatedPdfDocument.destroy();
+      } catch {}
+      this.translatedPdfDocument = null;
+    }
     this.translatedPdfBuffer = null;
     this.translatedResult = null;
     this.showingTranslated = false;

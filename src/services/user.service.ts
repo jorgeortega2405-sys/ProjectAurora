@@ -4,7 +4,6 @@ import { getTierBorderColor } from '../config/plans.config.js';
 import { isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
 import { SessionAccount, UserPayload, UserRecord } from '../types/auth.types.js';
 import { decryptAtRest, encryptAtRest } from './crypto.service.js';
-import { deleteUserPreferences } from './settings.service.js';
 import { clearPending2FASetup, hashBackupCode } from './two-factor.service.js';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -311,7 +310,7 @@ export async function deleteUserPermanently(userId: string): Promise<boolean> {
   }
 
   await clearPending2FASetup(userId);
-  await deleteUserPreferences(userId);
+  await pool.query('DELETE FROM user_preferences WHERE user_id = ?', [userId]);
 
   return deleteUserById(userId);
 }

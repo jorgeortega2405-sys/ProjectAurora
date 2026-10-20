@@ -43,7 +43,7 @@ if (!fs.existsSync(TEMP_STORAGE_DIR)) {
   } catch {}
 }
 
-setInterval(() => {
+setInterval(async () => {
   const now = Date.now();
   const maxAgeMs = DEFAULT_TTL_SECONDS * 1000;
 
@@ -59,20 +59,18 @@ setInterval(() => {
     }
   }
 
-  if (fs.existsSync(TEMP_STORAGE_DIR)) {
-    try {
-      const files = fs.readdirSync(TEMP_STORAGE_DIR);
-      for (const file of files) {
-        const fullPath = path.join(TEMP_STORAGE_DIR, file);
-        try {
-          const stats = fs.statSync(fullPath);
-          if (now - stats.mtimeMs > maxAgeMs) {
-            fs.unlinkSync(fullPath);
-          }
-        } catch {}
-      }
-    } catch {}
-  }
+  try {
+    const files = await fs.promises.readdir(TEMP_STORAGE_DIR);
+    for (const file of files) {
+      const fullPath = path.join(TEMP_STORAGE_DIR, file);
+      try {
+        const stats = await fs.promises.stat(fullPath);
+        if (now - stats.mtimeMs > maxAgeMs) {
+          await fs.promises.unlink(fullPath);
+        }
+      } catch {}
+    }
+  } catch {}
 }, 5 * 60 * 1000).unref();
 
 function buildS3Key(token: string): string {
@@ -201,22 +199,22 @@ export async function getTempFile<T extends StoredTempFile = StoredTempFile>(
   }
 
   const binPath = getLocalBinPath(token);
-  if (fs.existsSync(binPath)) {
-    try {
-      const buffer = await fs.promises.readFile(binPath);
-      const resolvedMeta = meta || {
-        contentType: 'application/pdf',
-        createdAt: Date.now(),
-        filename: 'documento.pdf',
-      };
+  try {
+    const buffer = await fs.promises.readFile(binPath);
+    const resolvedMeta = meta || {
+      contentType: 'application/pdf',
+      createdAt: Date.now(),
+      filename: 'documento.pdf',
+    };
 
-      return {
-        ...resolvedMeta,
-        buffer,
-        fileSize: buffer.length,
-        size: buffer.length,
-      } as unknown as T;
-    } catch (err) {
+    return {
+      ...resolvedMeta,
+      buffer,
+      fileSize: buffer.length,
+      size: buffer.length,
+    } as unknown as T;
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
       logger.db.warn('Error al leer archivo temporal desde disco local', err);
     }
   }
@@ -268,20 +266,20 @@ export async function getTempFileStream(token: string): Promise<TempFileStreamRe
   }
 
   const binPath = getLocalBinPath(token);
-  if (fs.existsSync(binPath)) {
-    try {
-      const stats = fs.statSync(binPath);
-      const stream = fs.createReadStream(binPath);
-      const resolvedFilename = meta?.filename || 'documento.pdf';
-      const resolvedContentType = meta?.contentType || 'application/pdf';
+  try {
+    const stats = await fs.promises.stat(binPath);
+    const stream = fs.createReadStream(binPath);
+    const resolvedFilename = meta?.filename || 'documento.pdf';
+    const resolvedContentType = meta?.contentType || 'application/pdf';
 
-      return {
-        contentType: resolvedContentType,
-        fileSize: stats.size,
-        filename: resolvedFilename,
-        stream,
-      };
-    } catch (err) {
+    return {
+      contentType: resolvedContentType,
+      fileSize: stats.size,
+      filename: resolvedFilename,
+      stream,
+    };
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
       logger.db.warn('Error al crear stream de lectura desde disco local', err);
     }
   }
@@ -319,12 +317,10 @@ export async function getTempFileMeta(token: string): Promise<StoredTempFileMeta
   }
 
   const metaPath = getLocalMetaPath(token);
-  if (fs.existsSync(metaPath)) {
-    try {
-      const raw = await fs.promises.readFile(metaPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch {}
-  }
+  try {
+    const raw = await fs.promises.readFile(metaPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {}
 
   const local = memoryStore.get(token);
   if (local) {
@@ -397,10 +393,10 @@ export async function deleteTempFile(token: string): Promise<void> {
 
   const binPath = getLocalBinPath(token);
   const metaPath = getLocalMetaPath(token);
-  try {
-    if (fs.existsSync(binPath)) fs.unlinkSync(binPath);
-    if (fs.existsSync(metaPath)) fs.unlinkSync(metaPath);
-  } catch {}
+  await Promise.allSettled([
+    fs.promises.unlink(binPath),
+    fs.promises.unlink(metaPath),
+  ]);
 
   if (redis.status === 'ready') {
     try {

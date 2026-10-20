@@ -1,5 +1,4 @@
 import { createPopper, Instance as PopperInstance, Placement } from '@popperjs/core';
-import { navigate } from '../app-router.js';
 
 export interface BannerManager {
   hideAll: () => void;
@@ -164,13 +163,19 @@ export function bindSubmitOnEnter(
 
 export function bindNavigationLinks(
   container: HTMLElement,
-  linksMap: Record<string, string>
+  linksMap: Record<string, string>,
+  onNavigate?: (path: string) => void
 ): void {
   for (const [ref, path] of Object.entries(linksMap)) {
     const el = container.querySelector<HTMLElement>(`[data-ref="${ref}"]`);
     el?.addEventListener('click', (e) => {
       e.preventDefault();
-      navigate(path);
+      if (onNavigate) {
+        onNavigate(path);
+      } else {
+        window.history.pushState({}, '', path);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
     });
   }
 }

@@ -201,6 +201,345 @@ export async function deleteWorkflow(workflowId: string, userId: string): Promis
   }
 }
 
+interface StepExecutionContext {
+  buffer: Buffer;
+  filename: string;
+  options: Record<string, any>;
+  stepIndex: number;
+  totalSteps: number;
+}
+
+interface StepExecutionResult {
+  buffer: Buffer;
+  contentType: string;
+  filename: string;
+}
+
+const STEP_EXECUTORS: Record<string, (ctx: StepExecutionContext) => Promise<StepExecutionResult>> = {
+  'compress-pdf': async ({ buffer, filename, options }) => {
+    const level = options.level === 'extreme' || options.level === 'low' ? options.level : 'recommended';
+    const compressRes = await compressPdfFile({ buffer, level, originalname: filename });
+    const stored = await getCompressedPdf(compressRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo comprimido procesado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: compressRes.filename || (filename.replace(/\.pdf$/i, '') + '_comprimido.pdf'),
+    };
+  },
+  'repair-pdf': async ({ buffer, filename }) => {
+    const repairRes = await repairPdfFile({ buffer, originalname: filename });
+    const stored = await getRepairedPdf(repairRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo reparado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: repairRes.filename || filename,
+    };
+  },
+  'organize-pdf': async ({ buffer, filename, options }) => {
+    const pagesOrder = Array.isArray(options.pagesOrder)
+      ? options.pagesOrder.map((item: any) => ({
+          pageIndex: normalizePageIndex(item),
+          rotation: typeof item?.rotation === 'number' ? item.rotation : 0,
+        }))
+      : undefined;
+    const organizeRes = await organizePdf(buffer, filename, {
+      order: options.order === 'reverse' ? 'reverse' : 'asc',
+      pagesOrder,
+    });
+    const stored = await getOrganizePdfResult(organizeRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo organizado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: organizeRes.filename || (filename.replace(/\.pdf$/i, '') + '_ordenado.pdf'),
+    };
+  },
+  'split-pdf': async ({ buffer, filename, options, stepIndex, totalSteps }) => {
+    const rawSelected = Array.isArray(options.selectedPages)
+      ? options.selectedPages
+      : Array.isArray(options.pages)
+        ? options.pages
+        : undefined;
+    const selectedPages = rawSelected
+      ? rawSelected.map(normalizePageNumber).filter((n) => !isNaN(n))
+      : undefined;
+    const splitRes = await splitPdfFile(buffer, filename, {
+      filename,
+      fixedPageCount: options.fixedPageCount,
+      maxSizeBytes: options.maxSizeBytes,
+      mergeSelected: options.mergeSelected ?? true,
+      mode: options.mode || 'range',
+      ranges: options.ranges,
+      selectedPages,
+      submode: options.submode,
+    });
+    const stored = await getSplitResult(splitRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo dividido.');
+    if (stored.isZip && stepIndex < totalSteps - 1) {
+      throw new Error('La división del PDF generó múltiples archivos (archivo ZIP) y no permite pasos posteriores en el flujo.');
+    }
+    return {
+      buffer: stored.buffer,
+      contentType: stored.contentType || (stored.isZip ? 'application/zip' : 'application/pdf'),
+      filename: splitRes.filename || filename,
+    };
+  },
+  'remove-pdf-pages': async ({ buffer, filename, options }) => {
+    const rawPages = Array.isArray(options.pagesToRemove)
+      ? options.pagesToRemove
+      : Array.isArray(options.pages)
+        ? options.pages
+        : [];
+    const pagesToRemove = rawPages.map(normalizePageNumber).filter((n) => !isNaN(n));
+    const removeRes = await removePdfPages(buffer, filename, { filename, pagesToRemove });
+    const stored = await getRemovePagesResult(removeRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo procesado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: removeRes.filename || filename,
+    };
+  },
+  'extract-pdf-pages': async ({ buffer, filename, options, stepIndex, totalSteps }) => {
+    const rawSelected = Array.isArray(options.selectedPages)
+      ? options.selectedPages
+      : Array.isArray(options.pages)
+        ? options.pages
+        : [1];
+    const selectedPages = rawSelected.map(normalizePageNumber).filter((n) => !isNaN(n));
+    const splitRes = await splitPdfFile(buffer, filename, {
+      filename,
+      mergeSelected: options.mergeSelected ?? true,
+      mode: 'pages',
+      selectedPages,
+      submode: 'custom',
+    });
+    const stored = await getSplitResult(splitRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo extraído.');
+    if (stored.isZip && stepIndex < totalSteps - 1) {
+      throw new Error('La extracción de páginas generó múltiples archivos y no permite pasos posteriores en el flujo.');
+    }
+    return {
+      buffer: stored.buffer,
+      contentType: stored.contentType || (stored.isZip ? 'application/zip' : 'application/pdf'),
+      filename: splitRes.filename || filename,
+    };
+  },
+  'rotate-pdf': async ({ buffer, filename, options }) => {
+    const pages = Array.isArray(options.pages)
+      ? options.pages.map((p: any) => ({
+          pageIndex: normalizePageIndex(p),
+          rotation: typeof p?.rotation === 'number' ? p.rotation : 0,
+        }))
+      : [];
+    const defaultGlobalRot = pages.length > 0 ? 0 : 90;
+    const globalRotation = typeof options.rotation === 'number'
+      ? options.rotation
+      : typeof options.globalRotation === 'number'
+        ? options.globalRotation
+        : defaultGlobalRot;
+    const rotateRes = await rotatePdf(buffer, filename, { filename, globalRotation, pages });
+    const stored = await getRotatePdfResult(rotateRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo rotado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: rotateRes.filename || filename,
+    };
+  },
+  'crop-pdf': async ({ buffer, filename, options }) => {
+    const cropRes = await cropPdf(buffer, filename, {
+      applyToAll: options.applyToAll !== false,
+      cropBox: options.cropBox,
+      filename,
+      targetPageIndex: options.targetPageIndex,
+    });
+    const stored = await getCropPdfResult(cropRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo recortado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: cropRes.filename || filename,
+    };
+  },
+  'watermark-pdf': async ({ buffer, filename, options }) => {
+    let imgBuffer: Buffer | undefined;
+    if (options.imageBuffer && Buffer.isBuffer(options.imageBuffer)) {
+      imgBuffer = options.imageBuffer;
+    } else if (typeof options.imageBase64 === 'string' && options.imageBase64.trim().length > 0) {
+      imgBuffer = Buffer.from(options.imageBase64.trim(), 'base64');
+    } else if (typeof options.image === 'string' && options.image.trim().length > 0) {
+      const raw = options.image.trim();
+      const base64Part = raw.startsWith('data:') ? (raw.split(',')[1] || '') : raw;
+      imgBuffer = Buffer.from(base64Part, 'base64');
+    }
+
+    if (options.type === 'image' && (!imgBuffer || imgBuffer.length === 0)) {
+      throw new Error('Se requiere una imagen válida para la marca de agua de tipo imagen.');
+    }
+
+    const watermarkRes = await addWatermarkToPdf(
+      buffer,
+      filename,
+      {
+        color: options.textColor || options.color,
+        filename,
+        fontSize: options.fontSize,
+        position: options.position || 'center',
+        rotation: options.rotation,
+        text: options.text || options.customText || 'CONFIDENCIAL',
+        transparency: typeof options.opacity === 'number' ? options.opacity : options.transparency,
+        type: options.type || 'text',
+      },
+      imgBuffer
+    );
+    const stored = await getWatermarkPdfResult(watermarkRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo con marca de agua.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: watermarkRes.filename || filename,
+    };
+  },
+  'page-numbers': async ({ buffer, filename, options }) => {
+    const numRes = await addPageNumbers(buffer, filename, {
+      filename,
+      fontFamily: options.fontFamily,
+      fontSize: options.fontSize,
+      format: options.format,
+      margin: options.margin,
+      mode: options.mode || options.pageMode || 'single',
+      position: options.position || 'bottom-center',
+      startNumber: options.startNumber,
+    });
+    const stored = await getPageNumberResult(numRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo con numeración.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: numRes.filename || filename,
+    };
+  },
+  'protect-pdf': async ({ buffer, filename, options }) => {
+    const protectRes = await protectPdf(buffer, filename, {
+      filename,
+      password: options.password,
+    });
+    const stored = await getProtectPdfResult(protectRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo protegido.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: protectRes.filename || filename,
+    };
+  },
+  'redact-pdf': async ({ buffer, filename, options }) => {
+    const redactRes = await redactPdfDocument({
+      buffer,
+      originalFilename: filename,
+      redactions: options.redactions || [],
+      sanitizeMetadata: options.sanitizeMetadata !== false,
+    });
+    const stored = await getStoredRedactedPdf(redactRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo censurado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: redactRes.filename || filename,
+    };
+  },
+  'unlock-pdf': async ({ buffer, filename, options }) => {
+    const unlockRes = await unlockPdf(buffer, filename, {
+      filename,
+      password: options.password || '',
+    });
+    const stored = await getUnlockPdfResult(unlockRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo desbloqueado.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: unlockRes.filename || filename,
+    };
+  },
+  'pdf-to-markdown': async ({ buffer, filename, options }) => {
+    const mdRes = await convertPdfToMarkdown({
+      buffer,
+      mode: options.mode || 'structured',
+      originalname: filename,
+    });
+    return {
+      buffer: Buffer.from(mdRes.markdown, 'utf-8'),
+      contentType: 'text/markdown; charset=utf-8',
+      filename: filename.replace(/\.pdf$/i, '') + '.md',
+    };
+  },
+  'summarize-pdf': async ({ buffer, filename, options }) => {
+    const sumRes = await summarizePdf({
+      buffer,
+      mode: options.mode || 'executive',
+      originalname: filename,
+    });
+    return {
+      buffer: Buffer.from(sumRes.summary, 'utf-8'),
+      contentType: 'text/markdown; charset=utf-8',
+      filename: filename.replace(/\.pdf$/i, '') + '_resumen.md',
+    };
+  },
+  'translate-pdf': async ({ buffer, filename, options }) => {
+    const targetLang = (options.targetLang || 'EN').toUpperCase();
+    const transRes = await translatePdf({
+      buffer,
+      filename,
+      originalname: filename,
+      targetLang,
+    });
+    const storedTrans = await getTranslatedPdf(transRes.fileId);
+    if (!storedTrans?.buffer) throw new Error('Error al recuperar el archivo traducido.');
+    return {
+      buffer: storedTrans.buffer,
+      contentType: 'application/pdf',
+      filename: filename.replace(/\.pdf$/i, '') + `_${targetLang.toLowerCase()}.pdf`,
+    };
+  },
+  'ocr-pdf': async ({ buffer, filename, options }) => {
+    const ocrRes = await processOcrPdf({
+      buffer,
+      deskew: options.deskew !== false,
+      language: options.language || 'spa',
+      originalname: filename,
+    });
+    const stored = await getOcrPdf(ocrRes.fileId);
+    if (!stored?.buffer) throw new Error('Error al recuperar el archivo procesado por OCR.');
+    return {
+      buffer: stored.buffer,
+      contentType: 'application/pdf',
+      filename: ocrRes.filename || filename,
+    };
+  },
+  'pdf-to-word': async ({ buffer, filename }) => ({
+    buffer,
+    contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    filename: filename.replace(/\.pdf$/i, '') + '.docx',
+  }),
+  'pdf-to-excel': async ({ buffer, filename }) => ({
+    buffer,
+    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    filename: filename.replace(/\.pdf$/i, '') + '.xlsx',
+  }),
+  'pdf-to-powerpoint': async ({ buffer, filename }) => ({
+    buffer,
+    contentType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    filename: filename.replace(/\.pdf$/i, '') + '.pptx',
+  }),
+  'pdf-to-jpg': async ({ buffer, filename }) => ({
+    buffer,
+    contentType: 'image/jpeg',
+    filename: filename.replace(/\.pdf$/i, '') + '.jpg',
+  }),
+};
+
 export async function executeWorkflowSteps(
   steps: WorkflowStep[],
   inputBuffer: Buffer,
@@ -244,320 +583,22 @@ export async function executeWorkflowSteps(
         throw new Error(`La herramienta "${stepTool}" es una acción terminal y no permite pasos posteriores en el flujo.`);
       }
 
-      if (stepTool === 'compress-pdf') {
-        const level = opts.level === 'extreme' || opts.level === 'low' ? opts.level : 'recommended';
-        const compressRes = await compressPdfFile({
-          buffer: currentBuffer,
-          level,
-          originalname: currentFilename,
-        });
-        const stored = await getCompressedPdf(compressRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo comprimido procesado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = compressRes.filename || (currentFilename.replace(/\.pdf$/i, '') + '_comprimido.pdf');
-      } else if (stepTool === 'repair-pdf') {
-        const repairRes = await repairPdfFile({
-          buffer: currentBuffer,
-          originalname: currentFilename,
-        });
-        const stored = await getRepairedPdf(repairRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo reparado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = repairRes.filename || currentFilename;
-      } else if (stepTool === 'organize-pdf') {
-        const pagesOrder = Array.isArray(opts.pagesOrder)
-          ? opts.pagesOrder.map((item: any) => ({
-              pageIndex: normalizePageIndex(item),
-              rotation: typeof item?.rotation === 'number' ? item.rotation : 0,
-            }))
-          : undefined;
-        const organizeRes = await organizePdf(currentBuffer, currentFilename, {
-          order: opts.order === 'reverse' ? 'reverse' : 'asc',
-          pagesOrder,
-        });
-        const stored = await getOrganizePdfResult(organizeRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo organizado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = organizeRes.filename || (currentFilename.replace(/\.pdf$/i, '') + '_ordenado.pdf');
-      } else if (stepTool === 'split-pdf') {
-        const rawSelected = Array.isArray(opts.selectedPages)
-          ? opts.selectedPages
-          : Array.isArray(opts.pages)
-            ? opts.pages
-            : undefined;
-        const selectedPages = rawSelected
-          ? rawSelected.map(normalizePageNumber).filter((n) => !isNaN(n))
-          : undefined;
-        const splitRes = await splitPdfFile(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          fixedPageCount: opts.fixedPageCount,
-          maxSizeBytes: opts.maxSizeBytes,
-          mergeSelected: opts.mergeSelected ?? true,
-          mode: opts.mode || 'range',
-          ranges: opts.ranges,
-          selectedPages,
-          submode: opts.submode,
-        });
-        const stored = await getSplitResult(splitRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo dividido.');
-        }
-        if (stored.isZip && stepIndex < steps.length - 1) {
-          throw new Error('La división del PDF generó múltiples archivos (archivo ZIP) y no permite pasos posteriores en el flujo.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = stored.contentType || (stored.isZip ? 'application/zip' : 'application/pdf');
-        currentFilename = splitRes.filename || currentFilename;
-      } else if (stepTool === 'remove-pdf-pages') {
-        const rawPages = Array.isArray(opts.pagesToRemove)
-          ? opts.pagesToRemove
-          : Array.isArray(opts.pages)
-            ? opts.pages
-            : [];
-        const pagesToRemove: number[] = rawPages
-          .map(normalizePageNumber)
-          .filter((n) => !isNaN(n));
-        const removeRes = await removePdfPages(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          pagesToRemove,
-        });
-        const stored = await getRemovePagesResult(removeRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo procesado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = removeRes.filename || currentFilename;
-      } else if (stepTool === 'extract-pdf-pages') {
-        const rawSelected = Array.isArray(opts.selectedPages)
-          ? opts.selectedPages
-          : Array.isArray(opts.pages)
-            ? opts.pages
-            : [1];
-        const selectedPages: number[] = rawSelected
-          .map(normalizePageNumber)
-          .filter((n) => !isNaN(n));
-        const splitRes = await splitPdfFile(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          mergeSelected: opts.mergeSelected ?? true,
-          mode: 'pages',
-          selectedPages,
-          submode: 'custom',
-        });
-        const stored = await getSplitResult(splitRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo extraído.');
-        }
-        if (stored.isZip && stepIndex < steps.length - 1) {
-          throw new Error('La extracción de páginas generó múltiples archivos y no permite pasos posteriores en el flujo.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = stored.contentType || (stored.isZip ? 'application/zip' : 'application/pdf');
-        currentFilename = splitRes.filename || currentFilename;
-      } else if (stepTool === 'rotate-pdf') {
-        const pages = Array.isArray(opts.pages)
-          ? opts.pages.map((p: any) => ({
-              pageIndex: normalizePageIndex(p),
-              rotation: typeof p?.rotation === 'number' ? p.rotation : 0,
-            }))
-          : [];
-        const defaultGlobalRot = pages.length > 0 ? 0 : 90;
-        const globalRotation = typeof opts.rotation === 'number'
-          ? opts.rotation
-          : typeof opts.globalRotation === 'number'
-            ? opts.globalRotation
-            : defaultGlobalRot;
-        const rotateRes = await rotatePdf(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          globalRotation,
-          pages,
-        });
-        const stored = await getRotatePdfResult(rotateRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo rotado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = rotateRes.filename || currentFilename;
-      } else if (stepTool === 'crop-pdf') {
-        const cropRes = await cropPdf(currentBuffer, currentFilename, {
-          applyToAll: opts.applyToAll !== false,
-          cropBox: opts.cropBox,
-          filename: currentFilename,
-          targetPageIndex: opts.targetPageIndex,
-        });
-        const stored = await getCropPdfResult(cropRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo recortado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = cropRes.filename || currentFilename;
-      } else if (stepTool === 'watermark-pdf') {
-        let imgBuffer: Buffer | undefined;
-        if (opts.imageBuffer && Buffer.isBuffer(opts.imageBuffer)) {
-          imgBuffer = opts.imageBuffer;
-        } else if (typeof opts.imageBase64 === 'string' && opts.imageBase64.trim().length > 0) {
-          imgBuffer = Buffer.from(opts.imageBase64.trim(), 'base64');
-        } else if (typeof opts.image === 'string' && opts.image.trim().length > 0) {
-          const raw = opts.image.trim();
-          const base64Part = raw.startsWith('data:') ? (raw.split(',')[1] || '') : raw;
-          imgBuffer = Buffer.from(base64Part, 'base64');
-        }
-
-        if (opts.type === 'image' && (!imgBuffer || imgBuffer.length === 0)) {
-          throw new Error('Se requiere una imagen válida para la marca de agua de tipo imagen.');
-        }
-
-        const watermarkRes = await addWatermarkToPdf(
-          currentBuffer,
-          currentFilename,
-          {
-            color: opts.textColor || opts.color,
-            filename: currentFilename,
-            fontSize: opts.fontSize,
-            position: opts.position || 'center',
-            rotation: opts.rotation,
-            text: opts.text || opts.customText || 'CONFIDENCIAL',
-            transparency: typeof opts.opacity === 'number' ? opts.opacity : opts.transparency,
-            type: opts.type || 'text',
-          },
-          imgBuffer
-        );
-        const stored = await getWatermarkPdfResult(watermarkRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo con marca de agua.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = watermarkRes.filename || currentFilename;
-      } else if (stepTool === 'page-numbers') {
-        const numRes = await addPageNumbers(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          fontFamily: opts.fontFamily,
-          fontSize: opts.fontSize,
-          format: opts.format,
-          margin: opts.margin,
-          mode: opts.mode || opts.pageMode || 'single',
-          position: opts.position || 'bottom-center',
-          startNumber: opts.startNumber,
-        });
-        const stored = await getPageNumberResult(numRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo con numeración.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = numRes.filename || currentFilename;
-      } else if (stepTool === 'protect-pdf') {
-        const protectRes = await protectPdf(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          password: opts.password,
-        });
-        const stored = await getProtectPdfResult(protectRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo protegido.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = protectRes.filename || currentFilename;
-      } else if (stepTool === 'redact-pdf') {
-        const redactRes = await redactPdfDocument({
-          buffer: currentBuffer,
-          originalFilename: currentFilename,
-          redactions: opts.redactions || [],
-          sanitizeMetadata: opts.sanitizeMetadata !== false,
-        });
-        const stored = await getStoredRedactedPdf(redactRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo censurado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = redactRes.filename || currentFilename;
-      } else if (stepTool === 'unlock-pdf') {
-        const unlockRes = await unlockPdf(currentBuffer, currentFilename, {
-          filename: currentFilename,
-          password: opts.password || '',
-        });
-        const stored = await getUnlockPdfResult(unlockRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo desbloqueado.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = unlockRes.filename || currentFilename;
-      } else if (stepTool === 'pdf-to-markdown') {
-        const mdRes = await convertPdfToMarkdown({
-          buffer: currentBuffer,
-          mode: opts.mode || 'structured',
-          originalname: currentFilename,
-        });
-        currentBuffer = Buffer.from(mdRes.markdown, 'utf-8');
-        currentContentType = 'text/markdown; charset=utf-8';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '.md';
-      } else if (stepTool === 'summarize-pdf') {
-        const sumRes = await summarizePdf({
-          buffer: currentBuffer,
-          mode: opts.mode || 'executive',
-          originalname: currentFilename,
-        });
-        currentBuffer = Buffer.from(sumRes.summary, 'utf-8');
-        currentContentType = 'text/markdown; charset=utf-8';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '_resumen.md';
-      } else if (stepTool === 'translate-pdf') {
-        const targetLang = (opts.targetLang || 'EN').toUpperCase();
-        const transRes = await translatePdf({
-          buffer: currentBuffer,
-          filename: currentFilename,
-          originalname: currentFilename,
-          targetLang,
-        });
-        const storedTrans = await getTranslatedPdf(transRes.fileId);
-        if (!storedTrans?.buffer) {
-          throw new Error('Error al recuperar el archivo traducido.');
-        }
-        currentBuffer = storedTrans.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + `_${targetLang.toLowerCase()}.pdf`;
-      } else if (stepTool === 'ocr-pdf') {
-        const ocrRes = await processOcrPdf({
-          buffer: currentBuffer,
-          deskew: opts.deskew !== false,
-          language: opts.language || 'spa',
-          originalname: currentFilename,
-        });
-        const stored = await getOcrPdf(ocrRes.fileId);
-        if (!stored?.buffer) {
-          throw new Error('Error al recuperar el archivo procesado por OCR.');
-        }
-        currentBuffer = stored.buffer;
-        currentContentType = 'application/pdf';
-        currentFilename = ocrRes.filename || currentFilename;
-      } else if (stepTool === 'pdf-to-word') {
-        currentContentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '.docx';
-      } else if (stepTool === 'pdf-to-excel') {
-        currentContentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '.xlsx';
-      } else if (stepTool === 'pdf-to-powerpoint') {
-        currentContentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '.pptx';
-      } else if (stepTool === 'pdf-to-jpg') {
-        currentContentType = 'image/jpeg';
-        currentFilename = currentFilename.replace(/\.pdf$/i, '') + '.jpg';
-      } else {
+      const executor = STEP_EXECUTORS[stepTool];
+      if (!executor) {
         throw new Error(`Herramienta no soportada o desconocida en el flujo: ${stepTool}`);
       }
+
+      const res = await executor({
+        buffer: currentBuffer,
+        filename: currentFilename,
+        options: opts,
+        stepIndex,
+        totalSteps: steps.length,
+      });
+
+      currentBuffer = res.buffer;
+      currentContentType = res.contentType;
+      currentFilename = res.filename;
 
       stepsResults.push({
         stepId,

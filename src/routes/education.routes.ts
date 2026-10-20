@@ -32,7 +32,7 @@ function uploadDocumentMiddleware(req: Request, res: Response, next: NextFunctio
       res.status(400).json({ error: 'Error al procesar el archivo adjunto.', success: false });
       return;
     } else if (err) {
-      res.status(400).json({ error: err.message || 'El archivo seleccionado no es válido.', success: false });
+      res.status(400).json({ error: 'El archivo seleccionado no es válido.', success: false });
       return;
     }
     next();

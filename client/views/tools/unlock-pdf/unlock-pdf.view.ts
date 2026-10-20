@@ -47,7 +47,12 @@ export class UnlockPdfController implements ViewController {
       this.abortController.abort();
       this.abortController = null;
     }
-    this.pdfDocument = null;
+    if (this.pdfDocument) {
+      try {
+        void this.pdfDocument.destroy();
+      } catch {}
+      this.pdfDocument = null;
+    }
   }
 
   private bindEvents(): void {

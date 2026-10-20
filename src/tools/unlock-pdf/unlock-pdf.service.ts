@@ -1,14 +1,11 @@
-import { execFile } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { promisify } from 'util';
 import { logger } from '../../services/logger.service.js';
 import { getTempFile, storeTempFile } from '../../services/temp-storage.service.js';
+import { executeProcessWithTimeout } from '../../utils/process.util.js';
 import { StoredUnlockPdfResult, UnlockPdfOptions, UnlockPdfResponse } from './unlock-pdf.types.js';
-
-const execFileAsync = promisify(execFile);
 
 function sanitizePdfFilename(rawName?: string, defaultName = 'documento_desbloqueado.pdf'): string {
   if (!rawName || typeof rawName !== 'string') {
@@ -33,15 +30,12 @@ export async function unlockPdf(
   const tempOutput = path.join(os.tmpdir(), `${tempId}_out.pdf`);
 
   try {
-    fs.writeFileSync(tempInput, fileBuffer);
+    await fs.promises.writeFile(tempInput, fileBuffer);
 
-    const pythonScript = `
-import sys, pikepdf
-
+    const pythonScript = `import sys, pikepdf
 input_path = sys.argv[1]
 output_path = sys.argv[2]
 password = sys.argv[3] if len(sys.argv) > 3 else ''
-
 try:
     with pikepdf.open(input_path, password=password) as pdf:
         num_pages = len(pdf.pages)
@@ -52,19 +46,17 @@ except pikepdf.PasswordError:
     sys.exit(2)
 `;
 
-    let stdout = '';
-    try {
-      const res = await execFileAsync('python3', ['-c', pythonScript, tempInput, tempOutput, password]);
-      stdout = res.stdout;
-    } catch (procErr: any) {
-      if (procErr.code === 2 || procErr.stdout?.includes('PASSWORD_REQUIRED')) {
-        throw new Error('PASSWORD_INVALID');
-      }
-      throw procErr;
+    const pyCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const result = await executeProcessWithTimeout(pyCmd, ['-c', pythonScript, tempInput, tempOutput, password], { timeoutMs: 45000 });
+    if (result.code === 2 || result.stdout?.includes('PASSWORD_REQUIRED') || result.stderr?.includes('PASSWORD_REQUIRED')) {
+      throw new Error('PASSWORD_INVALID');
+    }
+    if (result.timedOut || result.code !== 0) {
+      throw new Error(result.stderr || 'El proceso de desbloqueo no pudo completarse.');
     }
 
-    const totalPages = parseInt(stdout.trim(), 10) || 1;
-    const decryptedBuffer = fs.readFileSync(tempOutput);
+    const totalPages = parseInt(result.stdout.trim(), 10) || 1;
+    const decryptedBuffer = await fs.promises.readFile(tempOutput);
     const fileId = crypto.randomUUID();
     const filename = sanitizePdfFilename(options.filename, `${originalFilename.replace(/\.pdf$/i, '')}_desbloqueado.pdf`);
 
@@ -94,12 +86,10 @@ except pikepdf.PasswordError:
     logger.app.error(`Error al desbloquear documento PDF: ${originalFilename}`, err);
     throw new Error('No se pudo desbloquear el archivo PDF. Asegúrate de que sea un archivo PDF válido.');
   } finally {
-    if (fs.existsSync(tempInput)) {
-      try { fs.unlinkSync(tempInput); } catch {}
-    }
-    if (fs.existsSync(tempOutput)) {
-      try { fs.unlinkSync(tempOutput); } catch {}
-    }
+    await Promise.allSettled([
+      fs.promises.unlink(tempInput),
+      fs.promises.unlink(tempOutput),
+    ]);
   }
 }
 

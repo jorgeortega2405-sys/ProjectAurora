@@ -1,24 +1,17 @@
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Request, Response } from 'express';
 import { config } from '../config/env.config.js';
 import { MultiAccountSessionPayload, SessionAccount, UserPayload } from '../types/auth.types.js';
+import { hashPassword, verifyPassword } from './crypto.service.js';
 import { getUserOrganization } from './organization.service.js';
 import { getRolePermissions, getUserEffectivePermissions } from './pbac.service.js';
 import { findUserById, sanitizeUser } from './user.service.js';
 
+export { hashPassword, verifyPassword };
+
 export const COOKIE_NAME = 'aurora_session';
 export const MAX_CONCURRENT_ACCOUNTS = 3;
 export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
-
-export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
 
 export function createMultiAccountToken(session: MultiAccountSessionPayload): string {
   const now = Date.now();

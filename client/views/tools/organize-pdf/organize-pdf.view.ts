@@ -58,7 +58,12 @@ export class OrganizePdfController implements ViewController {
       this.sortableInstance.destroy();
       this.sortableInstance = null;
     }
-    this.pdfDocument = null;
+    if (this.pdfDocument) {
+      try {
+        void this.pdfDocument.destroy();
+      } catch {}
+      this.pdfDocument = null;
+    }
   }
 
   private async handleDriveImport(): Promise<void> {

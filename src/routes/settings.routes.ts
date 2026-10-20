@@ -32,7 +32,7 @@ function uploadAvatarMiddleware(req: Request, res: Response, next: NextFunction)
       res.status(400).json({ error: 'Error al procesar el archivo.', ok: false, success: false });
       return;
     } else if (err) {
-      res.status(400).json({ error: err.message || 'El archivo enviado no es válido.', ok: false, success: false });
+      res.status(400).json({ error: 'El archivo enviado no es válido.', ok: false, success: false });
       return;
     }
     next();

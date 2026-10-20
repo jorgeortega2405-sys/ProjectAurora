@@ -1,8 +1,8 @@
-import { navigate, render, switchLanguage } from '../../app-router.js';
+import { navigate, switchLanguage } from '../../app-router.js';
 import { openModal } from '../../components/modal.component.js';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { currentUser, deleteApi, escapeHtml, getApi, hasPermission, postApi, postFormApi, setCurrentUser } from '../../services/api.service.js';
-import { getCurrentLanguage, setLanguage, t } from '../../services/i18n.service.js';
+import { getCurrentLanguage, t } from '../../services/i18n.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { setToastPreferences, showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';
@@ -13,9 +13,10 @@ import { validateAndSanitizeFile } from '../../utils/validators.util.js';
 
 export class YourAccountController implements ViewController {
   private abortController: AbortController | null = null;
+  private cleanUpLinkListeners: (() => void) | null = null;
   private container: HTMLElement;
   private dropdownController: { close: () => void; destroy: () => void; update: () => void } | null = null;
-  private cleanUpLinkListeners: (() => void) | null = null;
+  private selectedAvatarFile: File | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -43,7 +44,66 @@ export class YourAccountController implements ViewController {
       protectedBanner.style.display = 'flex';
     }
 
+    this._initAvatarSection(signal, isProtected);
+    this._initUsernameSection(signal, isProtected);
+    this._initEmailSection(signal, isProtected);
+    this._initGoogleSection(signal, isProtected);
+    await this._initPreferencesSection(signal);
+  }
+
+  destroy(): void {
+    if (this.cleanUpLinkListeners) {
+      this.cleanUpLinkListeners();
+      this.cleanUpLinkListeners = null;
+    }
+    if (this.dropdownController) {
+      this.dropdownController.destroy();
+      this.dropdownController = null;
+    }
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+  }
+
+  private _getDefaultAvatarUrl(name?: string): string {
+    return API_ROUTES.avatar(name || currentUser?.username || 'User');
+  }
+
+  private _hasCustomAvatar(): boolean {
+    if (!currentUser?.avatar_url) return false;
+    const url = currentUser.avatar_url.trim();
+    if (!url || url === 'null' || url === 'undefined') return false;
+    if (url.includes('/api/avatar') || url.includes('/api/settings/avatar')) return false;
+    return true;
+  }
+
+  private _refreshAvatarsInDom(url: string | null): void {
+    const finalUrl = url || this._getDefaultAvatarUrl(currentUser?.username);
     const avatarImg = this.container.querySelector<HTMLImageElement>('[data-ref="profile-avatar-img"]');
+    if (avatarImg) {
+      avatarImg.classList.add('image-lazy-fade');
+      avatarImg.classList.remove('image-loaded');
+      avatarImg.src = finalUrl;
+      avatarImg.onload = () => avatarImg.classList.add('image-loaded');
+      avatarImg.onerror = () => avatarImg.classList.add('image-loaded');
+      if (avatarImg.complete) avatarImg.classList.add('image-loaded');
+    }
+
+    const otherAvatars = document.querySelectorAll<HTMLImageElement>(
+      '[data-ref="avatar-img"], [data-ref="topbar-avatar-img"], [data-ref="btn-avatar-toggle"] img, [data-ref="active-account-avatar"]'
+    );
+    otherAvatars.forEach((el) => {
+      el.classList.add('image-lazy-fade');
+      el.classList.remove('image-loaded');
+      el.src = finalUrl;
+      el.onload = () => el.classList.add('image-loaded');
+      el.onerror = () => el.classList.add('image-loaded');
+      if (el.complete) el.classList.add('image-loaded');
+    });
+  }
+
+  private _initAvatarSection(signal: AbortSignal, isProtected: boolean): void {
     const avatarPreviewBox = this.container.querySelector<HTMLElement>('[data-ref="avatar-preview-box"]');
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-avatar-file"]');
     const btnUploadAvatar = this.container.querySelector<HTMLElement>('[data-ref="btn-upload-avatar"]');
@@ -53,46 +113,9 @@ export class YourAccountController implements ViewController {
     const btnSaveAvatar = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-save-avatar"]');
     const avatarErrorBanner = this.container.querySelector<HTMLElement>('[data-ref="avatar-error"]');
 
-    const usernameViewBox = this.container.querySelector<HTMLElement>('[data-ref="username-view-box"]');
-    const usernameEditRow = this.container.querySelector<HTMLElement>('[data-ref="username-edit-row"]');
-    const usernameViewActions = this.container.querySelector<HTMLElement>('[data-ref="username-view-actions"]');
-    const displayUsername = this.container.querySelector<HTMLElement>('[data-ref="display-username"]');
-    const inputUsername = this.container.querySelector<HTMLInputElement>('[data-ref="input-username"]');
-    const btnEditUsername = this.container.querySelector<HTMLElement>('[data-ref="btn-edit-username"]');
-    const btnCancelUsername = this.container.querySelector<HTMLElement>('[data-ref="btn-cancel-username"]');
-    const btnSaveUsername = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-save-username"]');
-    const usernameErrorBanner = this.container.querySelector<HTMLElement>('[data-ref="username-error"]');
-
-    const emailViewBox = this.container.querySelector<HTMLElement>('[data-ref="email-view-box"]');
-    const emailEditRow = this.container.querySelector<HTMLElement>('[data-ref="email-edit-row"]');
-    const emailViewActions = this.container.querySelector<HTMLElement>('[data-ref="email-view-actions"]');
-    const displayEmail = this.container.querySelector<HTMLElement>('[data-ref="display-email"]');
-    const inputEmail = this.container.querySelector<HTMLInputElement>('[data-ref="input-email"]');
-    const btnEditEmail = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-edit-email"]');
-    const btnCancelEmail = this.container.querySelector<HTMLElement>('[data-ref="btn-cancel-email"]');
-    const btnSaveEmail = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-save-email"]');
-    const emailErrorBanner = this.container.querySelector<HTMLElement>('[data-ref="email-error"]');
-
-    const googleStatusEl = this.container.querySelector<HTMLElement>('[data-ref="google-account-status"]');
-    const googleActionBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-google-account-action"]');
-
-    const langDropdown = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-language"]');
-    const langSelectedText = this.container.querySelector<HTMLElement>('[data-ref="language-selected-text"]');
-    const toggleOpenLinks = this.container.querySelector<HTMLInputElement>('[data-ref="toggle-open-links"]');
-
-    let selectedAvatarFile: File | null = null;
-
-    const getDefaultAvatarUrl = (name?: string) => {
-      return API_ROUTES.avatar(name || currentUser?.username || 'User');
-    };
-
-    const hasCustomAvatar = () => {
-      if (!currentUser?.avatar_url) return false;
-      const url = currentUser.avatar_url.trim();
-      if (!url || url === 'null' || url === 'undefined') return false;
-      if (url.includes('/api/avatar') || url.includes('/api/settings/avatar')) return false;
-      return true;
-    };
+    if (avatarPreviewBox && currentUser) {
+      applyAvatarTier(avatarPreviewBox, currentUser.subscription_tier || 'free', currentUser.subscription_tier_color);
+    }
 
     const updateAvatarButtonsState = (state: 'preview' | 'custom' | 'default') => {
       if (isProtected) {
@@ -124,72 +147,389 @@ export class YourAccountController implements ViewController {
       }
     };
 
-    const refreshAvatarsInDom = (url: string | null) => {
-      const finalUrl = url || getDefaultAvatarUrl(currentUser?.username);
-      if (avatarImg) {
-        avatarImg.classList.add('image-lazy-fade');
-        avatarImg.classList.remove('image-loaded');
-        avatarImg.src = finalUrl;
-        avatarImg.onload = () => avatarImg.classList.add('image-loaded');
-        avatarImg.onerror = () => avatarImg.classList.add('image-loaded');
-        if (avatarImg.complete) {
-          avatarImg.classList.add('image-loaded');
-        }
-      }
-      const topBarAvatar = document.querySelector<HTMLImageElement>(
-        '[data-ref="avatar-img"], [data-ref="topbar-avatar-img"], [data-ref="btn-avatar-toggle"] img'
-      );
-      if (topBarAvatar) {
-        topBarAvatar.classList.add('image-lazy-fade');
-        topBarAvatar.classList.remove('image-loaded');
-        topBarAvatar.src = finalUrl;
-        topBarAvatar.onload = () => topBarAvatar.classList.add('image-loaded');
-        topBarAvatar.onerror = () => topBarAvatar.classList.add('image-loaded');
-        if (topBarAvatar.complete) {
-          topBarAvatar.classList.add('image-loaded');
-        }
-      }
-      const activeAccountAvatar = document.querySelector<HTMLImageElement>(
-        '[data-ref="active-account-avatar"]'
-      );
-      if (activeAccountAvatar) {
-        activeAccountAvatar.classList.add('image-lazy-fade');
-        activeAccountAvatar.classList.remove('image-loaded');
-        activeAccountAvatar.src = finalUrl;
-        activeAccountAvatar.onload = () => activeAccountAvatar.classList.add('image-loaded');
-        activeAccountAvatar.onerror = () => activeAccountAvatar.classList.add('image-loaded');
-        if (activeAccountAvatar.complete) {
-          activeAccountAvatar.classList.add('image-loaded');
-        }
-      }
+    if (isProtected && avatarPreviewBox) {
+      avatarPreviewBox.removeAttribute('data-i18n-tooltip');
+      avatarPreviewBox.removeAttribute('data-tooltip');
+      avatarPreviewBox.style.cursor = 'default';
+      const overlay = avatarPreviewBox.querySelector<HTMLElement>('[data-ref="avatar-preview-overlay"]');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    const initialAvatarUrl = this._hasCustomAvatar()
+      ? currentUser?.avatar_url!
+      : this._getDefaultAvatarUrl(currentUser?.username);
+    this._refreshAvatarsInDom(initialAvatarUrl);
+    updateAvatarButtonsState(this._hasCustomAvatar() ? 'custom' : 'default');
+
+    const triggerFileInput = () => {
+      if (isProtected) return;
+      if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
+      fileInput?.click();
     };
 
-    if (displayUsername) displayUsername.textContent = currentUser.username || '-';
-    if (displayEmail) displayEmail.textContent = currentUser.email || '-';
+    avatarPreviewBox?.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerFileInput();
+    }, { signal });
 
-    if (avatarPreviewBox) {
-      const userTier = currentUser.subscription_tier || 'free';
-      applyAvatarTier(avatarPreviewBox, userTier, currentUser.subscription_tier_color);
-    }
+    btnUploadAvatar?.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerFileInput();
+    }, { signal });
 
-    if (isProtected) {
-      if (avatarPreviewBox) {
-        avatarPreviewBox.removeAttribute('data-i18n-tooltip');
-        avatarPreviewBox.removeAttribute('data-tooltip');
-        avatarPreviewBox.style.cursor = 'default';
-        const overlay = avatarPreviewBox.querySelector<HTMLElement>('[data-ref="avatar-preview-overlay"]');
-        if (overlay) overlay.style.display = 'none';
+    btnChangeAvatar?.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerFileInput();
+    }, { signal });
+
+    fileInput?.addEventListener('change', (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
+
+      if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
+
+      const validation = validateAndSanitizeFile(file, {
+        allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'],
+        maxMb: 2,
+      });
+
+      if (!validation.valid) {
+        if (avatarErrorBanner) {
+          avatarErrorBanner.textContent = validation.error ?? '';
+          avatarErrorBanner.style.display = 'block';
+        }
+        target.value = '';
+        return;
       }
-      if (btnEditUsername) btnEditUsername.style.display = 'none';
-      if (btnEditEmail) btnEditEmail.style.display = 'none';
-      if (googleActionBtn) googleActionBtn.style.display = 'none';
+
+      this.selectedAvatarFile = validation.file ?? null;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const avatarImg = this.container.querySelector<HTMLImageElement>('[data-ref="profile-avatar-img"]');
+        if (avatarImg && ev.target?.result) {
+          avatarImg.classList.add('image-lazy-fade');
+          avatarImg.classList.remove('image-loaded');
+          avatarImg.src = String(ev.target.result);
+          avatarImg.onload = () => avatarImg.classList.add('image-loaded');
+          if (avatarImg.complete) avatarImg.classList.add('image-loaded');
+        }
+        updateAvatarButtonsState('preview');
+      };
+      reader.readAsDataURL(file);
+    }, { signal });
+
+    btnCancelAvatar?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.selectedAvatarFile = null;
+      if (fileInput) fileInput.value = '';
+      if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
+      this._refreshAvatarsInDom(currentUser?.avatar_url || null);
+      updateAvatarButtonsState(this._hasCustomAvatar() ? 'custom' : 'default');
+    }, { signal });
+
+    btnSaveAvatar?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!this.selectedAvatarFile) return;
+
+      await withButtonLoading(btnSaveAvatar, t('app.loading'), async () => {
+        if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
+        const formData = new FormData();
+        formData.append('avatar', this.selectedAvatarFile!);
+
+        try {
+          const res = await postFormApi(API_ROUTES.settings.avatar, formData);
+          const data = await res.json();
+
+          if (res.ok && data.ok && currentUser) {
+            currentUser.avatar_url = data.avatar_url;
+            setCurrentUser({ ...currentUser, avatar_url: data.avatar_url });
+            this._refreshAvatarsInDom(data.avatar_url);
+            this.selectedAvatarFile = null;
+            if (fileInput) fileInput.value = '';
+            updateAvatarButtonsState('custom');
+            showToast(t('toasts.avatar_updated'), 'success');
+          } else if (avatarErrorBanner) {
+            avatarErrorBanner.textContent = data.error || t('toasts.generic_error');
+            avatarErrorBanner.style.display = 'block';
+          }
+        } catch (_) {
+          if (avatarErrorBanner) {
+            avatarErrorBanner.textContent = t('toasts.generic_error');
+            avatarErrorBanner.style.display = 'block';
+          }
+        }
+      });
+    }, { signal });
+
+    btnDeleteAvatar?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await withButtonLoading(btnDeleteAvatar, t('app.loading'), async () => {
+        if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
+
+        try {
+          const res = await deleteApi(API_ROUTES.settings.avatar);
+          const data = await res.json();
+
+          if (res.ok && data.ok && currentUser) {
+            currentUser.avatar_url = null;
+            setCurrentUser({ ...currentUser, avatar_url: null });
+            this._refreshAvatarsInDom(null);
+            this.selectedAvatarFile = null;
+            if (fileInput) fileInput.value = '';
+            updateAvatarButtonsState('default');
+            showToast(t('toasts.avatar_deleted'), 'success');
+          } else if (avatarErrorBanner) {
+            avatarErrorBanner.textContent = data.error || t('toasts.generic_error');
+            avatarErrorBanner.style.display = 'block';
+          }
+        } catch (_) {
+          if (avatarErrorBanner) {
+            avatarErrorBanner.textContent = t('toasts.generic_error');
+            avatarErrorBanner.style.display = 'block';
+          }
+        }
+      });
+    }, { signal });
+  }
+
+  private _initUsernameSection(signal: AbortSignal, isProtected: boolean): void {
+    const usernameViewBox = this.container.querySelector<HTMLElement>('[data-ref="username-view-box"]');
+    const usernameEditRow = this.container.querySelector<HTMLElement>('[data-ref="username-edit-row"]');
+    const usernameViewActions = this.container.querySelector<HTMLElement>('[data-ref="username-view-actions"]');
+    const displayUsername = this.container.querySelector<HTMLElement>('[data-ref="display-username"]');
+    const inputUsername = this.container.querySelector<HTMLInputElement>('[data-ref="input-username"]');
+    const btnEditUsername = this.container.querySelector<HTMLElement>('[data-ref="btn-edit-username"]');
+    const btnCancelUsername = this.container.querySelector<HTMLElement>('[data-ref="btn-cancel-username"]');
+    const btnSaveUsername = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-save-username"]');
+    const usernameErrorBanner = this.container.querySelector<HTMLElement>('[data-ref="username-error"]');
+
+    if (displayUsername && currentUser) {
+      displayUsername.textContent = currentUser.username || '-';
     }
 
-    const initialAvatarUrl = hasCustomAvatar()
-      ? currentUser.avatar_url!
-      : getDefaultAvatarUrl(currentUser.username);
-    refreshAvatarsInDom(initialAvatarUrl);
-    updateAvatarButtonsState(hasCustomAvatar() ? 'custom' : 'default');
+    if (isProtected && btnEditUsername) {
+      btnEditUsername.style.display = 'none';
+      return;
+    }
+
+    btnEditUsername?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (usernameErrorBanner) usernameErrorBanner.style.display = 'none';
+      if (inputUsername) inputUsername.value = currentUser?.username || '';
+      if (usernameViewBox) usernameViewBox.style.display = 'none';
+      if (usernameViewActions) usernameViewActions.style.display = 'none';
+      if (usernameEditRow) usernameEditRow.style.display = 'flex';
+      inputUsername?.focus();
+    }, { signal });
+
+    btnCancelUsername?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (usernameErrorBanner) usernameErrorBanner.style.display = 'none';
+      if (usernameEditRow) usernameEditRow.style.display = 'none';
+      if (usernameViewBox) usernameViewBox.style.display = '';
+      if (usernameViewActions) usernameViewActions.style.display = '';
+    }, { signal });
+
+    btnSaveUsername?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const newUsername = inputUsername?.value?.trim() || '';
+
+      if (newUsername === currentUser?.username) {
+        if (usernameEditRow) usernameEditRow.style.display = 'none';
+        if (usernameViewBox) usernameViewBox.style.display = '';
+        if (usernameViewActions) usernameViewActions.style.display = '';
+        return;
+      }
+
+      await withButtonLoading(btnSaveUsername, t('app.loading'), async () => {
+        if (usernameErrorBanner) usernameErrorBanner.style.display = 'none';
+
+        try {
+          const res = await postApi(API_ROUTES.settings.username, { username: newUsername });
+          const data = await res.json();
+
+          if (res.ok && data.ok && currentUser) {
+            currentUser.username = data.username;
+            if (displayUsername) displayUsername.textContent = data.username;
+            if (!this._hasCustomAvatar()) {
+              this._refreshAvatarsInDom(null);
+            }
+            if (usernameEditRow) usernameEditRow.style.display = 'none';
+            if (usernameViewBox) usernameViewBox.style.display = '';
+            if (usernameViewActions) usernameViewActions.style.display = '';
+            showToast(t('toasts.username_updated'), 'success');
+          } else if (usernameErrorBanner) {
+            usernameErrorBanner.textContent = data.error || t('toasts.generic_error');
+            usernameErrorBanner.style.display = 'block';
+          }
+        } catch (_) {
+          if (usernameErrorBanner) {
+            usernameErrorBanner.textContent = t('toasts.generic_error');
+            usernameErrorBanner.style.display = 'block';
+          }
+        }
+      });
+    }, { signal });
+  }
+
+  private _initEmailSection(signal: AbortSignal, isProtected: boolean): void {
+    const emailViewBox = this.container.querySelector<HTMLElement>('[data-ref="email-view-box"]');
+    const emailEditRow = this.container.querySelector<HTMLElement>('[data-ref="email-edit-row"]');
+    const emailViewActions = this.container.querySelector<HTMLElement>('[data-ref="email-view-actions"]');
+    const displayEmail = this.container.querySelector<HTMLElement>('[data-ref="display-email"]');
+    const inputEmail = this.container.querySelector<HTMLInputElement>('[data-ref="input-email"]');
+    const btnEditEmail = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-edit-email"]');
+    const btnCancelEmail = this.container.querySelector<HTMLElement>('[data-ref="btn-cancel-email"]');
+    const btnSaveEmail = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-save-email"]');
+    const emailErrorBanner = this.container.querySelector<HTMLElement>('[data-ref="email-error"]');
+
+    if (displayEmail && currentUser) {
+      displayEmail.textContent = currentUser.email || '-';
+    }
+
+    if (isProtected && btnEditEmail) {
+      btnEditEmail.style.display = 'none';
+      return;
+    }
+
+    const activateEmailEditMode = () => {
+      if (emailErrorBanner) emailErrorBanner.style.display = 'none';
+      if (inputEmail) inputEmail.value = currentUser?.email || '';
+      if (emailViewBox) emailViewBox.style.display = 'none';
+      if (emailViewActions) emailViewActions.style.display = 'none';
+      if (emailEditRow) emailEditRow.style.display = 'flex';
+      inputEmail?.focus();
+    };
+
+    const deactivateEmailEditMode = () => {
+      if (emailErrorBanner) emailErrorBanner.style.display = 'none';
+      if (emailEditRow) emailEditRow.style.display = 'none';
+      if (emailViewBox) emailViewBox.style.display = '';
+      if (emailViewActions) emailViewActions.style.display = '';
+    };
+
+    btnCancelEmail?.addEventListener('click', (e) => {
+      e.preventDefault();
+      deactivateEmailEditMode();
+    }, { signal });
+
+    btnSaveEmail?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const newEmail = inputEmail?.value?.trim() || '';
+
+      if (newEmail.toLowerCase() === (currentUser?.email || '').toLowerCase()) {
+        deactivateEmailEditMode();
+        return;
+      }
+
+      await withButtonLoading(btnSaveEmail, t('app.loading'), async () => {
+        if (emailErrorBanner) emailErrorBanner.style.display = 'none';
+
+        try {
+          const res = await postApi(API_ROUTES.settings.email, { email: newEmail });
+          const data = await res.json();
+
+          if (res.ok && data.ok && currentUser) {
+            currentUser.email = data.email;
+            if (displayEmail) displayEmail.textContent = data.email;
+            deactivateEmailEditMode();
+            showToast(t('toasts.email_updated'), 'success');
+          } else if (emailErrorBanner) {
+            emailErrorBanner.textContent = data.error || t('toasts.generic_error');
+            emailErrorBanner.style.display = 'block';
+          }
+        } catch (_) {
+          if (emailErrorBanner) {
+            emailErrorBanner.textContent = t('toasts.generic_error');
+            emailErrorBanner.style.display = 'block';
+          }
+        }
+      });
+    }, { signal });
+
+    btnEditEmail?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (emailErrorBanner) emailErrorBanner.style.display = 'none';
+
+      await withButtonLoading(btnEditEmail, t('app.loading'), async () => {
+        try {
+          const res = await postApi(API_ROUTES.settings.emailRequestCode);
+          const data = await res.json();
+
+          if (!res.ok || !data.ok) {
+            showToast(data.error || t('toasts.generic_error'), 'danger');
+            return;
+          }
+
+          if (data.alreadyAuthorized) {
+            activateEmailEditMode();
+            return;
+          }
+
+          showToast(t('settings.your_account.email_code_sent_toast'), 'info');
+
+          openModal({
+            bodyHtml: `
+              <label class="field" data-ref="field-email-code">
+                <input class="field__input field__input--code" data-ref="modal-input-code" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="one-time-code" />
+                <span class="field__label" data-ref="modal-label-code">${t('settings.your_account.modal_email_code_placeholder')}</span>
+              </label>
+            `,
+            cancelText: t('settings.your_account.btn_cancel'),
+            confirmText: t('settings.your_account.btn_continue'),
+            descriptionKey: 'settings.your_account.modal_email_verify_desc',
+            descriptionParams: { email: currentUser?.email || '' },
+            onConfirm: async (inst) => {
+              const inputCodeEl = inst.body.querySelector<HTMLInputElement>('[data-ref="modal-input-code"]');
+              const inputCode = inputCodeEl?.value?.trim() || '';
+
+              if (!inputCode) {
+                inst.showError(t('validation.code_required'));
+                return;
+              }
+              if (inputCode.length !== 6 || !/^\d+$/.test(inputCode)) {
+                inst.showError(t('validation.code_invalid'));
+                return;
+              }
+
+              inst.clearError();
+              inst.setConfirmLoading(true);
+
+              try {
+                const verifyRes = await postApi(API_ROUTES.settings.emailVerifyCode, { code: inputCode });
+                const verifyData = await verifyRes.json();
+
+                if (!verifyRes.ok || !verifyData.ok) {
+                  inst.setConfirmLoading(false);
+                  inst.showError(verifyData.error || t('toasts.generic_error'));
+                  return;
+                }
+
+                inst.close();
+                activateEmailEditMode();
+              } catch (_) {
+                inst.setConfirmLoading(false);
+                inst.showError(t('toasts.generic_error'));
+              }
+            },
+            titleKey: 'settings.your_account.modal_email_verify_title',
+          });
+        } catch (_) {
+          showToast(t('toasts.generic_error'), 'danger');
+        }
+      });
+    }, { signal });
+  }
+
+  private _initGoogleSection(signal: AbortSignal, isProtected: boolean): void {
+    const googleStatusEl = this.container.querySelector<HTMLElement>('[data-ref="google-account-status"]');
+    const googleActionBtn = this.container.querySelector<HTMLElement>('[data-ref="btn-google-account-action"]');
+
+    if (isProtected && googleActionBtn) {
+      googleActionBtn.style.display = 'none';
+      return;
+    }
 
     const refreshGoogleStatus = () => {
       if (!currentUser) return;
@@ -222,26 +562,25 @@ export class YourAccountController implements ViewController {
 
             if (!hasPassword) {
               openModal({
-                titleKey: 'settings.your_account.modal_google_no_password_title',
-                descriptionKey: 'settings.your_account.modal_google_no_password_desc',
-                confirmText: t('settings.your_account.btn_go_to_security'),
-                showCancel: true,
                 cancelText: t('modal.cancel'),
                 confirmClass: 'component-button--black',
+                confirmText: t('settings.your_account.btn_go_to_security'),
+                descriptionKey: 'settings.your_account.modal_google_no_password_desc',
                 onConfirm: (modalInst) => {
                   modalInst.close();
                   navigate('/settings/security');
                 },
+                showCancel: true,
+                titleKey: 'settings.your_account.modal_google_no_password_title',
               });
               return;
             }
 
             openModal({
-              titleKey: 'settings.your_account.modal_unlink_google_title',
-              descriptionKey: 'settings.your_account.modal_unlink_google_desc',
-              confirmText: t('settings.your_account.btn_unlink_confirm'),
               cancelText: t('modal.cancel'),
               confirmClass: 'component-button--danger',
+              confirmText: t('settings.your_account.btn_unlink_confirm'),
+              descriptionKey: 'settings.your_account.modal_unlink_google_desc',
               onConfirm: async (modalInst) => {
                 modalInst.clearError();
                 modalInst.setConfirmLoading(true);
@@ -266,6 +605,7 @@ export class YourAccountController implements ViewController {
                   modalInst.showError(t('toasts.generic_error'));
                 }
               },
+              titleKey: 'settings.your_account.modal_unlink_google_title',
             });
           } catch (_) {
             showToast(t('toasts.generic_error'), 'danger');
@@ -404,335 +744,12 @@ export class YourAccountController implements ViewController {
         }
       }
     }, { signal });
+  }
 
-    const triggerFileInput = () => {
-      if (isProtected) return;
-      if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
-      fileInput?.click();
-    };
-
-    avatarPreviewBox?.addEventListener('click', (e) => {
-      e.preventDefault();
-      triggerFileInput();
-    }, { signal });
-
-    btnUploadAvatar?.addEventListener('click', (e) => {
-      e.preventDefault();
-      triggerFileInput();
-    }, { signal });
-
-    btnChangeAvatar?.addEventListener('click', (e) => {
-      e.preventDefault();
-      triggerFileInput();
-    }, { signal });
-
-    fileInput?.addEventListener('change', (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (!file) return;
-
-      if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
-
-      const validation = validateAndSanitizeFile(file, {
-        allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'],
-        maxMb: 2,
-      });
-
-      if (!validation.valid) {
-        if (avatarErrorBanner) {
-          avatarErrorBanner.textContent = validation.error ?? '';
-          avatarErrorBanner.style.display = 'block';
-        }
-        target.value = '';
-        return;
-      }
-
-      selectedAvatarFile = validation.file ?? null;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (avatarImg && ev.target?.result) {
-          avatarImg.classList.add('image-lazy-fade');
-          avatarImg.classList.remove('image-loaded');
-          avatarImg.src = String(ev.target.result);
-          avatarImg.onload = () => avatarImg.classList.add('image-loaded');
-          if (avatarImg.complete) avatarImg.classList.add('image-loaded');
-        }
-        updateAvatarButtonsState('preview');
-      };
-      reader.readAsDataURL(file);
-    }, { signal });
-
-    btnCancelAvatar?.addEventListener('click', (e) => {
-      e.preventDefault();
-      selectedAvatarFile = null;
-      if (fileInput) fileInput.value = '';
-      if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
-      refreshAvatarsInDom(currentUser?.avatar_url || null);
-      updateAvatarButtonsState(hasCustomAvatar() ? 'custom' : 'default');
-    }, { signal });
-
-    btnSaveAvatar?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (!selectedAvatarFile) return;
-
-      await withButtonLoading(btnSaveAvatar, t('app.loading'), async () => {
-        if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
-
-        const formData = new FormData();
-        formData.append('avatar', selectedAvatarFile!);
-
-        try {
-          const res = await postFormApi(API_ROUTES.settings.avatar, formData);
-          const data = await res.json();
-
-          if (res.ok && data.ok && currentUser) {
-            currentUser.avatar_url = data.avatar_url;
-            setCurrentUser({ ...currentUser, avatar_url: data.avatar_url });
-            refreshAvatarsInDom(data.avatar_url);
-            selectedAvatarFile = null;
-            if (fileInput) fileInput.value = '';
-            updateAvatarButtonsState('custom');
-            showToast(t('toasts.avatar_updated'), 'success');
-          } else {
-            if (avatarErrorBanner) {
-              avatarErrorBanner.textContent = data.error || t('toasts.generic_error');
-              avatarErrorBanner.style.display = 'block';
-            }
-          }
-        } catch (_) {
-          if (avatarErrorBanner) {
-            avatarErrorBanner.textContent = t('toasts.generic_error');
-            avatarErrorBanner.style.display = 'block';
-          }
-        }
-      });
-    }, { signal });
-
-    btnDeleteAvatar?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await withButtonLoading(btnDeleteAvatar, t('app.loading'), async () => {
-        if (avatarErrorBanner) avatarErrorBanner.style.display = 'none';
-
-        try {
-          const res = await deleteApi(API_ROUTES.settings.avatar);
-          const data = await res.json();
-
-          if (res.ok && data.ok && currentUser) {
-            currentUser.avatar_url = null;
-            setCurrentUser({ ...currentUser, avatar_url: null });
-            refreshAvatarsInDom(null);
-            selectedAvatarFile = null;
-            if (fileInput) fileInput.value = '';
-            updateAvatarButtonsState('default');
-            showToast(t('toasts.avatar_deleted'), 'success');
-          } else {
-            if (avatarErrorBanner) {
-              avatarErrorBanner.textContent = data.error || t('toasts.generic_error');
-              avatarErrorBanner.style.display = 'block';
-            }
-          }
-        } catch (_) {
-          if (avatarErrorBanner) {
-            avatarErrorBanner.textContent = t('toasts.generic_error');
-            avatarErrorBanner.style.display = 'block';
-          }
-        }
-      });
-    }, { signal });
-
-    btnEditUsername?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (usernameErrorBanner) usernameErrorBanner.style.display = 'none';
-      if (inputUsername) inputUsername.value = currentUser?.username || '';
-      if (usernameViewBox) usernameViewBox.style.display = 'none';
-      if (usernameViewActions) usernameViewActions.style.display = 'none';
-      if (usernameEditRow) usernameEditRow.style.display = 'flex';
-      inputUsername?.focus();
-    }, { signal });
-
-    btnCancelUsername?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (usernameErrorBanner) usernameErrorBanner.style.display = 'none';
-      if (usernameEditRow) usernameEditRow.style.display = 'none';
-      if (usernameViewBox) usernameViewBox.style.display = '';
-      if (usernameViewActions) usernameViewActions.style.display = '';
-    }, { signal });
-
-    btnSaveUsername?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const newUsername = inputUsername?.value?.trim() || '';
-
-      if (newUsername === currentUser?.username) {
-        if (usernameEditRow) usernameEditRow.style.display = 'none';
-        if (usernameViewBox) usernameViewBox.style.display = '';
-        if (usernameViewActions) usernameViewActions.style.display = '';
-        return;
-      }
-
-      await withButtonLoading(btnSaveUsername, t('app.loading'), async () => {
-        if (usernameErrorBanner) usernameErrorBanner.style.display = 'none';
-
-        try {
-          const res = await postApi(API_ROUTES.settings.username, { username: newUsername });
-          const data = await res.json();
-
-          if (res.ok && data.ok && currentUser) {
-            currentUser.username = data.username;
-            if (displayUsername) displayUsername.textContent = data.username;
-            if (!hasCustomAvatar()) {
-              refreshAvatarsInDom(null);
-            }
-            if (usernameEditRow) usernameEditRow.style.display = 'none';
-            if (usernameViewBox) usernameViewBox.style.display = '';
-            if (usernameViewActions) usernameViewActions.style.display = '';
-            showToast(t('toasts.username_updated'), 'success');
-          } else {
-            if (usernameErrorBanner) {
-              usernameErrorBanner.textContent = data.error || t('toasts.generic_error');
-              usernameErrorBanner.style.display = 'block';
-            }
-          }
-        } catch (_) {
-          if (usernameErrorBanner) {
-            usernameErrorBanner.textContent = t('toasts.generic_error');
-            usernameErrorBanner.style.display = 'block';
-          }
-        }
-      });
-    }, { signal });
-
-    const activateEmailEditMode = () => {
-      if (emailErrorBanner) emailErrorBanner.style.display = 'none';
-      if (inputEmail) inputEmail.value = currentUser?.email || '';
-      if (emailViewBox) emailViewBox.style.display = 'none';
-      if (emailViewActions) emailViewActions.style.display = 'none';
-      if (emailEditRow) emailEditRow.style.display = 'flex';
-      inputEmail?.focus();
-    };
-
-    const deactivateEmailEditMode = () => {
-      if (emailErrorBanner) emailErrorBanner.style.display = 'none';
-      if (emailEditRow) emailEditRow.style.display = 'none';
-      if (emailViewBox) emailViewBox.style.display = '';
-      if (emailViewActions) emailViewActions.style.display = '';
-    };
-
-    btnCancelEmail?.addEventListener('click', (e) => {
-      e.preventDefault();
-      deactivateEmailEditMode();
-    }, { signal });
-
-    btnSaveEmail?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const newEmail = inputEmail?.value?.trim() || '';
-
-      if (newEmail.toLowerCase() === (currentUser?.email || '').toLowerCase()) {
-        deactivateEmailEditMode();
-        return;
-      }
-
-      await withButtonLoading(btnSaveEmail, t('app.loading'), async () => {
-        if (emailErrorBanner) emailErrorBanner.style.display = 'none';
-
-        try {
-          const res = await postApi(API_ROUTES.settings.email, { email: newEmail });
-          const data = await res.json();
-
-          if (res.ok && data.ok && currentUser) {
-            currentUser.email = data.email;
-            if (displayEmail) displayEmail.textContent = data.email;
-            deactivateEmailEditMode();
-            showToast(t('toasts.email_updated'), 'success');
-          } else {
-            if (emailErrorBanner) {
-              emailErrorBanner.textContent = data.error || t('toasts.generic_error');
-              emailErrorBanner.style.display = 'block';
-            }
-          }
-        } catch (_) {
-          if (emailErrorBanner) {
-            emailErrorBanner.textContent = t('toasts.generic_error');
-            emailErrorBanner.style.display = 'block';
-          }
-        }
-      });
-    }, { signal });
-
-    btnEditEmail?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (emailErrorBanner) emailErrorBanner.style.display = 'none';
-
-      await withButtonLoading(btnEditEmail, t('app.loading'), async () => {
-        try {
-          const res = await postApi(API_ROUTES.settings.emailRequestCode);
-          const data = await res.json();
-
-          if (!res.ok || !data.ok) {
-            showToast(data.error || t('toasts.generic_error'), 'danger');
-            return;
-          }
-
-          if (data.alreadyAuthorized) {
-            activateEmailEditMode();
-            return;
-          }
-
-          showToast(t('settings.your_account.email_code_sent_toast'), 'info');
-
-          openModal({
-            titleKey: 'settings.your_account.modal_email_verify_title',
-            descriptionKey: 'settings.your_account.modal_email_verify_desc',
-            descriptionParams: { email: currentUser?.email || '' },
-            confirmText: t('settings.your_account.btn_continue'),
-            cancelText: t('settings.your_account.btn_cancel'),
-            bodyHtml: `
-              <label class="field" data-ref="field-email-code">
-                <input class="field__input field__input--code" data-ref="modal-input-code" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="one-time-code" />
-                <span class="field__label" data-ref="modal-label-code">${t('settings.your_account.modal_email_code_placeholder')}</span>
-              </label>
-            `,
-            onConfirm: async (inst) => {
-              const inputCodeEl = inst.body.querySelector<HTMLInputElement>('[data-ref="modal-input-code"]');
-              const inputCode = inputCodeEl?.value?.trim() || '';
-
-              if (!inputCode) {
-                inst.showError(t('validation.code_required'));
-                return;
-              }
-              if (inputCode.length !== 6 || !/^\d+$/.test(inputCode)) {
-                inst.showError(t('validation.code_invalid'));
-                return;
-              }
-
-              inst.clearError();
-              inst.setConfirmLoading(true);
-
-              try {
-                const verifyRes = await postApi(API_ROUTES.settings.emailVerifyCode, {
-                  code: inputCode,
-                });
-                const verifyData = await verifyRes.json();
-
-                if (!verifyRes.ok || !verifyData.ok) {
-                  inst.setConfirmLoading(false);
-                  inst.showError(verifyData.error || t('toasts.generic_error'));
-                  return;
-                }
-
-                inst.close();
-                activateEmailEditMode();
-              } catch (_) {
-                inst.setConfirmLoading(false);
-                inst.showError(t('toasts.generic_error'));
-              }
-            },
-          });
-        } catch (_) {
-          showToast(t('toasts.generic_error'), 'danger');
-        }
-      });
-    }, { signal });
-
+  private async _initPreferencesSection(signal: AbortSignal): Promise<void> {
+    const langDropdown = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-language"]');
+    const langSelectedText = this.container.querySelector<HTMLElement>('[data-ref="language-selected-text"]');
+    const toggleOpenLinks = this.container.querySelector<HTMLInputElement>('[data-ref="toggle-open-links"]');
     const langListEl = this.container.querySelector<HTMLElement>('[data-ref="list-languages"]');
     const langSearchInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-search-language"]');
     const langEmptyEl = this.container.querySelector<HTMLElement>('[data-ref="empty-languages"]');
@@ -800,6 +817,12 @@ export class YourAccountController implements ViewController {
 
     if (langDropdown) {
       this.dropdownController = setupDropdown(langDropdown, {
+        onClose: () => {
+          if (langSearchInput) {
+            langSearchInput.value = '';
+            filterLanguages('');
+          }
+        },
         onSelect: async (lang: string) => {
           try {
             activeLang = lang;
@@ -809,12 +832,6 @@ export class YourAccountController implements ViewController {
             showToast(t('toasts.language_updated'), 'success');
             await switchLanguage(lang);
           } catch (_) {}
-        },
-        onClose: () => {
-          if (langSearchInput) {
-            langSearchInput.value = '';
-            filterLanguages('');
-          }
         },
       });
     }
@@ -829,21 +846,6 @@ export class YourAccountController implements ViewController {
     toggleOpenLinks?.addEventListener('change', (e: Event) => {
       saveOpenLinks((e.target as HTMLInputElement).checked);
     }, { signal });
-  }
-
-  destroy(): void {
-    if (this.cleanUpLinkListeners) {
-      this.cleanUpLinkListeners();
-      this.cleanUpLinkListeners = null;
-    }
-    if (this.dropdownController) {
-      this.dropdownController.destroy();
-      this.dropdownController = null;
-    }
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
   }
 }
 

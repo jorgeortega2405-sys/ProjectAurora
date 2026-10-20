@@ -5,7 +5,9 @@ import { describe, it } from 'node:test';
 
 const ROOT_DIR = process.cwd();
 const MERGE_HTML_PATH = path.resolve(ROOT_DIR, 'public/views/tools/merge-pdf/merge-pdf.html');
-const TOOL_CSS_PATH = path.resolve(ROOT_DIR, 'public/css/tools/tool-layout.css');
+const TOOL_CSS_PATH = fs.existsSync(path.resolve(ROOT_DIR, 'public/css/tools/tool-base.css'))
+  ? path.resolve(ROOT_DIR, 'public/css/tools/tool-base.css')
+  : path.resolve(ROOT_DIR, 'public/css/tools/tool-layout.css');
 const DOM_UTIL_PATH = path.resolve(ROOT_DIR, 'client/utils/dom.util.ts');
 const MERGE_VIEW_PATH = path.resolve(ROOT_DIR, 'client/views/tools/merge-pdf/merge-pdf.view.ts');
 
@@ -40,13 +42,14 @@ describe('Mobile Tool Sidebar Modal & Settings FAB Tests', () => {
     assert.ok(css.includes('.tool-sidebar-backdrop'), 'Must have .tool-sidebar-backdrop');
 
     // Desktop suppression
-    const desktopSlice = css.slice(0, css.indexOf('@media (max-width: 960px)'));
+    const mqIndex = css.indexOf('.tool-fab-settings.is-visible');
+    const desktopSlice = css.slice(0, mqIndex);
     assert.ok(desktopSlice.includes('.tool-fab-settings') && desktopSlice.includes('display: none !important'), 'Desktop must hide tool-fab-settings with !important');
     assert.ok(desktopSlice.includes('.tool-sidebar__mobile-bar') && desktopSlice.includes('display: none !important'), 'Desktop must hide tool-sidebar__mobile-bar with !important');
     assert.ok(desktopSlice.includes('.tool-sidebar-backdrop') && desktopSlice.includes('display: none !important'), 'Desktop must hide tool-sidebar-backdrop with !important');
 
     // Mobile activation
-    const mqSlice = css.slice(css.indexOf('@media (max-width: 960px)'));
+    const mqSlice = css.slice(mqIndex);
     assert.ok(mqSlice.includes('.tool-fab-settings.is-visible'), 'Mobile FAB must respond to is-visible');
     assert.ok(mqSlice.includes('.tool-sidebar-backdrop.is-visible'), 'Mobile backdrop must handle is-visible');
     assert.ok(mqSlice.includes('.tool-layout__sidebar.is-mobile-open'), 'Mobile sidebar must slide open with is-mobile-open');

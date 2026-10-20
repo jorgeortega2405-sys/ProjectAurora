@@ -1,13 +1,10 @@
-import { execFile } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { promisify } from 'util';
 import { logger } from '../../services/logger.service.js';
 import { getTempFile, storeTempFile } from '../../services/temp-storage.service.js';
+import { executeProcessWithTimeout } from '../../utils/process.util.js';
 import { StoredToPdfFile, ToPdfConversionResult, ToPdfSourceType } from './to-pdf-converter.types.js';
-
-const execFileAsync = promisify(execFile);
 
 const TO_PDF_DIR = path.resolve(process.cwd(), 'data/to-pdf');
 const UPLOADS_DIR = path.join(TO_PDF_DIR, 'uploads');
@@ -41,8 +38,7 @@ export async function convertToPdf(
 
   try {
     if (sourceType === 'jpg-to-pdf') {
-      const pythonScript = `
-import sys, os
+      const pythonScript = `import sys, os
 from PIL import Image
 input_file = sys.argv[1]
 output_file = sys.argv[2]
@@ -60,38 +56,50 @@ if im.mode in ('RGBA', 'LA', 'P'):
     im = im.convert('RGB')
 im.save(output_file, 'PDF', resolution=100.0)
 `;
-      await execFileAsync('python3', ['-c', pythonScript, inputPath, destinationPath]);
+      const pyCmd = process.platform === 'win32' ? 'python' : 'python3';
+      const pyResult = await executeProcessWithTimeout(pyCmd, ['-c', pythonScript, inputPath, destinationPath], { timeoutMs: 45000 });
+      if (pyResult.timedOut || pyResult.code !== 0) {
+        throw new Error(pyResult.stderr || 'Fallo en la conversión de imagen a PDF');
+      }
     } else {
       const tempOutDir = path.join(OUTPUT_DIR, uniquePrefix);
-      fs.mkdirSync(tempOutDir, { recursive: true });
+      await fs.promises.mkdir(tempOutDir, { recursive: true });
 
       try {
-        await execFileAsync('libreoffice', [
+        const loResult = await executeProcessWithTimeout('libreoffice', [
           '--headless',
           '--convert-to',
           'pdf',
           '--outdir',
           tempOutDir,
           inputPath,
-        ]);
+        ], { timeoutMs: 60000 });
 
-        const generatedFiles = fs.readdirSync(tempOutDir).filter((f) => f.toLowerCase().endsWith('.pdf'));
+        if (loResult.timedOut) {
+          throw new Error('La conversión de documento con LibreOffice excedió el tiempo límite (60s)');
+        }
+
+        const entries = await fs.promises.readdir(tempOutDir);
+        const generatedFiles = entries.filter((f) => f.toLowerCase().endsWith('.pdf'));
         if (generatedFiles.length === 0) {
           throw new Error('No se pudo generar el documento PDF desde el archivo proporcionado.');
         }
 
         const generatedPath = path.join(tempOutDir, generatedFiles[0]);
-        fs.copyFileSync(generatedPath, destinationPath);
+        await fs.promises.copyFile(generatedPath, destinationPath);
       } finally {
-        if (fs.existsSync(tempOutDir)) {
-          try {
-            fs.rmSync(tempOutDir, { force: true, recursive: true });
-          } catch {}
-        }
+        try {
+          await fs.promises.rm(tempOutDir, { force: true, recursive: true });
+        } catch {}
       }
     }
 
-    if (!fs.existsSync(destinationPath)) {
+    try {
+      const stats = await fs.promises.stat(destinationPath);
+      if (stats.size === 0) {
+        throw new Error('El archivo generado está vacío');
+      }
+    } catch {
       throw new Error('El archivo PDF resultante no fue generado correctamente.');
     }
 
@@ -122,18 +130,14 @@ im.save(output_file, 'PDF', resolution=100.0)
     };
   } catch (err) {
     logger.app.error('Error durante la conversión hacia PDF', err);
-    if (fs.existsSync(destinationPath)) {
-      try {
-        fs.unlinkSync(destinationPath);
-      } catch {}
-    }
+    try {
+      await fs.promises.unlink(destinationPath);
+    } catch {}
     throw new Error('Ocurrió un error al procesar la conversión a PDF.');
   } finally {
-    if (fs.existsSync(inputPath)) {
-      try {
-        fs.unlinkSync(inputPath);
-      } catch {}
-    }
+    try {
+      await fs.promises.unlink(inputPath);
+    } catch {}
   }
 }
 

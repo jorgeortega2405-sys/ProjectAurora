@@ -117,7 +117,12 @@ export class SplitPdfController implements ViewController {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
     }
-    this.pdfDocument = null;
+    if (this.pdfDocument) {
+      try {
+        void this.pdfDocument.destroy();
+      } catch {}
+      this.pdfDocument = null;
+    }
   }
 
   private async handleDriveImport(): Promise<void> {

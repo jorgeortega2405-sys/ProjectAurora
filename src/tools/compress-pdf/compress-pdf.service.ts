@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
@@ -6,6 +6,7 @@ import path from 'path';
 import { PDFDocument } from 'pdf-lib';
 import { logger } from '../../services/logger.service.js';
 import { getTempFile, storeTempFile } from '../../services/temp-storage.service.js';
+import { executeProcessWithTimeout } from '../../utils/process.util.js';
 import { CompressPdfParams, CompressPdfResponse, PdfCompressLevel, StoredCompressedPdf } from './compress-pdf.types.js';
 
 let resolvedGsCommand: string | null = null;
@@ -17,10 +18,11 @@ function getGhostscriptCommand(): string {
     : ['gs'];
   for (const cmd of candidates) {
     try {
-      const res = spawn(cmd, ['-version']);
-      res.on('error', () => {});
-      resolvedGsCommand = cmd;
-      return cmd;
+      const res = spawnSync(cmd, ['-version']);
+      if (!res.error) {
+        resolvedGsCommand = cmd;
+        return cmd;
+      }
     } catch {
       continue;
     }
@@ -93,38 +95,31 @@ async function runGhostscriptCompression(inputPath: string, outputPath: string, 
     inputPath,
   ];
 
-  return new Promise<boolean>((resolve) => {
-    const proc = spawn(gsCmd, args);
-    let stderr = '';
+  const result = await executeProcessWithTimeout(gsCmd, args, { timeoutMs: 60000 });
+  if (result.timedOut) {
+    logger.app.warn('Ghostscript excedió el tiempo límite de compresión (timeout 60s)');
+    return false;
+  }
 
-    proc.stderr.on('data', (d) => {
-      stderr += d.toString();
-    });
+  if (result.code === 0) {
+    try {
+      const stats = await fs.promises.stat(outputPath);
+      if (stats.size > 0) return true;
+    } catch {}
+  }
 
-    proc.on('error', (err) => {
-      logger.app.warn('Ghostscript no disponible para compresión de PDF, usando fallback', err);
-      resolve(false);
-    });
-
-    proc.on('close', (code) => {
-      if (code === 0 && fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0) {
-        resolve(true);
-      } else {
-        logger.app.warn(`Ghostscript finalizó con código ${code} al comprimir PDF`, { stderr });
-        resolve(false);
-      }
-    });
-  });
+  logger.app.warn(`Ghostscript finalizó con código ${result.code} al comprimir PDF`, { stderr: result.stderr });
+  return false;
 }
 
 export async function compressPdfFile(params: CompressPdfParams): Promise<CompressPdfResponse> {
   const { buffer, filename: customFilename, level, originalname } = params;
   const originalSize = buffer.length;
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pdf_compress_'));
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'pdf_compress_'));
   const inputTempPath = path.join(tempDir, 'input.pdf');
   const outputTempPath = path.join(tempDir, 'output.pdf');
 
-  fs.writeFileSync(inputTempPath, buffer);
+  await fs.promises.writeFile(inputTempPath, buffer);
 
   let finalBuffer: Buffer = buffer;
   let pageCount = 1;
@@ -139,7 +134,7 @@ export async function compressPdfFile(params: CompressPdfParams): Promise<Compre
   try {
     const gsSuccess = await runGhostscriptCompression(inputTempPath, outputTempPath, level);
     if (gsSuccess) {
-      const gsBuffer = fs.readFileSync(outputTempPath);
+      const gsBuffer = await fs.promises.readFile(outputTempPath);
       if (gsBuffer.length < originalSize) {
         finalBuffer = gsBuffer;
       } else {
@@ -159,11 +154,11 @@ export async function compressPdfFile(params: CompressPdfParams): Promise<Compre
       }
     }
   } finally {
-    try {
-      if (fs.existsSync(inputTempPath)) fs.unlinkSync(inputTempPath);
-      if (fs.existsSync(outputTempPath)) fs.unlinkSync(outputTempPath);
-      if (fs.existsSync(tempDir)) fs.rmdirSync(tempDir);
-    } catch {}
+    await Promise.allSettled([
+      fs.promises.unlink(inputTempPath),
+      fs.promises.unlink(outputTempPath),
+      fs.promises.rm(tempDir, { force: true, recursive: true }),
+    ]);
   }
 
   const compressedSize = finalBuffer.length;

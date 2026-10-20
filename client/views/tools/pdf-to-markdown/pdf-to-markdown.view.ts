@@ -218,7 +218,12 @@ export class PdfToMarkdownController implements ViewController {
     this.sidebarModal = null;
     this.currentFile = null;
     this.currentResult = null;
-    this.pdfDocument = null;
+    if (this.pdfDocument) {
+      try {
+        void this.pdfDocument.destroy();
+      } catch {}
+      this.pdfDocument = null;
+    }
   }
 
   private setupSidebarModal(): void {

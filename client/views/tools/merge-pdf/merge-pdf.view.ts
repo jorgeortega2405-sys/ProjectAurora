@@ -334,6 +334,7 @@ export class MergePdfController implements ViewController {
   }
 
   private async generateThumbnailForItem(item: SelectedPdfItem): Promise<void> {
+    let pdfDoc: any = null;
     try {
       const pdfjsLib = await loadPdfJs();
       const arrayBuffer = await item.file.arrayBuffer();
@@ -343,7 +344,7 @@ export class MergePdfController implements ViewController {
         data: new Uint8Array(arrayBuffer),
         standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.6.205/standard_fonts/',
       });
-      const pdfDoc = await loadingTask.promise;
+      pdfDoc = await loadingTask.promise;
       item.pageCount = pdfDoc.numPages || item.pageCount;
 
       const page = await pdfDoc.getPage(1);
@@ -376,7 +377,12 @@ export class MergePdfController implements ViewController {
           metaEl.textContent = `${pagesLabel} • ${formatBytes(item.size)}`;
         }
       }
-    } catch {}
+    } catch {
+    } finally {
+      try {
+        if (pdfDoc) await pdfDoc.destroy();
+      } catch {}
+    }
 
     this.updateSummary();
   }

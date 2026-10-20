@@ -1,14 +1,11 @@
-import { execFile } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { promisify } from 'util';
 import { logger } from '../../services/logger.service.js';
 import { getTempFile, storeTempFile } from '../../services/temp-storage.service.js';
+import { executeProcessWithTimeout } from '../../utils/process.util.js';
 import { ProtectPdfOptions, ProtectPdfResponse, StoredProtectPdfResult } from './protect-pdf.types.js';
-
-const execFileAsync = promisify(execFile);
 
 function sanitizePdfFilename(rawName?: string, defaultName = 'documento_protegido.pdf'): string {
   if (!rawName || typeof rawName !== 'string') {
@@ -36,15 +33,12 @@ export async function protectPdf(
   const tempOutput = path.join(os.tmpdir(), `${tempId}_out.pdf`);
 
   try {
-    fs.writeFileSync(tempInput, fileBuffer);
+    await fs.promises.writeFile(tempInput, fileBuffer);
 
-    const pythonScript = `
-import sys, pikepdf
-
+    const pythonScript = `import sys, pikepdf
 input_path = sys.argv[1]
 output_path = sys.argv[2]
 password = sys.argv[3]
-
 with pikepdf.open(input_path) as pdf:
     num_pages = len(pdf.pages)
     enc = pikepdf.Encryption(user=password, owner=password, R=6)
@@ -52,10 +46,14 @@ with pikepdf.open(input_path) as pdf:
     print(num_pages)
 `;
 
-    const { stdout } = await execFileAsync('python3', ['-c', pythonScript, tempInput, tempOutput, password]);
-    const totalPages = parseInt(stdout.trim(), 10) || 1;
+    const pyCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const result = await executeProcessWithTimeout(pyCmd, ['-c', pythonScript, tempInput, tempOutput, password], { timeoutMs: 45000 });
+    if (result.timedOut || result.code !== 0) {
+      throw new Error(result.stderr || 'El proceso de cifrado no pudo completarse.');
+    }
 
-    const encryptedBuffer = fs.readFileSync(tempOutput);
+    const totalPages = parseInt(result.stdout.trim(), 10) || 1;
+    const encryptedBuffer = await fs.promises.readFile(tempOutput);
     const fileId = crypto.randomUUID();
     const filename = sanitizePdfFilename(options.filename, `${originalFilename.replace(/\.pdf$/i, '')}_protegido.pdf`);
 
@@ -82,12 +80,10 @@ with pikepdf.open(input_path) as pdf:
     logger.app.error(`Error al proteger PDF con contraseña: ${originalFilename}`, err);
     throw new Error('No se pudo proteger el archivo PDF. Asegúrate de que no esté corrupto.');
   } finally {
-    if (fs.existsSync(tempInput)) {
-      try { fs.unlinkSync(tempInput); } catch {}
-    }
-    if (fs.existsSync(tempOutput)) {
-      try { fs.unlinkSync(tempOutput); } catch {}
-    }
+    await Promise.allSettled([
+      fs.promises.unlink(tempInput),
+      fs.promises.unlink(tempOutput),
+    ]);
   }
 }
 

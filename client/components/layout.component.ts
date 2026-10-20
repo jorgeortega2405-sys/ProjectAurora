@@ -1,9 +1,9 @@
-import { navigate } from '../app-router.js';
 import { getLocalizedPath } from '../config/seo.config.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { currentUser, escapeHtml, getApi, linkedAccounts, logoutAllApi, logoutApi, onAuthChange, switchAccountApi } from '../services/api.service.js';
 import { getCurrentLanguage, t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { UserWorkflow } from '../types/workflow.types.js';
 import { applyAvatarTier } from '../utils/tier.util.js';

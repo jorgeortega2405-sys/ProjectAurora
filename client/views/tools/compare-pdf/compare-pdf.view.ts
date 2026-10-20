@@ -53,8 +53,18 @@ export class ComparePdfController implements ViewController {
       this.abortController.abort();
       this.abortController = null;
     }
-    this.pdfDocument1 = null;
-    this.pdfDocument2 = null;
+    if (this.pdfDocument1) {
+      try {
+        void this.pdfDocument1.destroy();
+      } catch {}
+      this.pdfDocument1 = null;
+    }
+    if (this.pdfDocument2) {
+      try {
+        void this.pdfDocument2.destroy();
+      } catch {}
+      this.pdfDocument2 = null;
+    }
   }
 
   private bindEvents(): void {

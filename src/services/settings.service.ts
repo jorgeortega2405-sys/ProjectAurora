@@ -6,7 +6,7 @@ import { pool } from '../config/database.config.js';
 import { redis } from '../config/redis.config.js';
 import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
 import { validatePassword } from '../utils/validators.util.js';
-import { hashPassword, verifyPassword } from './auth.service.js';
+import { hashPassword, verifyPassword } from './crypto.service.js';
 import { logger } from './logger.service.js';
 import { sendEmailChangeCodeEmail } from './mail.service.js';
 import { findUserByEmail, findUserById, findUserByUsername, unlinkUserGoogle, updateUserAvatar, updateUserEmail, updateUserPassword, updateUserUsername } from './user.service.js';

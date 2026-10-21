@@ -170,22 +170,22 @@ export class HomeController {
       );
     });
 
-    const btnAiSummarize = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-summarize"]');
-    btnAiSummarize?.addEventListener(
+    const btnHomePro = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-pro"]');
+    btnHomePro?.addEventListener(
       'click',
       (e) => {
         e.preventDefault();
-        navigate('/summarize-pdf');
+        navigate('/upgrade');
       },
       { signal: this.abortController?.signal }
     );
 
-    const btnAiTranslate = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-translate"]');
-    btnAiTranslate?.addEventListener(
+    const btnHomePlans = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-plans"]');
+    btnHomePlans?.addEventListener(
       'click',
       (e) => {
         e.preventDefault();
-        navigate('/translate-pdf');
+        navigate('/upgrade');
       },
       { signal: this.abortController?.signal }
     );

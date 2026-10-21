@@ -1,6 +1,6 @@
 import { getLocalizedPath } from '../config/seo.config.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
-import { currentUser, escapeHtml, getApi, linkedAccounts, logoutAllApi, logoutApi, onAuthChange, switchAccountApi } from '../services/api.service.js';
+import { currentUser, escapeHtml, getApi, hasPermission, linkedAccounts, logoutAllApi, logoutApi, onAuthChange, switchAccountApi } from '../services/api.service.js';
 import { getCurrentLanguage, t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
@@ -30,11 +30,23 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
   const activeAvatarBox = sidebar.querySelector<HTMLElement>('[data-ref="active-account-avatar-box"]');
   const activeName = sidebar.querySelector<HTMLElement>('[data-ref="active-account-name"]');
   const activeEmail = sidebar.querySelector<HTMLElement>('[data-ref="active-account-email"]');
+  const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
+  const btnMenuOrganization = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-organization"]');
 
   if (currentUser) {
     if (itemLogin) itemLogin.style.display = 'none';
     if (railItemSettings) railItemSettings.style.display = 'none';
     if (avatarContainer) avatarContainer.style.display = 'inline-flex';
+
+    const isProOrHigher = hasPermission(currentUser, 'subscription:feature:pro');
+    if (railItemAi) {
+      railItemAi.style.display = isProOrHigher ? 'flex' : 'none';
+    }
+
+    const isEnterprise = hasPermission(currentUser, 'subscription:feature:enterprise');
+    if (btnMenuOrganization) {
+      btnMenuOrganization.style.display = isEnterprise ? 'flex' : 'none';
+    }
 
     const avatarUrl = currentUser.avatar_url || `/api/avatar?name=${encodeURIComponent(currentUser.username)}`;
 
@@ -71,10 +83,11 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
       applyAvatarTier(activeAvatarBox, currentUser.subscription_tier, currentUser.subscription_tier_color);
     }
   } else {
-
     if (itemLogin) itemLogin.style.display = 'flex';
     if (railItemSettings) railItemSettings.style.display = 'flex';
     if (avatarContainer) avatarContainer.style.display = 'none';
+    if (railItemAi) railItemAi.style.display = 'none';
+    if (btnMenuOrganization) btnMenuOrganization.style.display = 'none';
   }
 }
 
@@ -82,6 +95,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isHome = path === '/' || path === '' || /^\/[a-z]{2}\/?$/i.test(path);
   const isSettings = path.includes('/settings');
   const isHelp = path.includes('/help') || path.includes('/preguntas-frecuentes') || path.includes('/herramientas') || path.includes('/seguridad') || path.includes('/privacidad') || path.includes('/terminos') || path.includes('/cookies');
+  const isAi = path === '/ai' || path.startsWith('/ai') || /^\/[a-z]{2}\/ai(\/.*)?$/i.test(path);
 
   const itemHome = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-home"]');
   const btnHome = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-home"]');
@@ -92,6 +106,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
   const railItemSettings = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-settings"]');
   const btnRailSettings = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-settings"]');
+  const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
+  const btnRailAi = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-ai"]');
 
   itemHome?.classList.toggle('is-active', isHome && (!isDrawerOpen || currentDrawerMode !== 'apps'));
   btnHome?.classList.toggle('is-active', isHome && (!isDrawerOpen || currentDrawerMode !== 'apps'));
@@ -102,6 +118,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnToggle?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode !== 'apps');
   railItemSettings?.classList.toggle('is-active', isSettings && (!isDrawerOpen || currentDrawerMode === 'settings'));
   btnRailSettings?.classList.toggle('is-active', isSettings && (!isDrawerOpen || currentDrawerMode === 'settings'));
+  railItemAi?.classList.toggle('is-active', isAi && (!isDrawerOpen || currentDrawerMode !== 'apps'));
+  btnRailAi?.classList.toggle('is-active', isAi && (!isDrawerOpen || currentDrawerMode !== 'apps'));
 
   updateSidebarAuthState(sidebar);
   if (isDrawerOpen) {
@@ -331,6 +349,29 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     navigate('/workflows');
   });
 
+  const btnMenuOrganization = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-organization"]');
+  btnMenuOrganization?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAvatarMenu();
+    navigate('/organization');
+  });
+
+  const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
+  const btnRailAi = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-ai"]');
+
+  const goAi = (e: Event) => {
+    e.preventDefault();
+    closeAvatarMenu();
+    navigate('/ai');
+  };
+
+  btnRailAi?.addEventListener('click', goAi);
+  railItemAi?.addEventListener('click', (e) => {
+    if (e.target !== btnRailAi && !btnRailAi?.contains(e.target as Node)) {
+      goAi(e);
+    }
+  });
+
   btnLogout?.addEventListener('click', async (e) => {
     e.preventDefault();
     closeAvatarMenu();
@@ -398,10 +439,6 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
           <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#person"></use></svg>
           <span class="menu-item__text" data-i18n="nav.your_account">Tu cuenta</span>
         </button>
-        <button type="button" class="menu-item" data-ref="btn-nav-settings-organization">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.organization">Organización</span>
-        </button>
         <button type="button" class="menu-item" data-ref="btn-nav-settings-accessibility">
           <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#accessibility_new"></use></svg>
           <span class="menu-item__text" data-i18n="nav.accessibility">Accesibilidad</span>
@@ -443,14 +480,11 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       translateElement(drawerBody);
 
       const btnAccount = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-account"]');
-      const btnOrganization = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-organization"]');
       const btnAccessibility = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-accessibility"]');
       const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-security"]');
 
       if (currentPath.endsWith('/settings') || currentPath.includes('/your-account') || currentPath.includes('/profile')) {
         btnAccount?.classList.add('is-active');
-      } else if (currentPath.includes('/organization')) {
-        btnOrganization?.classList.add('is-active');
       } else if (currentPath.includes('/accessibility')) {
         btnAccessibility?.classList.add('is-active');
       } else if (currentPath.includes('/security') || currentPath.includes('login-and-security')) {
@@ -458,7 +492,6 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
       }
 
       bindNavLink(btnAccount, '/settings/your-account');
-      bindNavLink(btnOrganization, '/settings/organization');
       bindNavLink(btnAccessibility, '/settings/accessibility');
       bindNavLink(btnSecurity, '/settings/security');
     } else {

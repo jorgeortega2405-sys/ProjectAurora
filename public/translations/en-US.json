@@ -329,7 +329,14 @@
     "loading": "Processing...",
     "save": "Save"
   },
+  "ai": {
+    "greeting": "What would you like to work on today?",
+    "input_placeholder": "Type a message...",
+    "new_chat": "New chat",
+    "send": "Send"
+  },
   "nav": {
+    "ai_assistant": "AI Assistant",
     "accessibility": "Accessibility",
     "accounts": "Accounts",
     "add_account": "Add another account",

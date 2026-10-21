@@ -787,6 +787,21 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
       es: 'Política de Cookies - ProjectAurora',
     },
   },
+  ai: {
+    descriptions: {
+      en: 'AI Assistant for intelligent document processing and natural language workflows.',
+      es: 'Asistente de IA para procesamiento inteligente de documentos y flujos de trabajo.',
+    },
+    routeId: 'ai',
+    slugs: {
+      en: 'ai',
+      es: 'ai',
+    },
+    titles: {
+      en: 'AI Assistant - ProjectAurora',
+      es: 'Asistente IA - ProjectAurora',
+    },
+  },
   workflows: {
     descriptions: {
       en: 'Automate multi-step PDF workflows with custom processing sequences.',

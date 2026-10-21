@@ -529,14 +529,20 @@ export class StripeService {
       throw new Error('Usuario no encontrado.');
     }
 
+    const isDbActive = Boolean(
+      user.subscription_tier &&
+      user.subscription_tier !== 'free' &&
+      (user.subscription_status === 'active' || user.subscription_status === 'trialing' || !user.subscription_status)
+    );
+
     const defaultResult = {
       amount: 0,
       cancel_at_period_end: user.cancel_at_period_end || false,
       currency: 'USD',
       current_period_end: user.subscription_period_end,
-      hasSubscription: false,
+      hasSubscription: isDbActive,
       interval: 'month' as const,
-      status: user.subscription_status || 'none',
+      status: user.subscription_status || (isDbActive ? 'active' : 'none'),
       subscription_id: user.stripe_subscription_id,
       tier: user.subscription_tier || 'free',
     };

@@ -317,7 +317,14 @@
     "merge_pdf_summary_title": "Resumen de Unión",
     "merge_pdf_title": "Unir PDF"
   },
+  "ai": {
+    "greeting": "¿Con qué quieres trabajar hoy?",
+    "input_placeholder": "Escribe un mensaje...",
+    "new_chat": "Nuevo chat",
+    "send": "Enviar"
+  },
   "nav": {
+    "ai_assistant": "Asistente IA",
     "accessibility": "Accesibilidad",
     "accounts": "Cuentas",
     "add_account": "Agregar otra cuenta",

@@ -400,12 +400,30 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
+      await loadStylesheet('/css/components/component-ai.css');
+      const { createAiView } = await import('../views/ai.view.js');
+      return await createAiView();
+    },
+    id: 'ai',
+    match: (path) => path === '/ai' || path.startsWith('/ai'),
+  },
+  {
+    handler: async () => {
       await loadStylesheet('/css/components/component-views.css');
       const { createWorkflowsPageView } = await import('../views/workflows.view.js');
       return await createWorkflowsPageView();
     },
     id: 'workflows',
     match: (path) => path === '/workflows' || path.startsWith('/workflows'),
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-settings.css');
+      const { createOrganizationView } = await import('../views/settings.view.js');
+      return await createOrganizationView();
+    },
+    id: 'organization',
+    match: (path) => path === '/organization' || path.startsWith('/organization'),
   },
   {
     handler: async ({ path }) => {
@@ -439,6 +457,7 @@ export const APP_ROUTES: RouteDefinition[] = [
         case '/settings/billing':
           return await createBillingView();
         case '/settings/organization':
+          window.history.replaceState({}, '', '/organization');
           return await createOrganizationView();
         case '/settings/purchases':
         case '/settings/purchases-history':

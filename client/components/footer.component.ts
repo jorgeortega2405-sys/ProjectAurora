@@ -84,7 +84,7 @@ export function getFooterHtml(): string {
 
         <div class="site-footer__bottom" data-ref="site-footer-bottom">
           <div class="site-footer__bottom-left" data-ref="footer-bottom-left">
-            <div class="settings-dropdown-wrapper footer-lang-dropdown" data-ref="dropdown-wrapper-footer-language">
+            <div class="settings-dropdown-wrapper" data-ref="dropdown-wrapper-footer-language">
               <button type="button" class="dropdown-trigger" data-ref="btn-trigger-footer-language" aria-label="Seleccionar idioma">
                 <div class="dropdown-trigger__left" data-ref="dropdown-trigger-left-footer-language">
                   <svg class="component-icon dropdown-trigger__icon" data-ref="icon-footer-language" aria-hidden="true"><use href="/icons.svg#language"></use></svg>
@@ -94,7 +94,7 @@ export function getFooterHtml(): string {
               </button>
 
               <div class="dropdown-backdrop" data-ref="dropdown-backdrop-footer-language">
-                <div class="menu-panel menu-panel--dropdown menu-panel--h-auto" data-ref="dropdown-menu-footer-language">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="dropdown-menu-footer-language">
                   <div class="menu-panel__drag-zone" data-ref="drag-zone-footer-language" aria-hidden="true">
                     <div class="menu-panel__drag-handle" data-ref="drag-handle-footer-language"></div>
                   </div>
@@ -203,7 +203,7 @@ export function mountSiteFooter(container: HTMLElement, signal?: AbortSignal): {
     dropdownCtrl = setupDropdown(langDropdown, {
       backdrop: langDropdown.querySelector<HTMLElement>('[data-ref="dropdown-backdrop-footer-language"]'),
       isSelect: true,
-      matchWidth: false,
+      matchWidth: true,
       menu: langDropdown.querySelector<HTMLElement>('[data-ref="dropdown-menu-footer-language"]'),
       offset: [0, 8],
       onOpen: () => {

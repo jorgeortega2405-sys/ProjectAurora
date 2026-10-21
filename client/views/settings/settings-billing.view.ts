@@ -72,10 +72,19 @@ export class BillingViewController implements ViewController {
     const dividerCancelSub = this.container.querySelector<HTMLElement>('[data-ref="divider-cancel-sub"]');
     const btnCancelImmediate = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-cancel-subscription-immediate"]');
 
-    const hasActiveSub = Boolean(billing.hasSubscription && billing.tier && billing.tier !== 'free');
+    const effectiveTier = (billing.tier || currentUser?.subscription_tier || 'free').toLowerCase();
+    const hasActiveSub = Boolean(
+      (billing.hasSubscription || (effectiveTier !== 'free' && effectiveTier !== 'none')) &&
+      effectiveTier !== 'free'
+    );
 
     if (hasActiveSub) {
-      const tierName = billing.tier === 'enterprise' ? 'Aurora Empresas' : 'Aurora Pro';
+      let tierName = 'Aurora Pro';
+      if (effectiveTier === 'enterprise' || effectiveTier === 'business') {
+        tierName = 'Aurora Empresas';
+      } else if (effectiveTier === 'education') {
+        tierName = 'Aurora Educación Pro';
+      }
       const intervalText = billing.interval === 'year'
         ? (t('upgrade.billing_yearly') || 'Anual')
         : (t('upgrade.billing_monthly') || 'Mensual');
@@ -167,6 +176,22 @@ export class BillingViewController implements ViewController {
   }
 
   private renderFallbackInfo(): void {
+    const effectiveTier = (currentUser?.subscription_tier || 'free').toLowerCase();
+    if (effectiveTier !== 'free' && effectiveTier !== 'none') {
+      this.renderBillingInfo({
+        amount: 0,
+        cancel_at_period_end: false,
+        currency: 'USD',
+        current_period_end: null,
+        hasSubscription: true,
+        interval: 'month',
+        status: 'active',
+        subscription_id: null,
+        tier: effectiveTier,
+      });
+      return;
+    }
+
     const planNameEl = this.container.querySelector<HTMLElement>('[data-ref="current-plan-name"]');
     const planStatusBadge = this.container.querySelector<HTMLElement>('[data-ref="current-plan-status-badge"]');
     const planDescEl = this.container.querySelector<HTMLElement>('[data-ref="current-plan-desc"]');

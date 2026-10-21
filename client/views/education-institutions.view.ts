@@ -43,18 +43,6 @@ export class EducationInstitutionsController implements ViewController {
   }
 
   private bindEvents(): void {
-    const backLink = this.container.querySelector<HTMLAnchorElement>('[data-ref="link-back-education"]');
-    if (backLink) {
-      backLink.addEventListener(
-        'click',
-        (e: MouseEvent) => {
-          e.preventDefault();
-          navigate('/education');
-        },
-        { signal: this.abortController?.signal }
-      );
-    }
-
     const form = this.container.querySelector<HTMLFormElement>('[data-ref="form-institution-inquiry"]');
     if (form) {
       form.addEventListener(

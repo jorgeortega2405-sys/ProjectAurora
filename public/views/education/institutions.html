@@ -4,10 +4,6 @@
     <div class="education-view" data-ref="institutions-view">
       
       <div class="education-hero" data-ref="institutions-hero">
-        <a class="education-back-link" data-ref="link-back-education" data-navigate="/education" href="/education">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_back"></use></svg>
-          <span>Volver al programa educativo</span>
-        </a>
         <div class="education-hero__badge" data-ref="institutions-badge">
           <svg class="component-icon education-hero__badge-icon" data-ref="institutions-badge-icon" aria-hidden="true"><use href="/icons.svg#school"></use></svg>
           <span data-ref="institutions-badge-text">Alianzas & Convenios Institucionales</span>
@@ -44,14 +40,12 @@
           </div>
         </div>
 
-        <div class="education-verify-card education-verify-card--wide" data-ref="card-institution-form">
-          <div class="education-verify-card__header" data-ref="header-institution-form">
-            <h2 class="education-verify-card__title" data-ref="title-form-heading">Solicitar convenio institucional</h2>
-            <p class="education-verify-card__subtitle" data-ref="desc-form-subheading">Completa el formulario para que nuestro equipo de vinculación académica prepare una propuesta a la medida de tu centro de estudios.</p>
-          </div>
+        <div class="contact-card" data-ref="card-institution-form" style="max-width: 860px; margin: 0 auto; width: 100%;">
+          <h2 class="contact-card__title" data-ref="title-form-heading">Solicitar convenio institucional</h2>
+          <p class="contact-card__desc" data-ref="desc-form-subheading">Completa el formulario para que nuestro equipo de vinculación académica prepare una propuesta a la medida de tu centro de estudios.</p>
 
-          <form class="education-verify-form" data-ref="form-institution-inquiry" novalidate>
-            <div class="form-grid-2col" data-ref="form-row-1">
+          <form class="contact-form" data-ref="form-institution-inquiry" novalidate>
+            <div class="business-form-row" data-ref="form-row-1">
               <label class="field" data-ref="field-school-name">
                 <input class="field__input" data-ref="input-school-name" type="text" placeholder=" " required />
                 <span class="field__label">Nombre de la institución educativa *</span>
@@ -63,7 +57,7 @@
               </label>
             </div>
 
-            <div class="form-grid-2col" data-ref="form-row-2">
+            <div class="business-form-row" data-ref="form-row-2">
               <label class="field" data-ref="field-contact-name">
                 <input class="field__input" data-ref="input-contact-name" type="text" placeholder=" " required />
                 <span class="field__label">Nombre completo del contacto *</span>
@@ -75,7 +69,7 @@
               </label>
             </div>
 
-            <div class="form-grid-2col" data-ref="form-row-3">
+            <div class="business-form-row" data-ref="form-row-3">
               <label class="field" data-ref="field-contact-email">
                 <input class="field__input" data-ref="input-contact-email" type="email" placeholder=" " autocomplete="email" required />
                 <span class="field__label">Correo institucional oficial *</span>
@@ -87,7 +81,7 @@
               </label>
             </div>
 
-            <div class="form-grid-2col" data-ref="form-row-4">
+            <div class="business-form-row" data-ref="form-row-4">
               <label class="field" data-ref="field-estimated-students">
                 <select class="field__input field__input--select" data-ref="select-estimated-students" required>
                   <option value="" disabled selected>Selecciona un rango</option>
@@ -107,16 +101,14 @@
             </div>
 
             <label class="field field--textarea" data-ref="field-message">
-              <textarea class="field__input field__input--textarea" data-ref="textarea-message" placeholder=" " rows="4" required></textarea>
+              <textarea class="field__input field__textarea" data-ref="textarea-message" placeholder=" " rows="4" required></textarea>
               <span class="field__label">Cuéntanos sobre las necesidades o proyectos de tu institución *</span>
             </label>
 
-            <div class="education-verify-form__actions" data-ref="form-actions">
-              <button type="submit" class="component-button component-button--black component-button--h48 component-button--w-full" data-ref="btn-submit-institution">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#send"></use></svg>
-                <span>Enviar solicitud de convenio</span>
-              </button>
-            </div>
+            <button type="submit" class="component-button component-button--primary component-button--h44 component-button--w-full" data-ref="btn-submit-institution">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#send"></use></svg>
+              <span>Enviar solicitud de convenio</span>
+            </button>
 
             <div class="banner banner--danger" data-ref="banner-error" style="display: none;"></div>
             <div class="banner banner--success" data-ref="banner-success" style="display: none;"></div>

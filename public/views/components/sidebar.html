@@ -2,7 +2,7 @@
   <div class="layout-rail" data-ref="layout-rail">
     <div class="layout-rail__top" data-ref="rail-top">
       <div class="rail-top-default" data-ref="rail-top-default">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--toggle" data-ref="btn-toggle-drawer" data-i18n-tooltip="nav.menu" data-i18n-aria="nav.menu" data-tooltip="Alternar menú lateral" aria-label="Alternar menú lateral">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--toggle" data-ref="btn-toggle-drawer" data-i18n-tooltip="nav.workflows" data-i18n-aria="nav.workflows" data-tooltip="Flujos de trabajo" aria-label="Flujos de trabajo">
           <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dock_to_right"></use></svg>
         </button>
       </div>
@@ -48,6 +48,12 @@
         </button>
       </div>
 
+      <div class="rail-nav-item" data-ref="rail-item-ai" style="display: none;">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--ai" data-ref="btn-rail-ai" data-tooltip="Asistente IA" data-i18n-tooltip="nav.ai_assistant" data-i18n-aria="nav.ai_assistant" aria-label="Asistente IA">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+        </button>
+      </div>
+
       <div class="rail-item-container" data-ref="avatar-container" style="display: none;">
         <button type="button" class="component-button component-button--avatar rail-avatar-btn" data-ref="btn-avatar" data-tooltip="Perfil" data-i18n-tooltip="nav.profile" data-i18n-aria="nav.profile" aria-label="Perfil">
           <img class="avatar-img image-lazy-fade" data-ref="avatar-img" src="" alt="Avatar" referrerpolicy="no-referrer" onload="this.classList.add('image-loaded')" onerror="this.classList.add('image-loaded')" />
@@ -84,6 +90,11 @@
               <button type="button" class="menu-item" data-ref="btn-menu-workflows">
                 <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
                 <span class="menu-item__text" data-i18n="nav.workflows">Flujos de trabajo</span>
+              </button>
+
+              <button type="button" class="menu-item" data-ref="btn-menu-organization" style="display: none;">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
+                <span class="menu-item__text" data-i18n="nav.organization">Organización</span>
               </button>
 
               <button type="button" class="menu-item menu-item--bordered menu-item--danger" data-ref="btn-logout">

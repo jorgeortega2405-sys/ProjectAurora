@@ -13,6 +13,7 @@ import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from './
 import { injectHtmlSeo, isSupportedLanguage, normalizeLanguageCode } from './config/seo.config.js';
 import { csrfProtection } from './middlewares/csrf.middleware.js';
 import { requestLogger } from './middlewares/request-logger.middleware.js';
+import aiRoutes from './routes/ai.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import downloadRoutes from './routes/download.routes.js';
 import educationRoutes from './routes/education.routes.js';
@@ -320,6 +321,7 @@ async function startServer(): Promise<void> {
   });
 
 
+  app.use('/api', aiRoutes);
   app.use('/api', authRoutes);
   app.use('/api', downloadRoutes);
   app.use('/api', educationRoutes);

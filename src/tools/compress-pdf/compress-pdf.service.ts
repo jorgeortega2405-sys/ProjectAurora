@@ -35,7 +35,7 @@ function sanitizePdfFilename(rawName?: string): string {
   if (!rawName || typeof rawName !== 'string') {
     return 'documento_comprimido.pdf';
   }
-  const clean = path.basename(rawName).trim().replace(/[^a-zA-Z0-9_\-\. ]/g, '_');
+  const clean = path.basename(rawName).trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
   if (!clean) {
     return 'documento_comprimido.pdf';
   }

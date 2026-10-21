@@ -151,9 +151,9 @@
     "title": "Todas las herramientas PDF que necesitas en un solo lugar",
     "trust_desc": "ProjectAurora es tu suite web todo en uno para procesar, optimizar y gestionar documentos, imágenes y video con total facilidad. Disfruta de todas las herramientas que necesitas para trabajar de forma rápida y eficiente mientras mantienes tus archivos 100% seguros y privados.",
     "trust_title": "Las herramientas en las que confían millones de usuarios",
-    "tool_pdf_to_markdown_desc": "Convierte documentos PDF en archivos Markdown (.md) estructurados, limpios y listos para usar con Gemini AI.",
+    "tool_pdf_to_markdown_desc": "Convierte documentos PDF en archivos Markdown (.md) estructurados, limpios y listos para usar con IA.",
     "tool_pdf_to_markdown_title": "PDF a Markdown con IA",
-    "tool_summarize_pdf_desc": "Genera resúmenes ejecutivos, análisis estructurados y puntos clave de documentos PDF con Gemini AI en segundos.",
+    "tool_summarize_pdf_desc": "Genera resúmenes ejecutivos, análisis estructurados y puntos clave de documentos PDF con IA en segundos.",
     "tool_summarize_pdf_title": "Resumir PDF con IA",
     "tool_translate_pdf_desc": "Convierte documentos PDF con IA en otros idiomas y conserva el formato original. Una solución rápida, precisa e ideal para documentos de negocios, educativos o de viaje.",
     "tool_translate_pdf_title": "Traducir PDF con IA",
@@ -743,7 +743,7 @@
         "features": {
           "0": {
             "title": "2.000 Créditos mensuales de IA",
-            "desc": "Tokens para resúmenes avanzados y traducciones de alta fidelidad con Gemini"
+            "desc": "Tokens para resúmenes avanzados y traducciones de alta fidelidad con IA"
           },
           "1": {
             "title": "Procesamiento por lote de hasta 500 archivos",
@@ -799,7 +799,7 @@
           },
           "3": {
             "title": "10.000 Créditos de IA para el equipo",
-            "desc": "Bolsa mensual compartida de tokens para resúmenes avanzados y traducción con Gemini"
+            "desc": "Bolsa mensual compartida de tokens para resúmenes avanzados y traducción con IA"
           },
           "4": {
             "title": "Suite completa Pro en cada asiento",

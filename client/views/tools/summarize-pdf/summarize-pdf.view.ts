@@ -579,7 +579,7 @@ export class SummarizePdfController implements ViewController {
     const wordsBadge = this.container.querySelector<HTMLElement>('[data-ref="summary-badge-words"]');
 
     if (resultSection) resultSection.style.display = 'block';
-    if (modelBadge) modelBadge.textContent = 'Gemini AI';
+    if (modelBadge) modelBadge.textContent = 'Aurora AI';
     if (wordsBadge) wordsBadge.textContent = `${data.wordCount} palabras`;
 
     if (renderedTextEl) {

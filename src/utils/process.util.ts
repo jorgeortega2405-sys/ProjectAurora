@@ -12,6 +12,29 @@ export interface ProcessExecutionResult {
   timedOut: boolean;
 }
 
+let resolvedPythonCmd: string | null = null;
+
+export async function getPythonCommand(): Promise<string> {
+  if (resolvedPythonCmd) {
+    return resolvedPythonCmd;
+  }
+  if (process.env.PYTHON_PATH) {
+    resolvedPythonCmd = process.env.PYTHON_PATH;
+    return resolvedPythonCmd;
+  }
+  if (process.platform === 'win32') {
+    const pyCheck = await executeProcessWithTimeout('py', ['-c', 'import sys; print(1)'], { timeoutMs: 3000 });
+    if (pyCheck.code === 0) {
+      resolvedPythonCmd = 'py';
+      return 'py';
+    }
+    resolvedPythonCmd = 'python';
+    return 'python';
+  }
+  resolvedPythonCmd = 'python3';
+  return 'python3';
+}
+
 export function executeProcessWithTimeout(
   command: string,
   args: string[],

@@ -39,11 +39,11 @@ export function getCsrfToken(): string {
   return match ? decodeURIComponent(match[1]) : '';
 }
 
-export async function ensureCsrfToken(): Promise<string> {
+export async function ensureCsrfToken(forceRefresh = false): Promise<string> {
   let token = getCsrfToken();
-  if (!token && typeof window !== 'undefined') {
+  if ((!token || forceRefresh) && typeof window !== 'undefined') {
     try {
-      await fetch('/api/health', { credentials: 'same-origin' });
+      await fetch('/api/health', { credentials: 'include' });
       token = getCsrfToken();
     } catch {}
   }

@@ -152,9 +152,9 @@
     "title": "Every PDF tool you need in one place",
     "trust_desc": "ProjectAurora is your all-in-one web suite to process, optimize, and manage documents, images, and video with total ease. Enjoy every tool you need to work quickly and efficiently while keeping your data safe and secure.",
     "trust_title": "The software trusted by millions of users",
-    "tool_pdf_to_markdown_desc": "Convert PDF documents into clean, structured Markdown (.md) files with Gemini AI in seconds.",
+    "tool_pdf_to_markdown_desc": "Convert PDF documents into clean, structured Markdown (.md) files with AI in seconds.",
     "tool_pdf_to_markdown_title": "AI PDF to Markdown",
-    "tool_summarize_pdf_desc": "Generate executive summaries, structured analyses, and key takeaways from PDF documents with Gemini AI in seconds.",
+    "tool_summarize_pdf_desc": "Generate executive summaries, structured analyses, and key takeaways from PDF documents with AI in seconds.",
     "tool_summarize_pdf_title": "AI PDF Summarizer",
     "tool_translate_pdf_desc": "Convert PDF documents with AI into other languages while preserving the original layout. Fast, accurate, and ideal for business, education, or travel.",
     "tool_translate_pdf_title": "AI PDF Translator",
@@ -746,7 +746,7 @@
         "features": {
           "0": {
             "title": "2,000 Monthly AI Credits",
-            "desc": "Tokens for advanced summaries and high-fidelity translations with Gemini"
+            "desc": "Tokens for advanced summaries and high-fidelity translations with AI"
           },
           "1": {
             "title": "Batch processing up to 500 files",
@@ -802,7 +802,7 @@
           },
           "3": {
             "title": "10,000 AI Credits for the team",
-            "desc": "Shared monthly pool of tokens for advanced summaries and translation with Gemini"
+            "desc": "Shared monthly pool of tokens for advanced summaries and translation with AI"
           },
           "4": {
             "title": "Full Pro suite on every seat",

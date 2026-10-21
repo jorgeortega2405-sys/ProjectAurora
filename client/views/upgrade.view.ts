@@ -34,7 +34,7 @@ const TIERS: PlanTier[] = [
     buttonText: 'Obtén Aurora Pro',
     features: [
       {
-        desc: 'Tokens para resúmenes avanzados y traducciones de alta fidelidad con Gemini',
+        desc: 'Tokens para resúmenes avanzados y traducciones de alta fidelidad con IA',
         icon: 'auto_awesome',
         title: '2.000 Créditos mensuales de IA',
       },
@@ -108,7 +108,7 @@ const TIERS: PlanTier[] = [
         title: 'Permisos granulares PBAC',
       },
       {
-        desc: 'Bolsa mensual compartida de tokens para resúmenes avanzados y traducción con Gemini',
+        desc: 'Bolsa mensual compartida de tokens para resúmenes avanzados y traducción con IA',
         icon: 'auto_awesome',
         title: '10.000 Créditos de IA para el equipo',
       },

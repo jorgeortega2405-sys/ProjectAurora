@@ -4,14 +4,14 @@ import os from 'os';
 import path from 'path';
 import { logger } from '../../services/logger.service.js';
 import { getTempFile, storeTempFile } from '../../services/temp-storage.service.js';
-import { executeProcessWithTimeout } from '../../utils/process.util.js';
+import { executeProcessWithTimeout, getPythonCommand } from '../../utils/process.util.js';
 import { ProtectPdfOptions, ProtectPdfResponse, StoredProtectPdfResult } from './protect-pdf.types.js';
 
 function sanitizePdfFilename(rawName?: string, defaultName = 'documento_protegido.pdf'): string {
   if (!rawName || typeof rawName !== 'string') {
     return defaultName;
   }
-  const clean = path.basename(rawName).trim().replace(/[^a-zA-Z0-9_\-\. ]/g, '_');
+  const clean = path.basename(rawName).trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
   if (!clean) {
     return defaultName;
   }
@@ -46,7 +46,7 @@ with pikepdf.open(input_path) as pdf:
     print(num_pages)
 `;
 
-    const pyCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const pyCmd = await getPythonCommand();
     const result = await executeProcessWithTimeout(pyCmd, ['-c', pythonScript, tempInput, tempOutput, password], { timeoutMs: 45000 });
     if (result.timedOut || result.code !== 0) {
       throw new Error(result.stderr || 'El proceso de cifrado no pudo completarse.');

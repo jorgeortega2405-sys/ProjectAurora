@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" --exclude \"temp_storage/**\" src/index.ts",
     "dev:watch": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" src/index.ts",
     "dev:client": "vite",
     "infra:up": "docker compose up -d mysql redis downloader",

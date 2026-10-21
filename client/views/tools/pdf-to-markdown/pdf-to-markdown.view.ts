@@ -757,7 +757,7 @@ export class PdfToMarkdownController implements ViewController {
     const workspaceRaw = this.container.querySelector<HTMLElement>('[data-ref="markdown-workspace-raw"]');
 
     if (resultSection) resultSection.style.display = 'block';
-    if (modelBadge) modelBadge.textContent = 'Gemini AI';
+    if (modelBadge) modelBadge.textContent = 'Aurora AI';
     if (wordsBadge) wordsBadge.textContent = `${data.wordCount} palabras`;
     if (linesBadge) linesBadge.textContent = `${data.lineCount} líneas`;
 

@@ -46,14 +46,35 @@ async function extractTextFromPdf(buffer: Buffer): Promise<string> {
     const { stdout } = await execFileAsync('pdftotext', [tempPath, '-'], {
       maxBuffer: 30 * 1024 * 1024,
     });
-    return stdout ? stdout.trim() : '';
+    if (stdout && stdout.trim().length > 0) {
+      return stdout.trim();
+    }
   } catch (error) {
-    logger.app.warn('Fallo al extraer texto con pdftotext', { error });
-    return '';
+    logger.app.warn('Fallo al extraer texto con pdftotext, intentando con pdfjs-dist', { error });
   } finally {
     try {
       await fs.unlink(tempPath);
     } catch {}
+  }
+
+  try {
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+    const pagesText: string[] = [];
+
+    for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+      const page = await doc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageStrings = textContent.items
+        .map((item: any) => ('str' in item ? item.str : ''))
+        .filter(Boolean);
+      pagesText.push(pageStrings.join(' '));
+    }
+
+    return pagesText.join('\n\n').trim();
+  } catch (err) {
+    logger.app.warn('Error al extraer texto con pdfjs-dist en summarize-pdf', err);
+    return '';
   }
 }
 

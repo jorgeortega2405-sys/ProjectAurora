@@ -4,23 +4,108 @@
       <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-new-chat" data-tooltip="Nuevo chat" data-i18n-tooltip="ai.new_chat" data-i18n-aria="ai.new_chat" aria-label="Nuevo chat">
         <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
       </button>
+      <span class="ai-model-badge" data-ref="ai-model-badge">
+        <svg class="component-icon ai-model-badge__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+        <span class="ai-model-badge__text">Aurora AI</span>
+      </span>
+    </div>
+    <div class="component-top-right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h36 component-button--subtle" data-ref="btn-clear-chat" data-tooltip="Limpiar conversación" aria-label="Limpiar conversación">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
+        <span data-i18n="ai.clear">Limpiar</span>
+      </button>
     </div>
   </header>
 
   <div class="component-bottom ai-bottom" data-ref="component-bottom">
+    <div class="ai-drop-overlay" data-ref="ai-drop-overlay">
+      <div class="ai-drop-overlay__card" data-ref="ai-drop-card">
+        <svg class="component-icon ai-drop-overlay__icon" aria-hidden="true"><use href="/icons.svg#cloud_upload"></use></svg>
+        <h3 class="ai-drop-overlay__title">Suelta tus archivos aquí</h3>
+        <p class="ai-drop-overlay__desc">Soporta PDF, Word, Excel, PowerPoint e imágenes</p>
+      </div>
+    </div>
+
     <div class="ai-chat-container" data-ref="ai-chat-container">
       <div class="ai-chat-hero" data-ref="ai-chat-hero">
+        <div class="ai-chat-hero__icon-wrap" data-ref="ai-hero-icon">
+          <svg class="component-icon ai-chat-hero__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+        </div>
         <h1 class="ai-chat-greeting" data-ref="ai-chat-greeting" data-i18n="ai.greeting">¿Con qué quieres trabajar hoy?</h1>
+        <p class="ai-chat-subtitle" data-ref="ai-chat-subtitle">Comprime, une, convierte o analiza tus documentos utilizando lenguaje natural con IA.</p>
+
+        <div class="ai-quick-chips-grid" data-ref="ai-quick-chips">
+          <button type="button" class="ai-quick-chip" data-ref="chip-compress" data-prompt="Comprímeme este PDF">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#compress"></use></svg>
+            <span>Comprimir PDF</span>
+          </button>
+          <button type="button" class="ai-quick-chip" data-ref="chip-merge" data-prompt="Úneme estos 2 PDF y luego comprime">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#call_merge"></use></svg>
+            <span>Unir y comprimir</span>
+          </button>
+          <button type="button" class="ai-quick-chip" data-ref="chip-word" data-prompt="Pásame este Word a PDF">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
+            <span>Word a PDF</span>
+          </button>
+          <button type="button" class="ai-quick-chip" data-ref="chip-excel" data-prompt="Pásame este Excel a PDF">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#table_chart"></use></svg>
+            <span>Excel a PDF</span>
+          </button>
+          <button type="button" class="ai-quick-chip" data-ref="chip-summarize" data-prompt="Resúmeme este documento con IA">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#subject"></use></svg>
+            <span>Resumir con IA</span>
+          </button>
+          <button type="button" class="ai-quick-chip" data-ref="chip-translate" data-prompt="Traduce este PDF al inglés">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#translate"></use></svg>
+            <span>Traducir PDF</span>
+          </button>
+        </div>
       </div>
 
-      <div class="ai-chat-input-wrapper" data-ref="ai-chat-input-wrapper">
-        <div class="ai-chat-input-box" data-ref="ai-chat-input-box">
-          <textarea class="ai-chat-input" data-ref="ai-chat-input" rows="1" placeholder="Escribe un mensaje..." data-i18n-placeholder="ai.input_placeholder"></textarea>
-          <div class="ai-chat-input-actions" data-ref="ai-chat-input-actions">
-            <button type="button" class="component-button component-button--h36 component-button--icon-only ai-chat-send-btn" data-ref="btn-send-message" data-tooltip="Enviar" data-i18n-tooltip="ai.send" data-i18n-aria="ai.send" aria-label="Enviar">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_upward"></use></svg>
-            </button>
+      <div class="ai-messages-scroll" data-ref="ai-messages-scroll">
+        <div class="ai-messages-list" data-ref="ai-messages-list"></div>
+
+        <div class="ai-thinking-state" data-ref="ai-thinking-indicator" style="display: none;">
+          <div class="ai-message-avatar ai-message-avatar--ai" data-ref="ai-thinking-avatar">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
           </div>
+          <div class="ai-thinking-content" data-ref="ai-thinking-content">
+            <div class="ai-thinking-dots" data-ref="ai-thinking-dots">
+              <span class="ai-dot"></span>
+              <span class="ai-dot"></span>
+              <span class="ai-dot"></span>
+            </div>
+            <span class="ai-thinking-text" data-ref="ai-thinking-text">Procesando y analizando...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-chat-bottom-dock" data-ref="ai-chat-bottom">
+        <div class="ai-staged-tray" data-ref="ai-staged-tray" style="display: none;">
+          <div class="ai-staged-list" data-ref="ai-staged-list"></div>
+        </div>
+
+        <div class="ai-chat-input-wrapper" data-ref="ai-chat-input-wrapper">
+          <input class="ai-hidden-file-input" data-ref="ai-file-input" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt" />
+
+          <div class="ai-chat-input-box" data-ref="ai-chat-input-box">
+            <button type="button" class="component-button component-button--h36 component-button--icon-only ai-attach-btn" data-ref="btn-attach-files" data-tooltip="Adjuntar archivos (PDF, Word, Excel...)" aria-label="Adjuntar archivos">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#attach_file"></use></svg>
+            </button>
+
+            <textarea class="ai-chat-input" data-ref="ai-chat-input" rows="1" placeholder="Escribe un mensaje o pide una acción (ej. Comprímeme este PDF, pásame este word a pdf...)" data-i18n-placeholder="ai.input_placeholder"></textarea>
+
+            <div class="ai-chat-input-actions" data-ref="ai-chat-input-actions">
+              <button type="button" class="component-button component-button--h36 component-button--icon-only ai-chat-send-btn" data-ref="btn-send-message" data-tooltip="Enviar" data-i18n-tooltip="ai.send" data-i18n-aria="ai.send" aria-label="Enviar">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_upward"></use></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="banner banner--danger ai-chat-banner" data-ref="ai-error-banner" style="display: none;">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#error"></use></svg>
+          <span class="banner__text" data-ref="ai-error-text"></span>
         </div>
       </div>
     </div>

@@ -1,12 +1,15 @@
 import { navigate } from '../app-router.js';
 import { mountSiteFooter } from '../components/footer.component.js';
+import { API_ROUTES } from '../config/api-routes.js';
 import { getLocalizedPath } from '../config/seo.config.js';
 import { isToolNew, TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
-import { currentUser, getApi } from '../services/api.service.js';
+import { checkAuthSession, currentUser, getApi, postApi } from '../services/api.service.js';
 import { getCurrentLanguage, t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
+import { showToast } from '../services/toast.service.js';
+import { withButtonLoading } from '../utils/dom.util.js';
 
 interface UserWorkflowItem {
   category: 'pdf' | 'image';
@@ -29,6 +32,7 @@ export class HomeController {
     this.abortController = new AbortController();
     if (currentUser) {
       await this.loadUserWorkflows();
+      await this.checkEducationalEligibility();
     }
     this.renderTools();
     renderIcons(this.container);
@@ -42,6 +46,77 @@ export class HomeController {
     }
     this.dropdownControllers.forEach((ctrl) => ctrl.destroy());
     this.dropdownControllers = [];
+  }
+
+  private async checkEducationalEligibility(): Promise<void> {
+    if (!currentUser || currentUser.subscription_tier === 'pro' || currentUser.is_student) {
+      return;
+    }
+
+    try {
+      const res = await getApi(API_ROUTES.education.status);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (!data.isEligibleInstant) return;
+
+      const banner = this.container.querySelector<HTMLElement>('[data-ref="home-edu-banner"]');
+      const schoolBadge = this.container.querySelector<HTMLElement>('[data-ref="badge-home-edu-school"]');
+      const descText = this.container.querySelector<HTMLElement>('[data-ref="txt-home-edu-desc"]');
+      const claimBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-claim-edu"]');
+      const dismissBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-dismiss-edu"]');
+
+      if (!banner) return;
+
+      if (schoolBadge && data.eligibleSchoolName) {
+        schoolBadge.textContent = data.eligibleSchoolName;
+      }
+      if (descText) {
+        descText.textContent = `Detectamos que estudias o enseñas en ${data.eligibleSchoolName || 'tu institución'}. Activa 1 año de herramientas Pro ilimitadas 100% bonificado.`;
+      }
+
+      banner.style.display = 'block';
+      renderIcons(banner);
+
+      if (dismissBtn) {
+        dismissBtn.addEventListener(
+          'click',
+          () => {
+            banner.style.display = 'none';
+          },
+          { signal: this.abortController?.signal }
+        );
+      }
+
+      if (claimBtn) {
+        claimBtn.addEventListener(
+          'click',
+          () => void this.handleClaimInstantPro(claimBtn, banner),
+          { signal: this.abortController?.signal }
+        );
+      }
+    } catch {
+      // Ignore background check failure
+    }
+  }
+
+  private async handleClaimInstantPro(btn: HTMLButtonElement, banner: HTMLElement): Promise<void> {
+    await withButtonLoading(btn, async () => {
+      try {
+        const res = await postApi(API_ROUTES.education.claimInstantPro, {});
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.error || 'No fue posible activar el plan estudiantil.', 'danger');
+          return;
+        }
+
+        showToast(data.message || '¡Plan Pro Estudiantil activado con éxito!', 'success');
+        banner.style.display = 'none';
+        await checkAuthSession();
+      } catch {
+        showToast('Error de red al activar el plan estudiantil.', 'danger');
+      }
+    });
   }
 
   private async loadUserWorkflows(): Promise<void> {

@@ -96,9 +96,45 @@ export class OrganizationMembersViewController implements ViewController {
         return;
       }
       this.currentOrg = (await resOrg.json()) as OrganizationDetailsResponse;
+      const isEdu = this.currentOrg?.organization.org_type === 'education';
+      this.applyEducationTexts(isEdu);
       await this.loadMembers();
     } catch {
       navigate('/organization');
+    }
+  }
+
+  private applyEducationTexts(isEdu: boolean): void {
+    const titleEl = this.container.querySelector<HTMLElement>('[data-ref="members-page-title"]');
+    if (titleEl) titleEl.textContent = isEdu ? 'Alumnos y Docentes de la Institución' : 'Miembros de la Organización';
+
+    const btnInvite = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-invite-modal"]');
+    if (btnInvite) {
+      btnInvite.setAttribute('data-tooltip', isEdu ? 'Invitar alumno o docente' : 'Invitar miembro');
+      btnInvite.setAttribute('aria-label', isEdu ? 'Invitar alumno o docente' : 'Invitar miembro');
+    }
+
+    const thUser = this.container.querySelector<HTMLElement>('[data-ref="th-user"]');
+    if (thUser) thUser.textContent = isEdu ? 'Estudiante / Docente' : 'Usuario';
+
+    const inviteTitle = this.container.querySelector<HTMLElement>('[data-ref="title-modal-invite"]');
+    if (inviteTitle) inviteTitle.textContent = isEdu ? 'Invitar estudiante o docente' : 'Invitar a un nuevo miembro';
+
+    const inviteDesc = this.container.querySelector<HTMLElement>('[data-ref="desc-modal-invite"]');
+    if (inviteDesc) inviteDesc.textContent = isEdu ? 'Otorga una licencia Pro a un alumno, investigador o profesor de tu institución.' : 'Agrega colegas a tu organización corporativa consumiendo un asiento disponible.';
+
+    const inviteEmailLabel = this.container.querySelector<HTMLElement>('[data-ref="label-invite-email"]');
+    if (inviteEmailLabel) inviteEmailLabel.textContent = isEdu ? 'Correo institucional (@escuela.edu)' : 'Correo electrónico corporativo';
+
+    const optMember = this.container.querySelector<HTMLElement>('[data-ref="opt-invite-role-member"] .menu-item__text');
+    if (optMember) optMember.textContent = isEdu ? 'Alumno / Docente (Licencia Pro)' : 'Miembro (Acceso a herramientas)';
+
+    const optAdmin = this.container.querySelector<HTMLElement>('[data-ref="opt-invite-role-admin"] .menu-item__text');
+    if (optAdmin) optAdmin.textContent = isEdu ? 'Administrador de Campus (Gestión de licencias)' : 'Administrador (Gestión de equipo)';
+
+    const selectedRoleText = this.container.querySelector<HTMLElement>('[data-ref="txt-selected-invite-role"]');
+    if (selectedRoleText) {
+      selectedRoleText.textContent = isEdu ? 'Alumno / Docente (Licencia Pro)' : 'Miembro (Acceso a herramientas)';
     }
   }
 
@@ -106,6 +142,8 @@ export class OrganizationMembersViewController implements ViewController {
     const tbody = this.container.querySelector<HTMLElement>('[data-ref="members-table-body"]');
     const badge = this.container.querySelector<HTMLElement>('[data-ref="members-count-badge"]');
     if (!tbody) return;
+
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
 
     try {
       const res = await getApi(API_ROUTES.organization.members);
@@ -119,7 +157,7 @@ export class OrganizationMembersViewController implements ViewController {
       if (badge) badge.textContent = String(members.length);
 
       if (members.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-secondary);">No hay miembros registrados en esta organización.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-secondary);">${isEdu ? 'No hay estudiantes o docentes registrados en esta institución.' : 'No hay miembros registrados en esta organización.'}</td></tr>`;
         return;
       }
 
@@ -128,9 +166,11 @@ export class OrganizationMembersViewController implements ViewController {
           const isOwner = m.role === 'ORG_OWNER';
           const isCurrent = currentUser?.id === m.user_id;
           const canDelete = hasPermission(currentUser, 'org:members:remove') && !isOwner && !isCurrent;
-          const roleLabel = isOwner ? 'Propietario' : m.role === 'ORG_ADMIN' ? 'Administrador' : 'Miembro';
+          const roleLabel = isEdu
+            ? (isOwner ? 'Director / Coordinador' : m.role === 'ORG_ADMIN' ? 'Administrador Campus' : 'Alumno / Docente')
+            : (isOwner ? 'Propietario' : m.role === 'ORG_ADMIN' ? 'Administrador' : 'Miembro');
           const roleBadgeClass = isOwner ? 'component-badge--black' : m.role === 'ORG_ADMIN' ? 'component-badge--brand' : '';
-          const nameStr = m.username || m.email || 'Usuario';
+          const nameStr = m.username || m.email || (isEdu ? 'Estudiante/Docente' : 'Usuario');
           const emailStr = m.email || '';
           const initial = escapeHtml(nameStr.charAt(0).toUpperCase());
           const avatarHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-surface-secondary); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: var(--text-primary);">${initial}</div>`;
@@ -157,7 +197,7 @@ export class OrganizationMembersViewController implements ViewController {
               <td class="text-right">
                 <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
                   ${canDelete ? `
-                    <button type="button" class="component-button component-button--h32 component-button--icon-only component-button--danger" data-ref="btn-remove-member-${m.id}" data-id="${m.id}" data-tooltip="Remover miembro" aria-label="Remover miembro">
+                    <button type="button" class="component-button component-button--h32 component-button--icon-only component-button--danger" data-ref="btn-remove-member-${m.id}" data-id="${m.id}" data-tooltip="${isEdu ? 'Remover estudiante/docente' : 'Remover miembro'}" aria-label="${isEdu ? 'Remover estudiante/docente' : 'Remover miembro'}">
                       <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
                     </button>
                   ` : ''}
@@ -177,13 +217,17 @@ export class OrganizationMembersViewController implements ViewController {
 
   private bindMemberRowActions(tbody: HTMLElement): void {
     const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="members-page-error"]');
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
 
     const removeBtns = tbody.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-remove-member-"]');
     removeBtns.forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         if (!id) return;
-        if (!confirm('¿Estás seguro de que deseas eliminar este miembro de la organización? Perderá acceso a las herramientas empresariales.')) {
+        const confirmMsg = isEdu
+          ? '¿Estás seguro de que deseas revocar el acceso a este estudiante o docente? Perderá la licencia Pro de la institución.'
+          : '¿Estás seguro de que deseas eliminar este miembro de la organización? Perderá acceso a las herramientas empresariales.';
+        if (!confirm(confirmMsg)) {
           return;
         }
 
@@ -194,12 +238,12 @@ export class OrganizationMembersViewController implements ViewController {
             if (!res.ok) {
               const err = await res.json();
               if (errorBanner) {
-                errorBanner.textContent = err.error || 'No se pudo remover el miembro.';
+                errorBanner.textContent = err.error || (isEdu ? 'No se pudo revocar el acceso.' : 'No se pudo remover el miembro.');
                 errorBanner.style.display = 'block';
               }
               return;
             }
-            showToast('Miembro eliminado de la organización', 'success');
+            showToast(isEdu ? 'Usuario revocado de la institución' : 'Miembro eliminado de la organización', 'success');
             await this.loadMembers();
           } catch {
             if (errorBanner) {
@@ -215,6 +259,7 @@ export class OrganizationMembersViewController implements ViewController {
   private async handleInviteMember(): Promise<void> {
     const emailInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-invite-email"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-invite"]');
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
     const email = emailInput?.value.trim();
     if (!email) return;
 
@@ -227,12 +272,12 @@ export class OrganizationMembersViewController implements ViewController {
         });
         const data = await res.json();
         if (!res.ok) {
-          this.bannerManager?.showError(data.error || 'No fue posible enviar la invitación.');
+          this.bannerManager?.showError(data.error || (isEdu ? 'No fue posible enviar la invitación escolar.' : 'No fue posible enviar la invitación.'));
           return;
         }
 
         if (emailInput) emailInput.value = '';
-        showToast('Invitación corporativa enviada con éxito', 'success');
+        showToast(isEdu ? 'Invitación institucional enviada con éxito' : 'Invitación corporativa enviada con éxito', 'success');
         this.closeInviteModal();
         await this.loadMembers();
       } catch {

@@ -177,16 +177,16 @@ export class OrganizationViewController implements ViewController {
       }
 
       this.renderOverview(data);
-      this.renderDomains(data.domains || []);
+      this.renderDomains(data.domains || [], data.organization.org_type === 'education');
 
       if (hasPermission(currentUser, 'org:sso:configure')) {
-        await this.loadSsoConfig();
+        await this.loadSsoConfig(data.organization.org_type === 'education');
       } else {
         const btnOpenSso = this.container.querySelector<HTMLElement>('[data-ref="btn-open-sso-modal"]');
         if (btnOpenSso) btnOpenSso.style.display = 'none';
       }
 
-      this.renderCharts(data.activeMembersCount, data.organization.seat_limit);
+      this.renderCharts(data.activeMembersCount, data.organization.seat_limit, data.organization.org_type === 'education');
       renderIcons(this.container);
     } catch {
       if (emptyState) emptyState.style.display = 'block';
@@ -197,17 +197,20 @@ export class OrganizationViewController implements ViewController {
   }
 
   private renderOverview(data: OrganizationDetailsResponse): void {
+    const isEdu = data.organization.org_type === 'education';
     const nameEl = this.container.querySelector<HTMLElement>('[data-ref="org-name"]');
     const roleBadge = this.container.querySelector<HTMLElement>('[data-ref="org-role-badge"]');
+    const planBadge = this.container.querySelector<HTMLElement>('[data-ref="org-plan-badge"]');
     const seatDesc = this.container.querySelector<HTMLElement>('[data-ref="stat-seats-desc"]');
     const seatValue = this.container.querySelector<HTMLElement>('[data-ref="stat-seats-value"]');
     const seatProgressFill = this.container.querySelector<HTMLElement>('[data-ref="seat-progress-fill"]');
 
     if (nameEl) nameEl.textContent = data.organization.name;
+    if (planBadge) planBadge.textContent = isEdu ? 'Campus Educación' : 'Enterprise';
     if (roleBadge) {
-      const isEdu = data.organization.org_type === 'education';
-      const prefix = isEdu ? 'Campus Escolar · ' : '';
-      const roleLabel = data.memberRole === 'ORG_OWNER' ? `${prefix}Propietario` : data.memberRole === 'ORG_ADMIN' ? `${prefix}Administrador` : `${prefix}Miembro`;
+      const roleLabel = isEdu
+        ? (data.memberRole === 'ORG_OWNER' ? 'Director / Coordinador' : data.memberRole === 'ORG_ADMIN' ? 'Administrador de Campus' : 'Alumno / Docente')
+        : (data.memberRole === 'ORG_OWNER' ? 'Propietario' : data.memberRole === 'ORG_ADMIN' ? 'Administrador' : 'Miembro');
       roleBadge.textContent = roleLabel;
     }
 
@@ -216,7 +219,11 @@ export class OrganizationViewController implements ViewController {
     const remaining = Math.max(0, limit - used);
 
     if (seatValue) seatValue.textContent = `${used} / ${limit}`;
-    if (seatDesc) seatDesc.textContent = `${remaining} asientos disponibles para asignar`;
+    if (seatDesc) {
+      seatDesc.textContent = isEdu
+        ? `${remaining} licencias académicas disponibles`
+        : `${remaining} asientos disponibles para asignar`;
+    }
 
     const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
     if (seatProgressFill) {
@@ -228,19 +235,99 @@ export class OrganizationViewController implements ViewController {
     if (statMembersTotal) statMembersTotal.textContent = String(used);
 
     const statMembersDesc = this.container.querySelector<HTMLElement>('[data-ref="stat-members-desc"]');
-    if (statMembersDesc) statMembersDesc.textContent = `${used} usuario${used === 1 ? '' : 's'} activo${used === 1 ? '' : 's'} en el equipo`;
+    if (statMembersDesc) {
+      statMembersDesc.textContent = isEdu
+        ? `${used} alumno${used === 1 ? '' : 's'} o docente${used === 1 ? '' : 's'} activo${used === 1 ? '' : 's'} en el campus`
+        : `${used} usuario${used === 1 ? '' : 's'} activo${used === 1 ? '' : 's'} en el equipo`;
+    }
+
+    const labelKpiSeats = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-seats"]');
+    if (labelKpiSeats) labelKpiSeats.textContent = isEdu ? 'Licencias de Alumnos & Docentes' : 'Asientos & Licencias';
+
+    const labelKpiMembers = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-members"]');
+    if (labelKpiMembers) labelKpiMembers.textContent = isEdu ? 'Alumnos y Docentes' : 'Miembros del Equipo';
+
+    const labelKpiSso = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-sso"]');
+    if (labelKpiSso) labelKpiSso.textContent = isEdu ? 'Acceso Institucional & SSO' : 'Seguridad & SSO';
+
+    const labelKpiDomains = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-domains"]');
+    if (labelKpiDomains) labelKpiDomains.textContent = isEdu ? 'Dominios de la Institución' : 'Dominios Verificados';
+
+    const chartActivityTitle = this.container.querySelector<HTMLElement>('[data-ref="chart-activity-title"]');
+    if (chartActivityTitle) chartActivityTitle.textContent = isEdu ? 'Actividad Académica y Procesamiento de Documentos' : 'Actividad y Procesamiento Mensual de Documentos';
+
+    const chartActivitySub = this.container.querySelector<HTMLElement>('[data-ref="chart-activity-sub"]');
+    if (chartActivitySub) chartActivitySub.textContent = isEdu ? 'Tareas académicas completadas (unión, conversión, guías y compresión) en los últimos 6 meses' : 'Tareas completadas (unión, conversión, compresión y flujos automáticos) en los últimos 6 meses';
+
+    const chartSeatsTitle = this.container.querySelector<HTMLElement>('[data-ref="chart-seats-title"]');
+    if (chartSeatsTitle) chartSeatsTitle.textContent = isEdu ? 'Distribución de Licencias Escolares' : 'Distribución de Licencias';
+
+    const chartSeatsSub = this.container.querySelector<HTMLElement>('[data-ref="chart-seats-sub"]');
+    if (chartSeatsSub) chartSeatsSub.textContent = isEdu ? 'Licencias asignadas vs vacantes para estudiantes y docentes' : 'Asientos asignados vs vacantes';
+
+    const chartAuthTitle = this.container.querySelector<HTMLElement>('[data-ref="chart-auth-title"]');
+    if (chartAuthTitle) chartAuthTitle.textContent = isEdu ? 'Inicios de Sesión y Accesos al Campus (Últimas 4 Semanas)' : 'Autenticación y Accesos Corporativos (Últimas 4 Semanas)';
+
+    const chartAuthSub = this.container.querySelector<HTMLElement>('[data-ref="chart-auth-sub"]');
+    if (chartAuthSub) chartAuthSub.textContent = isEdu ? 'Distribución semanal de inicios vía SSO Educativo vs credenciales directas' : 'Distribución semanal de inicios de sesión vía SSO Corporativo vs credenciales directas';
 
     const canInvite = hasPermission(currentUser, 'org:members:invite') && remaining > 0;
     const btnOpenInvite = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-invite-modal"]');
-    if (btnOpenInvite) btnOpenInvite.style.display = canInvite ? 'inline-flex' : 'none';
+    if (btnOpenInvite) {
+      btnOpenInvite.style.display = canInvite ? 'inline-flex' : 'none';
+      btnOpenInvite.setAttribute('data-tooltip', isEdu ? 'Invitar alumno o docente' : 'Invitar miembro');
+      btnOpenInvite.setAttribute('aria-label', isEdu ? 'Invitar alumno o docente' : 'Invitar miembro');
+    }
 
     const btnOpenMembers = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-members-modal"]');
     if (btnOpenMembers) {
-      btnOpenMembers.setAttribute('data-tooltip', `Miembros del equipo (${used})`);
+      btnOpenMembers.setAttribute('data-tooltip', isEdu ? `Alumnos y docentes (${used})` : `Miembros del equipo (${used})`);
     }
+
+    const btnOpenSso = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-sso-page"]');
+    if (btnOpenSso) {
+      btnOpenSso.setAttribute('data-tooltip', isEdu ? 'SSO Escolar / Campus' : 'Configuración SSO');
+    }
+
+    this.applyModalTexts(isEdu);
   }
 
-  private renderCharts(usedSeats: number, totalSeats: number): void {
+  private applyModalTexts(isEdu: boolean): void {
+    const inviteTitle = this.container.querySelector<HTMLElement>('[data-ref="title-modal-invite"]');
+    if (inviteTitle) inviteTitle.textContent = isEdu ? 'Invitar estudiante o docente' : 'Invitar a un nuevo miembro';
+
+    const inviteDesc = this.container.querySelector<HTMLElement>('[data-ref="desc-modal-invite"]');
+    if (inviteDesc) inviteDesc.textContent = isEdu ? 'Otorga una licencia Pro a un alumno, investigador o profesor de tu institución.' : 'Agrega colegas a tu organización corporativa consumiendo un asiento disponible.';
+
+    const inviteEmailLabel = this.container.querySelector<HTMLElement>('[data-ref="label-invite-email"]');
+    if (inviteEmailLabel) inviteEmailLabel.textContent = isEdu ? 'Correo institucional (@escuela.edu)' : 'Correo electrónico corporativo';
+
+    const optMemberText = this.container.querySelector<HTMLElement>('[data-ref="opt-invite-role-member"] .menu-item__text');
+    if (optMemberText) optMemberText.textContent = isEdu ? 'Alumno / Docente (Licencia Pro)' : 'Miembro (Acceso a herramientas)';
+
+    const optAdminText = this.container.querySelector<HTMLElement>('[data-ref="opt-invite-role-admin"] .menu-item__text');
+    if (optAdminText) optAdminText.textContent = isEdu ? 'Administrador de Campus (Gestión de licencias)' : 'Administrador (Gestión de equipo)';
+
+    const selectedRoleText = this.container.querySelector<HTMLElement>('[data-ref="txt-selected-invite-role"]');
+    if (selectedRoleText) {
+      if (this.selectedInviteRole === 'ORG_ADMIN') {
+        selectedRoleText.textContent = isEdu ? 'Administrador de Campus (Gestión de licencias)' : 'Administrador (Gestión de equipo)';
+      } else {
+        selectedRoleText.textContent = isEdu ? 'Alumno / Docente (Licencia Pro)' : 'Miembro (Acceso a herramientas)';
+      }
+    }
+
+    const domainsTitle = this.container.querySelector<HTMLElement>('[data-ref="title-modal-domains"]');
+    if (domainsTitle) domainsTitle.textContent = isEdu ? 'Dominios de la Institución' : 'Dominios Corporativos';
+
+    const domainsDesc = this.container.querySelector<HTMLElement>('[data-ref="desc-modal-domains"]');
+    if (domainsDesc) domainsDesc.textContent = isEdu ? 'Los estudiantes y docentes con correo en estos dominios verificados (@institucion.edu) podrán acceder automáticamente mediante SSO de campus.' : 'Los usuarios con correo en estos dominios verificados podrán acceder automáticamente mediante SSO.';
+
+    const newDomainLabel = this.container.querySelector<HTMLElement>('[data-ref="label-new-domain"]');
+    if (newDomainLabel) newDomainLabel.textContent = isEdu ? 'Nuevo dominio escolar (ej. universidad.edu)' : 'Nuevo dominio (ej. miempresa.com)';
+  }
+
+  private renderCharts(usedSeats: number, totalSeats: number, isEdu = false): void {
     this.destroyCharts();
 
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.classList.contains('dark-theme');
@@ -265,7 +352,7 @@ export class OrganizationViewController implements ViewController {
                 borderWidth: 2.5,
                 data: [142, 235, 320, 480, 690, 940],
                 fill: true,
-                label: 'Documentos y flujos procesados',
+                label: isEdu ? 'Documentos académicos procesados' : 'Documentos y flujos procesados',
                 pointBackgroundColor: '#2563eb',
                 pointBorderColor: '#ffffff',
                 pointHoverRadius: 6,
@@ -313,7 +400,7 @@ export class OrganizationViewController implements ViewController {
       const available = Math.max(0, totalSeats - usedSeats);
       const seatsChart = new Chart(seatsCanvas, {
         data: {
-          labels: ['Asignados', 'Disponibles'],
+          labels: isEdu ? ['Licencias Asignadas', 'Licencias Disponibles'] : ['Asignados', 'Disponibles'],
           datasets: [
             {
               backgroundColor: ['#2563eb', isDark ? '#27272a' : '#e4e4e7'],
@@ -362,13 +449,13 @@ export class OrganizationViewController implements ViewController {
               backgroundColor: '#3b82f6',
               borderRadius: 6,
               data: [36, 54, 68, 92],
-              label: 'Inicios vía SSO Corporativo',
+              label: isEdu ? 'Inicios vía SSO Institucional' : 'Inicios vía SSO Corporativo',
             },
             {
               backgroundColor: isDark ? '#4b5563' : '#cbd5e1',
               borderRadius: 6,
               data: [14, 11, 7, 3],
-              label: 'Autenticación Directa',
+              label: isEdu ? 'Acceso Directo (Contraseña)' : 'Autenticación Directa',
             },
           ],
         },
@@ -411,13 +498,13 @@ export class OrganizationViewController implements ViewController {
     }
   }
 
-  private renderDomains(domains: OrganizationDomain[]): void {
+  private renderDomains(domains: OrganizationDomain[], isEdu = false): void {
     const list = this.container.querySelector<HTMLElement>('[data-ref="org-domains-list"]');
     if (!list) return;
 
     const btnOpenDomains = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-domains-modal"]');
     if (btnOpenDomains) {
-      btnOpenDomains.setAttribute('data-tooltip', `Dominios corporativos (${domains.length})`);
+      btnOpenDomains.setAttribute('data-tooltip', isEdu ? `Dominios de la institución (${domains.length})` : `Dominios corporativos (${domains.length})`);
     }
 
     const statCount = this.container.querySelector<HTMLElement>('[data-ref="stat-domains-count"]');
@@ -425,11 +512,11 @@ export class OrganizationViewController implements ViewController {
 
     const statPreview = this.container.querySelector<HTMLElement>('[data-ref="stat-domains-list-preview"]');
     if (statPreview) {
-      statPreview.textContent = domains.map((d) => d.domain).join(', ') || 'Sin dominios registrados';
+      statPreview.textContent = domains.map((d) => d.domain).join(', ') || (isEdu ? 'Sin dominios escolares' : 'Sin dominios registrados');
     }
 
     if (!domains.length) {
-      list.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">No hay dominios autorizados registrados.</span>';
+      list.innerHTML = `<span style="font-size: 13px; color: var(--text-secondary);">${isEdu ? 'No hay dominios escolares registrados.' : 'No hay dominios autorizados registrados.'}</span>`;
       return;
     }
 
@@ -468,6 +555,7 @@ export class OrganizationViewController implements ViewController {
     });
     banners.hideAll();
 
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
     const emailInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-invite-email"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-invite"]');
 
@@ -475,7 +563,7 @@ export class OrganizationViewController implements ViewController {
     const role = this.selectedInviteRole || 'ORG_MEMBER';
 
     if (!email || !email.includes('@')) {
-      banners.showError('Ingresa un correo electrónico corporativo válido.');
+      banners.showError(isEdu ? 'Ingresa un correo electrónico institucional válido.' : 'Ingresa un correo electrónico corporativo válido.');
       return;
     }
 
@@ -485,12 +573,12 @@ export class OrganizationViewController implements ViewController {
         const data = await res.json();
 
         if (!res.ok) {
-          banners.showError(data.error || 'No se pudo invitar al miembro.');
+          banners.showError(data.error || (isEdu ? 'No se pudo invitar al usuario.' : 'No se pudo invitar al miembro.'));
           return;
         }
 
-        banners.showSuccess('Miembro agregado correctamente.');
-        showToast('Invitación corporativa enviada con éxito.', 'success');
+        banners.showSuccess(isEdu ? 'Estudiante o docente agregado correctamente.' : 'Miembro agregado correctamente.');
+        showToast(isEdu ? 'Invitación institucional enviada con éxito.' : 'Invitación corporativa enviada con éxito.', 'success');
         if (emailInput) emailInput.value = '';
 
         setTimeout(() => {
@@ -511,12 +599,13 @@ export class OrganizationViewController implements ViewController {
     });
     banners.hideAll();
 
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
     const domainInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-new-domain"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-domain"]');
     const domain = domainInput?.value.trim().toLowerCase() || '';
 
     if (!domain || !domain.includes('.') || domain.length < 4) {
-      banners.showError('Ingresa un dominio corporativo válido (ej. miempresa.com).');
+      banners.showError(isEdu ? 'Ingresa un dominio escolar válido (ej. universidad.edu).' : 'Ingresa un dominio corporativo válido (ej. miempresa.com).');
       return;
     }
 
@@ -530,8 +619,8 @@ export class OrganizationViewController implements ViewController {
           return;
         }
 
-        banners.showSuccess('Dominio corporativo verificado y añadido con éxito.');
-        showToast('Dominio corporativo añadido correctamente.', 'success');
+        banners.showSuccess(isEdu ? 'Dominio institucional verificado y añadido con éxito.' : 'Dominio corporativo verificado y añadido con éxito.');
+        showToast(isEdu ? 'Dominio institucional añadido correctamente.' : 'Dominio corporativo añadido correctamente.', 'success');
         if (domainInput) domainInput.value = '';
 
         setTimeout(() => {
@@ -540,13 +629,18 @@ export class OrganizationViewController implements ViewController {
 
         await this.loadOrganizationData();
       } catch {
-        banners.showError('Error de red al registrar el dominio corporativo.');
+        banners.showError(isEdu ? 'Error de red al registrar el dominio escolar.' : 'Error de red al registrar el dominio corporativo.');
       }
     });
   }
 
   private async handleDeleteDomain(domainId: string, domainName: string): Promise<void> {
-    if (!confirm(`¿Eliminar el dominio ${domainName}? Los usuarios con este dominio ya no podrán usar SSO corporativo.`)) {
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
+    const confirmMsg = isEdu
+      ? `¿Eliminar el dominio ${domainName}? Los estudiantes y profesores con este dominio ya no podrán usar SSO escolar.`
+      : `¿Eliminar el dominio ${domainName}? Los usuarios con este dominio ya no podrán usar SSO corporativo.`;
+
+    if (!confirm(confirmMsg)) {
       return;
     }
 
@@ -557,14 +651,14 @@ export class OrganizationViewController implements ViewController {
         showToast(err.error || 'No se pudo eliminar el dominio.', 'danger');
         return;
       }
-      showToast('Dominio corporativo eliminado correctamente.', 'success');
+      showToast(isEdu ? 'Dominio institucional eliminado correctamente.' : 'Dominio corporativo eliminado correctamente.', 'success');
       await this.loadOrganizationData();
     } catch {
       showToast('Error de conexión al eliminar el dominio.', 'danger');
     }
   }
 
-  private async loadSsoConfig(): Promise<void> {
+  private async loadSsoConfig(isEdu = false): Promise<void> {
     const statusBadge = this.container.querySelector<HTMLElement>('[data-ref="sso-status-badge"]');
     const statProvider = this.container.querySelector<HTMLElement>('[data-ref="stat-sso-provider"]');
     const statEnforce = this.container.querySelector<HTMLElement>('[data-ref="stat-sso-enforce"]');
@@ -583,14 +677,24 @@ export class OrganizationViewController implements ViewController {
           statusBadge.style.background = 'rgba(22, 163, 74, 0.1)';
         }
 
-        const providerNames: Record<string, string> = {
-          azure: 'Microsoft Entra ID',
-          google: 'Google Workspace',
-          saml: 'SAML 2.0',
-        };
+        const providerNames: Record<string, string> = isEdu
+          ? {
+              azure: 'Microsoft 365 Educación',
+              google: 'Google Workspace for Education',
+              saml: 'SAML 2.0 Institucional',
+            }
+          : {
+              azure: 'Microsoft Entra ID',
+              google: 'Google Workspace',
+              saml: 'SAML 2.0',
+            };
         const pName = providerNames[ssoConfig.provider] || ssoConfig.provider.toUpperCase();
         if (statProvider) statProvider.textContent = pName;
-        if (statEnforce) statEnforce.textContent = ssoConfig.enforce_sso ? 'SSO Obligatorio' : 'SSO Opcional';
+        if (statEnforce) {
+          statEnforce.textContent = ssoConfig.enforce_sso
+            ? (isEdu ? 'SSO de Campus Obligatorio' : 'SSO Obligatorio')
+            : (isEdu ? 'SSO de Campus Opcional' : 'SSO Opcional');
+        }
       } else {
         if (statusBadge) {
           statusBadge.textContent = 'Inactivo';
@@ -598,7 +702,7 @@ export class OrganizationViewController implements ViewController {
           statusBadge.style.background = 'var(--bg-surface-secondary)';
         }
         if (statProvider) statProvider.textContent = 'Inactivo';
-        if (statEnforce) statEnforce.textContent = 'Sin SSO configurado';
+        if (statEnforce) statEnforce.textContent = isEdu ? 'Sin SSO escolar configurado' : 'Sin SSO configurado';
       }
     } catch {
       if (statusBadge) {
@@ -607,7 +711,7 @@ export class OrganizationViewController implements ViewController {
         statusBadge.style.background = 'var(--bg-surface-secondary)';
       }
       if (statProvider) statProvider.textContent = 'Inactivo';
-      if (statEnforce) statEnforce.textContent = 'Sin SSO configurado';
+      if (statEnforce) statEnforce.textContent = isEdu ? 'Sin SSO escolar configurado' : 'Sin SSO configurado';
     }
   }
 }

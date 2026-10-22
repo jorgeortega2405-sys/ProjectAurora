@@ -18,6 +18,15 @@ export const API_ROUTES = {
     file: (token: string) => `/api/download/${encodeURIComponent(token)}`,
     info: (token: string) => `/api/download/${encodeURIComponent(token)}/info`,
   },
+  education: {
+    checkEmail: '/api/education/check-email',
+    claimInstantPro: '/api/education/claim-instant-pro',
+    institutionInquiry: '/api/education/institution-inquiry',
+    requestOtp: '/api/education/request-otp',
+    status: '/api/education/status',
+    verify: '/api/education/verify',
+    verifyOtp: '/api/education/verify-otp',
+  },
   health: '/api/health',
   me: '/api/me',
   organization: {

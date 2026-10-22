@@ -1,6 +1,7 @@
 import { navigate } from '../app-router.js';
 import { getFooterHtml, mountSiteFooter } from '../components/footer.component.js';
-import { currentUser, getApi, postApi, postFormApi } from '../services/api.service.js';
+import { API_ROUTES } from '../config/api-routes.js';
+import { checkAuthSession, currentUser, getApi, postApi, postFormApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
@@ -54,7 +55,7 @@ export class EducationVerifyController implements ViewController {
     }
 
     try {
-      const res = await getApi('/api/education/status');
+      const res = await getApi(API_ROUTES.education.status);
       if (res.status === 401) {
         this.showCard('card-unauthenticated');
         return;
@@ -70,9 +71,15 @@ export class EducationVerifyController implements ViewController {
           return;
         }
 
-        if ((verification && verification.status === 'approved') || user.is_student) {
+        if ((verification && verification.status === 'approved') || user.is_student || user.subscription_tier === 'pro') {
           this.renderApprovedState(verification);
           this.showCard('card-approved');
+          return;
+        }
+
+        if (data.isEligibleInstant) {
+          this.renderInstantEligibleState(data.eligibleSchoolName, user.email || '');
+          this.showCard('card-instant-eligible');
           return;
         }
       }
@@ -84,13 +91,20 @@ export class EducationVerifyController implements ViewController {
   }
 
   private showCard(cardRef: string): void {
-    const cards = ['card-unauthenticated', 'card-pending', 'card-approved', 'card-form'];
+    const cards = ['card-unauthenticated', 'card-pending', 'card-approved', 'card-instant-eligible', 'card-form'];
     cards.forEach((ref) => {
       const el = this.container.querySelector<HTMLElement>(`[data-ref="${ref}"]`);
       if (el) {
         el.style.display = ref === cardRef ? 'flex' : 'none';
       }
     });
+  }
+
+  private renderInstantEligibleState(schoolName: string, email: string): void {
+    const emailEl = this.container.querySelector<HTMLElement>('[data-ref="val-instant-email"]');
+    const schoolEl = this.container.querySelector<HTMLElement>('[data-ref="val-instant-school"]');
+    if (emailEl) emailEl.textContent = email;
+    if (schoolEl) schoolEl.textContent = schoolName;
   }
 
   private renderPendingState(verification: { created_at?: string; full_name?: string; school_name?: string }): void {
@@ -118,6 +132,24 @@ export class EducationVerifyController implements ViewController {
   }
 
   private bindEvents(): void {
+    const claimInstantBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-claim-instant-pro"]');
+    if (claimInstantBtn) {
+      claimInstantBtn.addEventListener(
+        'click',
+        () => void this.handleClaimInstantPro(claimInstantBtn),
+        { signal: this.abortController?.signal }
+      );
+    }
+
+    const altOptionsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-show-alternative-options"]');
+    if (altOptionsBtn) {
+      altOptionsBtn.addEventListener(
+        'click',
+        () => this.showCard('card-form'),
+        { signal: this.abortController?.signal }
+      );
+    }
+
     const navigateLinks = this.container.querySelectorAll<HTMLAnchorElement>('[data-navigate]');
     navigateLinks.forEach((link) => {
       link.addEventListener(
@@ -487,6 +519,26 @@ export class EducationVerifyController implements ViewController {
         }, 1200);
       } catch {
         this.showError('Error de conexión al enviar los datos. Por favor intenta de nuevo.');
+      }
+    });
+  }
+
+  private async handleClaimInstantPro(btn: HTMLButtonElement): Promise<void> {
+    await withButtonLoading(btn, async () => {
+      try {
+        const res = await postApi(API_ROUTES.education.claimInstantPro, {});
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.error || 'No fue posible activar el plan estudiantil.', 'danger');
+          return;
+        }
+
+        showToast(data.message || '¡Plan Pro Estudiantil activado con éxito!', 'success');
+        await checkAuthSession();
+        this.renderApprovedState({ school_name: data.schoolName });
+        this.showCard('card-approved');
+      } catch {
+        showToast('Error de conexión al activar el beneficio educativo.', 'danger');
       }
     });
   }

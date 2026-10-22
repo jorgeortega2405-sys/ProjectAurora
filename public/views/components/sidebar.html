@@ -2,12 +2,9 @@
   <div class="layout-rail" data-ref="layout-rail">
     <div class="layout-rail__top" data-ref="rail-top">
       <div class="rail-top-default" data-ref="rail-top-default">
-        <div class="rail-nav-item rail-nav-item--toggle" data-ref="rail-item-drawer">
-          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--toggle" data-ref="btn-toggle-drawer" data-i18n-tooltip="nav.rail_workflows" data-i18n-aria="nav.rail_workflows" data-tooltip="Flujos" aria-label="Flujos">
-            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dock_to_right"></use></svg>
-          </button>
-          <span class="rail-nav-item__label" data-ref="rail-label-drawer" data-i18n="nav.rail_workflows">Flujos</span>
-        </div>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--toggle" data-ref="btn-toggle-drawer" data-i18n-tooltip="nav.workflows" data-i18n-aria="nav.workflows" data-tooltip="Flujos de trabajo" aria-label="Flujos de trabajo">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dock_to_right"></use></svg>
+        </button>
       </div>
     </div>
 
@@ -23,49 +20,44 @@
         </div>
 
         <div class="rail-nav-item" data-ref="rail-item-apps">
-          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-apps" data-tooltip="Herramientas" data-i18n-tooltip="nav.rail_tools" data-i18n-aria="nav.rail_tools" aria-label="Herramientas">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-apps" data-tooltip="Herramientas" data-i18n-tooltip="nav.tools" data-i18n-aria="nav.tools" aria-label="Herramientas">
             <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#apps"></use></svg>
           </button>
-          <span class="rail-nav-item__label" data-ref="rail-label-apps" data-i18n="nav.rail_tools">Herramientas</span>
+          <span class="rail-nav-item__label" data-ref="rail-label-apps" data-i18n="nav.tools">Apps</span>
         </div>
       </div>
     </div>
 
     <div class="layout-rail__bottom" data-ref="rail-bottom">
 
-      <div class="rail-nav-item rail-nav-item--help" data-ref="rail-item-help">
+      <div class="rail-nav-item" data-ref="rail-item-help">
         <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--help" data-ref="btn-rail-help" data-tooltip="Ayuda" data-i18n-tooltip="nav.help" data-i18n-aria="nav.help" aria-label="Ayuda">
           <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#help"></use></svg>
         </button>
-        <span class="rail-nav-item__label" data-ref="rail-label-help" data-i18n="nav.help">Ayuda</span>
       </div>
 
-      <div class="rail-nav-item rail-nav-item--settings" data-ref="rail-item-settings" style="display: none;">
+      <div class="rail-nav-item" data-ref="rail-item-settings" style="display: none;">
         <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--settings" data-ref="btn-rail-settings" data-tooltip="Configuración" data-i18n-tooltip="nav.settings" data-i18n-aria="nav.settings" aria-label="Configuración">
           <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
         </button>
-        <span class="rail-nav-item__label" data-ref="rail-label-settings" data-i18n="nav.settings">Ajustes</span>
       </div>
 
-      <div class="rail-nav-item rail-nav-item--login" data-ref="rail-item-login">
+      <div class="rail-nav-item" data-ref="rail-item-login">
         <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-login" data-tooltip="Acceder" data-i18n-tooltip="nav.login" data-i18n-aria="nav.login" aria-label="Acceder">
           <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#login"></use></svg>
         </button>
-        <span class="rail-nav-item__label" data-ref="rail-label-login" data-i18n="nav.login">Acceder</span>
       </div>
 
-      <div class="rail-nav-item rail-nav-item--ai" data-ref="rail-item-ai">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--ai" data-ref="btn-rail-ai" data-tooltip="IA" data-i18n-tooltip="nav.rail_ai" data-i18n-aria="nav.rail_ai" aria-label="IA">
+      <div class="rail-nav-item" data-ref="rail-item-ai" style="display: none;">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--ai" data-ref="btn-rail-ai" data-tooltip="Asistente IA" data-i18n-tooltip="nav.ai_assistant" data-i18n-aria="nav.ai_assistant" aria-label="Asistente IA">
           <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
         </button>
-        <span class="rail-nav-item__label" data-ref="rail-label-ai" data-i18n="nav.rail_ai">IA</span>
       </div>
 
-      <div class="rail-nav-item rail-item-container rail-nav-item--profile" data-ref="avatar-container" style="display: none;">
+      <div class="rail-item-container" data-ref="avatar-container" style="display: none;">
         <button type="button" class="component-button component-button--avatar rail-avatar-btn" data-ref="btn-avatar" data-tooltip="Perfil" data-i18n-tooltip="nav.profile" data-i18n-aria="nav.profile" aria-label="Perfil">
           <img class="avatar-img image-lazy-fade" data-ref="avatar-img" src="" alt="Avatar" referrerpolicy="no-referrer" onload="this.classList.add('image-loaded')" onerror="this.classList.add('image-loaded')" />
         </button>
-        <span class="rail-nav-item__label" data-ref="rail-label-profile" data-i18n="nav.profile">Perfil</span>
 
         <div class="avatar-dropdown-backdrop" data-ref="avatar-menu-backdrop">
           <div class="menu-panel menu-panel--dropdown menu-panel--w-325 menu-panel--h-auto avatar-panel rail-floating-panel" data-ref="avatar-menu">

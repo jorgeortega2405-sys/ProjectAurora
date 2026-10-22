@@ -375,3 +375,45 @@ export async function verifyInstitutionalEmailOtp(userId: string, code: string):
     connection.release();
   }
 }
+
+export async function activateInstantEducationalPro(
+  userId: string,
+  email: string,
+  schoolName: string
+): Promise<{ schoolName: string; success: boolean }> {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    await connection.query(
+      'UPDATE users SET subscription_tier = ?, subscription_origin = ?, is_student = TRUE, subscription_status = ?, subscription_period_end = DATE_ADD(NOW(), INTERVAL 1 YEAR) WHERE id = ?',
+      ['pro', 'education', 'active', userId]
+    );
+
+    const verificationId = crypto.randomUUID();
+    const docPlaceholder = `instant_domain:${email}`;
+    await connection.query(
+      'INSERT INTO student_verifications (id, user_id, full_name, school_name, document_url, status, admin_notes, reviewed_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+      [verificationId, userId, email, schoolName, docPlaceholder, 'approved', 'Auto-activado por reconocimiento directo de correo educativo (.edu)']
+    );
+
+    await connection.commit();
+
+    logger.security.info('Pro Educativo auto-activado por reconocimiento directo de correo institucional', {
+      email,
+      schoolName,
+      userId,
+    });
+
+    return {
+      schoolName,
+      success: true,
+    };
+  } catch (err) {
+    await connection.rollback();
+    logger.db.error('Error al auto-activar Pro Educativo', err);
+    throw err;
+  } finally {
+    connection.release();
+  }
+}

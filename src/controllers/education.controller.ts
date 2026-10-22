@@ -3,9 +3,11 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
-import { getCurrentUser } from '../services/auth.service.js';
-import { checkEducationalDomain, createStudentVerification, getLatestStudentVerification, requestInstitutionalEmailOtp, verifyInstitutionalEmailOtp } from '../services/education.service.js';
+import { addAccountToSession, getCurrentUser } from '../services/auth.service.js';
+import { activateInstantEducationalPro, checkEducationalDomain, createStudentVerification, getLatestStudentVerification, requestInstitutionalEmailOtp, verifyInstitutionalEmailOtp } from '../services/education.service.js';
 import { logger } from '../services/logger.service.js';
+import { getUserEffectivePermissions } from '../services/pbac.service.js';
+import { findUserById, sanitizeUser } from '../services/user.service.js';
 
 const VERIFICATIONS_DIR = path.resolve(process.cwd(), 'public/uploads/student_verifications');
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -115,8 +117,14 @@ export async function getStudentVerificationStatusHandler(req: Request, res: Res
     }
 
     const verification = await getLatestStudentVerification(currentUser.id);
+    const domainCheck = await checkEducationalDomain(currentUser.email);
+    const isPro = currentUser.subscription_tier === 'pro';
+    const isEligibleInstant = !isPro && domainCheck.isPartner;
 
     res.status(200).json({
+      eligibleDomain: domainCheck.domain,
+      eligibleSchoolName: domainCheck.schoolName,
+      isEligibleInstant,
       isStudent: Boolean(currentUser.is_student),
       subscriptionOrigin: currentUser.subscription_origin || 'payment',
       subscriptionTier: currentUser.subscription_tier || 'free',
@@ -127,6 +135,65 @@ export async function getStudentVerificationStatusHandler(req: Request, res: Res
     logger.app.error('Error al consultar estado de verificación estudiantil', error);
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al consultar el estado de verificación.',
+      success: false,
+    });
+  }
+}
+
+export async function claimInstantStudentProHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const currentUser = getCurrentUser(req);
+    if (!currentUser) {
+      res.status(401).json({ error: 'Debes iniciar sesión para activar el beneficio educativo.', success: false });
+      return;
+    }
+
+    if (currentUser.subscription_tier === 'pro' && currentUser.subscription_status === 'active') {
+      res.status(400).json({ error: 'Tu cuenta ya cuenta con una suscripción Pro activa.', success: false });
+      return;
+    }
+
+    const domainCheck = await checkEducationalDomain(currentUser.email);
+    if (!domainCheck.isPartner) {
+      res.status(400).json({
+        error: 'El correo principal de tu cuenta no pertenece a un dominio educativo o institución acreditada.',
+        success: false,
+      });
+      return;
+    }
+
+    const latest = await getLatestStudentVerification(currentUser.id);
+    if (latest && latest.status === 'approved') {
+      const approvedDate = new Date(latest.created_at).getTime();
+      const elevenMonthsAgo = Date.now() - (11 * 30 * 24 * 60 * 60 * 1000);
+      if (approvedDate > elevenMonthsAgo) {
+        res.status(400).json({
+          error: 'Tu cuenta ya cuenta con una acreditación estudiantil vigente para este ciclo escolar.',
+          success: false,
+        });
+        return;
+      }
+    }
+
+    const result = await activateInstantEducationalPro(currentUser.id, currentUser.email, domainCheck.schoolName);
+
+    const freshUser = await findUserById(currentUser.id);
+    if (freshUser) {
+      const sanitized = sanitizeUser(freshUser);
+      sanitized.permissions = await getUserEffectivePermissions(freshUser);
+      await addAccountToSession(res, req, sanitized);
+    }
+
+    res.status(200).json({
+      message: `¡Felicidades! Se ha activado 1 año de Spriteboard Pro Estudiantil en tu cuenta (${result.schoolName}).`,
+      schoolName: result.schoolName,
+      subscriptionTier: 'pro',
+      success: true,
+    });
+  } catch (error) {
+    logger.app.error('Error al activar Pro Estudiantil instantáneo', error);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al activar el plan estudiantil. Por favor intenta más tarde.',
       success: false,
     });
   }

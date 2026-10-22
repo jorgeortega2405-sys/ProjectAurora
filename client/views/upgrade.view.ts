@@ -1,9 +1,11 @@
 import { navigate } from '../app-router.js';
+import { API_ROUTES } from '../config/api-routes.js';
 import { checkAuthSession, currentUser, escapeHtml, getApi, postApi } from '../services/api.service.js';
 import { t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
+import { withButtonLoading } from '../utils/dom.util.js';
 
 type BillingCycle = 'monthly' | 'yearly';
 
@@ -181,6 +183,7 @@ export class UpgradeController {
     this.bindEvents();
     this.handleUrlTargetPlan();
     await this.handlePaymentUrlParams();
+    await this.checkEducationalEligibility();
   }
 
   destroy(): void {
@@ -188,6 +191,68 @@ export class UpgradeController {
       this.abortController.abort();
       this.abortController = null;
     }
+  }
+
+  private async checkEducationalEligibility(): Promise<void> {
+    if (!currentUser || currentUser.subscription_tier === 'pro' || currentUser.is_student) {
+      return;
+    }
+
+    try {
+      const res = await getApi(API_ROUTES.education.status);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (!data.isEligibleInstant) return;
+
+      const banner = this.container.querySelector<HTMLElement>('[data-ref="upgrade-edu-banner"]');
+      const schoolBadge = this.container.querySelector<HTMLElement>('[data-ref="badge-upgrade-edu-school"]');
+      const descText = this.container.querySelector<HTMLElement>('[data-ref="txt-upgrade-edu-desc"]');
+      const claimBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-upgrade-claim-edu"]');
+
+      if (!banner) return;
+
+      if (schoolBadge && data.eligibleSchoolName) {
+        schoolBadge.textContent = data.eligibleSchoolName;
+      }
+      if (descText) {
+        descText.textContent = `Tu correo pertenece a ${data.eligibleSchoolName || 'una institución académica'}. No necesitas pagar un plan individual: activa tu acceso Pro Estudiantil 100% bonificado.`;
+      }
+
+      banner.style.display = 'block';
+      renderIcons(banner);
+
+      if (claimBtn) {
+        claimBtn.addEventListener(
+          'click',
+          () => void this.handleClaimInstantPro(claimBtn, banner),
+          { signal: this.abortController?.signal }
+        );
+      }
+    } catch {
+      // Ignore background check
+    }
+  }
+
+  private async handleClaimInstantPro(btn: HTMLButtonElement, banner: HTMLElement): Promise<void> {
+    await withButtonLoading(btn, async () => {
+      try {
+        const res = await postApi(API_ROUTES.education.claimInstantPro, {});
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.error || 'No fue posible activar el plan estudiantil.', 'danger');
+          return;
+        }
+
+        showToast(data.message || '¡Plan Pro Estudiantil activado con éxito!', 'success');
+        banner.style.display = 'none';
+        await checkAuthSession();
+        this.renderCards();
+        renderIcons(this.container);
+      } catch {
+        showToast('Error de red al activar el plan estudiantil.', 'danger');
+      }
+    });
   }
 
   private bindEvents(): void {

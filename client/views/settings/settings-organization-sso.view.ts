@@ -91,6 +91,7 @@ export class OrganizationSsoViewController implements ViewController {
   }
 
   private handleProviderChange(): void {
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
     const oidcFields = this.container.querySelector<HTMLElement>('[data-ref="sso-oidc-fields"]');
     const azureFields = this.container.querySelector<HTMLElement>('[data-ref="sso-azure-fields"]');
     const samlFields = this.container.querySelector<HTMLElement>('[data-ref="sso-saml-fields"]');
@@ -99,14 +100,14 @@ export class OrganizationSsoViewController implements ViewController {
 
     if (summaryProviderName && summaryProviderDesc) {
       if (this.selectedProvider === 'azure') {
-        summaryProviderName.textContent = 'Microsoft Entra ID';
-        summaryProviderDesc.textContent = 'Azure AD OIDC';
+        summaryProviderName.textContent = isEdu ? 'Microsoft 365 Educación' : 'Microsoft Entra ID';
+        summaryProviderDesc.textContent = isEdu ? 'Azure AD / Entra ID Educativo' : 'Azure AD OIDC';
       } else if (this.selectedProvider === 'saml') {
-        summaryProviderName.textContent = 'SAML 2.0';
-        summaryProviderDesc.textContent = 'Federación SAML 2.0';
+        summaryProviderName.textContent = isEdu ? 'SAML 2.0 Institucional' : 'SAML 2.0';
+        summaryProviderDesc.textContent = isEdu ? 'Federación SAML 2.0 / Shibboleth' : 'Federación SAML 2.0';
       } else {
-        summaryProviderName.textContent = 'Google Workspace';
-        summaryProviderDesc.textContent = 'OAuth 2.0 / OpenID Connect';
+        summaryProviderName.textContent = isEdu ? 'Google Workspace for Education' : 'Google Workspace';
+        summaryProviderDesc.textContent = isEdu ? 'OAuth 2.0 / Google Classroom' : 'OAuth 2.0 / OpenID Connect';
       }
     }
 
@@ -141,10 +142,56 @@ export class OrganizationSsoViewController implements ViewController {
         return;
       }
 
+      const isEdu = this.currentOrg?.organization.org_type === 'education';
+      this.applyEducationTexts(isEdu);
       await this.loadSsoConfig();
     } catch {
       navigate('/organization');
     }
+  }
+
+  private applyEducationTexts(isEdu: boolean): void {
+    const titleEl = this.container.querySelector<HTMLElement>('[data-ref="sso-page-title"]');
+    if (titleEl) titleEl.textContent = isEdu ? 'Configuración de SSO Educativo / Campus' : 'Configuración de SSO Corporativo';
+
+    const lblStatus = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-status"]');
+    if (lblStatus) lblStatus.textContent = isEdu ? 'Estado SSO Institucional' : 'Estado de SSO';
+
+    const lblProvider = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-provider"]');
+    if (lblProvider) lblProvider.textContent = isEdu ? 'Proveedor de Identidad' : 'Proveedor Activo';
+
+    const lblPolicy = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-policy"]');
+    if (lblPolicy) lblPolicy.textContent = isEdu ? 'Política de Acceso de Campus' : 'Política de Acceso';
+
+    const lblDomains = this.container.querySelector<HTMLElement>('[data-ref="label-kpi-domains"]');
+    if (lblDomains) lblDomains.textContent = isEdu ? 'Dominios Escolares Protegidos' : 'Dominios Protegidos';
+
+    const optGoogle = this.container.querySelector<HTMLElement>('[data-ref="opt-sso-google"] .menu-item__text');
+    if (optGoogle) optGoogle.textContent = isEdu ? 'Google Workspace for Education (OAuth 2.0 / OIDC)' : 'Google Workspace (OAuth 2.0 / OIDC)';
+
+    const optAzure = this.container.querySelector<HTMLElement>('[data-ref="opt-sso-azure"] .menu-item__text');
+    if (optAzure) optAzure.textContent = isEdu ? 'Microsoft 365 Educación (Azure AD OIDC)' : 'Microsoft Entra ID (Azure AD OIDC)';
+
+    const optSaml = this.container.querySelector<HTMLElement>('[data-ref="opt-sso-saml"] .menu-item__text');
+    if (optSaml) optSaml.textContent = isEdu ? 'SAML 2.0 Institucional (Shibboleth, Okta, etc.)' : 'SAML 2.0 (Okta, MockSAML, Ping, etc.)';
+
+    const descProvider = this.container.querySelector<HTMLElement>('[data-ref="desc-sso-provider"]');
+    if (descProvider) descProvider.textContent = isEdu ? 'Selecciona tu Identity Provider e ingresa las credenciales escolares generadas en su consola de administración.' : 'Selecciona tu Identity Provider e ingresa las credenciales generadas en su consola de administración.';
+
+    const titleRules = this.container.querySelector<HTMLElement>('[data-ref="title-sso-rules"]');
+    if (titleRules) titleRules.textContent = isEdu ? '3. Reglas de Acceso para Estudiantes y Docentes' : '3. Reglas de Autenticación y Dominios';
+
+    const descRules = this.container.querySelector<HTMLElement>('[data-ref="desc-sso-rules"]');
+    if (descRules) descRules.textContent = isEdu ? 'Controla si el inicio de sesión vía SSO de campus es obligatorio para proteger las cuentas de tu institución.' : 'Controla si el inicio de sesión vía SSO es obligatorio para proteger las cuentas de tu organización.';
+
+    const textEnforce = this.container.querySelector<HTMLElement>('[data-ref="text-sso-enforce"]');
+    if (textEnforce) textEnforce.textContent = isEdu ? 'Exigir SSO institucional obligatorio para todos los estudiantes y docentes' : 'Exigir SSO obligatorio para todos los usuarios corporativos';
+
+    const textHint = this.container.querySelector<HTMLElement>('[data-ref="text-domains-hint"]');
+    if (textHint) textHint.textContent = isEdu ? 'Asegúrate de tener registrados los dominios escolares (@escuela.edu) en la sección de Dominios para que el acceso automático funcione.' : 'Asegúrate de tener registrados tus dominios en la sección de Dominios Corporativos para que el enrutamiento automático de login funcione.';
+
+    const descGuide = this.container.querySelector<HTMLElement>('[data-ref="desc-sso-guide"]');
+    if (descGuide) descGuide.textContent = isEdu ? 'Sigue esta secuencia para desplegar el acceso institucional a alumnos y docentes sin interrupciones:' : 'Sigue esta secuencia para evitar bloquear el acceso de tu personal corporativo:';
   }
 
   private async loadSsoConfig(): Promise<void> {
@@ -186,6 +233,7 @@ export class OrganizationSsoViewController implements ViewController {
 
       const data = await res.json();
       const ssoConfig = data.config as OrganizationSsoConfig | null;
+      const isEdu = this.currentOrg?.organization.org_type === 'education';
 
       if (ssoConfig && ssoConfig.is_enabled) {
         if (statusBadge) {
@@ -202,24 +250,32 @@ export class OrganizationSsoViewController implements ViewController {
           summaryStatusBadge.style.background = 'rgba(22, 163, 74, 0.1)';
         }
         if (summaryStatusDesc) {
-          summaryStatusDesc.textContent = 'Autenticación corporativa habilitada';
+          summaryStatusDesc.textContent = isEdu ? 'Autenticación escolar habilitada' : 'Autenticación corporativa habilitada';
         }
 
         if (summaryPolicyVal) {
-          summaryPolicyVal.textContent = ssoConfig.enforce_sso ? 'SSO Obligatorio' : 'SSO Opcional';
+          summaryPolicyVal.textContent = ssoConfig.enforce_sso ? (isEdu ? 'SSO de Campus Obligatorio' : 'SSO Obligatorio') : (isEdu ? 'SSO Institucional Opcional' : 'SSO Opcional');
         }
         if (summaryPolicyDesc) {
-          summaryPolicyDesc.textContent = ssoConfig.enforce_sso ? 'Contraseña bloqueada para miembros' : 'Inicio tradicional habilitado';
+          summaryPolicyDesc.textContent = ssoConfig.enforce_sso
+            ? (isEdu ? 'Acceso exclusivo con cuenta institucional' : 'Contraseña bloqueada para miembros')
+            : (isEdu ? 'Contraseña o SSO institucional' : 'Inicio tradicional habilitado');
         }
 
         this.selectedProvider = ssoConfig.provider || 'google';
         const txtProvider = this.container.querySelector<HTMLElement>('[data-ref="txt-selected-sso-provider"]');
         if (txtProvider) {
-          const names: Record<string, string> = {
-            azure: 'Microsoft Entra ID (Azure AD OIDC)',
-            google: 'Google Workspace (OAuth 2.0 / OIDC)',
-            saml: 'SAML 2.0 (Okta, MockSAML, Ping, etc.)',
-          };
+          const names: Record<string, string> = isEdu
+            ? {
+                azure: 'Microsoft 365 Educación (Azure AD OIDC)',
+                google: 'Google Workspace for Education (OAuth 2.0 / OIDC)',
+                saml: 'SAML 2.0 Institucional (Shibboleth, Okta, etc.)',
+              }
+            : {
+                azure: 'Microsoft Entra ID (Azure AD OIDC)',
+                google: 'Google Workspace (OAuth 2.0 / OIDC)',
+                saml: 'SAML 2.0 (Okta, MockSAML, Ping, etc.)',
+              };
           txtProvider.textContent = names[this.selectedProvider] || this.selectedProvider;
         }
         this.container.querySelectorAll<HTMLElement>('[data-ref^="opt-sso-"]').forEach((btn) => {
@@ -247,13 +303,13 @@ export class OrganizationSsoViewController implements ViewController {
           summaryStatusBadge.style.background = 'var(--bg-surface-secondary)';
         }
         if (summaryStatusDesc) {
-          summaryStatusDesc.textContent = 'Sin proveedor activo configurado';
+          summaryStatusDesc.textContent = isEdu ? 'Sin IdP de campus enlazado' : 'Sin proveedor activo configurado';
         }
         if (summaryPolicyVal) {
-          summaryPolicyVal.textContent = 'SSO Opcional';
+          summaryPolicyVal.textContent = isEdu ? 'SSO Institucional Opcional' : 'SSO Opcional';
         }
         if (summaryPolicyDesc) {
-          summaryPolicyDesc.textContent = 'Inicio tradicional habilitado';
+          summaryPolicyDesc.textContent = isEdu ? 'Inicio de sesión estándar habilitado' : 'Inicio tradicional habilitado';
         }
       }
       this.handleProviderChange();
@@ -265,6 +321,7 @@ export class OrganizationSsoViewController implements ViewController {
   private async handleSaveSsoConfig(): Promise<void> {
     this.bannerManager?.hideAll();
 
+    const isEdu = this.currentOrg?.organization.org_type === 'education';
     const clientIdInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-client-id"]');
     const clientSecretInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-client-secret"]');
     const tenantIdInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-tenant-id"]');
@@ -317,8 +374,8 @@ export class OrganizationSsoViewController implements ViewController {
           return;
         }
 
-        this.bannerManager?.showSuccess('Configuración de SSO corporativo guardada con éxito.');
-        showToast('Configuración SSO actualizada con éxito.', 'success');
+        this.bannerManager?.showSuccess(isEdu ? 'Configuración de SSO institucional guardada con éxito.' : 'Configuración de SSO corporativo guardada con éxito.');
+        showToast(isEdu ? 'Configuración SSO de campus actualizada con éxito.' : 'Configuración SSO actualizada con éxito.', 'success');
         await this.loadSsoConfig();
       } catch {
         this.bannerManager?.showError('Error de red al actualizar la configuración SSO.');

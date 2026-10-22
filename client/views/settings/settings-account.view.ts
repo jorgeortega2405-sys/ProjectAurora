@@ -549,6 +549,21 @@ export class YourAccountController implements ViewController {
     };
     refreshGoogleStatus();
 
+    void (async () => {
+      try {
+        const pwdStatusRes = await getApi(API_ROUTES.settings.passwordStatus);
+        if (signal.aborted) return;
+        if (pwdStatusRes.ok) {
+          const pwdStatusData = await pwdStatusRes.json();
+          if (currentUser && !signal.aborted) {
+            currentUser.google_id = pwdStatusData?.hasGoogle ? (currentUser.google_id || 'connected') : null;
+            setCurrentUser(currentUser);
+            refreshGoogleStatus();
+          }
+        }
+      } catch (_) {}
+    })();
+
     googleActionBtn?.addEventListener('click', async (e: Event) => {
       e.preventDefault();
       if (!currentUser) return;

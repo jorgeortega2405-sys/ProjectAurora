@@ -208,7 +208,11 @@ async function startServer(): Promise<void> {
           } else if (filePath.endsWith('.html')) {
             res.setHeader('Cache-Control', 'no-cache, must-revalidate');
           } else if (filePath.endsWith('.css') || filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
-            res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+            if (config.nodeEnv !== 'production') {
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            } else {
+              res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+            }
           } else if (filePath.endsWith('.json')) {
             res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
           } else if (filePath.endsWith('.svg') || filePath.endsWith('.png') || filePath.endsWith('.jpg') || filePath.endsWith('.webp') || filePath.endsWith('.woff2')) {

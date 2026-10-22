@@ -1,3 +1,4 @@
+import { setupSheetDragToDismiss } from '../components/modal.component.js';
 import { createPopper, Instance as PopperInstance, Placement } from '@popperjs/core';
 
 export interface BannerManager {
@@ -186,8 +187,7 @@ export function loadStylesheet(href: string): Promise<void> {
   const cleanHref = href.split('?')[0];
   if (
     loadedStylesheets.has(href) ||
-    loadedStylesheets.has(cleanHref) ||
-    document.querySelector(`link[href="${href}"], link[href^="${cleanHref}"]`)
+    document.querySelector(`link[href="${href}"]`)
   ) {
     loadedStylesheets.add(href);
     loadedStylesheets.add(cleanHref);
@@ -286,6 +286,7 @@ export function setupDropdown(
 
   let isClosing = false;
   let popperInstance: PopperInstance | null = null;
+  let cleanupDrag: (() => void) | null = null;
   const teleportTarget = backdrop || menu;
   let originalParent: HTMLElement | null = null;
   let originalNextSibling: Node | null = null;
@@ -405,10 +406,19 @@ export function setupDropdown(
       trigger?.classList.add('is-open');
       wrapper?.classList.add('is-open');
 
-      backdrop.style.transition = 'opacity 0.25s ease';
-      menu.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
-      backdrop.style.opacity = '1';
-      menu.style.transform = 'translateY(0)';
+      requestAnimationFrame(() => {
+        backdrop.style.transition = 'opacity 0.25s ease';
+        menu.style.transition = 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
+        backdrop.style.opacity = '1';
+        menu.style.transform = 'translateY(0)';
+      });
+
+      cleanupDrag?.();
+      if (dragZone) {
+        cleanupDrag = setupSheetDragToDismiss(dragZone, menu, backdrop, () => {
+          closeDropdown();
+        });
+      }
     } else {
       backdrop?.classList.add('is-open');
       menu?.classList.add('is-open');
@@ -430,6 +440,8 @@ export function setupDropdown(
   const closeDropdown = () => {
     if (isClosing || !menu?.classList.contains('is-open')) return;
 
+    cleanupDrag?.();
+    cleanupDrag = null;
     unregisterActiveDropdown(wrapper);
     destroyPopper();
 
@@ -506,94 +518,6 @@ export function setupDropdown(
     }
   };
   backdrop?.addEventListener('click', onBackdropClick);
-
-  let startY = 0;
-  let currentY = 0;
-  let startTime = 0;
-  let isDragging = false;
-  let activePointerId: number | null = null;
-
-  const detachPointerListeners = () => {
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', onPointerUp);
-    window.removeEventListener('pointercancel', onPointerUp);
-  };
-
-  const onPointerDown = (e: PointerEvent) => {
-    if (window.innerWidth > 768 || isClosing || !menu) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-    isDragging = true;
-    activePointerId = e.pointerId;
-    startY = e.clientY;
-    currentY = startY;
-    startTime = performance.now();
-
-    try {
-      dragZone?.setPointerCapture(activePointerId);
-    } catch (_) {}
-
-    menu.style.transition = 'none';
-    if (backdrop) {
-      backdrop.style.transition = 'none';
-    }
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
-  };
-
-  const onPointerMove = (e: PointerEvent) => {
-    if (!isDragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
-    currentY = e.clientY;
-    const diff = currentY - startY;
-
-    if (menu) {
-      if (diff > 0) {
-        menu.style.transform = `translateY(${diff}px)`;
-        if (backdrop) {
-          const progress = Math.min(diff / 220, 1);
-          backdrop.style.opacity = `${Math.max(0.2, 1 - progress * 0.8)}`;
-        }
-      } else {
-        const rubberDiff = Math.max(diff * 0.15, -24);
-        menu.style.transform = `translateY(${rubberDiff}px)`;
-      }
-    }
-  };
-
-  const onPointerUp = (e: PointerEvent) => {
-    if (!isDragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
-    isDragging = false;
-    detachPointerListeners();
-
-    try {
-      if (activePointerId !== null) {
-        dragZone?.releasePointerCapture(activePointerId);
-      }
-    } catch (_) {}
-    activePointerId = null;
-
-    const diff = currentY - startY;
-    const elapsed = Math.max(1, performance.now() - startTime);
-    const velocity = diff / elapsed;
-
-    if (diff > 75 || (diff > 25 && velocity > 0.45)) {
-      closeDropdown();
-    } else {
-      if (backdrop) {
-        backdrop.style.transition = 'opacity 0.25s ease';
-        backdrop.style.opacity = '1';
-      }
-      if (menu) {
-        menu.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
-        menu.style.transform = 'translateY(0)';
-      }
-    }
-  };
-
-  dragZone?.addEventListener('pointerdown', onPointerDown);
-  dragZone?.addEventListener('lostpointercapture', onPointerUp);
 
   const onDocClick = (e: MouseEvent) => {
     const target = e.target as Node;
@@ -712,11 +636,10 @@ export function setupDropdown(
   window.addEventListener('resize', onResize, { passive: true });
 
   const destroy = () => {
+    cleanupDrag?.();
+    cleanupDrag = null;
     returnFromTeleport();
     unregisterActiveDropdown(wrapper);
-    detachPointerListeners();
-    dragZone?.removeEventListener('pointerdown', onPointerDown);
-    dragZone?.removeEventListener('lostpointercapture', onPointerUp);
     trigger?.removeEventListener('click', onTriggerClick);
     backdrop?.removeEventListener('click', onBackdropClick);
     menu?.removeEventListener('click', onMenuClick);

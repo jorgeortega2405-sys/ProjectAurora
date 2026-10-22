@@ -24,6 +24,7 @@ export const API_ROUTES = {
     domains: '/api/organizations/me/domains',
     me: '/api/organizations/me',
     members: '/api/organizations/me/members',
+    removeDomain: (domainId: string) => `/api/organizations/me/domains/${encodeURIComponent(domainId)}`,
     removeMember: (memberId: string) => `/api/organizations/me/members/${encodeURIComponent(memberId)}`,
     ssoConfig: '/api/auth/sso/config',
     ssoInitiate: (emailOrDomain: string) => `/api/auth/sso/initiate?email=${encodeURIComponent(emailOrDomain)}`,

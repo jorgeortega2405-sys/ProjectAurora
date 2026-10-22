@@ -2,7 +2,7 @@ import { pool } from '../config/database.config.js';
 import { AddMemberDto, CreateOrganizationDto, Organization, OrganizationDomain, OrganizationMember } from '../types/enterprise.types.js';
 import { logger } from './logger.service.js';
 import { randomUUID } from 'crypto';
-import type { RowDataPacket } from 'mysql2';
+import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 interface OrgDbRow extends RowDataPacket {
   created_at: Date | string;
@@ -445,5 +445,14 @@ export async function listOrganizationDomains(organizationId: string): Promise<O
     is_verified: Boolean(r.is_verified),
     organization_id: r.organization_id,
   }));
+}
+
+export async function removeOrganizationDomain(organizationId: string, domainId: string): Promise<boolean> {
+  const [result] = await pool.execute<ResultSetHeader>(
+    'DELETE FROM organization_domains WHERE id = ? AND organization_id = ?',
+    [domainId, organizationId]
+  );
+  logger.db.info('Dominio corporativo eliminado', { domainId, organizationId });
+  return result.affectedRows > 0;
 }
 

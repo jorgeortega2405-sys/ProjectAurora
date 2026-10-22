@@ -349,9 +349,11 @@
     "upcoming": "Próximamente",
     "upgrade": "Actualizar plan",
     "workflows": "Flujos de trabajo",
-    "your_account": "Tu cuenta"
+    "your_account": "Tu cuenta",
+    "rail_workflows": "Flujos",
+    "rail_ai": "IA",
+    "rail_tools": "Herramientas"
   },
-
   "upcoming": {
     "back_home": "Ir a Inicio",
     "badge": "Próximamente",
@@ -701,7 +703,6 @@
     "payment_cancelled": "El proceso de suscripción fue cancelado.",
     "toast_coming_soon": "El plan {plan} estará disponible muy pronto en la fase de lanzamiento.",
     "toast_free_current": "Ya estás disfrutando de las ventajas del plan gratuito.",
-
     "disclaimer_geo": "La disponibilidad de funciones avanzadas, modelos de compresión en la nube y herramientas de alta velocidad puede variar según tu país, región geográfica o normativas de servicios digitales aplicables. Ciertas capacidades técnicas de procesamiento acelerado pueden estar sujetas a disponibilidad de cómputo y conectividad de red. Te recomendamos revisar detalladamente nuestros <a class=\"link\" data-ref=\"link-disclaimer-terms\" href=\"/terms\">Términos del servicio</a>.",
     "disclaimer_age": "Debes ser mayor de edad en tu jurisdicción de residencia para contratar suscripciones de pago. Las tarifas mostradas no incluyen los impuestos locales aplicables (IVA, GST o ventas), los cuales se calcularán según tu ubicación fiscal. Las suscripciones de pago se renovarán automáticamente al término de cada período salvo cancelación previa desde los ajustes de tu cuenta. Cifrado bancario TLS 1.3 garantizado. Consulta nuestra <a class=\"link\" data-ref=\"link-disclaimer-privacy\" href=\"/privacy\">Política de privacidad</a>.",
     "plans": {

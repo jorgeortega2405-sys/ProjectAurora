@@ -17,6 +17,121 @@ export function closeAllModals(): void {
   activeModals = [];
 }
 
+export function setupSheetDragToDismiss(
+  dragZone: HTMLElement,
+  sheet: HTMLElement,
+  backdrop: HTMLElement,
+  onClose: () => void
+): () => void {
+  const existingCleanup = (dragZone as any).__dragCleanup;
+  if (typeof existingCleanup === 'function') {
+    existingCleanup();
+  }
+
+  let startY = 0;
+  let currentY = 0;
+  let startTime = 0;
+  let isDragging = false;
+  let activePointerId: number | null = null;
+
+  const detachPointerListeners = () => {
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
+  };
+
+  const onPointerDown = (e: PointerEvent) => {
+    if (window.innerWidth > 768) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    isDragging = true;
+    activePointerId = e.pointerId;
+    startY = e.clientY;
+    currentY = startY;
+    startTime = performance.now();
+
+    try {
+      (dragZone || sheet).setPointerCapture(activePointerId);
+    } catch (_) {}
+
+    sheet.classList.add('is-dragging');
+    sheet.style.setProperty('transition', 'none', 'important');
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  };
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (!isDragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+    currentY = e.clientY;
+    const diff = currentY - startY;
+
+    if (diff > 0) {
+      sheet.style.setProperty('transform', `translateY(${diff}px)`, 'important');
+    } else {
+      sheet.style.setProperty('transform', 'translateY(0)', 'important');
+    }
+  };
+
+  const onPointerUp = (e: PointerEvent) => {
+    if (!isDragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+    isDragging = false;
+    sheet.classList.remove('is-dragging');
+    detachPointerListeners();
+
+    try {
+      if (activePointerId !== null) {
+        (dragZone || sheet)?.releasePointerCapture(activePointerId);
+      }
+    } catch (_) {}
+    activePointerId = null;
+
+    const diff = currentY - startY;
+    const elapsed = Math.max(1, performance.now() - startTime);
+    const velocity = diff / elapsed;
+
+    const sheetHeight = sheet.offsetHeight || 350;
+    const distanceThreshold = Math.min(Math.max(sheetHeight * 0.32, 85), 150);
+    const flickThreshold = Math.min(Math.max(sheetHeight * 0.18, 60), 90);
+    const shouldDismiss = diff >= distanceThreshold || (diff >= flickThreshold && velocity > 0.55);
+
+    if (shouldDismiss) {
+      sheet.style.setProperty('transition', 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)', 'important');
+      sheet.style.setProperty('transform', 'translateY(100%)', 'important');
+      backdrop.style.setProperty('transition', 'opacity 0.22s ease', 'important');
+      backdrop.style.setProperty('opacity', '0', 'important');
+      setTimeout(() => {
+        sheet.style.removeProperty('transition');
+        sheet.style.removeProperty('transform');
+        backdrop.style.removeProperty('transition');
+        backdrop.style.removeProperty('opacity');
+        onClose();
+      }, 220);
+    } else {
+      sheet.style.setProperty('transition', 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)', 'important');
+      sheet.style.setProperty('transform', 'translateY(0)', 'important');
+      setTimeout(() => {
+        sheet.style.removeProperty('transition');
+        sheet.style.removeProperty('transform');
+      }, 250);
+    }
+  };
+
+  dragZone.addEventListener('pointerdown', onPointerDown);
+  dragZone.addEventListener('lostpointercapture', onPointerUp);
+
+  const cleanup = () => {
+    detachPointerListeners();
+    dragZone.removeEventListener('pointerdown', onPointerDown);
+    dragZone.removeEventListener('lostpointercapture', onPointerUp);
+    delete (dragZone as any).__dragCleanup;
+  };
+
+  (dragZone as any).__dragCleanup = cleanup;
+  return cleanup;
+}
+
 export function openModal(options: ModalOptions = {}): ModalInstance {
   let {
     bodyHtml = '',
@@ -87,6 +202,7 @@ export function openModal(options: ModalOptions = {}): ModalInstance {
   const errorBanner = backdrop.querySelector<HTMLElement>('[data-ref="modal-error"]');
   const titleEl = backdrop.querySelector<HTMLElement>('[data-ref="modal-title"]');
   const descEl = backdrop.querySelector<HTMLElement>('[data-ref="modal-desc"]');
+  const dragZone = backdrop.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
 
   let isClosing = false;
 
@@ -231,6 +347,10 @@ export function openModal(options: ModalOptions = {}): ModalInstance {
       firstInput.focus();
     }
   });
+
+  if (dragZone && card) {
+    setupSheetDragToDismiss(dragZone, card, backdrop, () => modalInstance.close());
+  }
 
   return modalInstance;
 }
@@ -409,9 +529,6 @@ export async function open2FAModal(options: { onClose?: () => void; onSuccess?: 
 
       backdrop.classList.remove('is-visible');
       document.removeEventListener('keydown', handleKeyDown);
-      detach2FAPointerListeners();
-      dragZone2fa?.removeEventListener('pointerdown', onPointerDown);
-      dragZone2fa?.removeEventListener('lostpointercapture', onPointerUp);
 
       setTimeout(() => {
         if (backdrop.parentNode) {
@@ -430,87 +547,9 @@ export async function open2FAModal(options: { onClose?: () => void; onSuccess?: 
 
   const card2fa = backdrop.querySelector<HTMLElement>('[data-ref="modal-card-2fa"]');
   const dragZone2fa = backdrop.querySelector<HTMLElement>('[data-ref="modal-2fa-drag-zone"]');
-  let startY = 0;
-  let currentY = 0;
-  let startTime = 0;
-  let isDragging = false;
-  let activePointerId: number | null = null;
-
-  const detach2FAPointerListeners = () => {
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', onPointerUp);
-    window.removeEventListener('pointercancel', onPointerUp);
-  };
-
-  const onPointerDown = (e: PointerEvent) => {
-    if (isClosing || !card2fa) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-    isDragging = true;
-    activePointerId = e.pointerId;
-    startY = e.clientY;
-    currentY = startY;
-    startTime = performance.now();
-
-    try {
-      (dragZone2fa || card2fa).setPointerCapture(activePointerId);
-    } catch (_) {}
-
-    card2fa.style.transition = 'none';
-    backdrop.style.transition = 'none';
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
-  };
-
-  const onPointerMove = (e: PointerEvent) => {
-    if (!isDragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
-    currentY = e.clientY;
-    const diff = currentY - startY;
-
-    if (card2fa) {
-      if (diff > 0) {
-        card2fa.style.transform = `translateY(${diff}px)`;
-        const progress = Math.min(diff / 240, 1);
-        backdrop.style.opacity = `${Math.max(0.2, 1 - progress * 0.8)}`;
-      } else {
-        const rubberDiff = Math.max(diff * 0.15, -24);
-        card2fa.style.transform = `translateY(${rubberDiff}px)`;
-      }
-    }
-  };
-
-  const onPointerUp = (e: PointerEvent) => {
-    if (!isDragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
-    isDragging = false;
-    detach2FAPointerListeners();
-
-    try {
-      if (activePointerId !== null) {
-        (dragZone2fa || card2fa)?.releasePointerCapture(activePointerId);
-      }
-    } catch (_) {}
-    activePointerId = null;
-
-    const diff = currentY - startY;
-    const elapsed = Math.max(1, performance.now() - startTime);
-    const velocity = diff / elapsed;
-
-    if (diff > 80 || (diff > 25 && velocity > 0.45)) {
-      modalInstance.close();
-    } else {
-      backdrop.style.transition = 'opacity 0.25s ease';
-      backdrop.style.opacity = '1';
-      if (card2fa) {
-        card2fa.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
-        card2fa.style.transform = '';
-      }
-    }
-  };
-
-  dragZone2fa?.addEventListener('pointerdown', onPointerDown);
-  dragZone2fa?.addEventListener('lostpointercapture', onPointerUp);
+  if (dragZone2fa && card2fa) {
+    setupSheetDragToDismiss(dragZone2fa, card2fa, backdrop, () => modalInstance.close());
+  }
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {

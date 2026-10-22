@@ -1,5 +1,5 @@
 import { logger } from '../services/logger.service.js';
-import { addMemberToOrganization, addOrganizationDomain, countActiveMembers, createOrganization, getOrganizationById, getUserOrganization, listOrganizationDomains, listOrganizationMembers, removeMemberFromOrganization } from '../services/organization.service.js';
+import { addMemberToOrganization, addOrganizationDomain, countActiveMembers, createOrganization, getOrganizationById, getUserOrganization, listOrganizationDomains, listOrganizationMembers, removeMemberFromOrganization, removeOrganizationDomain } from '../services/organization.service.js';
 import { Request, Response } from 'express';
 
 export async function createOrganizationHandler(req: Request, res: Response): Promise<void> {
@@ -232,3 +232,38 @@ export async function addDomainHandler(req: Request, res: Response): Promise<voi
     });
   }
 }
+
+export async function removeDomainHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const user = (req as any).user;
+    const userOrg = await getUserOrganization(user.id);
+    if (!userOrg) {
+      res.status(404).json({ error: 'Organización no encontrada.', success: false });
+      return;
+    }
+
+    const domainId = req.params.domainId;
+    if (!domainId) {
+      res.status(400).json({ error: 'Identificador de dominio requerido.', success: false });
+      return;
+    }
+
+    const removed = await removeOrganizationDomain(userOrg.organization.id, domainId);
+    if (!removed) {
+      res.status(404).json({ error: 'Dominio no encontrado.', success: false });
+      return;
+    }
+
+    res.json({
+      message: 'Dominio corporativo eliminado exitosamente.',
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al remover dominio corporativo', err);
+    res.status(500).json({
+      error: 'No se pudo eliminar el dominio corporativo.',
+      success: false,
+    });
+  }
+}
+

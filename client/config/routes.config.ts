@@ -384,7 +384,11 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async ({ params }) => {
-      await loadStylesheet('/css/tools/download-ready.css');
+      await Promise.all([
+        loadStylesheet('/css/components/component-views.css'),
+        loadStylesheet('/css/tools/tool-base.css'),
+        loadStylesheet('/css/tools/download-ready.css'),
+      ]);
       const { createDownloadReadyView } = await import('../views/download-ready/download-ready.view.js');
       return await createDownloadReadyView(params.token);
     },
@@ -419,6 +423,24 @@ export const APP_ROUTES: RouteDefinition[] = [
   {
     handler: async () => {
       await loadStylesheet('/css/components/component-settings.css');
+      const { createOrganizationMembersView } = await import('../views/settings.view.js');
+      return await createOrganizationMembersView();
+    },
+    id: 'organization-members',
+    match: (path) => path === '/organization/members',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-settings.css');
+      const { createOrganizationSsoView } = await import('../views/settings.view.js');
+      return await createOrganizationSsoView();
+    },
+    id: 'organization-sso',
+    match: (path) => path === '/organization/sso',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-settings.css');
       const { createOrganizationView } = await import('../views/settings.view.js');
       return await createOrganizationView();
     },
@@ -428,7 +450,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
-      const { createAccessibilityView, createBillingView, createGuestSettingsView, createOrganizationView, createPurchasesView, createSecurityView, createYourAccountView } = await import('../views/settings.view.js');
+      const { createAccessibilityView, createBillingView, createGuestSettingsView, createOrganizationMembersView, createOrganizationSsoView, createOrganizationView, createPurchasesView, createSecurityView, createYourAccountView } = await import('../views/settings.view.js');
 
       if (!currentUser) {
         if (path.startsWith('/settings/workflows')) {
@@ -456,6 +478,12 @@ export const APP_ROUTES: RouteDefinition[] = [
           return await createAccessibilityView();
         case '/settings/billing':
           return await createBillingView();
+        case '/settings/organization/members':
+          window.history.replaceState({}, '', '/organization/members');
+          return await createOrganizationMembersView();
+        case '/settings/organization/sso':
+          window.history.replaceState({}, '', '/organization/sso');
+          return await createOrganizationSsoView();
         case '/settings/organization':
           window.history.replaceState({}, '', '/organization');
           return await createOrganizationView();

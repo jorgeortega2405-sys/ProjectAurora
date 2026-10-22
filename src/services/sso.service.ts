@@ -1,9 +1,10 @@
+import { SAML } from '@node-saml/node-saml';
+import { randomUUID } from 'crypto';
+import type { RowDataPacket } from 'mysql2';
 import { pool } from '../config/database.config.js';
 import { ConfigureSsoDto, Organization, OrganizationSsoConfig, SsoLookupResult } from '../types/enterprise.types.js';
 import { logger } from './logger.service.js';
 import { addMemberToOrganization, getOrganizationById } from './organization.service.js';
-import { randomUUID } from 'crypto';
-import type { RowDataPacket } from 'mysql2';
 
 interface SsoConfigDbRow extends RowDataPacket {
   client_id: string | null;
@@ -176,12 +177,13 @@ export async function configureSso(dto: ConfigureSsoDto): Promise<OrganizationSs
   return updated;
 }
 
-export function buildSsoAuthorizeUrl(params: {
+export async function buildSsoAuthorizeUrl(params: {
   baseUrl: string;
   config: OrganizationSsoConfig;
   domain: string;
+  host?: string;
   state: string;
-}): string {
+}): Promise<string> {
   const { baseUrl, config, domain, state } = params;
   const callbackUrl = `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/callback`;
 
@@ -219,11 +221,14 @@ export function buildSsoAuthorizeUrl(params: {
   }
 
   if (config.provider === 'saml' && config.saml_entrypoint) {
-    const q = new URLSearchParams({
-      RelayState: state,
+    const cleanCert = (config.saml_cert || '').replace(/\\n/g, '\n').trim() || 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA';
+    const saml = new SAML({
+      callbackUrl: `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/saml/callback`,
+      entryPoint: config.saml_entrypoint,
+      idpCert: cleanCert,
+      issuer: config.saml_issuer || `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/saml/metadata`,
     });
-    const sep = config.saml_entrypoint.includes('?') ? '&' : '?';
-    return `${config.saml_entrypoint}${sep}${q.toString()}`;
+    return await saml.getAuthorizeUrlAsync(state, params.host || 'localhost', {});
   }
 
   throw new Error('Configuración de SSO incompleta o proveedor no soportado');

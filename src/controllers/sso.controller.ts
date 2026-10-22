@@ -1,4 +1,5 @@
-import { randomBytes } from 'crypto';
+import { SAML } from '@node-saml/node-saml';
+import { createHmac, randomBytes } from 'crypto';
 import { Request, Response } from 'express';
 import { config } from '../config/env.config.js';
 import { addAccountToSession } from '../services/auth.service.js';
@@ -45,15 +46,24 @@ export async function ssoInitiateHandler(req: Request, res: Response): Promise<v
       return;
     }
 
-    const state = randomBytes(24).toString('hex');
+    let state = randomBytes(24).toString('hex');
+    if (ssoInfo.config.provider === 'saml') {
+      const nonce = randomBytes(16).toString('hex');
+      const ts = Date.now();
+      const payload = `${cleanDomain}:${ts}:${nonce}`;
+      const sig = createHmac('sha256', config.sessionSecret).update(payload).digest('hex');
+      state = `${payload}:${sig}`;
+    }
+
     const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
     const host = (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost:3000';
     const baseUrl = config.baseUrl && !config.baseUrl.includes('localhost') ? config.baseUrl : `${proto}://${host}`;
 
-    const authorizeUrl = buildSsoAuthorizeUrl({
+    const authorizeUrl = await buildSsoAuthorizeUrl({
       baseUrl,
       config: ssoInfo.config,
       domain: cleanDomain,
+      host,
       state,
     });
 
@@ -229,6 +239,149 @@ export async function ssoCallbackHandler(req: Request, res: Response): Promise<v
   }
 }
 
+export async function ssoSamlCallbackHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { RelayState, SAMLResponse } = req.body || {};
+    if (!SAMLResponse) {
+      logger.security.warn('SAML callback recibido sin SAMLResponse');
+      res.redirect('/login?error=' + encodeURIComponent('Respuesta de autenticación SAML no proporcionada por el proveedor.'));
+      return;
+    }
+
+    let domain = req.cookies?.aurora_sso_domain;
+    const relayState = String(RelayState || '');
+    if (relayState.includes(':')) {
+      const parts = relayState.split(':');
+      if (parts.length === 4) {
+        const [relayDomain, relayTsStr, relayNonce, relaySig] = parts;
+        const payloadToVerify = `${relayDomain}:${relayTsStr}:${relayNonce}`;
+        const expectedSig = createHmac('sha256', config.sessionSecret).update(payloadToVerify).digest('hex');
+        const relayTs = Number(relayTsStr);
+        if (expectedSig === relaySig && Date.now() - relayTs < 15 * 60 * 1000) {
+          domain = relayDomain;
+        }
+      }
+    }
+
+    if (!domain) {
+      logger.security.warn('SAML callback sin dominio corporativo identificable');
+      res.redirect('/login?error=' + encodeURIComponent('Dominio corporativo no identificado en la sesión.'));
+      return;
+    }
+
+    res.clearCookie('aurora_sso_state', { path: '/' });
+    res.clearCookie('aurora_sso_domain', { path: '/' });
+
+    const ssoInfo = await getSsoConfigByDomain(domain);
+    if (!ssoInfo || !ssoInfo.config.is_enabled || ssoInfo.config.provider !== 'saml') {
+      res.redirect('/login?error=' + encodeURIComponent('La configuración de SAML no está activa para este dominio.'));
+      return;
+    }
+
+    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+    const host = (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost:3000';
+    const baseUrl = config.baseUrl && !config.baseUrl.includes('localhost') ? config.baseUrl : `${proto}://${host}`;
+    const callbackUrl = `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/saml/callback`;
+    const issuer = ssoInfo.config.saml_issuer || `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/saml/metadata`;
+
+    const rawCert = ssoInfo.config.saml_cert || '';
+    const cleanCert = rawCert.replace(/\\n/g, '\n').trim();
+
+    const saml = new SAML({
+      acceptedClockSkewMs: 120000,
+      audience: false,
+      callbackUrl,
+      entryPoint: ssoInfo.config.saml_entrypoint || '',
+      idpCert: cleanCert,
+      issuer,
+      wantAssertionsSigned: false,
+      wantAuthnResponseSigned: false,
+    });
+
+    let profile: any = null;
+    try {
+      const result = await saml.validatePostResponseAsync(req.body);
+      profile = result.profile;
+    } catch (valErr: any) {
+      logger.security.error('Fallo en la validación de aserción SAML', {
+        domain,
+        error: valErr?.message || String(valErr),
+        orgId: ssoInfo.organization.id,
+      });
+      res.redirect('/login?error=' + encodeURIComponent('Fallo en la validación de seguridad de la aserción SAML.'));
+      return;
+    }
+
+    const rawEmail = (
+      profile?.email ||
+      profile?.nameID ||
+      profile?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
+      profile?.['http://schemas.xmlsoap.org/claims/EmailAddress'] ||
+      profile?.['urn:oid:0.9.2342.19200300.100.1.3'] ||
+      profile?.mail ||
+      ''
+    );
+    const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
+
+    if (!email || !email.includes('@')) {
+      logger.security.warn('Aserción SAML procesada sin email válido');
+      res.redirect('/login?error=' + encodeURIComponent('El proveedor SAML no devolvió un correo electrónico corporativo válido.'));
+      return;
+    }
+
+    const name = (
+      profile?.displayName ||
+      profile?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ||
+      profile?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] ||
+      profile?.cn ||
+      email.split('@')[0]
+    );
+
+    const user = await processSsoLoginSuccess({
+      email,
+      name,
+      organizationId: ssoInfo.organization.id,
+    });
+
+    const fullUser = await findUserById(user.id);
+    if (!fullUser) {
+      res.redirect('/login?error=' + encodeURIComponent('Error al cargar datos del usuario corporativo.'));
+      return;
+    }
+
+    await addAccountToSession(res, req, fullUser);
+    logger.security.info('Inicio de sesión corporativo SAML 2.0 exitoso', { email: fullUser.email, userId: fullUser.id });
+    res.redirect('/');
+  } catch (err) {
+    logger.app.error('Error no controlado en SAML callback', err);
+    res.redirect('/login?error=' + encodeURIComponent('Ocurrió un error inesperado al procesar el inicio de sesión SAML.'));
+  }
+}
+
+export async function ssoSamlMetadataHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+    const host = (req.headers['x-forwarded-host'] as string) || req.get('host') || 'localhost:3000';
+    const baseUrl = config.baseUrl && !config.baseUrl.includes('localhost') ? config.baseUrl : `${proto}://${host}`;
+    const callbackUrl = `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/saml/callback`;
+    const issuer = `${baseUrl.replace(/\/+$/, '')}/api/auth/sso/saml/metadata`;
+
+    const saml = new SAML({
+      callbackUrl,
+      entryPoint: 'https://example.com/idp',
+      idpCert: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA',
+      issuer,
+    });
+
+    const metadataXml = saml.generateServiceProviderMetadata(null, null);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.status(200).send(metadataXml);
+  } catch (err) {
+    logger.app.error('Error al generar metadatos SAML SP', err);
+    res.status(500).send('Error al generar metadatos SAML.');
+  }
+}
+
 export async function getSsoConfigHandler(req: Request, res: Response): Promise<void> {
   try {
     const user = (req as any).user;
@@ -248,6 +401,7 @@ export async function getSsoConfigHandler(req: Request, res: Response): Promise<
             is_enabled: ssoConfig.is_enabled,
             organization_id: ssoConfig.organization_id,
             provider: ssoConfig.provider,
+            saml_cert: ssoConfig.saml_cert,
             saml_entrypoint: ssoConfig.saml_entrypoint,
             saml_issuer: ssoConfig.saml_issuer,
             tenant_id: ssoConfig.tenant_id,
@@ -279,6 +433,8 @@ export async function ssoConfigHandler(req: Request, res: Response): Promise<voi
       return;
     }
 
+    const sanitizedSamlCert = typeof samlCert === 'string' ? samlCert.replace(/\\n/g, '\n').trim() : samlCert;
+
     const savedConfig = await configureSso({
       clientId,
       clientSecret,
@@ -286,7 +442,7 @@ export async function ssoConfigHandler(req: Request, res: Response): Promise<voi
       isEnabled,
       organizationId: userOrg.organization.id,
       provider,
-      samlCert,
+      samlCert: sanitizedSamlCert,
       samlEntrypoint,
       samlIssuer,
       tenantId,
@@ -301,6 +457,7 @@ export async function ssoConfigHandler(req: Request, res: Response): Promise<voi
         is_enabled: savedConfig.is_enabled,
         organization_id: savedConfig.organization_id,
         provider: savedConfig.provider,
+        saml_cert: savedConfig.saml_cert,
         saml_entrypoint: savedConfig.saml_entrypoint,
         saml_issuer: savedConfig.saml_issuer,
         tenant_id: savedConfig.tenant_id,

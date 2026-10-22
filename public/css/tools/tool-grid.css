@@ -183,7 +183,7 @@
 .split-page-card:hover {
   border-color: var(--border-color-hover);
   box-shadow: var(--sl-shadow-medium);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .split-page-card.is-selected {
@@ -645,7 +645,7 @@
 .pn-page-card:hover {
   border-color: var(--border-color-hover);
   box-shadow: var(--sl-shadow-medium);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .pn-page-card__preview {
@@ -936,7 +936,7 @@
 .wm-page-card:hover {
   border-color: var(--border-color-hover);
   box-shadow: var(--sl-shadow-medium);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .wm-page-card__preview {
@@ -1153,7 +1153,7 @@
 .rotate-page-card:hover {
   border-color: var(--border-color-hover);
   box-shadow: var(--sl-shadow-medium);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .rotate-page-card__preview {
@@ -1353,7 +1353,7 @@
 .organize-page-card:hover {
   border-color: var(--border-color-hover);
   box-shadow: var(--sl-shadow-medium);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .organize-page-card:active {
@@ -1638,7 +1638,7 @@
 .remove-page-card:hover {
   border-color: var(--border-color-hover);
   box-shadow: var(--sl-shadow-medium);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .remove-page-card.is-marked-remove {

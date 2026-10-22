@@ -9,6 +9,7 @@ import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { UserWorkflow, WorkflowStep } from '../types/workflow.types.js';
+import { setupDropdown } from '../utils/dom.util.js';
 
 export class WorkflowsController {
   private abortController: AbortController | null = null;
@@ -175,8 +176,17 @@ export class WorkflowsController {
     }
 
     let currentSteps: WorkflowStep[] = workflow && Array.isArray(workflow.steps) ? [...workflow.steps] : [];
+    let selectedToolId = '';
+    let selectedCompressLevel = 'recommended';
+    let selectedSplitMode = 'pages';
+    let activeSubDropdownCtrls: Array<{ destroy: () => void }> = [];
 
-    const toolsOptionsHtml = WORKFLOW_TOOLS.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
+    const toolsItemsHtml = WORKFLOW_TOOLS.map((t) => `
+      <button type="button" class="menu-item" data-ref="opt-tool-${t.id}" data-value="${t.id}">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#${t.icon}"></use></svg>
+        <span class="menu-item__text">${t.name}</span>
+      </button>
+    `).join('');
 
     const modalBody = document.createElement('div');
     modalBody.className = 'workflow-modal-builder';
@@ -184,19 +194,32 @@ export class WorkflowsController {
     modalBody.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
 
     modalBody.innerHTML = `
-      <div class="field" data-ref="field-workflow-name" style="width: 100%;">
-        <span class="field__label" data-ref="label-workflow-name" style="display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">Nombre del flujo de trabajo</span>
-        <input class="field__input field__input--h40" data-ref="input-workflow-name" type="text" placeholder="Ej: Comprimir y dividir facturas" style="width: 100%;" value="${workflow ? this.escape(workflow.name) : ''}" />
-      </div>
+      <label class="field" data-ref="field-workflow-name">
+        <input class="field__input" data-ref="input-workflow-name" type="text" placeholder=" " value="${workflow ? this.escape(workflow.name) : ''}" autocomplete="off" />
+        <span class="field__label" data-ref="label-workflow-name">Nombre del flujo de trabajo</span>
+      </label>
 
       <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: var(--radius-lg, 12px); padding: 14px;">
-        <span style="display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Añadir herramienta al flujo</span>
-        
-        <div class="field" data-ref="field-workflow-tool" style="margin-bottom: 10px; width: 100%;">
-          <select class="field__input field__input--h40" data-ref="select-workflow-tool" style="width: 100%;">
-            <option value="" disabled selected>Selecciona una herramienta...</option>
-            ${toolsOptionsHtml}
-          </select>
+        <span style="color: var(--text-primary); display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px;">Añadir herramienta al flujo</span>
+
+        <div class="dropdown-wrapper dropdown-wrapper--full" data-ref="dropdown-wrapper-workflow-tool" style="margin-bottom: 10px;">
+          <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-workflow-tool" aria-label="Seleccionar herramienta">
+            <div class="dropdown-trigger__left" data-ref="dropdown-trigger-left-workflow-tool">
+              <svg class="component-icon dropdown-trigger__icon" data-ref="icon-selected-tool" aria-hidden="true" style="display: none;"><use href="/icons.svg#widgets"></use></svg>
+              <span class="dropdown-trigger__text" data-ref="txt-selected-tool">Selecciona una herramienta...</span>
+            </div>
+            <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+          </button>
+          <div class="dropdown-backdrop" data-ref="backdrop-workflow-tool">
+            <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-workflow-tool">
+              <div class="menu-panel__drag-zone" data-ref="drag-zone-workflow-tool" aria-hidden="true">
+                <div class="menu-panel__drag-handle"></div>
+              </div>
+              <div class="menu-panel__list menu-panel__list--scrollable" data-ref="list-workflow-tool" style="max-height: 220px; overflow-y: auto;">
+                ${toolsItemsHtml}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="workflow-tool-options" data-ref="workflow-tool-options" style="display: none; margin-bottom: 10px;"></div>
@@ -209,7 +232,7 @@ export class WorkflowsController {
 
       <div>
         <div style="align-items: center; display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Secuencia de pasos (<span data-ref="txt-steps-count">${currentSteps.length}</span>)</span>
+          <span style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Secuencia de pasos (<span data-ref="txt-steps-count">${currentSteps.length}</span>)</span>
           <button type="button" class="component-button component-button--ghost component-button--danger" data-ref="btn-modal-clear-steps" style="font-size: 12px; padding: 2px 6px;">Borrar todo</button>
         </div>
 
@@ -222,7 +245,10 @@ export class WorkflowsController {
       </div>
     `;
 
-    const toolSelect = modalBody.querySelector<HTMLSelectElement>('[data-ref="select-workflow-tool"]');
+    const toolDropdownWrapper = modalBody.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-workflow-tool"]');
+    const toolTriggerBtn = modalBody.querySelector<HTMLButtonElement>('[data-ref="btn-trigger-workflow-tool"]');
+    const toolTriggerText = modalBody.querySelector<HTMLElement>('[data-ref="txt-selected-tool"]');
+    const toolTriggerIcon = modalBody.querySelector<SVGElement>('[data-ref="icon-selected-tool"]');
     const optionsBox = modalBody.querySelector<HTMLElement>('[data-ref="workflow-tool-options"]');
     const btnAddStep = modalBody.querySelector<HTMLButtonElement>('[data-ref="btn-modal-add-step"]');
     const stepsListEl = modalBody.querySelector<HTMLElement>('[data-ref="modal-pipeline-steps-list"]');
@@ -233,31 +259,84 @@ export class WorkflowsController {
     const updateToolOptions = (toolId: string) => {
       if (!optionsBox) return;
 
+      activeSubDropdownCtrls.forEach((c) => c.destroy());
+      activeSubDropdownCtrls = [];
+
       if (toolId === 'compress-pdf') {
+        selectedCompressLevel = 'recommended';
         optionsBox.style.display = 'block';
         optionsBox.innerHTML = `
-          <div class="field" data-ref="field-compress-level" style="width: 100%;">
-            <select class="field__input field__input--h36" data-ref="opt-compress-level" style="width: 100%;">
-              <option value="recommended" selected>Nivel: Recomendado (Buena calidad y tamaño)</option>
-              <option value="extreme">Nivel: Extremo (Máxima compresión, menor calidad)</option>
-              <option value="low">Nivel: Bajo (Alta calidad, compresión ligera)</option>
-            </select>
+          <div class="dropdown-wrapper dropdown-wrapper--full" data-ref="dropdown-wrapper-compress-level">
+            <button type="button" class="dropdown-trigger dropdown-trigger--full dropdown-trigger--sm" data-ref="btn-trigger-compress-level" aria-label="Nivel de compresión">
+              <div class="dropdown-trigger__left" data-ref="dropdown-trigger-left-compress-level">
+                <span class="dropdown-trigger__text" data-ref="txt-selected-compress-level">Nivel: Recomendado (Buena calidad y tamaño)</span>
+              </div>
+              <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="dropdown-backdrop" data-ref="backdrop-compress-level">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-compress-level">
+                <div class="menu-panel__list" data-ref="list-compress-level">
+                  <button type="button" class="menu-item is-active" data-ref="opt-compress-recommended" data-value="recommended">
+                    <span class="menu-item__text">Nivel: Recomendado (Buena calidad y tamaño)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-compress-extreme" data-value="extreme">
+                    <span class="menu-item__text">Nivel: Extremo (Máxima compresión, menor calidad)</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-compress-low" data-value="low">
+                    <span class="menu-item__text">Nivel: Bajo (Alta calidad, compresión ligera)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         `;
+        const wrapper = optionsBox.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-compress-level"]');
+        if (wrapper) {
+          const ctrl = setupDropdown(wrapper, {
+            onSelect: (val: string) => {
+              selectedCompressLevel = val || 'recommended';
+            },
+          });
+          activeSubDropdownCtrls.push(ctrl);
+        }
       } else if (toolId === 'split-pdf') {
+        selectedSplitMode = 'pages';
         optionsBox.style.display = 'block';
         optionsBox.innerHTML = `
-          <div class="field" data-ref="field-split-mode" style="width: 100%;">
-            <select class="field__input field__input--h36" data-ref="opt-split-mode" style="width: 100%;">
-              <option value="pages" selected>Modo: Extraer páginas interactivamente</option>
-              <option value="range">Modo: Dividir por rango de páginas</option>
-            </select>
+          <div class="dropdown-wrapper dropdown-wrapper--full" data-ref="dropdown-wrapper-split-mode">
+            <button type="button" class="dropdown-trigger dropdown-trigger--full dropdown-trigger--sm" data-ref="btn-trigger-split-mode" aria-label="Modo de división">
+              <div class="dropdown-trigger__left" data-ref="dropdown-trigger-left-split-mode">
+                <span class="dropdown-trigger__text" data-ref="txt-selected-split-mode">Modo: Extraer páginas interactivamente</span>
+              </div>
+              <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="dropdown-backdrop" data-ref="backdrop-split-mode">
+              <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-split-mode">
+                <div class="menu-panel__list" data-ref="list-split-mode">
+                  <button type="button" class="menu-item is-active" data-ref="opt-split-pages" data-value="pages">
+                    <span class="menu-item__text">Modo: Extraer páginas interactivamente</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-split-range" data-value="range">
+                    <span class="menu-item__text">Modo: Dividir por rango de páginas</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         `;
+        const wrapper = optionsBox.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-split-mode"]');
+        if (wrapper) {
+          const ctrl = setupDropdown(wrapper, {
+            onSelect: (val: string) => {
+              selectedSplitMode = val || 'pages';
+            },
+          });
+          activeSubDropdownCtrls.push(ctrl);
+        }
       } else if (toolId === 'organize-pdf') {
         optionsBox.style.display = 'block';
         optionsBox.innerHTML = `
-          <p style="color: var(--text-secondary); font-size: 12px; line-height: 1.4; margin: 0;">
+          <p class="tool-options-hint" data-ref="txt-organize-hint" style="color: var(--text-secondary); font-size: 12px; line-height: 1.4; margin: 0;">
             Durante la ejecución podrás reordenar, rotar o eliminar páginas visualmente.
           </p>
         `;
@@ -266,7 +345,7 @@ export class WorkflowsController {
         if (toolDef?.isTerminal) {
           optionsBox.style.display = 'block';
           optionsBox.innerHTML = `
-            <p style="color: var(--text-secondary); font-size: 12px; line-height: 1.4; margin: 0;">
+            <p class="tool-options-hint" data-ref="txt-terminal-hint" style="color: var(--text-secondary); font-size: 12px; line-height: 1.4; margin: 0;">
               Paso final: genera el documento convertido para descarga directa.
             </p>
           `;
@@ -276,6 +355,30 @@ export class WorkflowsController {
         }
       }
     };
+
+    const resetToolSelection = () => {
+      selectedToolId = '';
+      if (toolTriggerText) {
+        toolTriggerText.textContent = 'Selecciona una herramienta...';
+      }
+      if (toolTriggerIcon) {
+        toolTriggerIcon.style.display = 'none';
+      }
+      toolDropdownWrapper?.querySelectorAll<HTMLElement>('.menu-item').forEach((item) => {
+        item.classList.remove('is-active');
+      });
+      updateToolOptions('');
+    };
+
+    const toolDropdownCtrl = setupDropdown(toolDropdownWrapper, {
+      onSelect: (toolId: string) => {
+        selectedToolId = toolId;
+        if (toolTriggerIcon) {
+          toolTriggerIcon.style.display = '';
+        }
+        updateToolOptions(toolId);
+      },
+    });
 
     const hasTerminal = () => currentSteps.some((s) => {
       const def = WORKFLOW_TOOLS.find((t) => t.id === s.tool);
@@ -294,6 +397,7 @@ export class WorkflowsController {
         `;
         if (terminalAlertEl) terminalAlertEl.style.display = 'none';
         if (btnAddStep) btnAddStep.disabled = false;
+        if (toolTriggerBtn) toolTriggerBtn.disabled = false;
         return;
       }
 
@@ -338,11 +442,8 @@ export class WorkflowsController {
       const terminal = hasTerminal();
       if (terminalAlertEl) terminalAlertEl.style.display = terminal ? 'flex' : 'none';
       if (btnAddStep) btnAddStep.disabled = terminal;
+      if (toolTriggerBtn) toolTriggerBtn.disabled = terminal;
     };
-
-    toolSelect?.addEventListener('change', () => {
-      updateToolOptions(toolSelect.value);
-    });
 
     btnAddStep?.addEventListener('click', () => {
       if (hasTerminal()) {
@@ -350,7 +451,6 @@ export class WorkflowsController {
         return;
       }
 
-      const selectedToolId = toolSelect?.value;
       if (!selectedToolId) {
         showToast('Por favor selecciona una herramienta para añadir.', 'warning');
         return;
@@ -358,11 +458,9 @@ export class WorkflowsController {
 
       const options: Record<string, any> = {};
       if (selectedToolId === 'compress-pdf') {
-        const levelSelect = optionsBox?.querySelector<HTMLSelectElement>('[data-ref="opt-compress-level"]');
-        options.level = levelSelect?.value || 'recommended';
+        options.level = selectedCompressLevel;
       } else if (selectedToolId === 'split-pdf') {
-        const modeSelect = optionsBox?.querySelector<HTMLSelectElement>('[data-ref="opt-split-mode"]');
-        options.mode = modeSelect?.value || 'pages';
+        options.mode = selectedSplitMode;
       }
 
       currentSteps.push({
@@ -371,8 +469,7 @@ export class WorkflowsController {
         tool: selectedToolId,
       });
 
-      if (toolSelect) toolSelect.value = '';
-      updateToolOptions('');
+      resetToolSelection();
       renderPipelineSteps();
     });
 
@@ -389,6 +486,7 @@ export class WorkflowsController {
 
     btnClearSteps?.addEventListener('click', () => {
       currentSteps = [];
+      resetToolSelection();
       renderPipelineSteps();
     });
 
@@ -400,6 +498,11 @@ export class WorkflowsController {
       confirmClass: 'component-button--primary component-button--black',
       confirmText: workflow ? 'Guardar cambios' : 'Crear flujo',
       description: 'Configura las herramientas y el orden de ejecución para automatizar tu proceso.',
+      onClose: () => {
+        toolDropdownCtrl?.destroy();
+        activeSubDropdownCtrls.forEach((c) => c.destroy());
+        activeSubDropdownCtrls = [];
+      },
       onConfirm: async (inst) => {
         inst.clearError();
         const nameInput = modalBody.querySelector<HTMLInputElement>('[data-ref="input-workflow-name"]');

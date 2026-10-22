@@ -180,16 +180,6 @@ export class HomeController {
       { signal: this.abortController?.signal }
     );
 
-    const btnHomePlans = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-plans"]');
-    btnHomePlans?.addEventListener(
-      'click',
-      (e) => {
-        e.preventDefault();
-        navigate('/upgrade');
-      },
-      { signal: this.abortController?.signal }
-    );
-
     const footerEl = this.container.querySelector<HTMLElement>('[data-ref="home-footer-section"]');
     if (footerEl) {
       const footerCtrl = mountSiteFooter(footerEl, this.abortController?.signal);

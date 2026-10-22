@@ -1,4 +1,6 @@
 
+@import './tool-base.css';
+
 .tool-hero-dropzone__actions--ready {
   align-items: center;
   display: flex;

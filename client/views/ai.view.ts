@@ -1,4 +1,6 @@
 import { ensureCsrfToken, getApi } from '../services/api.service.js';
+import { pickDropboxFiles } from '../services/dropbox.service.js';
+import { pickGoogleDriveFiles } from '../services/google-drive.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadPdfJs } from '../services/pdf-loader.service.js';
 import { loadTemplate } from '../services/template.service.js';
@@ -125,7 +127,6 @@ export class AiController implements ViewController {
     void wsService.connect();
     this.bindEvents();
     renderIcons(this.container);
-    void this.loadCredits();
   }
 
   destroy(): void {
@@ -148,18 +149,15 @@ export class AiController implements ViewController {
     const input = this.container.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"]');
     const btnSend = this.container.querySelector<HTMLElement>('[data-ref="btn-send-message"]');
     const btnNewChat = this.container.querySelector<HTMLElement>('[data-ref="btn-new-chat"]');
-    const btnClear = this.container.querySelector<HTMLElement>('[data-ref="btn-clear-chat"]');
     const btnAttach = this.container.querySelector<HTMLElement>('[data-ref="btn-attach-files"]');
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="ai-file-input"]');
     const dropOverlay = this.container.querySelector<HTMLElement>('[data-ref="ai-drop-overlay"]');
-    const quickChips = this.container.querySelectorAll<HTMLElement>('.ai-quick-chip');
 
     if (input) {
       input.addEventListener(
         'input',
         () => {
-          input.style.height = 'auto';
-          input.style.height = `${Math.min(input.scrollHeight, 160)}px`;
+          this.adjustComposerHeight();
         },
         { signal }
       );
@@ -194,20 +192,58 @@ export class AiController implements ViewController {
       { signal }
     );
 
-    btnClear?.addEventListener(
-      'click',
-      (e: MouseEvent) => {
-        e.preventDefault();
-        this.handleResetChat();
-      },
-      { signal }
-    );
+    const menuAttach = this.container.querySelector<HTMLElement>('[data-ref="menu-attach-options"]');
+    const btnAttachDevice = this.container.querySelector<HTMLElement>('[data-ref="btn-attach-device"]');
+    const btnAttachDrive = this.container.querySelector<HTMLElement>('[data-ref="btn-attach-drive"]');
+    const btnAttachDropbox = this.container.querySelector<HTMLElement>('[data-ref="btn-attach-dropbox"]');
 
     btnAttach?.addEventListener(
       'click',
       (e: MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
+        const isOpen = menuAttach?.style.display === 'flex';
+        this.closeAllDropdowns();
+        if (!isOpen && menuAttach) {
+          menuAttach.style.display = 'flex';
+          btnAttach.setAttribute('aria-expanded', 'true');
+        }
+      },
+      { signal }
+    );
+
+    btnAttachDevice?.addEventListener(
+      'click',
+      (e: MouseEvent) => {
+        e.preventDefault();
+        this.closeAllDropdowns();
         fileInput?.click();
+      },
+      { signal }
+    );
+
+    btnAttachDrive?.addEventListener(
+      'click',
+      async (e: MouseEvent) => {
+        e.preventDefault();
+        this.closeAllDropdowns();
+        const files = await pickGoogleDriveFiles({ multiselect: true });
+        if (files && files.length > 0) {
+          this.addFiles(files);
+        }
+      },
+      { signal }
+    );
+
+    btnAttachDropbox?.addEventListener(
+      'click',
+      async (e: MouseEvent) => {
+        e.preventDefault();
+        this.closeAllDropdowns();
+        const files = await pickDropboxFiles({ multiselect: true });
+        if (files && files.length > 0) {
+          this.addFiles(files);
+        }
       },
       { signal }
     );
@@ -222,23 +258,6 @@ export class AiController implements ViewController {
       },
       { signal }
     );
-
-    for (const chip of quickChips) {
-      chip.addEventListener(
-        'click',
-        () => {
-          const prompt = chip.getAttribute('data-prompt');
-          if (prompt && input) {
-            input.value = prompt;
-            input.focus();
-            if (this.stagedFiles.length > 0) {
-              this.handleSend();
-            }
-          }
-        },
-        { signal }
-      );
-    }
 
     this.container.addEventListener(
       'dragover',
@@ -270,18 +289,7 @@ export class AiController implements ViewController {
       { signal }
     );
 
-    const creditsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-credits"]');
-    const creditsDropdown = this.container.querySelector<HTMLElement>('[data-ref="ai-credits-dropdown"]');
 
-    creditsBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = creditsDropdown?.style.display === 'flex';
-      this.closeAllDropdowns();
-      if (!isOpen && creditsDropdown) {
-        creditsDropdown.style.display = 'flex';
-        creditsBtn.setAttribute('aria-expanded', 'true');
-      }
-    }, { signal });
 
     const modalBackdrop = this.container.querySelector<HTMLElement>('[data-ref="ai-preview-modal"]');
     const closePreviewBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-preview"]');
@@ -388,14 +396,12 @@ export class AiController implements ViewController {
     for (const m of menus) {
       m.style.display = 'none';
     }
-    const toggles = this.container.querySelectorAll<HTMLButtonElement>('.ai-toolbar-btn[aria-expanded="true"]');
+    const toggles = this.container.querySelectorAll<HTMLButtonElement>(
+      '.ai-toolbar-btn[aria-expanded="true"], .chat-pill-input__attach[aria-expanded="true"]'
+    );
     for (const btn of toggles) {
       btn.setAttribute('aria-expanded', 'false');
     }
-    const creditsDropdown = this.container.querySelector<HTMLElement>('[data-ref="ai-credits-dropdown"]');
-    if (creditsDropdown) creditsDropdown.style.display = 'none';
-    const creditsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-credits"]');
-    if (creditsBtn) creditsBtn.setAttribute('aria-expanded', 'false');
   }
 
   private addFiles(newFiles: File[]): void {
@@ -420,6 +426,7 @@ export class AiController implements ViewController {
     if (this.stagedFiles.length === 0) {
       tray.style.display = 'none';
       list.innerHTML = '';
+      this.renderContextualSuggestions();
       return;
     }
 
@@ -451,6 +458,98 @@ export class AiController implements ViewController {
     }
 
     renderIcons(list);
+    this.renderContextualSuggestions();
+  }
+
+  private renderContextualSuggestions(): void {
+    const chipsGrid = this.container.querySelector<HTMLElement>('[data-ref="ai-quick-chips"]');
+    if (!chipsGrid) return;
+
+    if (this.stagedFiles.length === 0) {
+      chipsGrid.style.display = 'none';
+      chipsGrid.innerHTML = '';
+      return;
+    }
+
+    const suggestions: Array<{ icon: string; label: string; prompt: string }> = [];
+    const count = this.stagedFiles.length;
+    const names = this.stagedFiles.map((f) => f.name.toLowerCase());
+    const pdfCount = names.filter((n) => n.endsWith('.pdf')).length;
+    const wordCount = names.filter((n) => n.endsWith('.doc') || n.endsWith('.docx')).length;
+    const excelCount = names.filter((n) => n.endsWith('.xls') || n.endsWith('.xlsx')).length;
+    const imageCount = names.filter((n) => n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.png') || n.endsWith('.webp')).length;
+
+    if (count === 1 && pdfCount === 1) {
+      suggestions.push(
+        { icon: 'compress', label: 'Comprimir PDF', prompt: 'Comprímeme este archivo PDF' },
+        { icon: 'auto_awesome', label: 'Resumir con IA', prompt: 'Resúmeme este documento con IA' },
+        { icon: 'description', label: 'Pasar a Word', prompt: 'Convierte este PDF a formato Word (.docx)' },
+        { icon: 'lock', label: 'Proteger con clave', prompt: 'Protege este documento PDF con contraseña' },
+        { icon: 'translate', label: 'Traducir al inglés', prompt: 'Traduce este documento PDF al inglés' },
+        { icon: 'format_list_numbered', label: 'Numerar páginas', prompt: 'Añade numeración de páginas en la parte inferior' }
+      );
+    } else if (count >= 2 && pdfCount === count) {
+      suggestions.push(
+        { icon: 'call_merge', label: 'Unir todos los PDF', prompt: 'Une estos archivos PDF en un único documento' },
+        { icon: 'bolt', label: 'Unir y comprimir', prompt: 'Une estos archivos PDF y luego comprime el resultado' },
+        { icon: 'sort', label: 'Ordenar por contenido y unir', prompt: 'Analiza el contenido de estos PDF, ordénalos según su continuación y únelos' }
+      );
+      if (count >= 4) {
+        const half = Math.floor(count / 2);
+        suggestions.push({
+          icon: 'splitscreen',
+          label: `Unir en 2 archivos (${half} y ${count - half})`,
+          prompt: `Une estos ${count} archivos pero en 2 archivos PDF, ${half} y ${count - half}`,
+        });
+      }
+      suggestions.push(
+        { icon: 'compress', label: 'Comprimir todos', prompt: 'Comprime todos estos archivos PDF en calidad recomendada' }
+      );
+    } else if (wordCount > 0 && count === wordCount) {
+      suggestions.push(
+        { icon: 'picture_as_pdf', label: 'Convertir a PDF', prompt: 'Convierte este documento Word a formato PDF' },
+        { icon: 'compress', label: 'Convertir a PDF y comprimir', prompt: 'Convierte este Word a PDF y comprímelo' }
+      );
+    } else if (excelCount > 0 && count === excelCount) {
+      suggestions.push(
+        { icon: 'picture_as_pdf', label: 'Convertir a PDF', prompt: 'Convierte esta hoja de Excel a formato PDF' }
+      );
+    } else if (imageCount > 0 && count === imageCount) {
+      suggestions.push(
+        { icon: 'picture_as_pdf', label: 'Convertir a PDF', prompt: 'Convierte estas imágenes a un archivo PDF' }
+      );
+    } else {
+      suggestions.push(
+        { icon: 'call_merge', label: 'Convertir todo a PDF y unir', prompt: 'Convierte todos los archivos a PDF y únelos en un solo documento' }
+      );
+    }
+
+    chipsGrid.innerHTML = '';
+    const input = this.container.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"]');
+
+    for (let i = 0; i < suggestions.length; i++) {
+      const s = suggestions[i];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'component-badge component-badge--sm component-badge--interactive ai-quick-chip';
+      btn.setAttribute('data-ref', `chip-suggestion-${i}`);
+      btn.setAttribute('data-prompt', s.prompt);
+      btn.innerHTML = `
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#${s.icon}"></use></svg>
+        <span>${escapeHtml(s.label)}</span>
+      `;
+      btn.addEventListener('click', () => {
+        if (input) {
+          input.value = s.prompt;
+          this.adjustComposerHeight();
+          this.handleSend();
+        }
+      });
+      chipsGrid.appendChild(btn);
+    }
+
+    chipsGrid.style.display = 'flex';
+    renderIcons(chipsGrid);
   }
 
   private async handleSend(): Promise<void> {
@@ -471,7 +570,7 @@ export class AiController implements ViewController {
     this.renderStagedTray();
 
     input.value = '';
-    input.style.height = 'auto';
+    this.adjustComposerHeight();
 
     const userMessageItem: ChatMessageItem = {
       files: sentFiles.map((f) => ({ name: f.name, size: f.size })),
@@ -1063,8 +1162,46 @@ export class AiController implements ViewController {
     if (list) list.innerHTML = '';
     if (input) {
       input.value = '';
-      input.style.height = 'auto';
+      this.adjustComposerHeight();
       input.focus();
+    }
+  }
+
+  private adjustComposerHeight(): void {
+    const textarea = this.container.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"]');
+    const inputBox = this.container.querySelector<HTMLElement>('[data-ref="chat-input-box"]');
+    if (!textarea || !inputBox) return;
+
+    const text = textarea.value;
+    if (!text || text.trim().length === 0) {
+      inputBox.classList.remove('is-multiline');
+      textarea.style.height = '';
+      return;
+    }
+
+    if (text.includes('\n')) {
+      inputBox.classList.add('is-multiline');
+      textarea.style.height = 'auto';
+      const nextH = Math.min(Math.max(textarea.scrollHeight, 24), 120);
+      textarea.style.height = `${nextH}px`;
+      return;
+    }
+
+    const wasMultiline = inputBox.classList.contains('is-multiline');
+    if (wasMultiline) {
+      inputBox.classList.remove('is-multiline');
+    }
+    textarea.style.height = 'auto';
+    const singleRowScrollH = textarea.scrollHeight;
+
+    if (singleRowScrollH > 24) {
+      inputBox.classList.add('is-multiline');
+      textarea.style.height = 'auto';
+      const nextH = Math.min(Math.max(textarea.scrollHeight, 24), 120);
+      textarea.style.height = `${nextH}px`;
+    } else {
+      inputBox.classList.remove('is-multiline');
+      textarea.style.height = '';
     }
   }
 

@@ -74,6 +74,7 @@ export function sanitizeUser(user: UserRecord | UserPayload | SessionAccount): U
     cancel_at_period_end: (user as any).cancel_at_period_end,
     created_at: user.created_at || new Date().toISOString(),
     email: user.email,
+    google_id: (user as any).google_id ?? null,
     id: user.id,
     is_student: Boolean((user as any).is_student),
     permissions: (user as any).permissions || [],
@@ -84,6 +85,7 @@ export function sanitizeUser(user: UserRecord | UserPayload | SessionAccount): U
     subscription_status: (user as any).subscription_status || 'active',
     subscription_tier: tier,
     subscription_tier_color: (user as any).subscription_tier_color || getTierBorderColor(tier),
+    two_factor_enabled: Boolean((user as any).two_factor_enabled),
     username: user.username,
   };
 }

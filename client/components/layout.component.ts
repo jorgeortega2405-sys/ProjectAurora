@@ -7,6 +7,7 @@ import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { UserWorkflow } from '../types/workflow.types.js';
 import { applyAvatarTier } from '../utils/tier.util.js';
+import { setupSheetDragToDismiss } from './modal.component.js';
 
 export let isDrawerOpen = false;
 export let currentDrawerMode: 'apps' | 'settings' | 'navigation' | 'help' = 'navigation';
@@ -36,12 +37,8 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
   if (currentUser) {
     if (itemLogin) itemLogin.style.display = 'none';
     if (railItemSettings) railItemSettings.style.display = 'none';
-    if (avatarContainer) avatarContainer.style.display = 'inline-flex';
-
-    const isProOrHigher = hasPermission(currentUser, 'subscription:feature:pro');
-    if (railItemAi) {
-      railItemAi.style.display = isProOrHigher ? 'flex' : 'none';
-    }
+    if (avatarContainer) avatarContainer.style.display = 'flex';
+    if (railItemAi) railItemAi.style.display = 'flex';
 
     const isEnterprise = hasPermission(currentUser, 'subscription:feature:enterprise');
     if (btnMenuOrganization) {
@@ -86,7 +83,7 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
     if (itemLogin) itemLogin.style.display = 'flex';
     if (railItemSettings) railItemSettings.style.display = 'flex';
     if (avatarContainer) avatarContainer.style.display = 'none';
-    if (railItemAi) railItemAi.style.display = 'none';
+    if (railItemAi) railItemAi.style.display = 'flex';
     if (btnMenuOrganization) btnMenuOrganization.style.display = 'none';
   }
 }
@@ -253,8 +250,10 @@ function setupRailNavigation(sidebar: HTMLElement): void {
   };
 
   const closeAvatarMenu = () => {
-    avatarMenu?.classList.remove('is-open');
-    avatarBackdrop?.classList.remove('is-open');
+    if (!avatarMenu || !avatarBackdrop) return;
+    avatarMenu.classList.remove('is-open');
+    avatarBackdrop.classList.remove('is-open');
+    document.body.classList.remove('modal-open');
     showPanel('main');
   };
 
@@ -265,13 +264,27 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     if (isOpen) {
       closeAvatarMenu();
     } else {
+      toggleDrawer(false);
       showPanel('main');
-      avatarMenu?.classList.add('is-open');
-      avatarBackdrop?.classList.add('is-open');
+      if (avatarMenu && avatarBackdrop) {
+        avatarBackdrop.classList.add('is-open');
+        void avatarMenu.offsetHeight;
+        requestAnimationFrame(() => {
+          avatarMenu.classList.add('is-open');
+        });
+      }
+      if (window.innerWidth <= 768) {
+        document.body.classList.add('modal-open');
+      }
     }
   };
 
   btnAvatar?.addEventListener('click', toggleAvatarMenu);
+
+  const avatarDragZone = avatarMenu?.querySelector<HTMLElement>('[data-ref="avatar-menu-drag-zone"]');
+  if (avatarDragZone && avatarMenu && avatarBackdrop) {
+    setupSheetDragToDismiss(avatarDragZone, avatarMenu, avatarBackdrop, closeAvatarMenu);
+  }
 
   btnSwitchAccountMenu?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -304,6 +317,7 @@ function setupRailNavigation(sidebar: HTMLElement): void {
   document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       closeAvatarMenu();
+      toggleDrawer(false);
     }
   });
 
@@ -395,6 +409,15 @@ function createDrawerElement(): HTMLElement {
   const drawer = document.createElement('div');
   drawer.className = 'layout-drawer';
   drawer.setAttribute('data-ref', 'layout-drawer');
+
+  const dragZone = document.createElement('div');
+  dragZone.className = 'layout-drawer__drag-zone';
+  dragZone.setAttribute('data-ref', 'drawer-drag-zone');
+  dragZone.setAttribute('aria-hidden', 'true');
+  const dragHandle = document.createElement('div');
+  dragHandle.className = 'layout-drawer__drag-handle';
+  dragZone.appendChild(dragHandle);
+  drawer.appendChild(dragZone);
 
   const drawerBody = document.createElement('div');
   drawerBody.className = 'layout-drawer__body';
@@ -773,22 +796,46 @@ function renderAppsDrawerContent(drawerBody: HTMLElement): void {
 }
 
 async function openDynamicDrawer(sidebar: HTMLElement): Promise<void> {
+  let backdrop = sidebar.querySelector<HTMLElement>('[data-ref="layout-drawer-backdrop"]');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'layout-drawer-backdrop';
+    backdrop.setAttribute('data-ref', 'layout-drawer-backdrop');
+    backdrop.addEventListener('click', () => {
+      toggleDrawer(false);
+    });
+    sidebar.appendChild(backdrop);
+  }
   let drawer = sidebar.querySelector<HTMLElement>('[data-ref="layout-drawer"]');
   if (!drawer) {
     drawer = createDrawerElement();
     sidebar.appendChild(drawer);
   }
+  const dragZone = drawer.querySelector<HTMLElement>('[data-ref="drawer-drag-zone"]');
+  if (dragZone && backdrop) {
+    setupSheetDragToDismiss(dragZone, drawer, backdrop, () => toggleDrawer(false));
+  }
   await populateDrawerContent(drawer);
-  drawer.classList.add('is-open');
+  void drawer.offsetHeight;
+  requestAnimationFrame(() => {
+    backdrop?.classList.add('is-open');
+    drawer?.classList.add('is-open');
+  });
+  if (window.innerWidth <= 768) {
+    document.body.classList.add('modal-open');
+  }
 }
 
 function closeDynamicDrawer(): void {
   const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"]');
   const drawer = sidebar?.querySelector<HTMLElement>('[data-ref="layout-drawer"]');
+  const backdrop = sidebar?.querySelector<HTMLElement>('[data-ref="layout-drawer-backdrop"]');
   const itemApps = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
   const btnApps = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
   itemApps?.classList.remove('is-active');
   btnApps?.classList.remove('is-active');
+  backdrop?.classList.remove('is-open');
+  document.body.classList.remove('modal-open');
 
   if (drawer) {
     drawer.classList.remove('is-open');
@@ -797,6 +844,7 @@ function closeDynamicDrawer(): void {
     }
     drawerRemovalTimer = setTimeout(() => {
       drawer?.remove();
+      backdrop?.remove();
       drawerRemovalTimer = null;
     }, 280);
   }
@@ -833,6 +881,11 @@ export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'settings' | 
   btnApps?.classList.toggle('is-active', isAppsActive);
 
   if (isDrawerOpen) {
+    const avatarMenu = sidebar?.querySelector<HTMLElement>('[data-ref="avatar-menu"]');
+    const avatarBackdrop = sidebar?.querySelector<HTMLElement>('[data-ref="avatar-menu-backdrop"]');
+    avatarMenu?.classList.remove('is-open');
+    avatarBackdrop?.classList.remove('is-open');
+
     if (drawerRemovalTimer) {
       clearTimeout(drawerRemovalTimer);
       drawerRemovalTimer = null;
@@ -867,6 +920,8 @@ function setupDrawerContent(sidebar: HTMLElement): void {
   btnToggle?.classList.remove('is-active');
   const existingDrawer = sidebar.querySelector<HTMLElement>('[data-ref="layout-drawer"]');
   existingDrawer?.remove();
+  const existingBackdrop = sidebar.querySelector<HTMLElement>('[data-ref="layout-drawer-backdrop"]');
+  existingBackdrop?.remove();
 }
 
 export async function createSidebar(): Promise<HTMLElement> {

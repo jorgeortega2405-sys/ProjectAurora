@@ -2030,6 +2030,58 @@ html.dark-theme .chat-empty-state__icon {
   margin-left: auto;
 }
 
+.chat-pill-input.has-attach {
+  padding-left: 4px;
+}
+
+.chat-pill-input.has-attach.is-multiline {
+  padding: 8px 8px 6px 8px;
+}
+
+.chat-pill-input__attach {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color var(--sl-transition-fast), background-color var(--sl-transition-fast), transform var(--sl-transition-x-fast);
+}
+
+.chat-pill-input__attach:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.chat-pill-input__attach:active {
+  transform: scale(0.92);
+}
+
+.chat-pill-input__attach .component-icon,
+.chat-pill-input__attach .material-symbols-rounded {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.chat-pill-input.is-multiline .chat-pill-input__attach,
+.chat-pill-input.is-multiline .ai-attach-dropdown-wrapper {
+  order: 2;
+}
+
+.chat-pill-input.has-attach.is-multiline .chat-pill-input__btn {
+  order: 3;
+  margin-left: auto;
+}
+
 .chat-pill-input__btn:hover {
   filter: brightness(1.1);
   border-color: transparent;

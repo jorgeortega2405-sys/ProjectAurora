@@ -12,6 +12,7 @@ export interface AiTask {
   description?: string;
   plan: AiToolStep[];
   targetFileIndex?: number;
+  targetFileIndices?: number[];
   targetFilename?: string;
 }
 

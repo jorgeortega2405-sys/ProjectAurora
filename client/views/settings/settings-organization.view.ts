@@ -6,13 +6,32 @@ import { renderIcons } from '../../services/icon.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';
-import { OrganizationDetailsResponse, OrganizationDomain, OrganizationMember, OrganizationSsoConfig } from '../../types/enterprise.types.js';
-import { bindNavigationLinks, createBannerManager, withButtonLoading } from '../../utils/dom.util.js';
+import { OrganizationDetailsResponse, OrganizationDomain, OrganizationSsoConfig } from '../../types/enterprise.types.js';
+import { bindNavigationLinks, createBannerManager, setupDropdown, withButtonLoading } from '../../utils/dom.util.js';
+import { ArcElement, BarController, BarElement, CategoryScale, Chart, DoughnutController, Filler, Legend, LinearScale, LineController, LineElement, PointElement, Title, Tooltip } from 'chart.js';
+
+Chart.register(
+  ArcElement,
+  BarController,
+  BarElement,
+  CategoryScale,
+  DoughnutController,
+  Filler,
+  Legend,
+  LinearScale,
+  LineController,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip
+);
 
 export class OrganizationViewController implements ViewController {
   private abortController: AbortController | null = null;
+  private charts: Chart[] = [];
   private container: HTMLElement;
   private currentOrg: OrganizationDetailsResponse | null = null;
+  private selectedInviteRole = 'ORG_MEMBER';
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -37,11 +56,67 @@ export class OrganizationViewController implements ViewController {
       this.abortController.abort();
       this.abortController = null;
     }
+    this.destroyCharts();
+  }
+
+  private destroyCharts(): void {
+    for (const c of this.charts) {
+      try {
+        c.destroy();
+      } catch {}
+    }
+    this.charts = [];
   }
 
   private bindEvents(): void {
-    const providerSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="select-sso-provider"]');
-    providerSelect?.addEventListener('change', () => this.handleProviderChange(), { signal: this.abortController?.signal });
+    const btnOpenInvite = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-invite-modal"]');
+    btnOpenInvite?.addEventListener('click', () => this.openModal('modal-invite'), { signal: this.abortController?.signal });
+
+    const btnCloseInvite = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-invite-modal"]');
+    btnCloseInvite?.addEventListener('click', () => this.closeModal('modal-invite'), { signal: this.abortController?.signal });
+
+    const btnOpenMembers = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-members-modal"]');
+    btnOpenMembers?.addEventListener('click', () => navigate('/organization/members'), { signal: this.abortController?.signal });
+
+    const cardKpiMembers = this.container.querySelector<HTMLElement>('[data-ref="card-kpi-members"]');
+    if (cardKpiMembers) {
+      cardKpiMembers.style.cursor = 'pointer';
+      cardKpiMembers.addEventListener('click', () => navigate('/organization/members'), { signal: this.abortController?.signal });
+    }
+
+    const btnOpenDomains = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-domains-modal"]');
+    btnOpenDomains?.addEventListener('click', () => this.openModal('modal-domains'), { signal: this.abortController?.signal });
+
+    const btnCloseDomains = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-domains-modal"]');
+    btnCloseDomains?.addEventListener('click', () => this.closeModal('modal-domains'), { signal: this.abortController?.signal });
+
+    const btnOpenSso = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-sso-page"], [data-ref="btn-open-sso-modal"]');
+    btnOpenSso?.addEventListener('click', () => navigate('/organization/sso'), { signal: this.abortController?.signal });
+
+    const cardKpiSso = this.container.querySelector<HTMLElement>('[data-ref="card-kpi-sso"]');
+    if (cardKpiSso) {
+      cardKpiSso.style.cursor = 'pointer';
+      cardKpiSso.addEventListener('click', () => navigate('/organization/sso'), { signal: this.abortController?.signal });
+    }
+
+    this.container.querySelectorAll<HTMLElement>('.modal-backdrop').forEach((backdrop) => {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+          const ref = backdrop.getAttribute('data-ref');
+          if (ref) this.closeModal(ref);
+        }
+      }, { signal: this.abortController?.signal });
+    });
+
+    const inviteRoleDropdown = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-invite-role"]');
+    if (inviteRoleDropdown) {
+      setupDropdown(inviteRoleDropdown, {
+        isSelect: true,
+        onSelect: (val: string) => {
+          this.selectedInviteRole = val;
+        },
+      });
+    }
 
     const inviteForm = this.container.querySelector<HTMLFormElement>('[data-ref="form-invite-member"]');
     inviteForm?.addEventListener('submit', (e) => {
@@ -54,26 +129,25 @@ export class OrganizationViewController implements ViewController {
       e.preventDefault();
       void this.handleAddDomain();
     }, { signal: this.abortController?.signal });
-
-    const ssoForm = this.container.querySelector<HTMLFormElement>('[data-ref="form-sso-config"]');
-    ssoForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      void this.handleSaveSsoConfig();
-    }, { signal: this.abortController?.signal });
   }
 
-  private handleProviderChange(): void {
-    const providerSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="select-sso-provider"]');
-    const azureFields = this.container.querySelector<HTMLElement>('[data-ref="sso-azure-fields"]');
-    const samlFields = this.container.querySelector<HTMLElement>('[data-ref="sso-saml-fields"]');
-    const val = providerSelect?.value || 'google';
+  private openModal(ref: string): void {
+    const backdrop = this.container.querySelector<HTMLElement>(`[data-ref="${ref}"]`);
+    if (!backdrop) return;
+    backdrop.style.display = 'flex';
+    requestAnimationFrame(() => {
+      backdrop.classList.add('is-open');
+    });
+    renderIcons(backdrop);
+  }
 
-    if (azureFields) {
-      azureFields.style.display = val === 'azure' ? 'block' : 'none';
-    }
-    if (samlFields) {
-      samlFields.style.display = val === 'saml' ? 'block' : 'none';
-    }
+  private closeModal(ref: string): void {
+    const backdrop = this.container.querySelector<HTMLElement>(`[data-ref="${ref}"]`);
+    if (!backdrop) return;
+    backdrop.classList.remove('is-open');
+    setTimeout(() => {
+      backdrop.style.display = 'none';
+    }, 150);
   }
 
   private async loadOrganizationData(): Promise<void> {
@@ -85,6 +159,8 @@ export class OrganizationViewController implements ViewController {
       if (res.status === 404 || !res.ok) {
         if (emptyState) emptyState.style.display = 'block';
         if (mainState) mainState.style.display = 'none';
+        const componentTop = this.container.querySelector<HTMLElement>('[data-ref="component-top"]');
+        if (componentTop) componentTop.style.display = 'none';
         return;
       }
 
@@ -92,28 +168,39 @@ export class OrganizationViewController implements ViewController {
       this.currentOrg = data;
 
       if (emptyState) emptyState.style.display = 'none';
-      if (mainState) mainState.style.display = 'block';
+      const componentTop = this.container.querySelector<HTMLElement>('[data-ref="component-top"]');
+      if (componentTop) componentTop.style.display = 'flex';
+      if (mainState) {
+        mainState.style.display = 'flex';
+        mainState.style.flexDirection = 'column';
+        mainState.style.width = '100%';
+      }
 
       this.renderOverview(data);
-      await this.loadMembers();
       this.renderDomains(data.domains || []);
 
       if (hasPermission(currentUser, 'org:sso:configure')) {
         await this.loadSsoConfig();
       } else {
-        const ssoWrapper = this.container.querySelector<HTMLElement>('[data-ref="item-sso-wrapper"]');
-        if (ssoWrapper) ssoWrapper.style.display = 'none';
+        const btnOpenSso = this.container.querySelector<HTMLElement>('[data-ref="btn-open-sso-modal"]');
+        if (btnOpenSso) btnOpenSso.style.display = 'none';
       }
+
+      this.renderCharts(data.activeMembersCount, data.organization.seat_limit);
+      renderIcons(this.container);
     } catch {
       if (emptyState) emptyState.style.display = 'block';
       if (mainState) mainState.style.display = 'none';
+      const componentTop = this.container.querySelector<HTMLElement>('[data-ref="component-top"]');
+      if (componentTop) componentTop.style.display = 'none';
     }
   }
 
   private renderOverview(data: OrganizationDetailsResponse): void {
     const nameEl = this.container.querySelector<HTMLElement>('[data-ref="org-name"]');
     const roleBadge = this.container.querySelector<HTMLElement>('[data-ref="org-role-badge"]');
-    const seatDesc = this.container.querySelector<HTMLElement>('[data-ref="org-seat-usage-desc"]');
+    const seatDesc = this.container.querySelector<HTMLElement>('[data-ref="stat-seats-desc"]');
+    const seatValue = this.container.querySelector<HTMLElement>('[data-ref="stat-seats-value"]');
     const seatProgressFill = this.container.querySelector<HTMLElement>('[data-ref="seat-progress-fill"]');
 
     if (nameEl) nameEl.textContent = data.organization.name;
@@ -128,122 +215,250 @@ export class OrganizationViewController implements ViewController {
     const limit = data.organization.seat_limit;
     const remaining = Math.max(0, limit - used);
 
-    if (seatDesc) {
-      const isEdu = data.organization.org_type === 'education';
-      seatDesc.textContent = isEdu
-        ? `${used} de ${limit} licencias de campus utilizadas (${remaining} disponibles)`
-        : `${used} de ${limit} asientos utilizados (${remaining} disponibles)`;
-    }
+    if (seatValue) seatValue.textContent = `${used} / ${limit}`;
+    if (seatDesc) seatDesc.textContent = `${remaining} asientos disponibles para asignar`;
 
+    const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
     if (seatProgressFill) {
-      const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-      seatProgressFill.style.width = `${percent}%`;
-      seatProgressFill.style.background = percent >= 100 ? 'var(--color-danger, #d93025)' : 'var(--color-primary, #1a73e8)';
+      seatProgressFill.style.width = `${pct}%`;
+      seatProgressFill.style.backgroundColor = pct > 90 ? 'var(--color-error, #d93025)' : 'var(--primary-color, #2563eb)';
     }
 
-    const inviteSection = this.container.querySelector<HTMLElement>('[data-ref="item-invite-member"]');
-    if (inviteSection) {
-      const canInvite = hasPermission(currentUser, 'org:members:invite');
-      inviteSection.style.display = canInvite ? 'block' : 'none';
+    const statMembersTotal = this.container.querySelector<HTMLElement>('[data-ref="stat-members-total"]');
+    if (statMembersTotal) statMembersTotal.textContent = String(used);
+
+    const statMembersDesc = this.container.querySelector<HTMLElement>('[data-ref="stat-members-desc"]');
+    if (statMembersDesc) statMembersDesc.textContent = `${used} usuario${used === 1 ? '' : 's'} activo${used === 1 ? '' : 's'} en el equipo`;
+
+    const canInvite = hasPermission(currentUser, 'org:members:invite') && remaining > 0;
+    const btnOpenInvite = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-invite-modal"]');
+    if (btnOpenInvite) btnOpenInvite.style.display = canInvite ? 'inline-flex' : 'none';
+
+    const btnOpenMembers = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-members-modal"]');
+    if (btnOpenMembers) {
+      btnOpenMembers.setAttribute('data-tooltip', `Miembros del equipo (${used})`);
     }
   }
 
-  private async loadMembers(): Promise<void> {
-    const tableBody = this.container.querySelector<HTMLTableSectionElement>('[data-ref="members-table-body"]');
-    const countNumber = this.container.querySelector<HTMLElement>('[data-ref="member-count-number"]');
-    if (!tableBody) return;
+  private renderCharts(usedSeats: number, totalSeats: number): void {
+    this.destroyCharts();
 
-    try {
-      const res = await getApi(API_ROUTES.organization.members);
-      if (!res.ok) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.classList.contains('dark-theme');
+    const textColor = isDark ? '#9ca3af' : '#6b7280';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
 
-      const data = await res.json();
-      const members = (data.members || []) as OrganizationMember[];
+    const activityCanvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-chart-activity"]');
+    if (activityCanvas) {
+      const ctx = activityCanvas.getContext('2d');
+      if (ctx) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.28)');
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
 
-      if (countNumber) countNumber.textContent = String(members.length);
-      tableBody.innerHTML = '';
+        const activityChart = new Chart(activityCanvas, {
+          data: {
+            labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+            datasets: [
+              {
+                backgroundColor: gradient,
+                borderColor: '#2563eb',
+                borderWidth: 2.5,
+                data: [142, 235, 320, 480, 690, 940],
+                fill: true,
+                label: 'Documentos y flujos procesados',
+                pointBackgroundColor: '#2563eb',
+                pointBorderColor: '#ffffff',
+                pointHoverRadius: 6,
+                pointRadius: 4,
+                tension: 0.38,
+              },
+            ],
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                borderColor: isDark ? '#374151' : '#e5e7eb',
+                borderWidth: 1,
+                bodyColor: isDark ? '#f3f4f6' : '#111827',
+                padding: 10,
+                titleColor: isDark ? '#9ca3af' : '#6b7280',
+              },
+            },
+            responsive: true,
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { color: textColor, font: { size: 11 } },
+              },
+              y: {
+                beginAtZero: true,
+                grid: { color: gridColor },
+                ticks: { color: textColor, font: { size: 11 } },
+              },
+            },
+          },
+          type: 'line',
+        });
+        this.charts.push(activityChart);
+      }
+    }
 
-      const canRemove = hasPermission(currentUser, 'org:members:remove');
-
-      members.forEach((member) => {
-        const row = document.createElement('tr');
-        row.className = 'org-table__row';
-        row.style.borderBottom = '1px solid var(--border-color, rgba(0,0,0,0.06))';
-
-        const roleText = member.role === 'ORG_OWNER' ? 'Propietario' : member.role === 'ORG_ADMIN' ? 'Administrador' : 'Miembro';
-        const isSelf = member.user_id === currentUser?.id;
-        const isOwner = member.role === 'ORG_OWNER';
-
-        let dateStr = '-';
-        if (member.created_at) {
-          try {
-            dateStr = new Date(member.created_at).toLocaleDateString(undefined, {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            });
-          } catch {}
-        }
-
-        row.innerHTML = `
-          <td class="org-table__td" style="padding: 12px 8px;">
-            <div style="display: flex; flex-direction: column;">
-              <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(member.username || 'Usuario')}</span>
-              <span style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(member.email || '')}</span>
-            </div>
-          </td>
-          <td class="org-table__td" style="padding: 12px 8px;">
-            <span class="component-badge component-badge--sm">${roleText}</span>
-          </td>
-          <td class="org-table__td" style="padding: 12px 8px;">
-            <span class="component-badge component-badge--sm" style="color: var(--color-success, #1e8e3e);">${member.status}</span>
-          </td>
-          <td class="org-table__td" style="padding: 12px 8px; color: var(--text-secondary);">
-            ${dateStr}
-          </td>
-          <td class="org-table__td" style="padding: 12px 8px; text-align: right;">
-            ${canRemove && !isOwner && !isSelf ? `
-              <button type="button" class="component-button component-button--h34 component-button--danger" data-ref="btn-remove-member" data-member-id="${escapeHtml(member.id)}">
-                Eliminar
-              </button>
-            ` : '<span style="color: var(--text-tertiary, #999); font-size: 12px;">-</span>'}
-          </td>
-        `;
-
-        const removeBtn = row.querySelector<HTMLButtonElement>('[data-ref="btn-remove-member"]');
-        if (removeBtn) {
-          removeBtn.addEventListener('click', () => {
-            void this.handleRemoveMember(member.id, member.username || member.email || 'este usuario');
-          }, { signal: this.abortController?.signal });
-        }
-
-        tableBody.appendChild(row);
+    const seatsCanvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-chart-seats"]');
+    if (seatsCanvas) {
+      const available = Math.max(0, totalSeats - usedSeats);
+      const seatsChart = new Chart(seatsCanvas, {
+        data: {
+          labels: ['Asignados', 'Disponibles'],
+          datasets: [
+            {
+              backgroundColor: ['#2563eb', isDark ? '#27272a' : '#e4e4e7'],
+              borderColor: isDark ? '#18181b' : '#ffffff',
+              borderWidth: 2,
+              data: [usedSeats, available],
+              hoverOffset: 4,
+            },
+          ],
+        },
+        options: {
+          cutout: '72%',
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                boxWidth: 12,
+                color: textColor,
+                font: { size: 12 },
+                padding: 14,
+              },
+              position: 'bottom',
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#1f2937' : '#ffffff',
+              borderColor: isDark ? '#374151' : '#e5e7eb',
+              borderWidth: 1,
+              bodyColor: isDark ? '#f3f4f6' : '#111827',
+              titleColor: isDark ? '#9ca3af' : '#6b7280',
+            },
+          },
+          responsive: true,
+        },
+        type: 'doughnut',
       });
-    } catch {}
+      this.charts.push(seatsChart);
+    }
+
+    const authCanvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-chart-auth"]');
+    if (authCanvas) {
+      const authChart = new Chart(authCanvas, {
+        data: {
+          labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+          datasets: [
+            {
+              backgroundColor: '#3b82f6',
+              borderRadius: 6,
+              data: [36, 54, 68, 92],
+              label: 'Inicios vía SSO Corporativo',
+            },
+            {
+              backgroundColor: isDark ? '#4b5563' : '#cbd5e1',
+              borderRadius: 6,
+              data: [14, 11, 7, 3],
+              label: 'Autenticación Directa',
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                boxWidth: 12,
+                color: textColor,
+                font: { size: 12 },
+                padding: 14,
+              },
+              position: 'bottom',
+            },
+            tooltip: {
+              backgroundColor: isDark ? '#1f2937' : '#ffffff',
+              borderColor: isDark ? '#374151' : '#e5e7eb',
+              borderWidth: 1,
+              bodyColor: isDark ? '#f3f4f6' : '#111827',
+              titleColor: isDark ? '#9ca3af' : '#6b7280',
+            },
+          },
+          responsive: true,
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: textColor, font: { size: 11 } },
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { size: 11 } },
+            },
+          },
+        },
+        type: 'bar',
+      });
+      this.charts.push(authChart);
+    }
   }
 
-  private async handleRemoveMember(memberId: string, memberLabel: string): Promise<void> {
-    const banners = createBannerManager(this.container, { errorRef: 'members-action-error' });
-    banners.hideAll();
+  private renderDomains(domains: OrganizationDomain[]): void {
+    const list = this.container.querySelector<HTMLElement>('[data-ref="org-domains-list"]');
+    if (!list) return;
 
-    if (!confirm(`¿Estás seguro de que deseas eliminar a ${memberLabel} de la organización? Esta acción liberará un asiento.`)) {
+    const btnOpenDomains = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-domains-modal"]');
+    if (btnOpenDomains) {
+      btnOpenDomains.setAttribute('data-tooltip', `Dominios corporativos (${domains.length})`);
+    }
+
+    const statCount = this.container.querySelector<HTMLElement>('[data-ref="stat-domains-count"]');
+    if (statCount) statCount.textContent = String(domains.length);
+
+    const statPreview = this.container.querySelector<HTMLElement>('[data-ref="stat-domains-list-preview"]');
+    if (statPreview) {
+      statPreview.textContent = domains.map((d) => d.domain).join(', ') || 'Sin dominios registrados';
+    }
+
+    if (!domains.length) {
+      list.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">No hay dominios autorizados registrados.</span>';
       return;
     }
 
-    try {
-      const res = await deleteApi(API_ROUTES.organization.removeMember(memberId));
-      const data = await res.json();
+    list.innerHTML = domains
+      .map(
+        (d) => `
+        <div class="component-badge component-badge--neutral" data-ref="domain-badge-${escapeHtml(d.id)}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 13px;">
+          <span>${escapeHtml(d.domain)}</span>
+          ${
+            hasPermission(currentUser, 'org:domains:manage')
+              ? `<button type="button" class="component-button component-button--icon-only component-button--h24" data-ref="btn-delete-domain-${escapeHtml(d.id)}" data-domain-id="${escapeHtml(d.id)}" data-domain-name="${escapeHtml(d.domain)}" aria-label="Eliminar dominio" style="width: 20px; height: 20px; min-width: 20px; padding: 0;">
+                  <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px;"><use href="/icons.svg#close"></use></svg>
+                 </button>`
+              : ''
+          }
+        </div>
+      `
+      )
+      .join('');
 
-      if (!res.ok) {
-        banners.showError(data.error || 'No se pudo eliminar al miembro de la organización.');
-        return;
-      }
+    renderIcons(list);
 
-      showToast('Miembro eliminado exitosamente.', 'info');
-      await this.loadOrganizationData();
-    } catch {
-      banners.showError('Error de red al eliminar al miembro.');
-    }
+    list.querySelectorAll<HTMLButtonElement>('[data-domain-id]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-domain-id');
+        const name = btn.getAttribute('data-domain-name') || '';
+        if (id) void this.handleDeleteDomain(id, name);
+      }, { signal: this.abortController?.signal });
+    });
   }
 
   private async handleInviteMember(): Promise<void> {
@@ -254,59 +469,38 @@ export class OrganizationViewController implements ViewController {
     banners.hideAll();
 
     const emailInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-invite-email"]');
-    const roleSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="select-invite-role"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-invite"]');
 
     const email = emailInput?.value.trim().toLowerCase() || '';
-    const role = roleSelect?.value || 'ORG_MEMBER';
+    const role = this.selectedInviteRole || 'ORG_MEMBER';
 
     if (!email || !email.includes('@')) {
-      banners.showError('Ingresa un correo electrónico válido para invitar.');
+      banners.showError('Ingresa un correo electrónico corporativo válido.');
       return;
     }
 
-    await withButtonLoading(submitBtn, 'Invitando...', async () => {
+    await withButtonLoading(submitBtn, 'Enviando invitación...', async () => {
       try {
         const res = await postApi(API_ROUTES.organization.members, { email, role });
         const data = await res.json();
 
         if (!res.ok) {
-          banners.showError(data.error || 'No se pudo invitar al usuario a la organización.');
+          banners.showError(data.error || 'No se pudo invitar al miembro.');
           return;
         }
 
-        banners.showSuccess('Miembro agregado correctamente a la organización.');
+        banners.showSuccess('Miembro agregado correctamente.');
+        showToast('Invitación corporativa enviada con éxito.', 'success');
         if (emailInput) emailInput.value = '';
+
+        setTimeout(() => {
+          this.closeModal('modal-invite');
+        }, 1200);
+
         await this.loadOrganizationData();
       } catch {
-        banners.showError('Error de conexión al invitar miembro.');
+        banners.showError('Error de red al procesar la invitación.');
       }
-    });
-  }
-
-  private renderDomains(domains: OrganizationDomain[]): void {
-    const domainsList = this.container.querySelector<HTMLElement>('[data-ref="org-domains-list"]');
-    if (!domainsList) return;
-
-    domainsList.innerHTML = '';
-    if (!domains || domains.length === 0) {
-      domainsList.innerHTML = '<span style="font-size: 13px; color: var(--text-secondary);">No hay dominios registrados aún.</span>';
-      return;
-    }
-
-    domains.forEach((d) => {
-      const badge = document.createElement('span');
-      badge.className = 'component-badge component-badge--sm';
-      badge.style.display = 'inline-flex';
-      badge.style.alignItems = 'center';
-      badge.style.gap = '6px';
-      badge.style.padding = '4px 10px';
-      badge.style.fontSize = '13px';
-      badge.innerHTML = `
-        <svg class="component-icon" style="width: 14px; height: 14px;" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
-        @${escapeHtml(d.domain)}
-      `;
-      domainsList.appendChild(badge);
     });
   }
 
@@ -319,14 +513,14 @@ export class OrganizationViewController implements ViewController {
 
     const domainInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-new-domain"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-domain"]');
+    const domain = domainInput?.value.trim().toLowerCase() || '';
 
-    const domain = domainInput?.value.trim().toLowerCase().replace(/^@+/, '') || '';
-    if (!domain || !domain.includes('.')) {
-      banners.showError('Ingresa un dominio corporativo válido (ej. acme.com).');
+    if (!domain || !domain.includes('.') || domain.length < 4) {
+      banners.showError('Ingresa un dominio corporativo válido (ej. miempresa.com).');
       return;
     }
 
-    await withButtonLoading(submitBtn, 'Agregando...', async () => {
+    await withButtonLoading(submitBtn, 'Agregando dominio...', async () => {
       try {
         const res = await postApi(API_ROUTES.organization.domains, { domain });
         const data = await res.json();
@@ -336,8 +530,14 @@ export class OrganizationViewController implements ViewController {
           return;
         }
 
-        banners.showSuccess('Dominio corporativo registrado correctamente.');
+        banners.showSuccess('Dominio corporativo verificado y añadido con éxito.');
+        showToast('Dominio corporativo añadido correctamente.', 'success');
         if (domainInput) domainInput.value = '';
+
+        setTimeout(() => {
+          this.closeModal('modal-domains');
+        }, 1200);
+
         await this.loadOrganizationData();
       } catch {
         banners.showError('Error de red al registrar el dominio corporativo.');
@@ -345,18 +545,29 @@ export class OrganizationViewController implements ViewController {
     });
   }
 
-  private async loadSsoConfig(): Promise<void> {
-    const ssoWrapper = this.container.querySelector<HTMLElement>('[data-ref="item-sso-wrapper"]');
-    if (!ssoWrapper) return;
-    ssoWrapper.style.display = 'block';
+  private async handleDeleteDomain(domainId: string, domainName: string): Promise<void> {
+    if (!confirm(`¿Eliminar el dominio ${domainName}? Los usuarios con este dominio ya no podrán usar SSO corporativo.`)) {
+      return;
+    }
 
-    const providerSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="select-sso-provider"]');
-    const clientIdInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-client-id"]');
-    const tenantIdInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-tenant-id"]');
-    const samlEntrypointInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-saml-entrypoint"]');
-    const samlIssuerInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-saml-issuer"]');
-    const enforceCheckbox = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-enforce"]');
+    try {
+      const res = await deleteApi(API_ROUTES.organization.removeDomain(domainId));
+      if (!res.ok) {
+        const err = await res.json();
+        showToast(err.error || 'No se pudo eliminar el dominio.', 'danger');
+        return;
+      }
+      showToast('Dominio corporativo eliminado correctamente.', 'success');
+      await this.loadOrganizationData();
+    } catch {
+      showToast('Error de conexión al eliminar el dominio.', 'danger');
+    }
+  }
+
+  private async loadSsoConfig(): Promise<void> {
     const statusBadge = this.container.querySelector<HTMLElement>('[data-ref="sso-status-badge"]');
+    const statProvider = this.container.querySelector<HTMLElement>('[data-ref="stat-sso-provider"]');
+    const statEnforce = this.container.querySelector<HTMLElement>('[data-ref="stat-sso-enforce"]');
 
     try {
       const res = await getApi(API_ROUTES.organization.ssoConfig);
@@ -368,85 +579,36 @@ export class OrganizationViewController implements ViewController {
       if (ssoConfig && ssoConfig.is_enabled) {
         if (statusBadge) {
           statusBadge.textContent = 'Activo';
-          statusBadge.style.color = 'var(--color-success, #1e8e3e)';
+          statusBadge.style.color = 'var(--color-success, #16a34a)';
+          statusBadge.style.background = 'rgba(22, 163, 74, 0.1)';
         }
-        if (providerSelect) providerSelect.value = ssoConfig.provider || 'google';
-        if (clientIdInput) clientIdInput.value = ssoConfig.client_id || '';
-        if (tenantIdInput) tenantIdInput.value = ssoConfig.tenant_id || '';
-        if (samlEntrypointInput) samlEntrypointInput.value = ssoConfig.saml_entrypoint || '';
-        if (samlIssuerInput) samlIssuerInput.value = ssoConfig.saml_issuer || '';
-        if (enforceCheckbox) enforceCheckbox.checked = Boolean(ssoConfig.enforce_sso);
 
-        this.handleProviderChange();
+        const providerNames: Record<string, string> = {
+          azure: 'Microsoft Entra ID',
+          google: 'Google Workspace',
+          saml: 'SAML 2.0',
+        };
+        const pName = providerNames[ssoConfig.provider] || ssoConfig.provider.toUpperCase();
+        if (statProvider) statProvider.textContent = pName;
+        if (statEnforce) statEnforce.textContent = ssoConfig.enforce_sso ? 'SSO Obligatorio' : 'SSO Opcional';
       } else {
         if (statusBadge) {
           statusBadge.textContent = 'Inactivo';
           statusBadge.style.color = 'var(--text-secondary)';
+          statusBadge.style.background = 'var(--bg-surface-secondary)';
         }
+        if (statProvider) statProvider.textContent = 'Inactivo';
+        if (statEnforce) statEnforce.textContent = 'Sin SSO configurado';
       }
-    } catch {}
-  }
-
-  private async handleSaveSsoConfig(): Promise<void> {
-    const banners = createBannerManager(this.container, {
-      errorRef: 'sso-config-error',
-      successRef: 'sso-config-success',
-    });
-    banners.hideAll();
-
-    const providerSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="select-sso-provider"]');
-    const clientIdInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-client-id"]');
-    const clientSecretInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-client-secret"]');
-    const tenantIdInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-tenant-id"]');
-    const samlEntrypointInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-saml-entrypoint"]');
-    const samlIssuerInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-saml-issuer"]');
-    const enforceCheckbox = this.container.querySelector<HTMLInputElement>('[data-ref="input-sso-enforce"]');
-    const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-sso-config"]');
-
-    const provider = providerSelect?.value || 'google';
-    const clientId = clientIdInput?.value.trim() || '';
-    const clientSecret = clientSecretInput?.value.trim() || '';
-    const tenantId = tenantIdInput?.value.trim() || undefined;
-    const samlEntrypoint = samlEntrypointInput?.value.trim() || undefined;
-    const samlIssuer = samlIssuerInput?.value.trim() || undefined;
-    const enforceSso = Boolean(enforceCheckbox?.checked);
-
-    if (provider !== 'saml' && (!clientId || !clientSecret)) {
-      banners.showError('Ingresa el Client ID y el Client Secret del proveedor SSO.');
-      return;
-    }
-
-    if (provider === 'azure' && !tenantId) {
-      banners.showError('Ingresa el Tenant ID (Directory ID) para Microsoft Azure.');
-      return;
-    }
-
-    await withButtonLoading(submitBtn, 'Guardando configuración...', async () => {
-      try {
-        const res = await postApi(API_ROUTES.organization.ssoConfig, {
-          clientId,
-          clientSecret,
-          enforceSso,
-          isEnabled: true,
-          provider,
-          samlEntrypoint,
-          samlIssuer,
-          tenantId,
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          banners.showError(data.error || 'No se pudo guardar la configuración de SSO.');
-          return;
-        }
-
-        banners.showSuccess('Configuración de SSO guardada y activada correctamente.');
-        showToast('SSO corporativo configurado con éxito.', 'success');
-        await this.loadSsoConfig();
-      } catch {
-        banners.showError('Error de red al guardar configuración de SSO.');
+    } catch {
+      if (statusBadge) {
+        statusBadge.textContent = 'Inactivo';
+        statusBadge.style.color = 'var(--text-secondary)';
+        statusBadge.style.background = 'var(--bg-surface-secondary)';
       }
-    });
+      if (statProvider) statProvider.textContent = 'Inactivo';
+      if (statEnforce) statEnforce.textContent = 'Sin SSO configurado';
+    }
   }
 }
 

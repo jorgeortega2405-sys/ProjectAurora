@@ -33,7 +33,7 @@ Tu función es analizar la solicitud del usuario, examinar los archivos adjuntos
 
 Herramientas disponibles en ProjectAurora:
 1. compress-pdf: Comprime documentos PDF. Opciones: level ('extreme' = 72dpi máx reducción, 'recommended' = 150dpi equilibrado por defecto, 'low' = 300dpi alta calidad para impresión).
-2. merge-pdf: Une dos o más documentos PDF en orden. Opciones: customFilename (opcional).
+2. merge-pdf: Une dos o más documentos PDF en orden. Opciones: customFilename (opcional), fileIndices (array con índices 0-based de los archivos específicos a unir y su orden exacto).
 3. to-pdf-converter: Convierte archivos Word, Excel, PowerPoint, JPG/PNG o HTML a PDF. Opciones: sourceType ('word-to-pdf', 'excel-to-pdf', 'powerpoint-to-pdf', 'jpg-to-pdf', 'html-to-pdf').
 4. pdf-converter: Convierte un PDF a otros formatos editables. Opciones: targetType ('pdf-to-word', 'pdf-to-excel', 'pdf-to-powerpoint', 'pdf-to-jpg', 'pdf-to-pdfa').
 5. summarize-pdf: Genera resúmenes ejecutivos o profundos con IA. Opciones: mode ('standard' gratuito 0 créditos, 'advanced' pro 10 créditos), customPrompt (opcional).
@@ -62,6 +62,8 @@ Formato de respuesta obligatorio (JSON puro sin bloques markdown decorativos):
     {
       "description": "Descripción clara de la tarea",
       "targetFileIndex": 0,
+      "targetFileIndices": [0, 1, 2],
+      "targetFilename": "documento_unido_parte_1.pdf",
       "plan": [{ "tool": "nombre-herramienta", "options": { ... } }]
     }
   ],
@@ -70,6 +72,27 @@ Formato de respuesta obligatorio (JSON puro sin bloques markdown decorativos):
 }
 
 Reglas:
+- PARTICIÓN Y UNIONES POR GRUPOS (BATCH / SUBSET MERGE):
+  Si el usuario sube varios archivos (ej. 8 PDFs) y solicita unirlos en varios grupos (ej. 'uneme estos 8 pdf pero en 2 archivos pdf, 4 y 4', 'únelos de 2 en 2', 'en 3 archivos, 3 en cada uno', 'los primeros 2 en uno y los restantes en otro'):
+  Debes responder con 'tasks', donde CADA tarea corresponde a un archivo PDF resultante independiente.
+  Para cada tarea en 'tasks':
+  * 'description': Ej. 'Unión del Grupo 1 (4 archivos)'
+  * 'targetFileIndices': Array de índices 0-based de los archivos que componen este grupo (ej. [0, 1, 2, 3])
+  * 'targetFilename': Nombre único del archivo resultante (ej. 'documento_unido_parte_1.pdf')
+  * 'plan': [{ "tool": "merge-pdf", "options": { "customFilename": "documento_unido_parte_1.pdf", "fileIndices": [0, 1, 2, 3] } }]
+  (Si además pidió comprimirlos u otra acción encadenada para cada grupo, añade el siguiente paso en el 'plan' de cada tarea).
+  En 'reply' explica detalladamente al usuario los grupos formados y confirma que tendrá los enlaces de descarga para cada uno.
+- ANÁLISIS DE CONTENIDO Y ORDENAMIENTO SECUENCIAL / CONTINUACIÓN:
+  Si el usuario solicita ordenar los archivos según su contenido, secuencia, continuación temática o cronología (ej. 'únelos y ordéname los pdf según su contenido o así, que la IA lea y ordene su continuación', 'detecta el orden de continuación y únelos', 'ordena por fecha o capítulo y únelos'):
+  Examina atentamente los fragmentos 'textSnippet' y los nombres de archivo en 'filesSummary'.
+  Deduce el orden secuencial lógico:
+  1. Portadas, índices, introducciones, prólogos o resúmenes ejecutivos al inicio.
+  2. Capítulos, secciones correlativas, números de parte y fechas cronológicas en orden ascendente.
+  3. Conclusiones, recomendaciones, bibliografía, anexos y epílogos al final.
+  Define el plan con la herramienta 'merge-pdf' pasando en 'options.fileIndices' el array con el orden secuencial determinado (ej. [2, 0, 1, 3]) y 'options.customFilename'.
+  En 'reply' y 'thought' explica con claridad al usuario la secuencia lógica detectada y el motivo del orden establecido.
+- CONVERSIÓN UNIVERSAL AL VUELO:
+  El motor convierte automáticamente archivos Word, Excel, PowerPoint e imágenes a PDF de forma transparente al realizar uniones o procesamientos combinados. No rechaces solicitudes por contener tipos mixtos de archivo.
 - Si el usuario pide varias acciones encadenadas sobre un mismo archivo o resultado común (ej. 'uneme estos 2 pdf y luego comprime' o 'pasa este word a pdf y comprímelo'), define la secuencia exacta en 'plan'.
 - Si el usuario solicita realizar acciones independientes sobre distintos archivos adjuntos (ej. 'comprimeme el pdf y el word pasalo a pdf', o 'pasa este word a pdf y este excel a pdf', o 'comprime ambos pdf'), debes desglosar la respuesta en 'tasks', indicando para cada tarea su 'targetFileIndex' (0, 1, ...), 'description' y su propio 'plan' de herramientas.
 - Si faltan archivos indispensables para la acción (ej. pide unir pero no adjunta archivos, o pide proteger sin dar contraseña), usa action = 'ask_user' y pídelo cordialmente en 'reply'.
@@ -179,6 +202,289 @@ function detectFileType(filename: string): string {
   if (ext === '.html' || ext === '.htm') return 'html';
   if (ext === '.md' || ext === '.markdown') return 'markdown';
   return 'unknown';
+}
+
+async function extractPdfPreviewText(buffer: Buffer, maxPages = 2, maxChars = 500): Promise<string> {
+  if (!buffer || buffer.length === 0) return '';
+  try {
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+    const pagesToRead = Math.min(doc.numPages, maxPages);
+    const collected: string[] = [];
+
+    for (let p = 1; p <= pagesToRead; p++) {
+      const page = await doc.getPage(p);
+      const content = await page.getTextContent();
+      const pageStrings = content.items
+        .map((item: any) => ('str' in item ? item.str : ''))
+        .filter(Boolean);
+      const pageText = pageStrings.join(' ').trim();
+      if (pageText) {
+        collected.push(pageText);
+      }
+    }
+
+    const full = collected.join(' ').replace(/\s+/g, ' ').trim();
+    return full.length > maxChars ? `${full.slice(0, maxChars)}...` : full;
+  } catch (err) {
+    logger.app.warn('Error al extraer texto preliminar de PDF en ai-agent', err);
+    return '';
+  }
+}
+
+interface OrderedFilesResult {
+  confidence: number;
+  explanation: string;
+  orderedIndices: number[];
+}
+
+function analyzeAndOrderPdfFiles(
+  files: AiFileAttachment[],
+  previews: string[]
+): OrderedFilesResult {
+  const n = files.length;
+  if (n <= 1) {
+    return {
+      confidence: 1,
+      explanation: 'No se requiere reordenamiento para un único archivo.',
+      orderedIndices: [0],
+    };
+  }
+
+  const items = files.map((file, index) => {
+    const preview = previews[index] || '';
+    const normText = normalizeText(preview);
+    const normName = normalizeText(file.originalname);
+    let score = 5000 + index;
+    let detectedReason = '';
+
+    if (
+      normText.includes('portada') ||
+      normName.includes('portada') ||
+      normText.includes('indice general') ||
+      normText.includes('tabla de contenido') ||
+      normName.includes('indice') ||
+      normText.includes('prologo') ||
+      normText.includes('prefacio') ||
+      normName.includes('intro') ||
+      normText.includes('introduccion') ||
+      normText.includes('resumen ejecutivo')
+    ) {
+      score = 100 + index;
+      detectedReason = 'Sección introductoria / preliminar';
+    }
+
+    const chapterMatch = normText.match(/(?:capitulo|cap|chapter|modulo|unidad|seccion|tema|parte|volumen|fasciculo)\s*[:#\.\-]?\s*([0-9ivxlcdm]+)/i);
+    const chapterNameMatch = normName.match(/(?:capitulo|cap|chapter|modulo|unidad|seccion|tema|parte|volumen|vol|part)\s*[:#\.\-_]?\s*([0-9ivxlcdm]+)/i);
+    const matchFound = chapterMatch || chapterNameMatch;
+
+    if (matchFound) {
+      const rawNum = matchFound[1].toLowerCase();
+      let numVal = parseInt(rawNum, 10);
+      if (isNaN(numVal)) {
+        const romanMap: Record<string, number> = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10 };
+        numVal = romanMap[rawNum] || 0;
+      }
+      if (numVal > 0) {
+        score = 1000 + numVal * 10;
+        detectedReason = `Capítulo / Sección ${numVal}`;
+      }
+    }
+
+    if (!detectedReason) {
+      const fnNumMatch = normName.match(/(?:^|[_\-\s])0*([1-9][0-9]?)(?:[_\-\s\.]|$)/);
+      if (fnNumMatch) {
+        const fnNum = parseInt(fnNumMatch[1], 10);
+        score = 2000 + fnNum * 10;
+        detectedReason = `Numeración en título (${fnNum})`;
+      }
+    }
+
+    if (!detectedReason) {
+      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      for (let m = 0; m < months.length; m++) {
+        if (normName.includes(months[m]) || normText.includes(months[m])) {
+          score = 3000 + (m + 1) * 10;
+          detectedReason = `Cronología mes de ${months[m]}`;
+          break;
+        }
+      }
+    }
+
+    if (
+      normText.includes('conclusiones') ||
+      normName.includes('conclusiones') ||
+      normText.includes('conclusion general') ||
+      normText.includes('bibliografia') ||
+      normName.includes('bibliografia') ||
+      normText.includes('referencias bibliograficas') ||
+      normText.includes('anexos') ||
+      normName.includes('anexo') ||
+      normText.includes('apendice') ||
+      normName.includes('epilogo')
+    ) {
+      score = 9000 + index;
+      detectedReason = 'Sección final / conclusiones / anexos';
+    }
+
+    return {
+      detectedReason: detectedReason || 'Contenido correlativo',
+      index,
+      name: file.originalname,
+      score,
+    };
+  });
+
+  items.sort((a, b) => a.score - b.score);
+  const orderedIndices = items.map((it) => it.index);
+  const explanationLines = items.map((it, pos) => `${pos + 1}. **${it.name}** (${it.detectedReason})`);
+
+  return {
+    confidence: 0.9,
+    explanation: `He analizado el contenido de los documentos y determinado la siguiente secuencia lógica de continuación:\n${explanationLines.join('\n')}`,
+    orderedIndices,
+  };
+}
+
+function parseMergePartitions(norm: string, totalFiles: number): number[][] | null {
+  if (totalFiles < 2) return null;
+
+  const multiNumsMatch = norm.match(/\b(\d+)\s*(?:y|,)\s*(\d+)(?:\s*(?:y|,)\s*(\d+))?(?:\s*(?:y|,)\s*(\d+))?\b/);
+  if (multiNumsMatch) {
+    const rawSizes = [multiNumsMatch[1], multiNumsMatch[2], multiNumsMatch[3], multiNumsMatch[4]]
+      .filter(Boolean)
+      .map((s) => parseInt(s, 10))
+      .filter((n) => n > 0);
+
+    const sum = rawSizes.reduce((a, b) => a + b, 0);
+    if (sum === totalFiles && rawSizes.length >= 2) {
+      const partitions: number[][] = [];
+      let cursor = 0;
+      for (const size of rawSizes) {
+        const group: number[] = [];
+        for (let i = 0; i < size; i++) {
+          group.push(cursor++);
+        }
+        partitions.push(group);
+      }
+      return partitions;
+    }
+  }
+
+  const deNMatch = norm.match(/de\s*(\d+)\s*en\s*(\d+)/);
+  if (deNMatch && deNMatch[1] === deNMatch[2]) {
+    const chunkSize = parseInt(deNMatch[1], 10);
+    if (chunkSize >= 1 && chunkSize < totalFiles) {
+      const partitions: number[][] = [];
+      for (let i = 0; i < totalFiles; i += chunkSize) {
+        const group: number[] = [];
+        for (let j = i; j < Math.min(i + chunkSize, totalFiles); j++) {
+          group.push(j);
+        }
+        if (group.length > 0) {
+          partitions.push(group);
+        }
+      }
+      if (partitions.length >= 2) return partitions;
+    }
+  }
+
+  const nOfMMatch = norm.match(/(\d+)\s*(?:archivos|pdf|partes)?\s*(?:de\s*)(\d+)\s*(?:cada uno|en cada)/);
+  if (nOfMMatch) {
+    const numGroups = parseInt(nOfMMatch[1], 10);
+    const chunkSize = parseInt(nOfMMatch[2], 10);
+    if (numGroups * chunkSize <= totalFiles) {
+      const partitions: number[][] = [];
+      let cursor = 0;
+      for (let g = 0; g < numGroups; g++) {
+        const group: number[] = [];
+        for (let i = 0; i < chunkSize && cursor < totalFiles; i++) {
+          group.push(cursor++);
+        }
+        if (group.length > 0) partitions.push(group);
+      }
+      if (partitions.length >= 2) return partitions;
+    }
+  }
+
+  if (norm.includes('mitad y mitad') || norm.includes('en dos partes iguales') || norm.includes('en 2 partes iguales')) {
+    const half = Math.floor(totalFiles / 2);
+    if (half >= 1) {
+      const g1: number[] = [];
+      for (let i = 0; i < half; i++) g1.push(i);
+      const g2: number[] = [];
+      for (let i = half; i < totalFiles; i++) g2.push(i);
+      return [g1, g2];
+    }
+  }
+
+  const inNMatch = norm.match(/(?:en|dividir en|partir en|hazme)\s*(\d+)\s*(?:archivos|partes|documentos|grupos|pdf)/);
+  if (inNMatch) {
+    const numGroups = parseInt(inNMatch[1], 10);
+    if (numGroups >= 2 && numGroups <= totalFiles) {
+      const partitions: number[][] = [];
+      const baseSize = Math.floor(totalFiles / numGroups);
+      let remainder = totalFiles % numGroups;
+      let cursor = 0;
+      for (let g = 0; g < numGroups; g++) {
+        const size = baseSize + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder--;
+        const group: number[] = [];
+        for (let i = 0; i < size; i++) {
+          group.push(cursor++);
+        }
+        if (group.length > 0) {
+          partitions.push(group);
+        }
+      }
+      if (partitions.length >= 2) return partitions;
+    }
+  }
+
+  return null;
+}
+
+async function convertBufferToPdf(buffer: Buffer, originalname: string): Promise<Buffer> {
+  const fType = detectFileType(originalname);
+  if (fType === 'pdf') {
+    return buffer;
+  }
+  let sourceType: any = 'word-to-pdf';
+  if (fType === 'excel') sourceType = 'excel-to-pdf';
+  else if (fType === 'powerpoint') sourceType = 'powerpoint-to-pdf';
+  else if (fType === 'image') sourceType = 'jpg-to-pdf';
+  else if (fType === 'html') sourceType = 'html-to-pdf';
+
+  const tempId = crypto.randomUUID();
+  const ext = path.extname(originalname) || '.tmp';
+  const tempInput = path.join(os.tmpdir(), `aurora_mconv_${tempId}${ext}`);
+  await fs.promises.writeFile(tempInput, buffer);
+
+  const fakeMulterFile: Express.Multer.File = {
+    buffer,
+    destination: os.tmpdir(),
+    encoding: '7bit',
+    fieldname: 'file',
+    filename: path.basename(tempInput),
+    mimetype: 'application/octet-stream',
+    originalname,
+    path: tempInput,
+    size: buffer.length,
+    stream: null as any,
+  };
+
+  try {
+    const convertRes = await convertToPdf(fakeMulterFile, sourceType);
+    const stored = await getStoredToPdfFile(convertRes.downloadToken);
+    if (!stored?.buffer) {
+      throw new Error(`No se pudo convertir ${originalname} a formato PDF.`);
+    }
+    return stored.buffer;
+  } finally {
+    try {
+      await fs.promises.unlink(tempInput);
+    } catch {}
+  }
 }
 
 function detectMultiFileTasks(norm: string, files: AiFileAttachment[]): AiTask[] | null {
@@ -396,11 +702,11 @@ function detectMultiFileTasks(norm: string, files: AiFileAttachment[]): AiTask[]
   return null;
 }
 
-function heuristicIntentPlanner(
+async function heuristicIntentPlanner(
   message: string,
   files: AiFileAttachment[],
   history?: Array<{ role: 'assistant' | 'user'; text: string }>
-): AiExecutionPlan {
+): Promise<AiExecutionPlan> {
   if (isModelInquiryOrJailbreak(message)) {
     return getModelProtectionResponse();
   }
@@ -494,6 +800,103 @@ function heuristicIntentPlanner(
         reply: `Voy a eliminar las páginas ${pagesToRemove.join(', ')} de tu documento PDF.`,
       };
     }
+  }
+
+  const asksContentOrder =
+    norm.includes('contenido') ||
+    norm.includes('continuacion') ||
+    norm.includes('ordenalo') ||
+    norm.includes('ordenar') ||
+    norm.includes('ordenalos') ||
+    norm.includes('secuencia') ||
+    norm.includes('correlativ');
+
+  const partitions = parseMergePartitions(norm, fileCount);
+  if (partitions && partitions.length >= 2) {
+    let finalPartitions = partitions;
+    let sequenceExplanation = '';
+
+    if (asksContentOrder) {
+      const previews = await Promise.all(
+        files.map(async (f) => (detectFileType(f.originalname) === 'pdf' ? extractPdfPreviewText(f.buffer, 2, 500) : ''))
+      );
+      const orderResult = analyzeAndOrderPdfFiles(files, previews);
+      sequenceExplanation = `\n\n${orderResult.explanation}`;
+      const flattenedOrdered = orderResult.orderedIndices;
+      finalPartitions = [];
+      let cursor = 0;
+      for (const group of partitions) {
+        const groupSize = group.length;
+        const subGroup: number[] = [];
+        for (let k = 0; k < groupSize && cursor < flattenedOrdered.length; k++) {
+          subGroup.push(flattenedOrdered[cursor++]);
+        }
+        finalPartitions.push(subGroup);
+      }
+    }
+
+    const partitionTasks: AiTask[] = finalPartitions.map((groupIndices, gIdx) => {
+      const groupName = `documento_unido_parte_${gIdx + 1}.pdf`;
+      const toolSteps: AiToolStep[] = [
+        {
+          options: {
+            customFilename: groupName,
+            fileIndices: groupIndices,
+          },
+          tool: 'merge-pdf',
+        },
+      ];
+      if (norm.includes('comprim') || norm.includes('reduc') || norm.includes('baj') || norm.includes('optimiz')) {
+        const level = norm.includes('extrem') ? 'extreme' : norm.includes('bajo') || norm.includes('baja') ? 'low' : 'recommended';
+        toolSteps.push({ options: { level }, tool: 'compress-pdf' });
+      }
+      return {
+        description: `Unión del Grupo ${gIdx + 1} (${groupIndices.length} archivos)`,
+        plan: toolSteps,
+        targetFileIndex: groupIndices[0],
+        targetFileIndices: groupIndices,
+        targetFilename: groupName,
+      };
+    });
+
+    const groupDescriptions = finalPartitions
+      .map((g, idx) => `• **Grupo ${idx + 1}**: ${g.length} archivos (${g.map((i) => files[i].originalname).join(', ')}) ➔ \`documento_unido_parte_${idx + 1}.pdf\``)
+      .join('\n');
+
+    return {
+      action: 'execute_plan',
+      reply: `Voy a procesar tus ${fileCount} archivos agrupados en ${finalPartitions.length} documentos PDF independientes:\n\n${groupDescriptions}${sequenceExplanation}\n\nPodrás descargar cada documento generado por separado.`,
+      tasks: partitionTasks,
+    };
+  }
+
+  if (
+    asksContentOrder &&
+    fileCount >= 2 &&
+    (norm.includes('un') || norm.includes('combin') || norm.includes('junt') || norm.includes('fusion') || norm.includes('orden'))
+  ) {
+    const previews = await Promise.all(
+      files.map(async (f) => (detectFileType(f.originalname) === 'pdf' ? extractPdfPreviewText(f.buffer, 2, 500) : ''))
+    );
+    const orderResult = analyzeAndOrderPdfFiles(files, previews);
+    const toolSteps: AiToolStep[] = [
+      {
+        options: {
+          customFilename: 'documento_unido_ordenado.pdf',
+          fileIndices: orderResult.orderedIndices,
+        },
+        tool: 'merge-pdf',
+      },
+    ];
+    if (norm.includes('comprim') || norm.includes('reduc') || norm.includes('baj') || norm.includes('optimiz')) {
+      const level = norm.includes('extrem') ? 'extreme' : norm.includes('bajo') || norm.includes('baja') ? 'low' : 'recommended';
+      toolSteps.push({ options: { level }, tool: 'compress-pdf' });
+    }
+    return {
+      action: 'execute_plan',
+      plan: toolSteps,
+      reply: `He leído y analizado el contenido de tus ${fileCount} documentos para determinar su continuación secuencial temática:\n\n${orderResult.explanation}\n\nHe procedido a unirlos en este orden correlativo exacto.`,
+    };
   }
 
   const multiTasks = detectMultiFileTasks(norm, files);
@@ -834,17 +1237,25 @@ async function planWithGemini(
 
   const apiKey = config.gemini.apiKey;
   if (!apiKey) {
-    return heuristicIntentPlanner(message, files, history);
+    return await heuristicIntentPlanner(message, files, history);
   }
 
   const primaryModel = config.gemini.model || 'gemini-3.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${apiKey}`;
+
+  const previews = await Promise.all(
+    files.map(async (f) => {
+      const fType = detectFileType(f.originalname);
+      return fType === 'pdf' ? extractPdfPreviewText(f.buffer, 2, 500) : '';
+    })
+  );
 
   const filesSummary = files.map((f, i) => ({
     index: i,
     mimetype: f.mimetype,
     originalname: f.originalname,
     sizeKb: (f.size / 1024).toFixed(1),
+    textSnippet: previews[i] || undefined,
     type: detectFileType(f.originalname),
   }));
 
@@ -885,23 +1296,78 @@ async function planWithGemini(
       logger.app.warn('Fallo en llamada a Gemini para planificación de IA, usando fallback heurístico', {
         status: response.status,
       });
-      return heuristicIntentPlanner(message, files, history);
+      return await heuristicIntentPlanner(message, files, history);
     }
 
     const data = (await response.json()) as any;
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!rawText) {
-      return heuristicIntentPlanner(message, files, history);
+      return await heuristicIntentPlanner(message, files, history);
     }
 
     const cleaned = cleanJsonText(rawText);
     const parsed = JSON.parse(cleaned) as AiExecutionPlan;
     if (!parsed || typeof parsed !== 'object' || !parsed.action) {
-      return heuristicIntentPlanner(message, files, history);
+      return await heuristicIntentPlanner(message, files, history);
     }
 
-    if (files.length >= 2) {
-      const multiTasks = detectMultiFileTasks(normalizeText(message), files);
+    const norm = normalizeText(message);
+    const partitions = parseMergePartitions(norm, files.length);
+    if (partitions && partitions.length >= 2 && (!Array.isArray(parsed.tasks) || parsed.tasks.length < 2)) {
+      const partitionTasks: AiTask[] = partitions.map((groupIndices, gIdx) => {
+        const groupName = `documento_unido_parte_${gIdx + 1}.pdf`;
+        const steps: AiToolStep[] = [
+          {
+            options: {
+              customFilename: groupName,
+              fileIndices: groupIndices,
+            },
+            tool: 'merge-pdf',
+          },
+        ];
+        if (norm.includes('comprim') || norm.includes('reduc') || norm.includes('baj') || norm.includes('optimiz')) {
+          const level = norm.includes('extrem') ? 'extreme' : norm.includes('bajo') || norm.includes('baja') ? 'low' : 'recommended';
+          steps.push({ options: { level }, tool: 'compress-pdf' });
+        }
+        return {
+          description: `Unión del Grupo ${gIdx + 1} (${groupIndices.length} archivos)`,
+          plan: steps,
+          targetFileIndex: groupIndices[0],
+          targetFileIndices: groupIndices,
+          targetFilename: groupName,
+        };
+      });
+      parsed.action = 'execute_plan';
+      parsed.tasks = partitionTasks;
+      parsed.reply = `Voy a unir tus ${files.length} archivos agrupados en ${partitions.length} documentos PDF independientes:\n` +
+        partitions.map((g, idx) => `• **Grupo ${idx + 1}** (${g.length} archivos): ${g.map((i) => files[i].originalname).join(', ')} ➔ \`documento_unido_parte_${idx + 1}.pdf\``).join('\n') +
+        '\n\nPuedes descargar cada archivo directamente a continuación.';
+    }
+
+    const asksOrder =
+      norm.includes('contenido') ||
+      norm.includes('continuacion') ||
+      norm.includes('ordenalo') ||
+      norm.includes('ordenar') ||
+      norm.includes('ordenalos') ||
+      norm.includes('secuencia') ||
+      norm.includes('correlativ');
+
+    if (asksOrder && files.length >= 2 && parsed.plan && parsed.plan.some((s) => s.tool === 'merge-pdf')) {
+      const mergeStep = parsed.plan.find((s) => s.tool === 'merge-pdf');
+      if (mergeStep && (!Array.isArray(mergeStep.options?.fileIndices) || mergeStep.options.fileIndices.length < files.length)) {
+        const orderResult = analyzeAndOrderPdfFiles(files, previews);
+        mergeStep.options = {
+          ...mergeStep.options,
+          customFilename: mergeStep.options?.customFilename || 'documento_unido_ordenado.pdf',
+          fileIndices: orderResult.orderedIndices,
+        };
+        parsed.reply = `He leído y analizado el contenido de tus ${files.length} documentos para determinar su continuación secuencial temática:\n\n${orderResult.explanation}\n\nHe procedido a unirlos en este orden correlativo exacto.`;
+      }
+    }
+
+    if (files.length >= 2 && !partitions) {
+      const multiTasks = detectMultiFileTasks(norm, files);
       if (multiTasks && multiTasks.length >= 2 && (!Array.isArray(parsed.tasks) || parsed.tasks.length < 2)) {
         parsed.action = 'execute_plan';
         parsed.tasks = multiTasks;
@@ -910,7 +1376,7 @@ async function planWithGemini(
     }
 
     if (parsed.action !== 'execute_plan' && Array.isArray(history) && history.length > 0) {
-      const contextualPlan = heuristicIntentPlanner(message, files, history);
+      const contextualPlan = await heuristicIntentPlanner(message, files, history);
       if (contextualPlan.action === 'execute_plan') {
         return contextualPlan;
       }
@@ -926,7 +1392,7 @@ async function planWithGemini(
     return parsed;
   } catch (error) {
     logger.app.warn('Error al parsear o llamar Gemini en AiAgentService', error);
-    return heuristicIntentPlanner(message, files, history);
+    return await heuristicIntentPlanner(message, files, history);
   }
 }
 
@@ -935,6 +1401,7 @@ interface StepContext {
   filename: string;
   files: AiFileAttachment[];
   options: Record<string, any>;
+  task?: AiTask;
   user?: AiChatParams['user'];
 }
 
@@ -957,20 +1424,50 @@ async function executeSingleToolStep(
 
   switch (tool) {
     case 'merge-pdf': {
+      let selectedFiles: AiFileAttachment[] = [];
+      const requestedIndices = options.fileIndices || ctx.task?.targetFileIndices;
+
+      if (Array.isArray(requestedIndices) && requestedIndices.length > 0) {
+        selectedFiles = requestedIndices
+          .filter((idx: any) => typeof idx === 'number' && idx >= 0 && idx < files.length)
+          .map((idx: number) => files[idx]);
+      } else if (files && files.length >= 2) {
+        selectedFiles = files;
+      }
+
       let mergeInput: Array<{ buffer: Buffer; originalname: string }> = [];
-      if (files && files.length >= 2) {
-        mergeInput = files.map((f) => ({ buffer: f.buffer, originalname: f.originalname }));
+      if (selectedFiles.length >= 2) {
+        mergeInput = await Promise.all(
+          selectedFiles.map(async (f) => ({
+            buffer: await convertBufferToPdf(f.buffer, f.originalname),
+            originalname: f.originalname,
+          }))
+        );
+      } else if (selectedFiles.length === 1) {
+        mergeInput = [
+          {
+            buffer: await convertBufferToPdf(selectedFiles[0].buffer, selectedFiles[0].originalname),
+            originalname: selectedFiles[0].originalname,
+          },
+        ];
       } else if (buffer && buffer.length > 0) {
-        mergeInput = [{ buffer, originalname: filename }];
+        mergeInput = [
+          {
+            buffer: await convertBufferToPdf(buffer, filename),
+            originalname: filename,
+          },
+        ];
       } else {
         throw new Error('No hay archivos suficientes para realizar la unión.');
       }
 
-      const mergeRes = await mergePdfFiles(mergeInput, options.customFilename || 'documento_unido.pdf');
+      const defaultName = ctx.task?.targetFilename || 'documento_unido.pdf';
+      const outFilename = options.customFilename || defaultName;
+      const mergeRes = await mergePdfFiles(mergeInput, outFilename);
       const stored = await getMergedPdf(mergeRes.fileId);
       if (!stored?.buffer) throw new Error('No se pudo recuperar el PDF unido.');
       return {
-        actionDescription: `Unión de ${mergeInput.length} documentos PDF`,
+        actionDescription: `Unión de ${mergeInput.length} documentos (${outFilename})`,
         buffer: stored.buffer,
         contentType: 'application/pdf',
         filename: mergeRes.filename,
@@ -1575,11 +2072,11 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
     const targetIdx =
       typeof task.targetFileIndex === 'number' && task.targetFileIndex >= 0 && task.targetFileIndex < files.length
         ? task.targetFileIndex
-        : (tIdx < files.length ? tIdx : 0);
+        : (Array.isArray(task.targetFileIndices) && task.targetFileIndices.length > 0 ? task.targetFileIndices[0] : (tIdx < files.length ? tIdx : 0));
 
     const taskSourceFile = files[targetIdx];
     let currentBuffer: Buffer = taskSourceFile ? taskSourceFile.buffer : (files[0]?.buffer || Buffer.alloc(0));
-    let currentFilename = taskSourceFile ? taskSourceFile.originalname : (files[0]?.originalname || 'documento.pdf');
+    let currentFilename = task.targetFilename || (taskSourceFile ? taskSourceFile.originalname : (files[0]?.originalname || 'documento.pdf'));
     const initialSize = currentBuffer.length;
     let currentContentType = taskSourceFile?.mimetype || 'application/pdf';
 
@@ -1607,6 +2104,7 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
         filename: currentFilename,
         files,
         options: step.options || {},
+        task,
         user,
       });
 
@@ -1670,7 +2168,7 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
       fileSize: currentBuffer.length,
       filename: currentFilename,
       mode: isSummaryResult ? summaryResultData?.mode : undefined,
-      originalFilename: taskSourceFile?.originalname || 'documento.pdf',
+      originalFilename: taskSourceFile?.originalname || currentFilename,
       originalSize: initialSize,
       originalToken,
       savingsBytes: finalSavingsBytes || (initialSize > currentBuffer.length ? initialSize - currentBuffer.length : 0),

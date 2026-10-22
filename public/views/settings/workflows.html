@@ -48,17 +48,27 @@
           <div class="settings-group builder-col-left" data-ref="builder-col-left" style="padding: 20px;">
             <h2 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Selección de herramienta</h2>
 
-            <div class="field" data-ref="field-workflow-name" style="margin-bottom: 16px; width: 100%;">
-              <label class="field__label" data-ref="label-workflow-name">Nombre del flujo de trabajo:</label>
-              <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 8px 0; line-height: 1.4;">Indica el nombre del flujo de trabajo para que puedas encontrarlo en las herramientas y en la página de inicio.</p>
-              <input class="field__input field__input--h44" data-ref="input-workflow-name" type="text" placeholder="Ej: Mi flujo de facturas" style="width: 100%;" />
-            </div>
+            <label class="field" data-ref="field-workflow-name" style="margin-bottom: 16px;">
+              <input class="field__input" data-ref="input-workflow-name" type="text" placeholder=" " autocomplete="off" />
+              <span class="field__label" data-ref="label-workflow-name">Nombre del flujo de trabajo</span>
+            </label>
 
-            <div class="field" data-ref="field-workflow-tool" style="margin-bottom: 16px; width: 100%;">
-              <label class="field__label" data-ref="label-workflow-tool">Selecciona una herramienta:</label>
-              <select class="field__input field__input--h44" data-ref="select-workflow-tool" style="width: 100%;">
-                <option value="" disabled selected>Herramientas disponibles...</option>
-              </select>
+            <div class="dropdown-wrapper dropdown-wrapper--full" data-ref="field-workflow-tool" style="margin-bottom: 16px;">
+              <button type="button" class="dropdown-trigger dropdown-trigger--full" data-ref="btn-trigger-workflow-tool" aria-label="Seleccionar herramienta">
+                <div class="dropdown-trigger__left" data-ref="dropdown-trigger-left-tool">
+                  <svg class="component-icon dropdown-trigger__icon" data-ref="icon-selected-tool" aria-hidden="true" style="display: none;"><use href="/icons.svg#widgets"></use></svg>
+                  <span class="dropdown-trigger__text" data-ref="txt-selected-tool">Selecciona una herramienta...</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="backdrop-workflow-tool">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="menu-workflow-tool">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-workflow-tool" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list menu-panel__list--scrollable" data-ref="list-workflow-tool"></div>
+                </div>
+              </div>
             </div>
 
             <div class="workflow-tool-options" data-ref="workflow-tool-options" style="margin-bottom: 20px; display: none;"></div>

@@ -3,6 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { config } from '../config/env.config.js';
+import { redis } from '../config/redis.config.js';
 import { compressPdfFile, getCompressedPdf } from '../tools/compress-pdf/compress-pdf.service.js';
 import { cropPdf, getCropPdfResult } from '../tools/crop-pdf/crop-pdf.service.js';
 import { getMergedPdf, mergePdfFiles } from '../tools/merge-pdf/merge-pdf.service.js';
@@ -1487,8 +1488,42 @@ function generateToolAlternatives(tool: string, options: Record<string, any>, _f
   }
 }
 
+async function emitAiProgress(sessionId: string | undefined, payload: {
+  message: string;
+  percent: number;
+  result?: any;
+  stage: string;
+  step?: number;
+  tool?: string;
+  totalSteps?: number;
+}): Promise<void> {
+  if (!sessionId) return;
+  try {
+    if (redis.status !== 'ready' && redis.status !== 'connecting') {
+      await redis.connect().catch(() => {});
+    }
+    if (redis.status === 'ready') {
+      await redis.publish(
+        'aurora:ai:progress',
+        JSON.stringify({
+          sessionId,
+          ...payload,
+        })
+      );
+    }
+  } catch (err) {
+    logger.db.warn('Error al publicar progreso de IA en Redis', err);
+  }
+}
+
 export async function processAiChat(params: AiChatParams): Promise<AiChatResponse> {
-  const { files = [], history = [], message, user } = params;
+  const { files = [], history = [], message, sessionId, user } = params;
+
+  await emitAiProgress(sessionId, {
+    message: 'Analizando solicitud y contexto con el asistente...',
+    percent: 10,
+    stage: 'planning',
+  });
 
   const planResult = await planWithGemini(message, files, history);
 
@@ -1496,6 +1531,11 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
   const hasPlan = Array.isArray(planResult.plan) && planResult.plan.length > 0;
 
   if (planResult.action !== 'execute_plan' || (!hasTasks && !hasPlan)) {
+    await emitAiProgress(sessionId, {
+      message: 'Respuesta generada.',
+      percent: 100,
+      stage: 'completed',
+    });
     return {
       creditsRemaining: user?.ai_credits_balance,
       plan: planResult.plan || [],
@@ -1518,6 +1558,15 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
 
   const allResults: AiActionResult[] = [];
   const actionSummaries: string[] = [];
+  const totalStepsCount = tasksToExecute.reduce((acc, t) => acc + (t.plan?.length || 0), 0);
+  let currentStepGlobal = 0;
+
+  await emitAiProgress(sessionId, {
+    message: `Plan de ejecución preparado: ${tasksToExecute.length} tarea(s) identificada(s).`,
+    percent: 25,
+    stage: 'planned',
+    totalSteps: totalStepsCount,
+  });
 
   for (let tIdx = 0; tIdx < tasksToExecute.length; tIdx++) {
     const task = tasksToExecute[tIdx];
@@ -1542,6 +1591,17 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
 
     for (let sIdx = 0; sIdx < task.plan.length; sIdx++) {
       const step = task.plan[sIdx];
+      currentStepGlobal++;
+      const stepPercent = Math.min(Math.round(25 + ((currentStepGlobal - 0.5) / Math.max(totalStepsCount, 1)) * 65), 90);
+      await emitAiProgress(sessionId, {
+        message: `[${currentStepGlobal}/${totalStepsCount}] Procesando ${step.tool}...`,
+        percent: stepPercent,
+        stage: 'executing_step',
+        step: currentStepGlobal,
+        tool: step.tool,
+        totalSteps: totalStepsCount,
+      });
+
       const output = await executeSingleToolStep(step.tool, {
         buffer: currentBuffer,
         filename: currentFilename,
@@ -1563,6 +1623,16 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
         isSummaryResult = true;
         summaryResultData = output.summaryData;
       }
+
+      const donePercent = Math.min(Math.round(25 + (currentStepGlobal / Math.max(totalStepsCount, 1)) * 65), 92);
+      await emitAiProgress(sessionId, {
+        message: `[${currentStepGlobal}/${totalStepsCount}] ${output.actionDescription} completado.`,
+        percent: donePercent,
+        stage: 'step_completed',
+        step: currentStepGlobal,
+        tool: step.tool,
+        totalSteps: totalStepsCount,
+      });
     }
 
     const originalToken = `orig_${Date.now()}_${tIdx}_${crypto.randomBytes(6).toString('hex')}`;
@@ -1642,6 +1712,13 @@ export async function processAiChat(params: AiChatParams): Promise<AiChatRespons
     resultsCount: allResults.length,
     tasksCount: tasksToExecute.length,
     userId: user?.id,
+  });
+
+  await emitAiProgress(sessionId, {
+    message: '¡Procesamiento finalizado con éxito!',
+    percent: 100,
+    result: primaryResult,
+    stage: 'completed',
   });
 
   return {

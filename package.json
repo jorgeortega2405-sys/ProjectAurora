@@ -8,9 +8,9 @@
     "dev": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" --exclude \"temp_storage/**\" src/index.ts",
     "dev:watch": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" src/index.ts",
     "dev:client": "vite",
-    "infra:up": "docker compose up -d mysql redis downloader",
-    "infra:stop": "docker compose stop mysql redis downloader",
-    "infra:logs": "docker compose logs -f mysql redis downloader",
+    "infra:up": "docker compose up -d mysql redis downloader websocket",
+    "infra:stop": "docker compose stop mysql redis downloader websocket",
+    "infra:logs": "docker compose logs -f mysql redis downloader websocket",
     "docker:dev": "docker compose up -d",
     "docker:prod": "docker compose -f docker-compose.yml up -d --build",
     "docker:down": "docker compose down",
@@ -54,9 +54,11 @@
     "@types/node": "^20.17.10",
     "@types/nodemailer": "^8.0.2",
     "@types/sortablejs": "^1.15.9",
+    "@types/ws": "^8.18.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "ws": "^8.22.0"
   },
   "optionalDependencies": {
     "@rolldown/binding-win32-x64-msvc": "^1.2.7"

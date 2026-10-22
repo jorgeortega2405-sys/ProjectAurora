@@ -1,7 +1,9 @@
-import { ensureCsrfToken } from '../services/api.service.js';
+import { ensureCsrfToken, getApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { loadPdfJs } from '../services/pdf-loader.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
+import { AiProgressEvent, wsService } from '../services/websocket.service.js';
 import { AttachedClientFile, ChatMessageItem, ChatMessageResult } from '../types/ai.types.js';
 import { ViewController } from '../types/common.types.js';
 
@@ -100,9 +102,19 @@ function renderSimpleMarkdown(text: string): string {
 export class AiController implements ViewController {
   private abortController: AbortController | null = null;
   private activeDocument: { filename: string; token: string } | null = null;
+  private activePreviewResult: ChatMessageResult | null = null;
   private container: HTMLElement;
+  private isDraggingSlider = false;
   private messages: ChatMessageItem[] = [];
+  private previewCurrentPage = 1;
+  private previewMaxPages = 1;
+  private previewMode: 'compare' | 'result' | 'slider' = 'compare';
+  private previewPdfAfter: any = null;
+  private previewPdfBefore: any = null;
+  private previewZoom = 1.0;
+  private progressUnsubscribe: (() => void) | null = null;
   private stagedFiles: AttachedClientFile[] = [];
+  private userCredits = 0;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -110,8 +122,10 @@ export class AiController implements ViewController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+    void wsService.connect();
     this.bindEvents();
     renderIcons(this.container);
+    void this.loadCredits();
   }
 
   destroy(): void {
@@ -119,6 +133,11 @@ export class AiController implements ViewController {
       this.abortController.abort();
       this.abortController = null;
     }
+    if (this.progressUnsubscribe) {
+      this.progressUnsubscribe();
+      this.progressUnsubscribe = null;
+    }
+    this.closePreview();
     this.activeDocument = null;
     this.stagedFiles = [];
     this.messages = [];
@@ -251,6 +270,110 @@ export class AiController implements ViewController {
       { signal }
     );
 
+    const creditsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-credits"]');
+    const creditsDropdown = this.container.querySelector<HTMLElement>('[data-ref="ai-credits-dropdown"]');
+
+    creditsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = creditsDropdown?.style.display === 'flex';
+      this.closeAllDropdowns();
+      if (!isOpen && creditsDropdown) {
+        creditsDropdown.style.display = 'flex';
+        creditsBtn.setAttribute('aria-expanded', 'true');
+      }
+    }, { signal });
+
+    const modalBackdrop = this.container.querySelector<HTMLElement>('[data-ref="ai-preview-modal"]');
+    const closePreviewBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-preview"]');
+    const prevPageBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-prev-page"]');
+    const nextPageBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-next-page"]');
+    const zoomInBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-in"]');
+    const zoomOutBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-zoom-out"]');
+
+    closePreviewBtn?.addEventListener('click', () => {
+      this.closePreview();
+    }, { signal });
+
+    modalBackdrop?.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) {
+        this.closePreview();
+      }
+    }, { signal });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalBackdrop?.style.display === 'flex') {
+        this.closePreview();
+      }
+    }, { signal });
+
+    prevPageBtn?.addEventListener('click', () => {
+      if (this.previewCurrentPage > 1) {
+        this.previewCurrentPage--;
+        void this.renderPreviewPages();
+      }
+    }, { signal });
+
+    nextPageBtn?.addEventListener('click', () => {
+      if (this.previewCurrentPage < this.previewMaxPages) {
+        this.previewCurrentPage++;
+        void this.renderPreviewPages();
+      }
+    }, { signal });
+
+    zoomInBtn?.addEventListener('click', () => {
+      this.previewZoom = Math.min(this.previewZoom + 0.25, 3.0);
+      void this.renderPreviewPages();
+    }, { signal });
+
+    zoomOutBtn?.addEventListener('click', () => {
+      this.previewZoom = Math.max(this.previewZoom - 0.25, 0.5);
+      void this.renderPreviewPages();
+    }, { signal });
+
+    const modeTabs = this.container.querySelectorAll<HTMLButtonElement>('.ai-preview-tab');
+    for (const tab of modeTabs) {
+      tab.addEventListener('click', () => {
+        const mode = tab.getAttribute('data-mode') as 'compare' | 'result' | 'slider';
+        if (mode) {
+          this.previewMode = mode;
+          this.updatePreviewModeUi();
+        }
+      }, { signal });
+    }
+
+    const sliderWrap = this.container.querySelector<HTMLElement>('[data-ref="preview-slider-wrap"]');
+    sliderWrap?.addEventListener('mousedown', (e) => {
+      this.isDraggingSlider = true;
+      this.handleSliderMove(e.clientX);
+    }, { signal });
+
+    window.addEventListener('mousemove', (e) => {
+      if (this.isDraggingSlider) {
+        this.handleSliderMove(e.clientX);
+      }
+    }, { signal });
+
+    window.addEventListener('mouseup', () => {
+      this.isDraggingSlider = false;
+    }, { signal });
+
+    sliderWrap?.addEventListener('touchstart', (e) => {
+      if (e.touches[0]) {
+        this.isDraggingSlider = true;
+        this.handleSliderMove(e.touches[0].clientX);
+      }
+    }, { passive: true, signal });
+
+    window.addEventListener('touchmove', (e) => {
+      if (this.isDraggingSlider && e.touches[0]) {
+        this.handleSliderMove(e.touches[0].clientX);
+      }
+    }, { passive: true, signal });
+
+    window.addEventListener('touchend', () => {
+      this.isDraggingSlider = false;
+    }, { signal });
+
     document.addEventListener(
       'click',
       () => {
@@ -269,6 +392,10 @@ export class AiController implements ViewController {
     for (const btn of toggles) {
       btn.setAttribute('aria-expanded', 'false');
     }
+    const creditsDropdown = this.container.querySelector<HTMLElement>('[data-ref="ai-credits-dropdown"]');
+    if (creditsDropdown) creditsDropdown.style.display = 'none';
+    const creditsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-ai-credits"]');
+    if (creditsBtn) creditsBtn.setAttribute('aria-expanded', 'false');
   }
 
   private addFiles(newFiles: File[]): void {
@@ -360,7 +487,17 @@ export class AiController implements ViewController {
     this.setThinking(true);
     this.scrollToBottom();
 
+    const sessionId = `ai_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    if (this.progressUnsubscribe) {
+      this.progressUnsubscribe();
+      this.progressUnsubscribe = null;
+    }
+    this.progressUnsubscribe = wsService.subscribeAiProgress(sessionId, (evt) => {
+      this.updateThinkingProgress(evt);
+    });
+
     const formData = new FormData();
+    formData.append('sessionId', sessionId);
     formData.append('message', userMessageItem.reply);
 
     const historyPayload = this.messages.slice(-6).map((m) => ({
@@ -451,10 +588,21 @@ export class AiController implements ViewController {
       this.messages.push(assistantMessageItem);
       this.renderAssistantMessage(assistantMessageItem);
       this.scrollToBottom();
+
+      if (typeof aiData.creditsRemaining === 'number') {
+        this.updateCreditsUi(aiData.creditsRemaining);
+      } else {
+        void this.loadCredits();
+      }
     } catch (err: any) {
       if (err.name === 'AbortError') return;
       this.setThinking(false);
       this.showError('Ha ocurrido un error de conexión al enviar el mensaje. Por favor intenta de nuevo.');
+    } finally {
+      if (this.progressUnsubscribe) {
+        this.progressUnsubscribe();
+        this.progressUnsubscribe = null;
+      }
     }
   }
 
@@ -530,6 +678,12 @@ export class AiController implements ViewController {
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
               <span>Descargar archivo</span>
             </a>
+            ${(res.filename?.toLowerCase().endsWith('.pdf') || res.originalFilename?.toLowerCase().endsWith('.pdf') || res.downloadUrl.toLowerCase().includes('.pdf')) ? `
+            <button type="button" class="component-button component-button--subtle component-button--h40 ai-result-card__preview-btn" data-ref="btn-preview-${msg.id}-${i}" aria-label="Vista previa / Comparar">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+              <span>Vista previa / Comparar</span>
+            </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -627,6 +781,14 @@ export class AiController implements ViewController {
     list.appendChild(row);
     renderIcons(row);
 
+    for (let i = 0; i < results.length; i++) {
+      const res = results[i];
+      const previewBtn = row.querySelector<HTMLButtonElement>(`[data-ref="btn-preview-${msg.id}-${i}"]`);
+      previewBtn?.addEventListener('click', () => {
+        void this.openPreview(res);
+      });
+    }
+
     const likeBtn = row.querySelector<HTMLButtonElement>(`[data-ref="btn-action-like-${msg.id}"]`);
     const dislikeBtn = row.querySelector<HTMLButtonElement>(`[data-ref="btn-action-dislike-${msg.id}"]`);
 
@@ -707,7 +869,17 @@ export class AiController implements ViewController {
     this.setThinking(true);
     this.scrollToBottom();
 
+    const sessionId = `ai_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    if (this.progressUnsubscribe) {
+      this.progressUnsubscribe();
+      this.progressUnsubscribe = null;
+    }
+    this.progressUnsubscribe = wsService.subscribeAiProgress(sessionId, (evt) => {
+      this.updateThinkingProgress(evt);
+    });
+
     const formData = new FormData();
+    formData.append('sessionId', sessionId);
     formData.append('message', prompt);
     formData.append('fileTokens', JSON.stringify([token]));
     formData.append('activeToken', token);
@@ -791,22 +963,73 @@ export class AiController implements ViewController {
       this.messages.push(assistantMessageItem);
       this.renderAssistantMessage(assistantMessageItem);
       this.scrollToBottom();
+
+      if (typeof aiData.creditsRemaining === 'number') {
+        this.updateCreditsUi(aiData.creditsRemaining);
+      } else {
+        void this.loadCredits();
+      }
     } catch (err: any) {
       if (err.name === 'AbortError') return;
       this.setThinking(false);
       this.showError('Ha ocurrido un error de conexión al enviar el mensaje. Por favor intenta de nuevo.');
+    } finally {
+      if (this.progressUnsubscribe) {
+        this.progressUnsubscribe();
+        this.progressUnsubscribe = null;
+      }
     }
   }
 
   private setThinking(isThinking: boolean): void {
     const indicator = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-indicator"]');
     const sendBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-send-message"]');
+    const textEl = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-text"]');
+    const barEl = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-bar"]');
+    const percentEl = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-percent"]');
+    const stepBadge = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-step"]');
+
     if (indicator) {
       indicator.style.display = isThinking ? 'flex' : 'none';
     }
     if (sendBtn) {
       sendBtn.disabled = isThinking;
     }
+    if (isThinking) {
+      if (textEl) textEl.textContent = 'Analizando solicitud...';
+      if (barEl) barEl.style.width = '10%';
+      if (percentEl) percentEl.textContent = '10%';
+      if (stepBadge) stepBadge.style.display = 'none';
+    }
+  }
+
+  private updateThinkingProgress(event: AiProgressEvent): void {
+    const textEl = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-text"]');
+    const barEl = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-bar"]');
+    const percentEl = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-percent"]');
+    const stepBadge = this.container.querySelector<HTMLElement>('[data-ref="ai-thinking-step"]');
+
+    if (event.message && textEl) {
+      textEl.textContent = event.message;
+    }
+
+    if (typeof event.percent === 'number' && barEl && percentEl) {
+      barEl.style.width = `${Math.min(Math.max(event.percent, 5), 100)}%`;
+      percentEl.textContent = `${event.percent}%`;
+    }
+
+    if (stepBadge) {
+      if (event.step && event.totalSteps) {
+        stepBadge.textContent = `Paso ${event.step} de ${event.totalSteps}`;
+        stepBadge.style.display = 'inline-block';
+      } else if (event.stage === 'completed') {
+        stepBadge.textContent = 'Completado';
+        stepBadge.style.display = 'inline-block';
+      } else {
+        stepBadge.style.display = 'none';
+      }
+    }
+    this.scrollToBottom();
   }
 
   private showError(message: string): void {
@@ -851,6 +1074,232 @@ export class AiController implements ViewController {
       requestAnimationFrame(() => {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       });
+    }
+  }
+
+  private async loadCredits(): Promise<void> {
+    try {
+      const res = await getApi('/api/ai/credits');
+      if (res.ok) {
+        const json = (await res.json()) as { data?: { credits?: number; plan?: string }; credits?: number; plan?: string };
+        const credits = typeof json.data?.credits === 'number' ? json.data.credits : json.credits;
+        const plan = json.data?.plan || json.plan;
+        if (typeof credits === 'number') {
+          this.updateCreditsUi(credits, plan);
+        }
+      }
+    } catch {}
+  }
+
+  private updateCreditsUi(credits: number, plan?: string): void {
+    this.userCredits = credits;
+    const valEl = this.container.querySelector<HTMLElement>('[data-ref="ai-credits-value"]');
+    const dropValEl = this.container.querySelector<HTMLElement>('[data-ref="ai-credits-dropdown-val"]');
+    const planEl = this.container.querySelector<HTMLElement>('[data-ref="ai-plan-badge"]');
+
+    if (valEl) valEl.textContent = credits.toLocaleString();
+    if (dropValEl) dropValEl.textContent = credits.toLocaleString();
+    if (plan && planEl) planEl.textContent = plan;
+  }
+
+  private async openPreview(res: ChatMessageResult): Promise<void> {
+    this.closePreview();
+    this.activePreviewResult = res;
+    this.previewCurrentPage = 1;
+    this.previewZoom = 1.0;
+
+    const modal = this.container.querySelector<HTMLElement>('[data-ref="ai-preview-modal"]');
+    const titleEl = this.container.querySelector<HTMLElement>('[data-ref="preview-title"]');
+    const subtitleEl = this.container.querySelector<HTMLElement>('[data-ref="preview-subtitle"]');
+    const beforeSizeEl = this.container.querySelector<HTMLElement>('[data-ref="preview-before-size"]');
+    const afterSizeEl = this.container.querySelector<HTMLElement>('[data-ref="preview-after-size"]');
+    const savingsEl = this.container.querySelector<HTMLElement>('[data-ref="preview-savings-badge"]');
+    const downloadBtn = this.container.querySelector<HTMLAnchorElement>('[data-ref="btn-preview-download"]');
+
+    if (modal) modal.style.display = 'flex';
+    if (titleEl) titleEl.textContent = res.filename || 'Vista previa';
+    if (subtitleEl) subtitleEl.textContent = res.action || 'Detalle del documento';
+
+    if (downloadBtn) {
+      downloadBtn.href = res.downloadUrl || '#';
+      downloadBtn.download = res.filename || 'documento.pdf';
+    }
+
+    if (beforeSizeEl) beforeSizeEl.textContent = res.originalSize ? formatFileSize(res.originalSize) : '--';
+    if (afterSizeEl) afterSizeEl.textContent = res.fileSize ? formatFileSize(res.fileSize) : '--';
+    if (savingsEl) {
+      if (res.savingsPercent && res.savingsPercent > 0) {
+        savingsEl.textContent = `-${res.savingsPercent}%`;
+        savingsEl.style.display = 'inline-block';
+      } else {
+        savingsEl.style.display = 'none';
+      }
+    }
+
+    const hasOriginal = Boolean(res.originalToken);
+    const compareTab = this.container.querySelector<HTMLElement>('[data-ref="tab-mode-compare"]');
+    const sliderTab = this.container.querySelector<HTMLElement>('[data-ref="tab-mode-slider"]');
+
+    if (hasOriginal) {
+      if (compareTab) compareTab.style.display = '';
+      if (sliderTab) sliderTab.style.display = '';
+      this.previewMode = 'compare';
+    } else {
+      if (compareTab) compareTab.style.display = 'none';
+      if (sliderTab) sliderTab.style.display = 'none';
+      this.previewMode = 'result';
+    }
+    this.updatePreviewModeUi();
+
+    try {
+      const pdfjs = await loadPdfJs();
+      if (res.downloadUrl) {
+        this.previewPdfAfter = await pdfjs.getDocument({ url: res.downloadUrl }).promise;
+      }
+      if (res.originalToken) {
+        this.previewPdfBefore = await pdfjs.getDocument({ url: `/api/ai/download/${encodeURIComponent(res.originalToken)}` }).promise;
+      }
+      this.previewMaxPages = Math.max(this.previewPdfBefore?.numPages || 1, this.previewPdfAfter?.numPages || 1);
+      await this.renderPreviewPages();
+    } catch {
+      showToast('No se pudo generar la vista previa interactiva del documento.', 'error');
+    }
+  }
+
+  private closePreview(): void {
+    const modal = this.container.querySelector<HTMLElement>('[data-ref="ai-preview-modal"]');
+    if (modal) modal.style.display = 'none';
+
+    if (this.previewPdfBefore) {
+      try { void this.previewPdfBefore.destroy(); } catch {}
+      this.previewPdfBefore = null;
+    }
+    if (this.previewPdfAfter) {
+      try { void this.previewPdfAfter.destroy(); } catch {}
+      this.previewPdfAfter = null;
+    }
+    this.activePreviewResult = null;
+  }
+
+  private updatePreviewModeUi(): void {
+    const compareGrid = this.container.querySelector<HTMLElement>('[data-ref="preview-compare-grid"]');
+    const sliderContainer = this.container.querySelector<HTMLElement>('[data-ref="preview-slider-container"]');
+    const beforePane = this.container.querySelector<HTMLElement>('[data-ref="preview-pane-before"]');
+
+    const tabs = this.container.querySelectorAll<HTMLElement>('.ai-preview-tab');
+    for (const tab of tabs) {
+      tab.classList.toggle('is-active', tab.getAttribute('data-mode') === this.previewMode);
+    }
+
+    if (this.previewMode === 'compare') {
+      if (compareGrid) {
+        compareGrid.style.display = 'grid';
+        compareGrid.classList.remove('is-single-mode');
+      }
+      if (beforePane) beforePane.style.display = 'flex';
+      if (sliderContainer) sliderContainer.style.display = 'none';
+    } else if (this.previewMode === 'slider') {
+      if (compareGrid) compareGrid.style.display = 'none';
+      if (sliderContainer) sliderContainer.style.display = 'flex';
+    } else if (this.previewMode === 'result') {
+      if (compareGrid) {
+        compareGrid.style.display = 'grid';
+        compareGrid.classList.add('is-single-mode');
+      }
+      if (beforePane) beforePane.style.display = 'none';
+      if (sliderContainer) sliderContainer.style.display = 'none';
+    }
+  }
+
+  private handleSliderMove(clientX: number): void {
+    const wrap = this.container.querySelector<HTMLElement>('[data-ref="preview-slider-wrap"]');
+    const beforeEl = this.container.querySelector<HTMLElement>('[data-ref="preview-slider-before"]');
+    const dividerEl = this.container.querySelector<HTMLElement>('[data-ref="preview-slider-divider"]');
+    if (!wrap || !beforeEl || !dividerEl) return;
+
+    const rect = wrap.getBoundingClientRect();
+    const offsetX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const percent = (offsetX / rect.width) * 100;
+
+    beforeEl.style.width = `${percent}%`;
+    dividerEl.style.left = `${percent}%`;
+  }
+
+  private async renderPreviewPages(): Promise<void> {
+    const pageNum = this.previewCurrentPage;
+    const zoom = this.previewZoom;
+
+    const pageInfo = this.container.querySelector<HTMLElement>('[data-ref="preview-page-info"]');
+    const zoomText = this.container.querySelector<HTMLElement>('[data-ref="preview-zoom-text"]');
+    if (pageInfo) pageInfo.textContent = `Página ${pageNum} de ${this.previewMaxPages}`;
+    if (zoomText) zoomText.textContent = `${Math.round(zoom * 100)}%`;
+
+    const dpr = window.devicePixelRatio || 1;
+
+    if (this.previewPdfBefore) {
+      try {
+        const page = await this.previewPdfBefore.getPage(Math.min(pageNum, this.previewPdfBefore.numPages));
+        const viewport = page.getViewport({ scale: zoom });
+
+        const canvasBefore = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-before"]');
+        if (canvasBefore) {
+          canvasBefore.width = Math.floor(viewport.width * dpr);
+          canvasBefore.height = Math.floor(viewport.height * dpr);
+          canvasBefore.style.width = `${viewport.width}px`;
+          canvasBefore.style.height = `${viewport.height}px`;
+          const ctx = canvasBefore.getContext('2d');
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+          }
+        }
+
+        const canvasSliderBefore = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-slider-before"]');
+        if (canvasSliderBefore) {
+          canvasSliderBefore.width = Math.floor(viewport.width * dpr);
+          canvasSliderBefore.height = Math.floor(viewport.height * dpr);
+          canvasSliderBefore.style.width = `${viewport.width}px`;
+          canvasSliderBefore.style.height = `${viewport.height}px`;
+          const ctx = canvasSliderBefore.getContext('2d');
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+          }
+        }
+      } catch {}
+    }
+
+    if (this.previewPdfAfter) {
+      try {
+        const page = await this.previewPdfAfter.getPage(Math.min(pageNum, this.previewPdfAfter.numPages));
+        const viewport = page.getViewport({ scale: zoom });
+
+        const canvasAfter = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-after"]');
+        if (canvasAfter) {
+          canvasAfter.width = Math.floor(viewport.width * dpr);
+          canvasAfter.height = Math.floor(viewport.height * dpr);
+          canvasAfter.style.width = `${viewport.width}px`;
+          canvasAfter.style.height = `${viewport.height}px`;
+          const ctx = canvasAfter.getContext('2d');
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+          }
+        }
+
+        const canvasSliderAfter = this.container.querySelector<HTMLCanvasElement>('[data-ref="canvas-slider-after"]');
+        if (canvasSliderAfter) {
+          canvasSliderAfter.width = Math.floor(viewport.width * dpr);
+          canvasSliderAfter.height = Math.floor(viewport.height * dpr);
+          canvasSliderAfter.style.width = `${viewport.width}px`;
+          canvasSliderAfter.style.height = `${viewport.height}px`;
+          const ctx = canvasSliderAfter.getContext('2d');
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+          }
+        }
+      } catch {}
     }
   }
 }

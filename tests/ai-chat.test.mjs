@@ -1,8 +1,10 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, it } from 'node:test';
+import { after, describe, it } from 'node:test';
 import { PDFDocument } from 'pdf-lib';
+import { redis } from '../src/config/redis.config.js';
+import { handleAiCredits } from '../src/controllers/ai.controller.js';
 import { processAiChat } from '../src/services/ai-agent.service.js';
 import { getTempFile } from '../src/services/temp-storage.service.js';
 
@@ -332,5 +334,95 @@ describe('Suite: AI Chat Assistant (/ai) & Tool Orchestration', () => {
 
     const aiHtmlContent = fs.readFileSync(AI_HTML_PATH, 'utf8').toLowerCase();
     assert.ok(!aiHtmlContent.includes('gemini'), 'public/views/ai/ai.html must not contain the word "gemini"');
+  });
+
+  it('Requirement: Interactive PDF preview & comparison modal elements exist in ai.html and ai.view.ts', () => {
+    const aiHtml = fs.readFileSync(AI_HTML_PATH, 'utf8');
+    assert.ok(aiHtml.includes('data-ref="ai-preview-dialog"'), 'Must contain modal dialog');
+    assert.ok(aiHtml.includes('data-ref="tab-mode-compare"'), 'Must contain compare tab');
+    assert.ok(aiHtml.includes('data-ref="tab-mode-slider"'), 'Must contain slider tab');
+    assert.ok(aiHtml.includes('data-ref="tab-mode-result"'), 'Must contain result tab');
+    assert.ok(aiHtml.includes('data-ref="canvas-before"'), 'Must contain before canvas');
+    assert.ok(aiHtml.includes('data-ref="canvas-after"'), 'Must contain after canvas');
+    assert.ok(aiHtml.includes('data-ref="preview-slider-wrap"'), 'Must contain slider container');
+    assert.ok(aiHtml.includes('data-ref="preview-slider-divider"'), 'Must contain slider divider');
+    assert.ok(aiHtml.includes('data-ref="preview-slider-handle"'), 'Must contain draggable slider handle');
+    assert.ok(aiHtml.includes('data-ref="btn-zoom-in"'), 'Must contain zoom in button');
+    assert.ok(aiHtml.includes('data-ref="btn-zoom-out"'), 'Must contain zoom out button');
+    assert.ok(aiHtml.includes('data-ref="btn-prev-page"'), 'Must contain previous page button');
+    assert.ok(aiHtml.includes('data-ref="btn-next-page"'), 'Must contain next page button');
+
+    const aiView = fs.readFileSync(AI_VIEW_PATH, 'utf8');
+    assert.ok(aiView.includes('openPreview('), 'ai.view.ts must implement openPreview');
+    assert.ok(aiView.includes('closePreview('), 'ai.view.ts must implement closePreview');
+    assert.ok(aiView.includes('updatePreviewModeUi('), 'ai.view.ts must implement updatePreviewModeUi');
+    assert.ok(aiView.includes('handleSliderMove('), 'ai.view.ts must implement handleSliderMove');
+    assert.ok(aiView.includes('renderPreviewPages('), 'ai.view.ts must implement renderPreviewPages');
+    assert.ok(aiView.includes('loadPdfJs('), 'ai.view.ts must load pdfjs dynamically');
+  });
+
+  it('Requirement: Header credit balance & transparent cost breakdown dropdown exist in ai.html and ai.view.ts', () => {
+    const aiHtml = fs.readFileSync(AI_HTML_PATH, 'utf8');
+    assert.ok(aiHtml.includes('data-ref="btn-ai-credits"'), 'Must contain credits button');
+    assert.ok(aiHtml.includes('data-ref="ai-credits-value"'), 'Must contain credits numerical display');
+    assert.ok(aiHtml.includes('data-ref="ai-credits-dropdown"'), 'Must contain cost breakdown dropdown');
+    assert.ok(aiHtml.includes('data-ref="ai-credits-dropdown-val"'), 'Must contain dropdown credits balance');
+    assert.ok(aiHtml.includes('data-ref="ai-plan-badge"'), 'Must contain plan badge');
+
+    const aiView = fs.readFileSync(AI_VIEW_PATH, 'utf8');
+    assert.ok(aiView.includes('loadCredits('), 'ai.view.ts must implement loadCredits');
+    assert.ok(aiView.includes('updateCreditsUi('), 'ai.view.ts must implement updateCreditsUi');
+  });
+
+  it('Functional: handleAiCredits returns credit balance and tier for guest and authenticated sessions', async () => {
+    let guestResponseData = null;
+    let guestStatusCode = null;
+    const guestRes = {
+      status(code) {
+        guestStatusCode = code;
+        return this;
+      },
+      json(body) {
+        guestResponseData = body;
+        return this;
+      },
+    };
+
+    await handleAiCredits({}, guestRes);
+    assert.strictEqual(guestStatusCode, 200);
+    assert.strictEqual(guestResponseData.success, true);
+    assert.strictEqual(guestResponseData.data.credits, 0);
+    assert.strictEqual(guestResponseData.data.isLoggedIn, false);
+    assert.strictEqual(guestResponseData.data.plan, 'Invitado');
+
+    let authResponseData = null;
+    let authStatusCode = null;
+    const authRes = {
+      status(code) {
+        authStatusCode = code;
+        return this;
+      },
+      json(body) {
+        authResponseData = body;
+        return this;
+      },
+    };
+
+    await handleAiCredits({ user: { id: 999999, subscription_tier: 'Pro' } }, authRes);
+    assert.strictEqual(authStatusCode, 200);
+    assert.strictEqual(authResponseData.success, true);
+    assert.strictEqual(typeof authResponseData.data.credits, 'number');
+    assert.strictEqual(authResponseData.data.isLoggedIn, true);
+    assert.strictEqual(authResponseData.data.plan, 'Pro');
+  });
+
+  after(async () => {
+    try {
+      redis.disconnect();
+    } catch {}
+    try {
+      const { pool } = await import('../src/config/database.config.js');
+      await pool.end();
+    } catch {}
   });
 });

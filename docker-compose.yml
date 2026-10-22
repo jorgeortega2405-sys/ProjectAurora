@@ -47,6 +47,21 @@ services:
     volumes:
       - downloader-data:/app/downloads
 
+  websocket:
+    build:
+      context: ./services/aurora-ws
+      dockerfile: Dockerfile
+    container_name: aurora-websocket
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      - PORT=3001
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
   minio:
     image: cgr.dev/chainguard/minio:latest
     container_name: aurora-minio
@@ -92,6 +107,8 @@ services:
       redis:
         condition: service_healthy
       downloader:
+        condition: service_started
+      websocket:
         condition: service_started
 
 volumes:

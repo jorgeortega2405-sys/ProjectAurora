@@ -37,6 +37,7 @@ export interface AiChatParams {
   files?: AiFileAttachment[];
   history?: Array<{ role: 'assistant' | 'user'; text: string }>;
   message: string;
+  sessionId?: string;
   user?: {
     ai_credits_balance?: number;
     email?: string;

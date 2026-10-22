@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import os from 'os';
 import path from 'path';
-import { handleAiChat, handleAiDownload } from '../controllers/ai.controller.js';
+import { handleAiChat, handleAiCredits, handleAiDownload } from '../controllers/ai.controller.js';
 import { optionalAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -17,6 +17,7 @@ const upload = multer({
 });
 
 router.post('/ai/chat', optionalAuth, upload.array('files', 10), handleAiChat);
+router.get('/ai/credits', optionalAuth, handleAiCredits);
 router.get('/ai/download/:token', handleAiDownload);
 
 export default router;

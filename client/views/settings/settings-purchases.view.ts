@@ -84,13 +84,13 @@ export class PurchasesViewController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-surface-secondary, rgba(0,0,0,0.04)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
-                <svg class="component-icon" aria-hidden="true" style="width: 22px; height: 22px;"><use href="/icons.svg#receipt_long"></use></svg>
+          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-surface-secondary, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
+                <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#receipt_long"></use></svg>
               </div>
-              <strong style="font-weight: 600; font-size: 14px; color: var(--text-primary);">No hay compras registradas</strong>
-              <span style="font-size: 12.5px; color: var(--text-secondary);">Aquí verás tus recibos, comprobantes y licencias una vez que actives un plan.</span>
+              <strong style="font-weight: 600; font-size: 14.5px; color: var(--text-primary);">No hay compras registradas</strong>
+              <span style="font-size: 13px; color: var(--text-secondary); max-width: 420px; line-height: 1.4;">Aquí verás tus recibos, comprobantes y licencias una vez que actives un plan.</span>
             </div>
           </td>
         </tr>

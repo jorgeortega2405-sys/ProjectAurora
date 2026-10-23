@@ -1127,6 +1127,7 @@ html.dark-theme .rail-nav-item.is-active .rail-nav-item__label {
   line-height: 1.4;
   max-width: 190px;
   margin: 0;
+}
 
 .more-panel {
   display: none;

@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS websites (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(50) NOT NULL UNIQUE,
+    domain VARCHAR(255) NOT NULL UNIQUE,
+    logo_url VARCHAR(512) NULL,
+    accent_color VARCHAR(20) NOT NULL DEFAULT '#6366f1',
+    status ENUM('active', 'maintenance', 'development') NOT NULL DEFAULT 'active',
+    config_json JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO websites (id, name, slug, domain, accent_color, status) VALUES
+('aurora-pdf', 'Aurora PDF', 'pdf', 'pdf.projectaurora.com', '#e11d48', 'active'),
+('aurora-img', 'Aurora IMG', 'img', 'img.projectaurora.com', '#2563eb', 'active');
+
 CREATE TABLE IF NOT EXISTS roles (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -63,6 +80,22 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS staff_website_access (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    website_id VARCHAR(50) NOT NULL,
+    role_id VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_staff_user_website (user_id, website_id),
+    INDEX idx_staff_user (user_id),
+    INDEX idx_staff_website (website_id),
+    INDEX idx_staff_role (role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO roles (id, name, description) VALUES
@@ -357,6 +390,7 @@ CREATE TABLE IF NOT EXISTS purchases (
     stripe_subscription_id VARCHAR(255) NULL,
     stripe_customer_id VARCHAR(255) NULL,
     plan_id VARCHAR(50) NOT NULL,
+    website_id VARCHAR(50) NOT NULL DEFAULT 'aurora-pdf',
     billing_period ENUM('monthly', 'yearly') NOT NULL DEFAULT 'monthly',
     amount_total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     currency VARCHAR(10) NOT NULL DEFAULT 'USD',
@@ -365,6 +399,7 @@ CREATE TABLE IF NOT EXISTS purchases (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_purchases_user_created (user_id, created_at),
     INDEX idx_purchases_sub (stripe_subscription_id),
+    INDEX idx_purchases_website (website_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -374,10 +409,12 @@ CREATE TABLE IF NOT EXISTS user_workflows (
     name VARCHAR(150) NOT NULL,
     description VARCHAR(255) NULL,
     category ENUM('pdf', 'image') NOT NULL DEFAULT 'pdf',
+    website_id VARCHAR(50) NOT NULL DEFAULT 'aurora-pdf',
     steps JSON NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user_workflows_user_created (user_id, created_at),
+    INDEX idx_user_workflows_website (website_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -386,12 +423,14 @@ CREATE TABLE IF NOT EXISTS enterprise_inquiries (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     company VARCHAR(150) NOT NULL,
+    website_id VARCHAR(50) NOT NULL DEFAULT 'aurora-pdf',
     email VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     status ENUM('pending', 'contacted', 'closed') NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_enterprise_inquiries_email (email),
+    INDEX idx_enterprise_inquiries_website (website_id),
     INDEX idx_enterprise_inquiries_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -646,6 +685,7 @@ CREATE TABLE IF NOT EXISTS internal_tickets (
     title VARCHAR(200) NOT NULL,
     description TEXT NOT NULL,
     category ENUM('hardware', 'software', 'network', 'facilities', 'access', 'hr', 'finance', 'other') NOT NULL DEFAULT 'other',
+    website_id VARCHAR(50) NULL DEFAULT 'aurora-pdf',
     priority ENUM('low', 'medium', 'high', 'urgent') NOT NULL DEFAULT 'medium',
     status ENUM('open', 'in_progress', 'resolved', 'closed') NOT NULL DEFAULT 'open',
     source_department_id VARCHAR(50) NULL,
@@ -666,6 +706,7 @@ CREATE TABLE IF NOT EXISTS internal_tickets (
     INDEX idx_tickets_status (status),
     INDEX idx_tickets_priority (priority),
     INDEX idx_tickets_creator (created_by),
+    INDEX idx_tickets_website (website_id),
     INDEX idx_tickets_assigned (assigned_to),
     INDEX idx_tickets_created_at (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -693,3 +734,11 @@ INSERT IGNORE INTO internal_ticket_comments (id, ticket_id, user_id, message, is
 ('tck-comm-001', 'tck-001', 'b7123456-3333-4000-8000-000000000003', 'Se desmontó la bandeja posterior de alimentación. El sensor de paso tiene acumulación de polvo; ya limpiamos y realizaremos prueba con 10 hojas.', 0, '2026-10-22 10:20:00'),
 ('tck-comm-002', 'tck-003', 'b7123456-1111-4000-8000-000000000001', 'Adjuntamos formato de seguridad firmado por el colaborador y confirmamos inicio de contrato.', 0, '2026-10-22 14:05:00'),
 ('tck-comm-003', 'tck-003', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Permisos concedidos bajo PBAC con rol ENGINEER y acceso a repositorios en GitHub Enterprise.', 1, '2026-10-22 16:55:00');
+
+INSERT IGNORE INTO staff_website_access (id, user_id, website_id, role_id) VALUES
+('swa-001', 'dffc9deb-ea49-400b-b33a-ba6bf94685e3', '*', 'SUPER_ADMIN'),
+('swa-002', '50e0819a-7151-433c-8797-613f6cbf0b6a', '*', 'ADMIN'),
+('swa-003', 'b7123456-1111-4000-8000-000000000001', '*', 'HR_MANAGER'),
+('swa-004', 'b7123456-3333-4000-8000-000000000003', 'aurora-pdf', 'DEVOPS'),
+('swa-005', 'b7123456-4444-4000-8000-000000000004', 'aurora-pdf', 'SENIOR_ENGINEER'),
+('swa-006', 'b7123456-2222-4000-8000-000000000002', 'aurora-img', 'OPERATIONS_AGENT');

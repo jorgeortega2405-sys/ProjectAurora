@@ -1,18 +1,14 @@
 {
-  "name": "project-aurora",
+  "name": "projectaurora-pdf",
   "version": "1.0.0",
-  "description": "ProjectAurora - SPA Application with modular design system",
+  "description": "ProjectAurora PDF - Tools SPA Application and Backend",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "build": "npm run build:server && npm run build:client",
-    "build:admin": "npm run build:admin:server && npm run build:admin:client",
-    "build:admin:client": "vite build --config admin/vite.config.ts",
-    "build:admin:server": "tsc -p admin/tsconfig.server.json",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
     "dev": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" --exclude \"temp_storage/**\" src/index.ts",
-    "dev:admin": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"admin/client/**\" --exclude \"admin/public/**\" admin/src/index.ts",
     "dev:client": "vite",
     "dev:watch": "tsx watch --exclude \"logs/**\" --exclude \"dist/**\" --exclude \"client/**\" --exclude \"public/**\" --exclude \"data/**\" src/index.ts",
     "docker:dev": "docker compose up -d",
@@ -22,10 +18,8 @@
     "infra:stop": "docker compose stop mysql redis downloader websocket",
     "infra:up": "docker compose up -d mysql redis downloader websocket",
     "start": "node dist/index.js",
-    "start:admin": "node dist/admin/index.js",
     "test": "node --test --test-concurrency=1 tests/admin-roles-permissions-auth.test.mjs tests/hr-management.test.mjs tests/internal-tickets.test.mjs tests/verification-lifecycle-redis-cache.test.mjs tests/cache-aside-db.test.mjs tests/stress-m1-concurrency.test.mjs tests/stress-m1-memory-fallback.test.mjs tests/adversarial-email-change-m1.test.mjs tests/adversarial-mutex-memory.test.mjs tests/backup-restore.test.mjs",
-    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p admin/tsconfig.server.json --noEmit && tsc -p admin/tsconfig.client.json --noEmit",
-    "typecheck:admin": "tsc -p admin/tsconfig.server.json --noEmit && tsc -p admin/tsconfig.client.json --noEmit",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "typecheck:all": "npm run typecheck"
   },
   "dependencies": {

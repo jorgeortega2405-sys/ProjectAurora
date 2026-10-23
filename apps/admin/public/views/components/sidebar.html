@@ -1,0 +1,159 @@
+<div class="layout-nav" data-ref="sidebar">
+  <div class="layout-rail" data-ref="layout-rail">
+    <div class="layout-rail__top" data-ref="rail-top">
+      <div class="rail-top-default" data-ref="rail-top-default">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--toggle" data-ref="btn-toggle-drawer" data-tooltip="Alternar menú lateral" aria-label="Alternar menú lateral">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dock_to_right"></use></svg>
+        </button>
+      </div>
+    </div>
+
+    <hr class="rail-divider" data-ref="rail-divider" />
+
+    <div class="layout-rail__center" data-ref="rail-center">
+      <div class="rail-center-default" data-ref="rail-center-default">
+        <div class="rail-nav-item is-active" data-ref="rail-item-dashboard">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn is-active" data-ref="btn-rail-dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dashboard"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-dashboard">Dashboard</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-users">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-users" data-tooltip="Gestionar Usuarios" aria-label="Gestionar Usuarios">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#group"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-users">Usuarios</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-education">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-education" data-tooltip="Verificación Estudiantes" aria-label="Verificación Estudiantes">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#school"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-education">Educación</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-purchases">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-purchases" data-tooltip="Historial de Compras" aria-label="Historial de Compras">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#receipt_long"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-purchases">Compras</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-organizations">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-organizations" data-tooltip="Organizaciones B2B" aria-label="Organizaciones B2B">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-organizations">Empresas</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-inquiries">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-inquiries" data-tooltip="Leads Comerciales" aria-label="Leads Comerciales">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#mail"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-inquiries">Leads</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-hr">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-hr" data-tooltip="Recursos Humanos (RRHH)" aria-label="Recursos Humanos">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-hr">RRHH</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-backups">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-backups" data-tooltip="Copias de Seguridad" aria-label="Copias de Seguridad">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#cloud"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-backups">Backups</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-tickets">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-tickets" data-tooltip="Tickets Internos" aria-label="Tickets Internos">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#support_agent"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-tickets">Tickets</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout-rail__bottom" data-ref="rail-bottom">
+      <div class="rail-nav-item" data-ref="rail-item-theme">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-toggle-theme" data-tooltip="Cambiar tema (Claro / Oscuro)" aria-label="Cambiar tema">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#palette"></use></svg>
+        </button>
+      </div>
+
+      <div class="rail-item-container" data-ref="avatar-container">
+        <button type="button" class="component-button component-button--avatar rail-avatar-btn" data-ref="btn-avatar" data-tooltip="Perfil" aria-label="Perfil">
+          <img class="avatar-img image-lazy-fade" data-ref="avatar-img" src="" alt="Avatar" referrerpolicy="no-referrer" onload="this.classList.add('image-loaded')" onerror="this.classList.add('image-loaded')" />
+        </button>
+
+        <div class="avatar-dropdown-backdrop" data-ref="avatar-menu-backdrop">
+          <div class="menu-panel menu-panel--dropdown menu-panel--w-325 menu-panel--h-auto avatar-panel rail-floating-panel" data-ref="avatar-menu">
+            <div class="menu-panel__drag-zone" data-ref="avatar-menu-drag-zone" aria-hidden="true">
+              <div class="menu-panel__drag-handle"></div>
+            </div>
+
+            <div class="menu-panel__list" data-ref="panel-main-options">
+              <div class="avatar-menu__section-header" data-ref="section-header-accounts">
+                <span class="drawer-section__title" data-ref="title-accounts">Cuentas</span>
+              </div>
+              <button type="button" class="menu-item menu-item--bordered account-item" data-ref="btn-switch-account-menu">
+                <div class="account-item__avatar" data-ref="active-account-avatar-box">
+                  <img class="avatar-img image-lazy-fade" data-ref="active-account-avatar" src="" alt="Avatar" referrerpolicy="no-referrer" onload="this.classList.add('image-loaded')" onerror="this.classList.add('image-loaded')" />
+                </div>
+                <div class="account-item__info" data-ref="active-account-info">
+                  <span class="account-item__name" data-ref="active-account-name"></span>
+                  <span class="account-item__email" data-ref="active-account-email"></span>
+                  <span class="account-item__role" data-ref="active-account-role" style="font-size: 10px; font-weight: 700; color: var(--primary, #0ea5e9); text-transform: uppercase; margin-top: 2px;"></span>
+                </div>
+                <svg class="component-icon account-item__arrow" aria-hidden="true"><use href="/icons.svg#navigate_next"></use></svg>
+              </button>
+
+              <div class="menu-divider" data-ref="active-account-divider"></div>
+
+              <button type="button" class="menu-item" data-ref="btn-menu-theme">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#palette"></use></svg>
+                <span class="menu-item__text" data-ref="text-menu-theme">Cambiar tema</span>
+              </button>
+
+              <a class="menu-item" data-ref="btn-menu-main-app" href="http://localhost:3000" target="_blank" rel="noopener noreferrer">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#arrow_outward"></use></svg>
+                <span class="menu-item__text">Ir al sitio principal</span>
+              </a>
+
+              <div class="menu-divider"></div>
+
+              <button type="button" class="menu-item menu-item--bordered menu-item--danger" data-ref="btn-logout">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#logout"></use></svg>
+                <span class="menu-item__text">Cerrar sesión</span>
+              </button>
+            </div>
+
+            <div class="menu-panel__list" data-ref="panel-account-switcher" style="display: none;">
+              <button type="button" class="menu-item menu-item--bordered" data-ref="btn-back-to-main-menu">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#arrow_back"></use></svg>
+                <span class="menu-item__text" data-ref="text-back">Volver</span>
+              </button>
+              <div class="menu-divider" data-ref="switcher-divider-top"></div>
+
+              <div class="account-switcher__list" data-ref="account-switcher-list"></div>
+
+              <button type="button" class="menu-item menu-item--bordered" data-ref="btn-add-account">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+                <span class="menu-item__text" data-ref="text-add-account">Agregar otra cuenta</span>
+              </button>
+              <div class="menu-divider" data-ref="switcher-divider-bottom"></div>
+
+              <button type="button" class="menu-item menu-item--bordered menu-item--danger" data-ref="btn-logout-all">
+                <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#logout"></use></svg>
+                <span class="menu-item__text" data-ref="text-logout-all">Cerrar todas las sesiones</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

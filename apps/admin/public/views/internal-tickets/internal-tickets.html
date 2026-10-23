@@ -1,0 +1,379 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="admin-tickets-wrapper">
+  <header class="component-top" data-ref="component-top">
+    <div class="component-top-left" data-ref="component-top-left">
+      <h1 class="component-top-title" data-ref="tickets-page-title" style="font-size: 15px; font-weight: 700;">Tickets Internos y Tareas</h1>
+      <span class="component-badge component-badge--sm" data-ref="tickets-count-badge">0</span>
+    </div>
+
+    <div class="component-top-right" data-ref="component-top-right" style="display: flex; align-items: center; gap: 8px;">
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar tickets" data-tooltip-placement="bottom" aria-label="Buscar tickets">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+      </button>
+
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-refresh-tickets" data-tooltip="Recargar tickets" data-tooltip-placement="bottom" aria-label="Recargar tickets">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+      </button>
+
+      <button type="button" class="component-button component-button--h36 component-button--black" data-ref="btn-open-create-modal" style="gap: 6px; font-weight: 600; padding: 0 14px;">
+        <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#add"></use></svg>
+        <span>Nuevo Reporte</span>
+      </button>
+    </div>
+
+    <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
+      <div class="component-search component-search--full" data-ref="search-box">
+        <div class="component-search__icon" data-ref="search-icon">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </div>
+        <div class="component-search__input-box" data-ref="search-input-box">
+          <input class="component-search__input" data-ref="tickets-search-input" placeholder="Buscar por número (ej. TCK-1001), título, descripción o solicitante..." type="text" maxlength="100" autocomplete="off" />
+        </div>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom" style="display: flex; flex-direction: column; gap: 16px; padding: 18px 24px;">
+    <div class="admin-grid" data-ref="tickets-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+      <div class="admin-card" data-ref="card-stat-total" style="padding: 14px 16px; gap: 6px;">
+        <div class="admin-card__header">
+          <span class="admin-card__title">Total Reportes</span>
+          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
+        </div>
+        <span class="admin-card__value" data-ref="stat-total-val" style="font-size: 22px;">0</span>
+        <span class="admin-card__meta">Histórico interdepartamental</span>
+      </div>
+
+      <div class="admin-card" data-ref="card-stat-open" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #3b82f6;">
+        <div class="admin-card__header">
+          <span class="admin-card__title">Abiertos</span>
+          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #3b82f6;"><use href="/icons.svg#info"></use></svg>
+        </div>
+        <span class="admin-card__value" data-ref="stat-open-val" style="font-size: 22px; color: #3b82f6;">0</span>
+        <span class="admin-card__meta">Por atender o asignar</span>
+      </div>
+
+      <div class="admin-card" data-ref="card-stat-progress" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #f59e0b;">
+        <div class="admin-card__header">
+          <span class="admin-card__title">En Progreso</span>
+          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #f59e0b;"><use href="/icons.svg#build"></use></svg>
+        </div>
+        <span class="admin-card__value" data-ref="stat-progress-val" style="font-size: 22px; color: #f59e0b;">0</span>
+        <span class="admin-card__meta">En gestión activa</span>
+      </div>
+
+      <div class="admin-card" data-ref="card-stat-urgent" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #ef4444;">
+        <div class="admin-card__header">
+          <span class="admin-card__title">Alta Prioridad / Urgente</span>
+          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #ef4444;"><use href="/icons.svg#warning"></use></svg>
+        </div>
+        <span class="admin-card__value" data-ref="stat-urgent-val" style="font-size: 22px; color: #ef4444;">0</span>
+        <span class="admin-card__meta">Atención prioritaria</span>
+      </div>
+
+      <div class="admin-card" data-ref="card-stat-resolved" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #10b981;">
+        <div class="admin-card__header">
+          <span class="admin-card__title">Resueltos</span>
+          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #10b981;"><use href="/icons.svg#check_circle"></use></svg>
+        </div>
+        <span class="admin-card__value" data-ref="stat-resolved-val" style="font-size: 22px; color: #10b981;">0</span>
+        <span class="admin-card__meta">Solucionados satisfactoriamente</span>
+      </div>
+    </div>
+
+    <div class="admin-card" data-ref="tickets-filter-bar" style="padding: 12px 16px; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: 1;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label class="field__label" data-ref="lbl-dept-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Departamento:</label>
+          <select class="component-select" data-ref="filter-department" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 170px;">
+            <option value="all">Todos los Departamentos</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label class="field__label" data-ref="lbl-status-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Estado:</label>
+          <select class="component-select" data-ref="filter-status" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 140px;">
+            <option value="all">Todos los Estados</option>
+            <option value="open">Abierto</option>
+            <option value="in_progress">En Progreso</option>
+            <option value="resolved">Resuelto</option>
+            <option value="closed">Cerrado</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label class="field__label" data-ref="lbl-priority-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Prioridad:</label>
+          <select class="component-select" data-ref="filter-priority" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 140px;">
+            <option value="all">Todas las Prioridades</option>
+            <option value="urgent">Urgente</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label class="field__label" data-ref="lbl-assignment-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Asignado:</label>
+          <select class="component-select" data-ref="filter-assigned" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 140px;">
+            <option value="all">Todos</option>
+            <option value="mine">Asignados a Mí</option>
+            <option value="unassigned">Sin Asignar</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h34" data-ref="btn-reset-filters" style="font-size: 12px;">
+          Limpiar Filtros
+        </button>
+      </div>
+    </div>
+
+    <div class="component-table-wrapper" data-ref="tickets-table-wrapper" style="border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-surface); overflow-x: auto;">
+      <table class="component-table" data-ref="tickets-table" style="width: 100%; border-collapse: collapse;">
+        <thead class="component-table__head" data-ref="tickets-thead">
+          <tr>
+            <th class="th-ticket-num" data-ref="th-ticket-num" style="width: 10%; padding: 12px 14px;">Ticket</th>
+            <th class="th-title" data-ref="th-title" style="width: 28%; padding: 12px 14px;">Asunto / Incidencia</th>
+            <th class="th-target-dept" data-ref="th-target-dept" style="width: 15%; padding: 12px 14px;">Dpto. Destino</th>
+            <th class="th-creator" data-ref="th-creator" style="width: 13%; padding: 12px 14px;">Solicitante</th>
+            <th class="th-priority" data-ref="th-priority" style="width: 9%; padding: 12px 14px;">Prioridad</th>
+            <th class="th-status" data-ref="th-status" style="width: 10%; padding: 12px 14px;">Estado</th>
+            <th class="th-assignee" data-ref="th-assignee" style="width: 11%; padding: 12px 14px;">Asignado A</th>
+            <th class="text-right th-actions" data-ref="th-actions" style="width: 4%; padding: 12px 14px;">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="component-table__body" data-ref="tickets-tbody">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando tickets internos departamentales...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="banner banner--danger" data-ref="tickets-page-error" style="display: none; margin: 8px 0;"></div>
+  </div>
+
+  <div class="modal-backdrop" data-ref="modal-create-ticket-backdrop" style="display: none;">
+    <div class="modal-container" data-ref="modal-create-ticket-container">
+      <button type="button" class="modal-close-btn" data-ref="btn-close-create-modal" aria-label="Cerrar modal">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+      </button>
+
+      <div class="modal-card modal-card--w-520" data-ref="card-create-ticket">
+        <div class="modal-card__header" data-ref="header-create-ticket">
+          <h2 class="modal-card__title" data-ref="title-create-ticket">Reportar Incidencia o Tarea Departamental</h2>
+          <p class="modal-card__desc" data-ref="desc-create-ticket">Registra una falla de equipo (ej. impresora averiada, fallas de red), solicitud de suministros o requerimiento interdepartamental.</p>
+        </div>
+
+        <form class="modal-card__body" data-ref="form-create-ticket" style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="field__label" data-ref="lbl-create-title" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Título del Reporte *</label>
+            <input class="component-input" data-ref="input-create-title" placeholder="Ej. Impresora del Piso 2 tiene atasco de papel continuo" type="text" maxlength="180" required />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="field__label" data-ref="lbl-create-target-dept" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Dpto. Destinatario *</label>
+              <select class="component-select" data-ref="select-create-target-dept" required>
+                <option value="">Selecciona departamento</option>
+              </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="field__label" data-ref="lbl-create-category" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Categoría *</label>
+              <select class="component-select" data-ref="select-create-category" required>
+                <option value="hardware">Hardware / Equipos e Impresoras</option>
+                <option value="network">Redes y Conectividad Wi-Fi</option>
+                <option value="software">Software y Licencias</option>
+                <option value="facilities">Instalaciones y Mobiliario</option>
+                <option value="access">Accesos y Credenciales</option>
+                <option value="hr">Recursos Humanos / Personal</option>
+                <option value="finance">Finanzas y Compras</option>
+                <option value="other">Otro Requerimiento</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="field__label" data-ref="lbl-create-priority" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Nivel de Prioridad *</label>
+              <select class="component-select" data-ref="select-create-priority" required>
+                <option value="low">Baja (No urgente)</option>
+                <option value="medium" selected>Media (Normal)</option>
+                <option value="high">Alta (Impacto operativo)</option>
+                <option value="urgent">Urgente (Bloqueo total)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="field__label" data-ref="lbl-create-source-dept" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Dpto. Emisor (Origen)</label>
+              <select class="component-select" data-ref="select-create-source-dept">
+                <option value="">Detectar automáticamente</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="field__label" data-ref="lbl-create-desc" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Descripción Detallada *</label>
+            <textarea class="component-input" data-ref="textarea-create-desc" placeholder="Describe claramente el problema, número de modelo, piso o ubicación exacta, pasos para reproducirlo y cualquier detalle útil..." rows="4" style="resize: vertical; min-height: 90px; line-height: 1.45;" required></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+            <button type="button" class="component-button component-button--h44" data-ref="btn-cancel-create-ticket">
+              Cancelar
+            </button>
+            <button type="submit" class="component-button component-button--h44 component-button--black" data-ref="btn-submit-create-ticket" style="font-weight: 600; padding: 0 20px;">
+              Registrar Ticket
+            </button>
+          </div>
+
+          <div class="banner banner--danger" data-ref="create-ticket-error" style="display: none; margin-top: 6px;"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" data-ref="modal-detail-ticket-backdrop" style="display: none;">
+    <div class="modal-container" data-ref="modal-detail-ticket-container">
+      <button type="button" class="modal-close-btn" data-ref="btn-close-detail-modal" aria-label="Cerrar modal">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+      </button>
+
+      <div class="modal-card modal-card--w-640" data-ref="card-detail-ticket" style="max-width: 780px; width: 100%;">
+        <div class="modal-card__header" data-ref="header-detail-ticket" style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="component-badge component-badge--sm" data-ref="detail-ticket-number" style="font-weight: 700; font-family: monospace; font-size: 13px;">TCK-0000</span>
+              <span class="component-badge component-badge--sm" data-ref="detail-status-badge">Estado</span>
+              <span class="component-badge component-badge--sm" data-ref="detail-priority-badge">Prioridad</span>
+            </div>
+            <span style="font-size: 12px; color: var(--text-tertiary);" data-ref="detail-created-date">-</span>
+          </div>
+          <h2 class="modal-card__title" data-ref="detail-ticket-title" style="font-size: 18px; margin-top: 8px; line-height: 1.35;">-</h2>
+        </div>
+
+        <div class="modal-card__body" data-ref="body-detail-ticket" style="display: flex; flex-direction: column; gap: 18px; padding-top: 16px; max-height: calc(85vh - 120px); overflow-y: auto;">
+          <div class="admin-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            <div class="admin-card" style="padding: 12px 14px; gap: 4px;">
+              <span style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-tertiary);">Reportado Por</span>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--border-color); display: flex; align-items: center; justify-content: center;">
+                  <img class="avatar-img image-lazy-fade" data-ref="detail-creator-avatar" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/icons.svg#person'" />
+                </div>
+                <div>
+                  <strong style="font-size: 13px; color: var(--text-primary); display: block;" data-ref="detail-creator-name">-</strong>
+                  <span style="font-size: 11.5px; color: var(--text-secondary);" data-ref="detail-creator-role">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card" style="padding: 12px 14px; gap: 4px;">
+              <span style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-tertiary);">Ruta de Departamentos</span>
+              <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                <span class="component-badge component-badge--sm" data-ref="detail-source-dept-badge" style="background: rgba(0,0,0,0.06);">Origen</span>
+                <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; color: var(--text-tertiary);"><use href="/icons.svg#arrow_forward"></use></svg>
+                <span class="component-badge component-badge--sm" data-ref="detail-target-dept-badge" style="font-weight: 600;">Destino</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Descripción del Problema</span>
+            <div class="admin-card" data-ref="detail-desc-box" style="padding: 14px; font-size: 13.5px; line-height: 1.55; color: var(--text-primary); white-space: pre-wrap; background: var(--bg-hover, rgba(0,0,0,0.02));"></div>
+          </div>
+
+          <div class="admin-card" data-ref="detail-resolution-section" style="padding: 14px; background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.3); display: none;">
+            <span style="font-size: 12px; font-weight: 700; color: #059669; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#check_circle"></use></svg>
+              Notas de Resolución
+            </span>
+            <p data-ref="detail-resolution-text" style="font-size: 13px; line-height: 1.5; color: var(--text-primary); margin: 6px 0 0 0; white-space: pre-wrap;"></p>
+          </div>
+
+          <div class="admin-card" data-ref="detail-review-panel" style="padding: 16px; gap: 14px; background: var(--bg-surface); border: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+              <strong style="font-size: 13.5px; color: var(--text-primary);">Gestión y Resolución del Ticket</strong>
+              <span style="font-size: 12px; color: var(--text-secondary);">Controles de personal responsable</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label class="field__label" data-ref="lbl-update-status" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Estado:</label>
+                <select class="component-select" data-ref="select-update-status">
+                  <option value="open">Abierto (Pendiente)</option>
+                  <option value="in_progress">En Progreso (Atendiendo)</option>
+                  <option value="resolved">Resuelto (Completado)</option>
+                  <option value="closed">Cerrado</option>
+                </select>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label class="field__label" data-ref="lbl-update-priority" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Prioridad:</label>
+                <select class="component-select" data-ref="select-update-priority">
+                  <option value="low">Baja</option>
+                  <option value="medium">Media</option>
+                  <option value="high">Alta</option>
+                  <option value="urgent">Urgente</option>
+                </select>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label class="field__label" data-ref="lbl-update-assignee" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Asignar A:</label>
+                <select class="component-select" data-ref="select-update-assignee">
+                  <option value="">Sin Asignar</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="field__label" data-ref="lbl-update-resolution-notes" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Notas de Resolución / Cierre</label>
+              <textarea class="component-input" data-ref="textarea-update-resolution" placeholder="Escribe aquí los pasos realizados para solucionar la falla, repuestos utilizados o conclusiones..." rows="2" style="resize: vertical; min-height: 60px; line-height: 1.4;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="button" class="component-button component-button--h36 component-button--black" data-ref="btn-save-ticket-updates" style="font-weight: 600; padding: 0 16px;">
+                Guardar Modificaciones
+              </button>
+            </div>
+
+            <div class="banner banner--danger" data-ref="update-ticket-error" style="display: none; margin-top: 4px;"></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <strong style="font-size: 13.5px; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+                <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#chat"></use></svg>
+                Historial de Respuestas y Notas Departamentales
+              </strong>
+              <span class="component-badge component-badge--sm" data-ref="detail-comments-count">0</span>
+            </div>
+
+            <div data-ref="detail-comments-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+
+            <div class="admin-card" style="padding: 14px; gap: 10px; background: var(--bg-surface);">
+              <label class="field__label" data-ref="lbl-new-comment" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Agregar Mensaje o Actualización</label>
+              <textarea class="component-input" data-ref="textarea-new-comment" placeholder="Escribe una actualización para los involucrados o instrucciones técnicas..." rows="3" style="resize: vertical; min-height: 60px; line-height: 1.4;"></textarea>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <label class="field" data-ref="lbl-checkbox-internal-note" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                  <input class="component-checkbox" data-ref="checkbox-internal-note" type="checkbox" />
+                  <span style="font-size: 12.5px; color: var(--text-secondary);">Marcar como nota interna departamental</span>
+                </label>
+
+                <button type="button" class="component-button component-button--h36 component-button--black" data-ref="btn-submit-comment" style="gap: 6px; font-weight: 600; padding: 0 16px;">
+                  <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px;"><use href="/icons.svg#send"></use></svg>
+                  <span>Enviar Nota</span>
+                </button>
+              </div>
+
+              <div class="banner banner--danger" data-ref="comment-ticket-error" style="display: none; margin-top: 4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

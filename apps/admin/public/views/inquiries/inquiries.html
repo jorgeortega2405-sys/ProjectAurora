@@ -1,0 +1,108 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="admin-inquiries-wrapper">
+  <header class="component-top" data-ref="component-top">
+    <div class="component-top-left" data-ref="component-top-left">
+      <h1 class="component-top-title" data-ref="inquiries-page-title" style="font-size: 15px; font-weight: 700;">Leads Comerciales Enterprise</h1>
+      <span class="component-badge component-badge--sm" data-ref="inquiries-count-badge">0</span>
+    </div>
+
+    <div class="component-top-right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar leads" data-tooltip-placement="bottom" aria-label="Buscar leads">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+      </button>
+    </div>
+
+    <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
+      <div class="component-search component-search--full" data-ref="search-box">
+        <div class="component-search__icon" data-ref="search-icon">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </div>
+        <div class="component-search__input-box" data-ref="search-input-box">
+          <input class="component-search__input" data-ref="inquiries-search-input" placeholder="Buscar por contacto, empresa, correo o mensaje..." type="text" maxlength="100" autocomplete="off" />
+        </div>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom">
+    <div class="component-table-wrapper" data-ref="inquiries-table-wrapper">
+      <table class="component-table" data-ref="inquiries-table">
+        <thead class="component-table__head" data-ref="inquiries-thead">
+          <tr>
+            <th class="th-contact" data-ref="th-contact" style="width: 25%;">Contacto</th>
+            <th class="th-company" data-ref="th-company" style="width: 20%;">Empresa</th>
+            <th class="th-message" data-ref="th-message" style="width: 25%;">Requerimientos</th>
+            <th class="th-date" data-ref="th-date" style="width: 12%;">Fecha</th>
+            <th class="th-status" data-ref="th-status" style="width: 10%;">Estado</th>
+            <th class="text-right th-actions" data-ref="th-actions" style="width: 8%;">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="component-table__body" data-ref="inquiries-tbody">
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando leads comerciales...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="banner banner--danger" data-ref="inquiries-page-error" style="display: none; margin: 12px 24px;"></div>
+  </div>
+
+  <div class="modal-backdrop" data-ref="modal-inquiry-backdrop" style="display: none;">
+    <div class="modal-container" data-ref="modal-inquiry-container">
+      <button type="button" class="modal-close-btn" data-ref="btn-close-modal-inquiry" aria-label="Cerrar modal">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+      </button>
+
+      <div class="modal-card modal-card--w-480" data-ref="card-modal-inquiry">
+        <div class="modal-card__header" data-ref="header-modal-inquiry">
+          <h2 class="modal-card__title" data-ref="title-modal-inquiry">Detalle de Solicitud Comercial</h2>
+          <p class="modal-card__desc" data-ref="desc-modal-inquiry">Revisa las necesidades de la empresa y actualiza el estado de prospección comercial.</p>
+        </div>
+
+        <div class="modal-card__body" data-ref="body-modal-inquiry" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="admin-card" data-ref="modal-inquiry-info-card" style="padding: 14px; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+              <div>
+                <strong style="font-size: 14.5px; color: var(--text-primary); display: block;" data-ref="modal-inquiry-name">Contacto</strong>
+                <span style="font-size: 12.5px; color: var(--text-secondary);" data-ref="modal-inquiry-company">Empresa</span>
+              </div>
+              <span class="component-badge component-badge--sm" data-ref="modal-inquiry-badge">Pendiente</span>
+            </div>
+            <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 12px; color: var(--text-tertiary);">Correo electrónico:</span>
+              <a class="link" data-ref="modal-inquiry-email-link" href="#" style="font-size: 13px; word-break: break-all;" target="_blank" rel="noopener noreferrer">correo@empresa.com</a>
+            </div>
+            <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 12px; color: var(--text-tertiary);">Recibido el:</span>
+              <span style="font-size: 12.5px; color: var(--text-secondary);" data-ref="modal-inquiry-date">-</span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Mensaje / Necesidades del cliente</span>
+            <div class="admin-card" data-ref="modal-inquiry-message-box" style="padding: 12px; max-height: 160px; overflow-y: auto; font-size: 13px; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap; background: var(--bg-hover, rgba(0,0,0,0.02));"></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label class="field__label" data-ref="label-inquiry-status" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Estado de la Solicitud</label>
+            <select class="component-select" data-ref="select-inquiry-status">
+              <option value="pending">Pendiente (No contactado)</option>
+              <option value="contacted">En Contacto (Conversaciones iniciadas)</option>
+              <option value="closed">Cerrado / Concluido</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 6px;">
+            <button type="button" class="component-button component-button--h44 component-button--black component-button--w-full" data-ref="btn-save-inquiry-status">
+              Actualizar Estado
+            </button>
+          </div>
+
+          <div class="banner banner--danger" data-ref="modal-inquiry-error" style="display: none; margin-top: 8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

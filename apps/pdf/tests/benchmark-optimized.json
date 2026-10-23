@@ -1,0 +1,14 @@
+{
+  "homeDurationMs": 151,
+  "homeKb": 66,
+  "homeRequests": 15,
+  "label": "optimized",
+  "mergeDurationMs": 170,
+  "mergeKb": 88,
+  "mergeRequests": 17,
+  "stressAvgMs": 94,
+  "stressMaxMs": 185,
+  "stressP95Ms": 172,
+  "stressRps": 98.05,
+  "timestamp": "2026-10-17T22:02:15.784Z"
+}

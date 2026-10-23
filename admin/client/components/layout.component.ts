@@ -39,7 +39,9 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const isPurchases = currentPath.startsWith('/purchases') || currentPath.startsWith('/compras');
   const isOrganizations = currentPath.startsWith('/organizations') || currentPath.startsWith('/organizaciones');
   const isInquiries = currentPath.startsWith('/inquiries') || currentPath.startsWith('/leads');
+  const isHr = currentPath.startsWith('/hr') || currentPath.startsWith('/rrhh');
   const isBackups = currentPath.startsWith('/backups') || currentPath.startsWith('/copias-de-seguridad');
+  const isTickets = currentPath.startsWith('/internal-tickets') || currentPath.startsWith('/tickets-internos') || currentPath.startsWith('/tickets');
 
   const canDashboard = hasPermission('admin:dashboard:view') || hasPermission('admin:access');
   const canUsers = hasPermission('admin:users:view');
@@ -47,7 +49,9 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const canPurchases = hasPermission('admin:purchases:view');
   const canOrganizations = hasPermission('admin:organizations:view');
   const canInquiries = hasPermission('admin:inquiries:view');
+  const canHr = hasPermission('admin:hr:view');
   const canBackups = hasPermission('system:backup:read');
+  const canTickets = hasPermission('admin:tickets:view');
 
   const bindNavLink = (btn: HTMLElement | null, path: string) => {
     btn?.addEventListener('click', (e) => {
@@ -119,11 +123,29 @@ function populateDrawerContent(drawer: HTMLElement): void {
     `;
   }
 
+  if (canHr) {
+    itemsHtml += `
+      <button type="button" class="menu-item ${isHr ? 'is-active' : ''}" data-ref="btn-drawer-nav-hr">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
+        <span class="menu-item__text">Recursos Humanos</span>
+      </button>
+    `;
+  }
+
   if (canBackups) {
     itemsHtml += `
       <button type="button" class="menu-item ${isBackups ? 'is-active' : ''}" data-ref="btn-drawer-nav-backups">
         <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#cloud"></use></svg>
         <span class="menu-item__text">Copias de Seguridad</span>
+      </button>
+    `;
+  }
+
+  if (canTickets) {
+    itemsHtml += `
+      <button type="button" class="menu-item ${isTickets ? 'is-active' : ''}" data-ref="btn-drawer-nav-tickets">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#support_agent"></use></svg>
+        <span class="menu-item__text">Tickets Internos</span>
       </button>
     `;
   }
@@ -182,8 +204,14 @@ function populateDrawerContent(drawer: HTMLElement): void {
   if (canInquiries) {
     bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-inquiries"]'), '/inquiries');
   }
+  if (canHr) {
+    bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-hr"]'), '/hr');
+  }
   if (canBackups) {
     bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-backups"]'), '/backups');
+  }
+  if (canTickets) {
+    bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-tickets"]'), '/internal-tickets');
   }
 
   renderIcons(drawer);
@@ -291,7 +319,9 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isPurchases = path.startsWith('/purchases') || path.startsWith('/compras');
   const isOrganizations = path.startsWith('/organizations') || path.startsWith('/organizaciones');
   const isInquiries = path.startsWith('/inquiries') || path.startsWith('/leads');
+  const isHr = path.startsWith('/hr') || path.startsWith('/rrhh');
   const isBackups = path.startsWith('/backups') || path.startsWith('/copias-de-seguridad');
+  const isTickets = path.startsWith('/internal-tickets') || path.startsWith('/tickets-internos') || path.startsWith('/tickets');
 
   const canDashboard = hasPermission('admin:dashboard:view') || hasPermission('admin:access');
   const canUsers = hasPermission('admin:users:view');
@@ -299,7 +329,9 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const canPurchases = hasPermission('admin:purchases:view');
   const canOrganizations = hasPermission('admin:organizations:view');
   const canInquiries = hasPermission('admin:inquiries:view');
+  const canHr = hasPermission('admin:hr:view');
   const canBackups = hasPermission('system:backup:read');
+  const canTickets = hasPermission('admin:tickets:view');
 
   const itemDashboard = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-dashboard"]');
   const btnDashboard = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-dashboard"]');
@@ -313,8 +345,12 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnOrganizations = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-organizations"]');
   const itemInquiries = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-inquiries"]');
   const btnInquiries = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-inquiries"]');
+  const itemHr = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-hr"]');
+  const btnHr = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-hr"]');
   const itemBackups = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-backups"]');
   const btnBackups = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-backups"]');
+  const itemTickets = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-tickets"]');
+  const btnTickets = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-tickets"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
 
   if (itemDashboard) itemDashboard.style.display = canDashboard ? '' : 'none';
@@ -323,7 +359,9 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   if (itemPurchases) itemPurchases.style.display = canPurchases ? '' : 'none';
   if (itemOrganizations) itemOrganizations.style.display = canOrganizations ? '' : 'none';
   if (itemInquiries) itemInquiries.style.display = canInquiries ? '' : 'none';
+  if (itemHr) itemHr.style.display = canHr ? '' : 'none';
   if (itemBackups) itemBackups.style.display = canBackups ? '' : 'none';
+  if (itemTickets) itemTickets.style.display = canTickets ? '' : 'none';
 
   itemDashboard?.classList.toggle('is-active', isDashboard);
   btnDashboard?.classList.toggle('is-active', isDashboard);
@@ -337,7 +375,12 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnOrganizations?.classList.toggle('is-active', isOrganizations);
   itemInquiries?.classList.toggle('is-active', isInquiries);
   btnInquiries?.classList.toggle('is-active', isInquiries);
+  itemHr?.classList.toggle('is-active', isHr);
+  btnHr?.classList.toggle('is-active', isHr);
   itemBackups?.classList.toggle('is-active', isBackups);
+  btnBackups?.classList.toggle('is-active', isBackups);
+  itemTickets?.classList.toggle('is-active', isTickets);
+  btnTickets?.classList.toggle('is-active', isTickets);
   btnBackups?.classList.toggle('is-active', isBackups);
   btnToggle?.classList.toggle('is-active', isDrawerOpen);
 
@@ -394,7 +437,9 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
   bindItemNav('btn-rail-purchases', 'rail-item-purchases', '/purchases');
   bindItemNav('btn-rail-organizations', 'rail-item-organizations', '/organizations');
   bindItemNav('btn-rail-inquiries', 'rail-item-inquiries', '/inquiries');
+  bindItemNav('btn-rail-hr', 'rail-item-hr', '/hr');
   bindItemNav('btn-rail-backups', 'rail-item-backups', '/backups');
+  bindItemNav('btn-rail-tickets', 'rail-item-tickets', '/internal-tickets');
 
   btnTheme?.addEventListener('click', (e) => {
     e.preventDefault();

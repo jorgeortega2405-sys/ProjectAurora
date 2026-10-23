@@ -66,12 +66,38 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
+      const { createHrView } = await import('../views/hr.view.js');
+      return await createHrView();
+    },
+    id: 'hr',
+    match: (path) => path === '/hr' || path.startsWith('/hr') || path === '/rrhh' || path.startsWith('/rrhh'),
+    requiredPermission: 'admin:hr:view',
+  },
+  {
+    handler: async () => {
       const { createBackupsView } = await import('../views/backups.view.js');
       return await createBackupsView();
     },
     id: 'backups',
     match: (path) => path === '/backups' || path.startsWith('/backups') || path === '/copias-de-seguridad' || path.startsWith('/copias-de-seguridad'),
     requiredPermission: 'system:backup:read',
+  },
+  {
+    handler: async ({ params }) => {
+      const { createInternalTicketsView } = await import('../views/internal-tickets.view.js');
+      return await createInternalTicketsView(params.id || '');
+    },
+    id: 'internal-tickets',
+    match: (path) => {
+      const match = path.match(/^\/internal-tickets(?:\/([a-zA-Z0-9_-]+))?$/) ||
+                    path.match(/^\/tickets-internos(?:\/([a-zA-Z0-9_-]+))?$/) ||
+                    path.match(/^\/tickets(?:\/([a-zA-Z0-9_-]+))?$/);
+      if (match) {
+        return { id: match[1] || '' };
+      }
+      return false;
+    },
+    requiredPermission: 'admin:tickets:view',
   },
 ];
 

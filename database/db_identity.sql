@@ -117,6 +117,9 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('admin:organizations:manage', 'Gestionar Organizaciones', 'Permite modificar configuración y asientos de organizaciones'),
 ('admin:inquiries:view', 'Ver Leads', 'Permite consultar contactos comerciales e institucionales'),
 ('admin:inquiries:manage', 'Gestionar Leads', 'Permite actualizar el estado y seguimiento de leads'),
+('admin:hr:view', 'Ver Recursos Humanos', 'Permite consultar empleados, salarios, organigrama y vacaciones'),
+('admin:hr:manage', 'Gestionar Recursos Humanos', 'Permite contratar empleados, definir puestos, salarios y vacaciones'),
+('admin:hr:documents', 'Gestionar Documentos RRHH', 'Permite subir y consultar contratos y acuerdos de confidencialidad'),
 ('account:view_profile', 'Ver Perfil', 'Ver información de perfil'),
 ('account:edit_identifiers', 'Editar Identificadores', 'Modificar nombre de usuario o correo'),
 ('account:edit_security', 'Editar Seguridad', 'Modificar contraseña y 2FA'),
@@ -137,7 +140,10 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('system:backup:create', 'Crear Copias de Seguridad', 'Crear copias de respaldo de bases de datos y archivos'),
 ('system:backup:read', 'Ver Copias de Seguridad', 'Consultar historial y estado de copias'),
 ('system:backup:restore', 'Restaurar Copias de Seguridad', 'Restaurar copias de seguridad del sistema'),
-('system:backup:delete', 'Eliminar Copias de Seguridad', 'Eliminar respaldos del sistema');
+('system:backup:delete', 'Eliminar Copias de Seguridad', 'Eliminar respaldos del sistema'),
+('admin:tickets:view', 'Ver Tickets Internos', 'Permite consultar y listar tickets interdepartamentales en el panel'),
+('admin:tickets:create', 'Crear Tickets Internos', 'Permite reportar incidencias y tareas entre departamentos'),
+('admin:tickets:manage', 'Gestionar Tickets Internos', 'Permite asignar, cambiar estado, prioridad y resolver tickets departamentales');
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SUPER_ADMIN', '*'),
@@ -154,6 +160,9 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('PLATFORM_ADMIN', 'admin:organizations:manage'),
 ('PLATFORM_ADMIN', 'admin:inquiries:view'),
 ('PLATFORM_ADMIN', 'admin:inquiries:manage'),
+('PLATFORM_ADMIN', 'admin:hr:view'),
+('PLATFORM_ADMIN', 'admin:hr:manage'),
+('PLATFORM_ADMIN', 'admin:hr:documents'),
 ('PLATFORM_ADMIN', 'system:backup:read'),
 ('PLATFORM_ADMIN', 'system:backup:create'),
 ('SECURITY_ADMIN', 'admin:access'),
@@ -260,6 +269,54 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SYSTEM_OPERATOR', 'admin:dashboard:view'),
 ('SYSTEM_OPERATOR', 'system:backup:read'),
 ('SYSTEM_OPERATOR', 'system:backup:create'),
+('PLATFORM_ADMIN', 'admin:tickets:view'),
+('PLATFORM_ADMIN', 'admin:tickets:create'),
+('PLATFORM_ADMIN', 'admin:tickets:manage'),
+('SUPPORT_L1', 'admin:tickets:view'),
+('SUPPORT_L1', 'admin:tickets:create'),
+('SUPPORT_L2', 'admin:tickets:view'),
+('SUPPORT_L2', 'admin:tickets:create'),
+('SUPPORT_L2', 'admin:tickets:manage'),
+('SUPPORT_L3', 'admin:tickets:view'),
+('SUPPORT_L3', 'admin:tickets:create'),
+('SUPPORT_L3', 'admin:tickets:manage'),
+('SUPPORT_MANAGER', 'admin:tickets:view'),
+('SUPPORT_MANAGER', 'admin:tickets:create'),
+('SUPPORT_MANAGER', 'admin:tickets:manage'),
+('OPERATIONS_AGENT', 'admin:tickets:view'),
+('OPERATIONS_AGENT', 'admin:tickets:create'),
+('OPERATIONS_AGENT', 'admin:tickets:manage'),
+('OPERATIONS_MANAGER', 'admin:tickets:view'),
+('OPERATIONS_MANAGER', 'admin:tickets:create'),
+('OPERATIONS_MANAGER', 'admin:tickets:manage'),
+('HR_MANAGER', 'admin:tickets:view'),
+('HR_MANAGER', 'admin:tickets:create'),
+('HR_MANAGER', 'admin:tickets:manage'),
+('HR_RECRUITER', 'admin:tickets:view'),
+('HR_RECRUITER', 'admin:tickets:create'),
+('ENGINEER', 'admin:tickets:view'),
+('ENGINEER', 'admin:tickets:create'),
+('ENGINEER', 'admin:tickets:manage'),
+('SENIOR_ENGINEER', 'admin:tickets:view'),
+('SENIOR_ENGINEER', 'admin:tickets:create'),
+('SENIOR_ENGINEER', 'admin:tickets:manage'),
+('DEVOPS', 'admin:tickets:view'),
+('DEVOPS', 'admin:tickets:create'),
+('DEVOPS', 'admin:tickets:manage'),
+('SRE', 'admin:tickets:view'),
+('SRE', 'admin:tickets:create'),
+('SRE', 'admin:tickets:manage'),
+('SYSTEM_OPERATOR', 'admin:tickets:view'),
+('SYSTEM_OPERATOR', 'admin:tickets:create'),
+('SYSTEM_OPERATOR', 'admin:tickets:manage'),
+('BILLING_AGENT', 'admin:tickets:view'),
+('BILLING_AGENT', 'admin:tickets:create'),
+('BILLING_MANAGER', 'admin:tickets:view'),
+('BILLING_MANAGER', 'admin:tickets:create'),
+('FINANCE_ADMIN', 'admin:tickets:view'),
+('FINANCE_ADMIN', 'admin:tickets:create'),
+('FINANCE_ADMIN', 'admin:tickets:manage'),
+('READ_ONLY_ADMIN', 'admin:tickets:view'),
 ('USER', 'account:view_profile'),
 ('USER', 'account:edit_identifiers'),
 ('USER', 'account:edit_security'),
@@ -472,3 +529,167 @@ CREATE TABLE IF NOT EXISTS backup_records (
     INDEX idx_backup_created (created_at DESC),
     INDEX idx_backup_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS hr_departments (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255) NULL,
+    color VARCHAR(20) NOT NULL DEFAULT '#6366f1',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO hr_departments (id, name, description, color) VALUES
+('exec', 'Dirección Ejecutiva', 'Liderazgo estratégico y dirección general', '#4f46e5'),
+('engineering', 'Ingeniería y Sistemas', 'Desarrollo de software, infraestructura y sistemas', '#0284c7'),
+('product', 'Producto y Diseño', 'Diseño de experiencia, interfaces y gestión de producto', '#8b5cf6'),
+('hr', 'Recursos Humanos', 'Atracción de talento, cultura y gestión de personas', '#ec4899'),
+('finance', 'Finanzas y Legal', 'Administración financiera, compras y marco legal', '#10b981'),
+('sales_marketing', 'Ventas y Marketing', 'Crecimiento comercial, leads y comunicación de marca', '#f59e0b'),
+('operations', 'Operaciones y Soporte', 'Atención técnica, resolución y calidad operativa', '#64748b');
+
+CREATE TABLE IF NOT EXISTS hr_employees (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL UNIQUE,
+    department_id VARCHAR(50) NOT NULL,
+    manager_id VARCHAR(36) NULL,
+    job_title VARCHAR(100) NOT NULL,
+    employment_type ENUM('full_time', 'part_time', 'contractor', 'intern') NOT NULL DEFAULT 'full_time',
+    status ENUM('active', 'on_leave', 'probation', 'terminated') NOT NULL DEFAULT 'active',
+    hire_date DATE NOT NULL,
+    salary_amount DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    salary_currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+    salary_frequency ENUM('monthly', 'biweekly', 'weekly', 'annual') NOT NULL DEFAULT 'monthly',
+    vacation_days_allocated INT NOT NULL DEFAULT 15,
+    vacation_days_used INT NOT NULL DEFAULT 0,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES hr_departments(id),
+    FOREIGN KEY (manager_id) REFERENCES hr_employees(id) ON DELETE SET NULL,
+    INDEX idx_hr_emp_dept (department_id),
+    INDEX idx_hr_emp_manager (manager_id),
+    INDEX idx_hr_emp_status (status),
+    INDEX idx_hr_emp_hire (hire_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS hr_documents (
+    id VARCHAR(36) PRIMARY KEY,
+    employee_id VARCHAR(36) NOT NULL,
+    document_type ENUM('contract', 'nda', 'tax_id', 'certification', 'other') NOT NULL DEFAULT 'contract',
+    title VARCHAR(255) NOT NULL,
+    file_url VARCHAR(512) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_size_bytes BIGINT NOT NULL DEFAULT 0,
+    mime_type VARCHAR(100) NOT NULL DEFAULT 'application/pdf',
+    uploaded_by VARCHAR(36) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES hr_employees(id) ON DELETE CASCADE,
+    INDEX idx_hr_docs_emp (employee_id),
+    INDEX idx_hr_docs_type (document_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS hr_vacation_requests (
+    id VARCHAR(36) PRIMARY KEY,
+    employee_id VARCHAR(36) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    days_count INT NOT NULL,
+    reason VARCHAR(255) NULL,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    reviewed_by VARCHAR(36) NULL,
+    reviewed_at TIMESTAMP NULL,
+    review_notes VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES hr_employees(id) ON DELETE CASCADE,
+    INDEX idx_hr_vac_emp (employee_id),
+    INDEX idx_hr_vac_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Semilla predeterminada de usuarios y equipo empresarial de RRHH
+INSERT IGNORE INTO users (id, username, email, password_hash, google_id, role, two_factor_enabled, created_at, updated_at) VALUES
+('dffc9deb-ea49-400b-b33a-ba6bf94685e3', '2310882_537', '2310882@utmatamoros.edu.mx', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'SUPER_ADMIN', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-1111-4000-8000-000000000001', 'sofia.hernandez', 'sofia.hernandez@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'HR_MANAGER', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-2222-4000-8000-000000000002', 'valeria.torres', 'valeria.torres@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'USER', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-3333-4000-8000-000000000003', 'carlos.mendoza', 'carlos.mendoza@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'DEVOPS', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-4444-4000-8000-000000000004', 'diego.ramirez', 'diego.ramirez@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'SENIOR_ENGINEER', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00');
+
+INSERT IGNORE INTO user_preferences (user_id, theme, language, open_links_new_tab, telemetry, reduce_motion, high_contrast, extended_alerts) VALUES
+('dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'system', 'es-MX', 1, 0, 0, 0, 0),
+('b7123456-1111-4000-8000-000000000001', 'system', 'es-MX', 1, 0, 0, 0, 0),
+('b7123456-2222-4000-8000-000000000002', 'system', 'es-MX', 1, 0, 0, 0, 0),
+('b7123456-3333-4000-8000-000000000003', 'system', 'es-MX', 1, 0, 0, 0, 0),
+('b7123456-4444-4000-8000-000000000004', 'system', 'es-MX', 1, 0, 0, 0, 0);
+
+INSERT IGNORE INTO hr_employees (id, user_id, department_id, manager_id, job_title, employment_type, status, hire_date, salary_amount, salary_currency, salary_frequency, vacation_days_allocated, vacation_days_used, notes) VALUES
+('emp-ceo-001', 'dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'exec', NULL, 'Chief Executive Officer (CEO)', 'full_time', 'active', '2024-01-01', 15000.00, 'USD', 'monthly', 30, 5, 'Fundador y Director General. Máxima autoridad en el organigrama corporativo.'),
+('emp-cto-001', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'engineering', 'emp-ceo-001', 'Chief Technology Officer (CTO)', 'full_time', 'active', '2024-01-15', 12000.00, 'USD', 'monthly', 25, 4, 'Director de Tecnología y Arquitectura de Software.'),
+('emp-hr-001', 'b7123456-1111-4000-8000-000000000001', 'hr', 'emp-ceo-001', 'Gerente de Recursos Humanos & Talento', 'full_time', 'active', '2024-02-01', 7500.00, 'USD', 'monthly', 20, 2, 'Lidera la atracción de talento, bienestar laboral y cultura empresarial.'),
+('emp-prod-001', 'b7123456-2222-4000-8000-000000000002', 'product', 'emp-ceo-001', 'Lead Product Designer & UX/UI', 'full_time', 'active', '2024-02-15', 8000.00, 'USD', 'monthly', 20, 3, 'Directora de diseño de producto y experiencia de usuario.'),
+('emp-devops-001', 'b7123456-3333-4000-8000-000000000003', 'engineering', 'emp-cto-001', 'Lead DevOps & SRE Engineer', 'full_time', 'active', '2024-03-01', 9000.00, 'USD', 'monthly', 20, 1, 'Encargado de Kubernetes, Docker, CI/CD y confiabilidad de sistemas.'),
+('emp-eng-001', 'b7123456-4444-4000-8000-000000000004', 'engineering', 'emp-cto-001', 'Senior Full-Stack Engineer', 'full_time', 'active', '2024-03-15', 8500.00, 'USD', 'monthly', 20, 0, 'Desarrollador senior en Node.js, TypeScript y motores gráficos.');
+
+INSERT IGNORE INTO hr_documents (id, employee_id, document_type, title, file_url, file_name, file_size_bytes, mime_type) VALUES
+('doc-001', 'emp-ceo-001', 'contract', 'Contrato de Dirección Ejecutiva y Fundación', '/uploads/hr_documents/contrato_director_general.pdf', 'contrato_director_general.pdf', 245760, 'application/pdf'),
+('doc-002', 'emp-cto-001', 'nda', 'Acuerdo de Confidencialidad y Propiedad Intelectual (NDA)', '/uploads/hr_documents/acuerdo_confidencialidad_cto.pdf', 'acuerdo_confidencialidad_cto.pdf', 184320, 'application/pdf'),
+('doc-003', 'emp-devops-001', 'contract', 'Contrato Laboral Tiempo Completo - Lead DevOps', '/uploads/hr_documents/contrato_lead_devops.pdf', 'contrato_lead_devops.pdf', 198000, 'application/pdf');
+
+INSERT IGNORE INTO hr_vacation_requests (id, employee_id, start_date, end_date, days_count, reason, status) VALUES
+('vac-001', 'emp-cto-001', '2026-11-15', '2026-11-20', 5, 'Congreso Internacional de Arquitectura de Software y descanso anual.', 'pending'),
+('vac-002', 'emp-prod-001', '2026-08-10', '2026-08-14', 4, 'Vacaciones de verano.', 'approved');
+
+CREATE TABLE IF NOT EXISTS internal_tickets (
+    id VARCHAR(36) PRIMARY KEY,
+    ticket_number VARCHAR(30) NOT NULL UNIQUE,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    category ENUM('hardware', 'software', 'network', 'facilities', 'access', 'hr', 'finance', 'other') NOT NULL DEFAULT 'other',
+    priority ENUM('low', 'medium', 'high', 'urgent') NOT NULL DEFAULT 'medium',
+    status ENUM('open', 'in_progress', 'resolved', 'closed') NOT NULL DEFAULT 'open',
+    source_department_id VARCHAR(50) NULL,
+    target_department_id VARCHAR(50) NOT NULL,
+    created_by VARCHAR(36) NOT NULL,
+    assigned_to VARCHAR(36) NULL,
+    resolution_notes TEXT NULL,
+    resolved_at TIMESTAMP NULL,
+    closed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (source_department_id) REFERENCES hr_departments(id) ON DELETE SET NULL,
+    FOREIGN KEY (target_department_id) REFERENCES hr_departments(id) ON DELETE RESTRICT,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_tickets_target_dept_status (target_department_id, status),
+    INDEX idx_tickets_source_dept (source_department_id),
+    INDEX idx_tickets_status (status),
+    INDEX idx_tickets_priority (priority),
+    INDEX idx_tickets_creator (created_by),
+    INDEX idx_tickets_assigned (assigned_to),
+    INDEX idx_tickets_created_at (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS internal_ticket_comments (
+    id VARCHAR(36) PRIMARY KEY,
+    ticket_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
+    message TEXT NOT NULL,
+    is_internal_note BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ticket_id) REFERENCES internal_tickets(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_ticket_comments_ticket_created (ticket_id, created_at ASC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO internal_tickets (id, ticket_number, title, description, category, priority, status, source_department_id, target_department_id, created_by, assigned_to, resolution_notes, resolved_at, created_at) VALUES
+('tck-001', 'TCK-1001', 'Impresora multifuncional Piso 2 bloqueada con atasco continuo', 'La impresora departamental del piso 2 (área de diseño y operaciones) reporta código de error E-04 de papel atascado de forma persistente y no procesa nuevas impresiones.', 'hardware', 'medium', 'in_progress', 'product', 'operations', 'b7123456-2222-4000-8000-000000000002', 'b7123456-3333-4000-8000-000000000003', NULL, NULL, '2026-10-22 09:15:00'),
+('tck-002', 'TCK-1002', 'Adquisición y ampliación de licencias corporativas de Figma', 'Requerimos autorizar 3 licencias adicionales de Figma Enterprise para los nuevos diseñadores UX/UI que se integran este mes.', 'software', 'high', 'open', 'product', 'finance', 'b7123456-2222-4000-8000-000000000002', NULL, NULL, NULL, '2026-10-22 11:30:00'),
+('tck-003', 'TCK-1003', 'Apertura de accesos VPN y llaves SSH de Staging para nuevo Ingeniero', 'Se contrató al nuevo ingeniero de software Diego Ramírez. Requiere acceso autorizado a la VPN corporativa y despliegue de llaves SSH en cluster staging.', 'access', 'high', 'resolved', 'hr', 'engineering', 'b7123456-1111-4000-8000-000000000001', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Llaves SSH aprovisionadas en bastión y perfil VPN generado con 2FA forzado.', '2026-10-22 17:00:00', '2026-10-22 14:00:00'),
+('tck-004', 'TCK-1004', 'Intermitencia y baja velocidad en enlace Wi-Fi de sala de juntas Boreal', 'Durante las reuniones ejecutivas la red inalámbrica de la sala principal presenta cortes cada 10 minutos con pérdida de paquetes.', 'network', 'urgent', 'open', 'exec', 'engineering', 'dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'b7123456-3333-4000-8000-000000000003', NULL, NULL, '2026-10-23 08:45:00'),
+('tck-005', 'TCK-1005', 'Solicitud de monitor secundario de 27 pulgadas y brazo ergonómico', 'Requiero un monitor adicional de 27 pulgadas y brazo soporte articulado para desarrollo y depuración de microservicios.', 'facilities', 'low', 'open', 'engineering', 'operations', 'b7123456-4444-4000-8000-000000000004', NULL, NULL, NULL, '2026-10-23 10:10:00');
+
+INSERT IGNORE INTO internal_ticket_comments (id, ticket_id, user_id, message, is_internal_note, created_at) VALUES
+('tck-comm-001', 'tck-001', 'b7123456-3333-4000-8000-000000000003', 'Se desmontó la bandeja posterior de alimentación. El sensor de paso tiene acumulación de polvo; ya limpiamos y realizaremos prueba con 10 hojas.', 0, '2026-10-22 10:20:00'),
+('tck-comm-002', 'tck-003', 'b7123456-1111-4000-8000-000000000001', 'Adjuntamos formato de seguridad firmado por el colaborador y confirmamos inicio de contrato.', 0, '2026-10-22 14:05:00'),
+('tck-comm-003', 'tck-003', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Permisos concedidos bajo PBAC con rol ENGINEER y acceso a repositorios en GitHub Enterprise.', 1, '2026-10-22 16:55:00');

@@ -448,6 +448,22 @@ export const APP_ROUTES: RouteDefinition[] = [
     match: (path) => path === '/organization' || path.startsWith('/organization'),
   },
   {
+    handler: async ({ params }) => {
+      const ticketParam = params.id ? `/${encodeURIComponent(params.id)}` : '';
+      window.location.href = `http://localhost:3005/internal-tickets${ticketParam}`;
+      return null;
+    },
+    id: 'internal-tickets-redirect',
+    match: (path) => {
+      const match = path.match(/^\/internal-tickets(?:\/([a-zA-Z0-9_-]+))?$/) ||
+                    path.match(/^\/tickets-internos(?:\/([a-zA-Z0-9_-]+))?$/);
+      if (match) {
+        return { id: match[1] || '' };
+      }
+      return false;
+    },
+  },
+  {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
       const { createAccessibilityView, createBillingView, createGuestSettingsView, createOrganizationMembersView, createOrganizationSsoView, createOrganizationView, createPurchasesView, createSecurityView, createYourAccountView } = await import('../views/settings.view.js');

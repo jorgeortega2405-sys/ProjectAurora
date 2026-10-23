@@ -23,7 +23,7 @@
     "infra:up": "docker compose up -d mysql redis downloader websocket",
     "start": "node dist/index.js",
     "start:admin": "node dist/admin/index.js",
-    "test": "node --test --test-concurrency=1 tests/admin-roles-permissions-auth.test.mjs tests/verification-lifecycle-redis-cache.test.mjs tests/cache-aside-db.test.mjs tests/stress-m1-concurrency.test.mjs tests/stress-m1-memory-fallback.test.mjs tests/adversarial-email-change-m1.test.mjs tests/adversarial-mutex-memory.test.mjs tests/backup-restore.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/admin-roles-permissions-auth.test.mjs tests/hr-management.test.mjs tests/internal-tickets.test.mjs tests/verification-lifecycle-redis-cache.test.mjs tests/cache-aside-db.test.mjs tests/stress-m1-concurrency.test.mjs tests/stress-m1-memory-fallback.test.mjs tests/adversarial-email-change-m1.test.mjs tests/adversarial-mutex-memory.test.mjs tests/backup-restore.test.mjs",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p admin/tsconfig.server.json --noEmit && tsc -p admin/tsconfig.client.json --noEmit",
     "typecheck:admin": "tsc -p admin/tsconfig.server.json --noEmit && tsc -p admin/tsconfig.client.json --noEmit",
     "typecheck:all": "npm run typecheck"

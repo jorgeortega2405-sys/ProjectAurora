@@ -1,14 +1,16 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { pool } from '../config/database.config.js';
-import { getTierBorderColor } from '../config/plans.config.js';
-import { isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
-import { SessionAccount, UserPayload, UserRecord } from '../types/auth.types.js';
-import { decryptAtRest, encryptAtRest } from './crypto.service.js';
-import { clearPending2FASetup, hashBackupCode } from './two-factor.service.js';
 import crypto from 'crypto';
 import fs from 'fs';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 import path from 'path';
+import { pool } from '../config/database.config.js';
+import { getTierBorderColor } from '../config/plans.config.js';
+import { isS3Configured, S3_BUCKET_NAME, s3Client } from '../config/s3.config.js';
+import { SessionAccount, UserPayload, UserRecord } from '../types/auth.types.js';
+import { CACHE_KEYS, cacheService } from './cache.service.js';
+import { decryptAtRest, encryptAtRest } from './crypto.service.js';
+import { clearPending2FASetup, hashBackupCode } from './two-factor.service.js';
+
 
 interface UserRow extends RowDataPacket {
   avatar_url: string | null;
@@ -92,12 +94,30 @@ export function sanitizeUser(user: UserRecord | UserPayload | SessionAccount): U
 
 
 export async function findUserByEmail(email: string): Promise<UserRecord | null> {
+  const normalized = email.toLowerCase().trim();
+  const cachedUserId = await cacheService.get<string>(CACHE_KEYS.userEmail(normalized));
+  if (cachedUserId) {
+    const user = await findUserById(cachedUserId);
+    if (user && user.email.toLowerCase().trim() === normalized) {
+      return user;
+    }
+  } else if (cachedUserId === null) {
+    return null;
+  }
+
   const [rows] = await pool.query<UserRow[]>(
     'SELECT * FROM users WHERE email = ? LIMIT 1',
-    [email.toLowerCase().trim()]
+    [normalized]
   );
-  if (rows.length === 0) return null;
-  return mapRowToUser(rows[0]);
+  if (rows.length === 0) {
+    await cacheService.set(CACHE_KEYS.userEmail(normalized), null, 60);
+    return null;
+  }
+  const user = mapRowToUser(rows[0]);
+  await cacheService.set(CACHE_KEYS.userById(user.id), user, 300);
+  await cacheService.set(CACHE_KEYS.userEmail(user.email), user.id, 300);
+  await cacheService.set(CACHE_KEYS.userUsername(user.username), user.id, 300);
+  return user;
 }
 
 export async function findUserByGoogleId(googleId: string): Promise<UserRecord | null> {
@@ -110,21 +130,72 @@ export async function findUserByGoogleId(googleId: string): Promise<UserRecord |
 }
 
 export async function findUserByUsername(username: string): Promise<UserRecord | null> {
+  const normalized = username.toLowerCase().trim();
+  const cachedUserId = await cacheService.get<string>(CACHE_KEYS.userUsername(normalized));
+  if (cachedUserId) {
+    const user = await findUserById(cachedUserId);
+    if (user && user.username.toLowerCase().trim() === normalized) {
+      return user;
+    }
+  } else if (cachedUserId === null) {
+    return null;
+  }
+
   const [rows] = await pool.query<UserRow[]>(
     'SELECT * FROM users WHERE username = ? LIMIT 1',
-    [username.toLowerCase().trim()]
+    [normalized]
   );
-  if (rows.length === 0) return null;
-  return mapRowToUser(rows[0]);
+  if (rows.length === 0) {
+    await cacheService.set(CACHE_KEYS.userUsername(normalized), null, 60);
+    return null;
+  }
+  const user = mapRowToUser(rows[0]);
+  await cacheService.set(CACHE_KEYS.userById(user.id), user, 300);
+  await cacheService.set(CACHE_KEYS.userEmail(user.email), user.id, 300);
+  await cacheService.set(CACHE_KEYS.userUsername(user.username), user.id, 300);
+  return user;
+}
+
+export async function invalidateUserCache(
+  id: string,
+  identifiers?: { email?: string; username?: string }
+): Promise<void> {
+  await cacheService.invalidateUserCache(id, identifiers);
+}
+
+export async function invalidateUser(
+  id: string,
+  email?: string,
+  username?: string
+): Promise<void> {
+  await cacheService.invalidateUser(id, email, username);
 }
 
 export async function findUserById(id: string): Promise<UserRecord | null> {
+  const cached = await cacheService.get<UserRecord>(CACHE_KEYS.userById(id));
+  if (cached !== undefined) {
+    return cached;
+  }
+  const legacy = await cacheService.get<UserRecord>(`user:cache:${id}`);
+  if (legacy !== undefined) {
+    return legacy;
+  }
+
   const [rows] = await pool.query<UserRow[]>(
     'SELECT * FROM users WHERE id = ? LIMIT 1',
     [id]
   );
-  if (rows.length === 0) return null;
-  return mapRowToUser(rows[0]);
+  if (rows.length === 0) {
+    await cacheService.set(CACHE_KEYS.userById(id), null, 60);
+    return null;
+  }
+  const user = mapRowToUser(rows[0]);
+
+  await cacheService.set(CACHE_KEYS.userById(id), user, 300);
+  await cacheService.set(CACHE_KEYS.userEmail(user.email), user.id, 300);
+  await cacheService.set(CACHE_KEYS.userUsername(user.username), user.id, 300);
+
+  return user;
 }
 
 export async function findUserDuplicates(email: string, username: string): Promise<{ emailExists: boolean; usernameExists: boolean }> {
@@ -144,6 +215,7 @@ export async function updateUserGoogleId(id: string, googleId: string): Promise<
     'UPDATE users SET google_id = ? WHERE id = ?',
     [googleId, id]
   );
+  await invalidateUserCache(id);
   return findUserById(id);
 }
 
@@ -166,6 +238,7 @@ export async function createUser(params: {
     [id, username, email, passwordHash, googleId, avatarUrl, 'USER', 0]
   );
 
+  await invalidateUserCache(id, { email, username });
   const user = await findUserById(id);
   if (!user) {
     throw new Error('No se pudo recuperar el usuario recién creado.');
@@ -178,22 +251,29 @@ export async function updateUserAvatar(id: string, avatarUrl: string | null): Pr
     'UPDATE users SET avatar_url = ? WHERE id = ?',
     [avatarUrl, id]
   );
+  await invalidateUserCache(id);
   return findUserById(id);
 }
 
 export async function updateUserUsername(id: string, username: string): Promise<UserRecord | null> {
+  const existing = await findUserById(id);
   await pool.query(
     'UPDATE users SET username = ?, username_changed_at = CURRENT_TIMESTAMP WHERE id = ?',
     [username.trim(), id]
   );
+  await invalidateUserCache(id, { username: existing?.username });
+  await cacheService.del(CACHE_KEYS.userUsername(username));
   return findUserById(id);
 }
 
 export async function updateUserEmail(id: string, email: string): Promise<UserRecord | null> {
+  const existing = await findUserById(id);
   await pool.query(
     'UPDATE users SET email = ?, email_changed_at = CURRENT_TIMESTAMP WHERE id = ?',
     [email.toLowerCase().trim(), id]
   );
+  await invalidateUserCache(id, { email: existing?.email });
+  await cacheService.del(CACHE_KEYS.userEmail(email));
   return findUserById(id);
 }
 
@@ -202,6 +282,7 @@ export async function unlinkUserGoogle(id: string): Promise<UserRecord | null> {
     'UPDATE users SET google_id = NULL WHERE id = ?',
     [id]
   );
+  await invalidateUserCache(id);
   return findUserById(id);
 }
 
@@ -210,10 +291,12 @@ export async function updateUserPassword(id: string, passwordHash: string): Prom
     'UPDATE users SET password_hash = ? WHERE id = ?',
     [passwordHash, id]
   );
+  await invalidateUserCache(id);
   return findUserById(id);
 }
 
 export async function deleteUserById(id: string): Promise<boolean> {
+  await invalidateUserCache(id);
   const [result] = await pool.query<ResultSetHeader>(
     'DELETE FROM users WHERE id = ?',
     [id]
@@ -248,6 +331,7 @@ export async function enableUser2FA(
     'UPDATE users SET two_factor_enabled = 1, two_factor_secret = ?, two_factor_recovery_codes = ? WHERE id = ?',
     [encryptedSecret, serializedCodes, userId]
   );
+  await invalidateUserCache(userId);
   return result.affectedRows > 0;
 }
 
@@ -256,6 +340,7 @@ export async function disableUser2FA(userId: string): Promise<boolean> {
     'UPDATE users SET two_factor_enabled = 0, two_factor_secret = NULL, two_factor_recovery_codes = NULL WHERE id = ?',
     [userId]
   );
+  await invalidateUserCache(userId);
   return result.affectedRows > 0;
 }
 
@@ -283,6 +368,7 @@ export async function verifyAndConsumeBackupCode(userId: string, code: string): 
     'UPDATE users SET two_factor_recovery_codes = ? WHERE id = ?',
     [serialized, userId]
   );
+  await invalidateUserCache(userId);
   return true;
 }
 
@@ -313,6 +399,9 @@ export async function deleteUserPermanently(userId: string): Promise<boolean> {
 
   await clearPending2FASetup(userId);
   await pool.query('DELETE FROM user_preferences WHERE user_id = ?', [userId]);
+  await invalidateUserCache(userId, { email: user.email, username: user.username });
+  await cacheService.invalidateUserOrg(userId);
+  await cacheService.invalidateUserPrefs(userId);
 
   return deleteUserById(userId);
 }

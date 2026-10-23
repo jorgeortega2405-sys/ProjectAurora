@@ -19,6 +19,7 @@
     "build:client": "vite build",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "typecheck:all": "npm run typecheck",
+    "test": "node --test --test-concurrency=1 tests/verification-lifecycle-redis-cache.test.mjs tests/cache-aside-db.test.mjs tests/stress-m1-concurrency.test.mjs tests/stress-m1-memory-fallback.test.mjs tests/adversarial-email-change-m1.test.mjs tests/adversarial-mutex-memory.test.mjs",
     "start": "node dist/index.js"
   },
   "dependencies": {

@@ -1,8 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { getCurrentUser, getSessionUser } from '../services/auth.service.js';
 import { logger } from '../services/logger.service.js';
-import { getUserOrganization } from '../services/organization.service.js';
-import { getRolePermissions, getUserEffectivePermissions, hasPermission } from '../services/pbac.service.js';
+import { getUserEffectivePermissions, hasPermission } from '../services/pbac.service.js';
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const user = (await getSessionUser(req)) || getCurrentUser(req);
@@ -15,16 +14,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  let permissions = user.permissions || (await getUserEffectivePermissions(user));
-
-  try {
-    const userOrg = await getUserOrganization(user.id);
-    if (userOrg && userOrg.memberRole) {
-      const orgPerms = await getRolePermissions(userOrg.memberRole);
-      permissions = Array.from(new Set([...permissions, ...orgPerms]));
-    }
-  } catch {}
-
+  const permissions = user.permissions || (await getUserEffectivePermissions(user));
   (req as any).user = { ...user, permissions };
   next();
 }
@@ -54,15 +44,7 @@ export function requirePermission(permission: string) {
         return;
       }
 
-      let permissions = user.permissions || (await getUserEffectivePermissions(user));
-      try {
-        const userOrg = await getUserOrganization(user.id);
-        if (userOrg && userOrg.memberRole) {
-          const orgPerms = await getRolePermissions(userOrg.memberRole);
-          permissions = Array.from(new Set([...permissions, ...orgPerms]));
-        }
-      } catch {}
-
+      const permissions = user.permissions || (await getUserEffectivePermissions(user));
       user = { ...user, permissions };
       (req as any).user = user;
     }

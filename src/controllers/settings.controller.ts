@@ -120,16 +120,29 @@ export async function handleRequestEmailChangeCode(req: Request, res: Response):
       return;
     }
 
-    const result = await requestEmailChangeCode(currentUser.id);
+    const isResend = Boolean(req.body?.resend);
+    const result = await requestEmailChangeCode(currentUser.id, isResend);
     if (!result.success) {
-      res.status(result.status || 400).json({ error: result.error || 'No se pudo enviar el código de verificación.', ok: false, success: false });
+      if (result.retryAfter) {
+        res.setHeader('Retry-After', String(result.retryAfter));
+      }
+      res.status(result.status || 400).json({
+        cooldownRemaining: result.retryAfter,
+        error: result.error || 'No se pudo enviar el código de verificación.',
+        ok: false,
+        retryAfter: result.retryAfter,
+        success: false,
+      });
       return;
     }
 
     res.status(200).json({
       alreadyAuthorized: Boolean(result.alreadyAuthorized),
+      codePending: Boolean(result.codePending),
       message: result.alreadyAuthorized
         ? 'Ya cuentas con autorización activa para cambiar tu correo.'
+        : result.codePending
+        ? 'Se ha reutilizado el código de verificación vigente enviado previamente.'
         : 'Código de verificación enviado exitosamente a tu correo actual.',
       ok: true,
       success: true,

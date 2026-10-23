@@ -420,6 +420,8 @@
       "btn_unlink_confirm": "Unlink",
       "btn_upload_photo": "Upload photo",
       "email_code_sent_toast": "Verification code sent to your current email.",
+      "email_code_pending_toast": "Please use the active verification code previously sent to your email.",
+      "btn_resend_code": "Resend code",
       "email_desc": "Associated email for signing in and security notices.",
       "email_placeholder": "user@example.com",
       "email_title": "Email address",

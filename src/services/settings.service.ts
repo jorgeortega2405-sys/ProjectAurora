@@ -10,7 +10,7 @@ import { hashPassword, verifyPassword } from './crypto.service.js';
 import { logger } from './logger.service.js';
 import { sendEmailChangeCodeEmail } from './mail.service.js';
 import { findUserByEmail, findUserById, findUserByUsername, unlinkUserGoogle, updateUserAvatar, updateUserEmail, updateUserPassword, updateUserUsername } from './user.service.js';
-import { consumeEmailChangeAuthorization, consumePasswordChangeAuth, generateSixDigitCode, isEmailChangeAuthorized, saveEmailChangeCode, savePasswordChangeAuth, verifyEmailChangeCode } from './verification.service.js';
+import { consumeEmailChangeAuthorization, consumePasswordChangeAuth, generateSixDigitCode, getEmailChangeCode, isEmailChangeAuthorized, saveEmailChangeCode, savePasswordChangeAuth, updateEmailChangeCodeLastSent, verifyEmailChangeCode } from './verification.service.js';
 
 export interface UserPreferences {
   extended_alerts: boolean;
@@ -296,34 +296,98 @@ export async function updateUsername(
   return { success: true, username: clean };
 }
 
-export async function requestEmailChangeCode(
-  userId: string
-): Promise<{ alreadyAuthorized?: boolean; error?: string; status?: number; success: boolean }> {
-  const user = await findUserById(userId);
-  if (!user) {
-    return { error: 'Usuario no encontrado.', status: 404, success: false };
-  }
-  if (!user.email) {
-    return { error: 'La cuenta no tiene un correo electrónico registrado.', status: 400, success: false };
-  }
+const EMAIL_CODE_COOLDOWN_SECONDS = 60;
+const EMAIL_CODE_TTL_SECONDS = 900;
 
-  const alreadyAuthorized = await isEmailChangeAuthorized(userId);
-  if (alreadyAuthorized) {
-    return { alreadyAuthorized: true, success: true };
-  }
+const userLocks = new Map<string, Promise<void>>();
 
-  const code = generateSixDigitCode();
-  await saveEmailChangeCode(userId, user.email, code, 900);
-  logger.app.info(`Código de cambio de email generado para ${user.email}`);
+export async function withUserLock<T>(userId: string, fn: () => Promise<T>): Promise<T> {
+  const previous = userLocks.get(userId) || Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  userLocks.set(userId, current);
 
   try {
-    await sendEmailChangeCodeEmail(user.email, user.username, code, 15);
-  } catch (error) {
-    logger.app.error('Error al enviar correo de verificación para cambio de email', error);
-    return { error: 'No se pudo enviar el correo de verificación. Intenta más tarde.', status: 500, success: false };
+    await previous.catch(() => {});
+    return await fn();
+  } finally {
+    release();
+    if (userLocks.get(userId) === current) {
+      userLocks.delete(userId);
+    }
   }
+}
 
-  return { alreadyAuthorized: false, success: true };
+export async function requestEmailChangeCode(
+  userId: string,
+  isResend = true
+): Promise<{ alreadyAuthorized?: boolean; codePending?: boolean; cooldownRemaining?: number; error?: string; retryAfter?: number; status?: number; success: boolean }> {
+  return withUserLock(userId, async () => {
+    const user = await findUserById(userId);
+    if (!user) {
+      return { error: 'Usuario no encontrado.', status: 404, success: false };
+    }
+    if (!user.email) {
+      return { error: 'La cuenta no tiene un correo electrónico registrado.', status: 400, success: false };
+    }
+
+    const alreadyAuthorized = await isEmailChangeAuthorized(userId);
+    if (alreadyAuthorized) {
+      return { alreadyAuthorized: true, success: true };
+    }
+
+    const now = Date.now();
+    const existing = await getEmailChangeCode(userId);
+
+    if (existing) {
+      if (isResend === false) {
+        return { alreadyAuthorized: false, codePending: true, success: true };
+      }
+
+      const lastSent = existing.lastSentAt || existing.createdAt;
+      const elapsedSeconds = Math.floor((now - lastSent) / 1000);
+
+      if (elapsedSeconds < EMAIL_CODE_COOLDOWN_SECONDS) {
+        const retryAfter = EMAIL_CODE_COOLDOWN_SECONDS - elapsedSeconds;
+        return {
+          cooldownRemaining: retryAfter,
+          error: `Por favor espera ${retryAfter} segundos antes de solicitar otro código de verificación.`,
+          retryAfter,
+          status: 429,
+          success: false,
+        };
+      }
+
+      await updateEmailChangeCodeLastSent(userId, now);
+      const remainingMinutes = Math.max(1, Math.ceil((existing.expiresAt - now) / 60000));
+
+      try {
+        await sendEmailChangeCodeEmail(user.email, user.username, existing.code, remainingMinutes);
+        logger.app.info(`Código de verificación de email reutilizado para ${user.email}`);
+      } catch (error) {
+        logger.app.error('Error al reenviar correo de verificación para cambio de email', error);
+        return { error: 'No se pudo enviar el correo de verificación. Intenta más tarde.', status: 500, success: false };
+      }
+
+      return { alreadyAuthorized: false, codePending: true, success: true };
+    }
+
+    const code = generateSixDigitCode();
+    await saveEmailChangeCode(userId, user.email, code, EMAIL_CODE_TTL_SECONDS);
+    logger.app.info(`Código de cambio de email generado para ${user.email}`);
+
+    try {
+      await sendEmailChangeCodeEmail(user.email, user.username, code, 15);
+    } catch (error) {
+      logger.app.error('Error al enviar correo de verificación para cambio de email', error);
+      return { error: 'No se pudo enviar el correo de verificación. Intenta más tarde.', status: 500, success: false };
+    }
+
+    return { alreadyAuthorized: false, codePending: false, success: true };
+  });
 }
 
 export async function verifyEmailChange(

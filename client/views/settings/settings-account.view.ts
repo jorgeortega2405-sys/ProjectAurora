@@ -467,14 +467,21 @@ export class YourAccountController implements ViewController {
             return;
           }
 
-          showToast(t('settings.your_account.email_code_sent_toast'), 'info');
+          if (data.codePending) {
+            showToast(t('settings.your_account.email_code_pending_toast') || 'Usa el código de verificación vigente enviado a tu correo.', 'info');
+          } else {
+            showToast(t('settings.your_account.email_code_sent_toast'), 'info');
+          }
 
-          openModal({
+          const modalInst = openModal({
             bodyHtml: `
               <label class="field" data-ref="field-email-code">
                 <input class="field__input field__input--code" data-ref="modal-input-code" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="one-time-code" />
                 <span class="field__label" data-ref="modal-label-code">${t('settings.your_account.modal_email_code_placeholder')}</span>
               </label>
+              <div class="field-hint" style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                <button type="button" class="component-button component-button--link" data-ref="btn-resend-email-code">${t('settings.your_account.btn_resend_code') || 'Reenviar código'}</button>
+              </div>
             `,
             cancelText: t('settings.your_account.btn_cancel'),
             confirmText: t('settings.your_account.btn_continue'),
@@ -514,6 +521,28 @@ export class YourAccountController implements ViewController {
               }
             },
             titleKey: 'settings.your_account.modal_email_verify_title',
+          });
+
+          const btnResend = modalInst.body.querySelector<HTMLButtonElement>('[data-ref="btn-resend-email-code"]');
+          btnResend?.addEventListener('click', async (resendEv) => {
+            resendEv.preventDefault();
+            btnResend.disabled = true;
+            try {
+              const resendRes = await postApi(API_ROUTES.settings.emailRequestCode, { resend: true });
+              const resendData = await resendRes.json();
+              if (resendRes.ok && resendData.ok) {
+                showToast(t('settings.your_account.email_code_sent_toast'), 'info');
+                modalInst.clearError();
+              } else {
+                modalInst.showError(resendData.error || t('toasts.generic_error'));
+              }
+            } catch (_) {
+              modalInst.showError(t('toasts.generic_error'));
+            } finally {
+              setTimeout(() => {
+                if (btnResend) btnResend.disabled = false;
+              }, 2000);
+            }
           });
         } catch (_) {
           showToast(t('toasts.generic_error'), 'danger');

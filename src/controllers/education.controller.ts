@@ -301,9 +301,16 @@ export async function requestEducationalOtpHandler(req: Request, res: Response):
     });
   } catch (error: any) {
     logger.app.warn('Fallo al solicitar OTP educativo:', error?.message);
-    const clientMsg = error?.message && !error.message.includes('Database')
-      ? error.message
-      : 'No se pudo enviar el código de verificación al correo indicado.';
+    const safeErrors = [
+      'El correo ingresado no pertenece a un dominio educativo o institución en convenio.',
+      'Usuario no encontrado.',
+    ];
+    let clientMsg = 'No se pudo enviar el código de verificación al correo indicado.';
+    if (typeof error?.message === 'string') {
+      if (safeErrors.includes(error.message) || error.message.startsWith('Por favor espera')) {
+        clientMsg = error.message;
+      }
+    }
     res.status(400).json({
       error: clientMsg,
       success: false,
@@ -344,7 +351,13 @@ export async function verifyEducationalOtpHandler(req: Request, res: Response): 
     });
   } catch (error: any) {
     logger.app.warn('Fallo al verificar OTP educativo:', error?.message);
-    const clientMsg = error?.message && !error.message.includes('Database')
+    const safeErrors = [
+      'El código ha expirado o no se ha solicitado ninguna verificación.',
+      'El código ha expirado. Por favor solicita uno nuevo.',
+      'Has superado el número máximo de intentos. Solicita un nuevo código.',
+      'El código de verificación es incorrecto.',
+    ];
+    const clientMsg = typeof error?.message === 'string' && safeErrors.includes(error.message)
       ? error.message
       : 'Código inválido o expirado. Por favor intenta de nuevo.';
     res.status(400).json({

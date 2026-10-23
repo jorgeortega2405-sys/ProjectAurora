@@ -1,8 +1,8 @@
-import { config } from '../config/env.config.js';
-import { logger } from './logger.service.js';
 import fs from 'fs';
 import nodemailer from 'nodemailer';
 import path from 'path';
+import { config } from '../config/env.config.js';
+import { logger } from './logger.service.js';
 
 function loadTemplates(): Record<string, any> {
   const srcPath = path.resolve(process.cwd(), 'src/config/email-templates.json');

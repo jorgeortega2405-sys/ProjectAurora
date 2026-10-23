@@ -1,9 +1,10 @@
+import crypto from 'crypto';
+import type { RowDataPacket } from 'mysql2';
 import { pool } from '../config/database.config.js';
 import { redis } from '../config/redis.config.js';
 import { logger } from './logger.service.js';
 import { sendEducationVerificationEmail } from './mail.service.js';
-import crypto from 'crypto';
-import type { RowDataPacket } from 'mysql2';
+import { findUserById, invalidateUserCache } from './user.service.js';
 
 export interface StudentVerificationRecord {
   admin_notes: string | null;
@@ -51,6 +52,7 @@ interface EduOtpPayload {
   code: string;
   createdAt: number;
   email: string;
+  lastSentAt?: number;
   schoolName: string;
 }
 
@@ -147,6 +149,7 @@ export async function approveStudentVerification(params: {
     );
 
     await connection.commit();
+    await invalidateUserCache(verification.user_id);
     logger.db.info('Verificación estudiantil aprobada con éxito', {
       adminId: params.adminId,
       userId: verification.user_id,
@@ -193,9 +196,25 @@ export async function checkEducationalDomain(email: string): Promise<{
 
   const domain = cleanEmail.substring(atIdx + 1);
 
-  const [partnerRows] = await pool.query<PartnerDomainRow[]>(
-    'SELECT domain, school_name FROM educational_partner_domains WHERE is_active = 1'
-  );
+  let partnerRows: PartnerDomainRow[] | null = null;
+  try {
+    if (redis.status === 'ready') {
+      const raw = await redis.get('cache:edu:partner_domains');
+      if (raw) partnerRows = JSON.parse(raw);
+    }
+  } catch {}
+
+  if (!partnerRows) {
+    const [rows] = await pool.query<PartnerDomainRow[]>(
+      'SELECT domain, school_name FROM educational_partner_domains WHERE is_active = 1'
+    );
+    partnerRows = rows;
+    try {
+      if (redis.status === 'ready') {
+        await redis.setex('cache:edu:partner_domains', 3600, JSON.stringify(partnerRows));
+      }
+    } catch {}
+  }
 
   for (const row of partnerRows) {
     const pDomain = row.domain.toLowerCase();
@@ -231,29 +250,73 @@ export async function requestInstitutionalEmailOtp(userId: string, institutional
     throw new Error('El correo ingresado no pertenece a un dominio educativo o institución en convenio.');
   }
 
-  const [users] = await pool.query<UserDbRow[]>(
-    'SELECT id, username, email FROM users WHERE id = ? LIMIT 1',
-    [userId]
-  );
-
-  if (!users.length) {
+  const user = await findUserById(userId);
+  if (!user) {
     throw new Error('Usuario no encontrado.');
   }
 
-  const user = users[0];
-  const code = String(crypto.randomInt(100000, 1000000));
   const now = Date.now();
+  const redisKey = `edu_otp:${userId}`;
+  let existing: EduOtpPayload | null = null;
+
+  try {
+    if (redis.status === 'ready') {
+      const raw = await redis.get(redisKey);
+      if (raw) existing = JSON.parse(raw);
+    }
+  } catch (err) {
+    logger.db.warn('Fallo al consultar OTP educativo en Redis', err);
+  }
+
+  if (!existing) {
+    existing = memoryEduOtp.get(userId) || null;
+  }
+
+  if (existing && (now - existing.createdAt < OTP_TTL_SECONDS * 1000) && existing.email === cleanEmail) {
+    const lastSent = existing.lastSentAt || existing.createdAt;
+    const elapsedSeconds = Math.floor((now - lastSent) / 1000);
+
+    if (elapsedSeconds < 60) {
+      const retryAfter = 60 - elapsedSeconds;
+      throw new Error(`Por favor espera ${retryAfter} segundos antes de solicitar otro código de verificación.`);
+    }
+
+    existing.lastSentAt = now;
+    const remainingSeconds = Math.max(1, Math.floor((OTP_TTL_SECONDS * 1000 - (now - existing.createdAt)) / 1000));
+    const remainingMinutes = Math.max(1, Math.ceil(remainingSeconds / 60));
+
+    try {
+      if (redis.status === 'ready') {
+        await redis.setex(redisKey, remainingSeconds, JSON.stringify(existing));
+      }
+    } catch {}
+    memoryEduOtp.set(userId, existing);
+
+    await sendEducationVerificationEmail(cleanEmail, user.username, check.schoolName, existing.code, remainingMinutes);
+    logger.security.info('Código OTP de activación educativa reutilizado', {
+      email: cleanEmail,
+      schoolName: check.schoolName,
+      userId,
+    });
+
+    return {
+      domain: check.domain,
+      schoolName: check.schoolName,
+      success: true,
+    };
+  }
+
+  const code = String(crypto.randomInt(100000, 1000000));
   const payload: EduOtpPayload = {
     attempts: 0,
     code,
     createdAt: now,
     email: cleanEmail,
+    lastSentAt: now,
     schoolName: check.schoolName,
   };
 
-  const redisKey = `edu_otp:${userId}`;
   let storedInRedis = false;
-
   try {
     if (redis.status === 'ready') {
       await redis.setex(redisKey, OTP_TTL_SECONDS, JSON.stringify(payload));
@@ -324,6 +387,13 @@ export async function verifyInstitutionalEmailOtp(userId: string, code: string):
 
   if (payload.code !== code.trim()) {
     payload.attempts += 1;
+    if (payload.attempts >= MAX_OTP_ATTEMPTS) {
+      memoryEduOtp.delete(userId);
+      try {
+        if (redis.status === 'ready') await redis.del(redisKey);
+      } catch {}
+      throw new Error('Has superado el número máximo de intentos. Solicita un nuevo código.');
+    }
     try {
       if (redis.status === 'ready') {
         const remainingTtl = Math.max(1, Math.floor((OTP_TTL_SECONDS * 1000 - (Date.now() - payload.createdAt)) / 1000));
@@ -356,6 +426,7 @@ export async function verifyInstitutionalEmailOtp(userId: string, code: string):
       if (redis.status === 'ready') await redis.del(redisKey);
     } catch {}
     memoryEduOtp.delete(userId);
+    await invalidateUserCache(userId);
 
     logger.security.info('Pro Educativo activado automáticamente por verificación de correo institucional', {
       email: payload.email,
@@ -398,6 +469,7 @@ export async function activateInstantEducationalPro(
     );
 
     await connection.commit();
+    await invalidateUserCache(userId);
 
     logger.security.info('Pro Educativo auto-activado por reconocimiento directo de correo institucional', {
       email,

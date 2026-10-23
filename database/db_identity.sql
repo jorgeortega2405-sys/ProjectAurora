@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS purchases (
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_purchases_user (user_id),
+    INDEX idx_purchases_user_created (user_id, created_at),
     INDEX idx_purchases_sub (stripe_subscription_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS user_workflows (
     steps JSON NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_workflows_user (user_id),
+    INDEX idx_user_workflows_user_created (user_id, created_at),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -197,8 +197,8 @@ CREATE TABLE IF NOT EXISTS organization_members (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_org_user (organization_id, user_id),
-    INDEX idx_org_members_user (user_id),
-    INDEX idx_org_members_org (organization_id),
+    INDEX idx_org_members_user_status (user_id, status, organization_id, role),
+    INDEX idx_org_members_org_status (organization_id, status),
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS organization_domains (
     domain VARCHAR(255) NOT NULL UNIQUE,
     is_verified BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_org_domains_domain (domain),
+    INDEX idx_org_domains_org_created (organization_id, created_at),
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -242,8 +242,8 @@ CREATE TABLE IF NOT EXISTS student_verifications (
     reviewed_at DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_student_verifications_user (user_id),
-    INDEX idx_student_verifications_status (status),
+    INDEX idx_student_verifications_user_created (user_id, created_at),
+    INDEX idx_student_verifications_status_created (status, created_at),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -275,8 +275,7 @@ CREATE TABLE IF NOT EXISTS educational_partner_domains (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_edu_domains_domain (domain),
-    INDEX idx_edu_domains_active (is_active)
+    INDEX idx_edu_domains_active_lookup (is_active, domain, school_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO educational_partner_domains (id, school_name, domain, is_active) VALUES

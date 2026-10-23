@@ -1,8 +1,10 @@
-import { pool } from '../config/database.config.js';
-import { AddMemberDto, CreateOrganizationDto, Organization, OrganizationDomain, OrganizationMember } from '../types/enterprise.types.js';
-import { logger } from './logger.service.js';
 import { randomUUID } from 'crypto';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { pool } from '../config/database.config.js';
+import { AddMemberDto, CreateOrganizationDto, Organization, OrganizationDomain, OrganizationMember } from '../types/enterprise.types.js';
+import { CACHE_KEYS, cacheService } from './cache.service.js';
+import { logger } from './logger.service.js';
+import { invalidateUserCache } from './user.service.js';
 
 interface OrgDbRow extends RowDataPacket {
   created_at: Date | string;
@@ -77,6 +79,8 @@ export async function createOrganization(dto: CreateOrganizationDto): Promise<Or
       'UPDATE users SET role = ? WHERE id = ? AND role != ?',
       ['ORG_OWNER', ownerId, 'ADMIN']
     );
+    await invalidateUserOrgCache(ownerId);
+    await invalidateUserCache(ownerId);
 
     if (dto.domain) {
       const cleanDomain = dto.domain.trim().toLowerCase().replace(/^@+/, '');
@@ -156,7 +160,28 @@ export async function getOrganizationBySlug(slug: string): Promise<Organization 
   };
 }
 
+export async function invalidateUserOrgCache(userId: string): Promise<void> {
+  await cacheService.invalidateUserOrgCache(userId);
+}
+
+export async function invalidateUserOrg(userId: string): Promise<void> {
+  await cacheService.invalidateUserOrg(userId);
+}
+
 export async function getUserOrganization(userId: string): Promise<{ memberRole: string; organization: Organization } | null> {
+  const cached = await cacheService.get<{ memberRole: string; organization: Organization }>(
+    CACHE_KEYS.userOrg(userId)
+  );
+  if (cached !== undefined) {
+    return cached;
+  }
+  const legacy = await cacheService.get<{ memberRole: string; organization: Organization }>(
+    `user:org:${userId}`
+  );
+  if (legacy !== undefined) {
+    return legacy;
+  }
+
   const [rows] = await pool.query<(OrgDbRow & { member_role: string })[]>(
     `SELECT o.id, o.name, o.slug, o.owner_id, o.seat_limit, o.org_type, o.subscription_status, o.created_at, o.updated_at, m.role AS member_role
      FROM organization_members m
@@ -165,10 +190,13 @@ export async function getUserOrganization(userId: string): Promise<{ memberRole:
      LIMIT 1`,
     [userId]
   );
-  if (!rows.length) return null;
+  if (!rows.length) {
+    await cacheService.set(CACHE_KEYS.userOrg(userId), null, 60);
+    return null;
+  }
 
   const r = rows[0];
-  return {
+  const result = {
     memberRole: r.member_role,
     organization: {
       created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
@@ -182,6 +210,9 @@ export async function getUserOrganization(userId: string): Promise<{ memberRole:
       updated_at: r.updated_at instanceof Date ? r.updated_at.toISOString() : String(r.updated_at),
     },
   };
+
+  await cacheService.set(CACHE_KEYS.userOrg(userId), result, 300);
+  return result;
 }
 
 export async function isUserInBusinessOrganization(userId: string): Promise<boolean> {
@@ -235,6 +266,8 @@ export async function createCampusOrganizationFromInquiry(params: {
     'UPDATE users SET subscription_tier = ?, subscription_origin = ?, is_student = TRUE, subscription_status = ?, subscription_period_end = DATE_ADD(NOW(), INTERVAL 1 YEAR) WHERE id = ?',
     ['enterprise', 'education', 'active', params.ownerUserId]
   );
+  await invalidateUserCache(params.ownerUserId);
+  await invalidateUserOrgCache(params.ownerUserId);
 
   logger.db.info('Campus educativo Enterprise creado a partir de solicitud', {
     inquiryId: params.inquiryId,
@@ -322,6 +355,8 @@ export async function addMemberToOrganization(dto: AddMemberDto): Promise<Organi
       "UPDATE organization_members SET status = 'active', role = ? WHERE id = ?",
       [dto.role || 'ORG_MEMBER', existingMember[0].id]
     );
+    await invalidateUserOrgCache(targetUserId);
+    await invalidateUserCache(targetUserId);
     return {
       created_at: new Date().toISOString(),
       email,
@@ -341,6 +376,8 @@ export async function addMemberToOrganization(dto: AddMemberDto): Promise<Organi
     'INSERT INTO organization_members (id, organization_id, user_id, role, status) VALUES (?, ?, ?, ?, ?)',
     [memberId, dto.organizationId, targetUserId, role, 'active']
   );
+  await invalidateUserOrgCache(targetUserId);
+  await invalidateUserCache(targetUserId);
 
   logger.db.info('Miembro añadido a la organización', {
     email,
@@ -379,6 +416,8 @@ export async function removeMemberFromOrganization(organizationId: string, membe
     'DELETE FROM organization_members WHERE id = ?',
     [memberId]
   );
+  await invalidateUserOrgCache(member.user_id);
+  await invalidateUserCache(member.user_id);
 
   logger.db.info('Miembro removido de la organización', {
     memberId,
@@ -387,6 +426,50 @@ export async function removeMemberFromOrganization(organizationId: string, membe
   });
 
   return true;
+}
+
+export async function updateMemberRole(
+  organizationId: string,
+  memberId: string,
+  role: string
+): Promise<OrganizationMember | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT id, user_id FROM organization_members WHERE id = ? AND organization_id = ? LIMIT 1',
+    [memberId, organizationId]
+  );
+  if (!rows.length) return null;
+
+  const member = rows[0];
+  await pool.execute(
+    'UPDATE organization_members SET role = ? WHERE id = ?',
+    [role, memberId]
+  );
+
+  await invalidateUserOrgCache(member.user_id);
+  await invalidateUserCache(member.user_id);
+
+  const [updated] = await pool.query<MemberDbRow[]>(
+    `SELECT m.id, m.organization_id, m.user_id, m.role, m.status, m.created_at, m.updated_at, u.email, u.username
+     FROM organization_members m
+     INNER JOIN users u ON m.user_id = u.id
+     WHERE m.id = ?
+     LIMIT 1`,
+    [memberId]
+  );
+  if (!updated.length) return null;
+
+  const r = updated[0];
+  return {
+    created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    email: r.email,
+    id: r.id,
+    organization_id: r.organization_id,
+    role: r.role,
+    status: r.status,
+    updated_at: r.updated_at instanceof Date ? r.updated_at.toISOString() : String(r.updated_at),
+    user_id: r.user_id,
+    username: r.username,
+  };
 }
 
 export async function addOrganizationDomain(organizationId: string, rawDomain: string): Promise<string> {

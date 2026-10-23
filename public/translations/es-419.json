@@ -469,6 +469,8 @@
       "modal_email_new_desc": "Ingresa la nueva dirección de correo electrónico que deseas asociar a tu cuenta.",
       "modal_email_new_placeholder": "nuevo@correo.com",
       "email_code_sent_toast": "Código de verificación enviado a tu correo actual.",
+      "email_code_pending_toast": "Usa el código de verificación vigente enviado previamente a tu correo.",
+      "btn_resend_code": "Reenviar código",
       "username_title": "Nombre de usuario",
       "username_placeholder": "Nombre de usuario",
       "email_title": "Correo electrónico",

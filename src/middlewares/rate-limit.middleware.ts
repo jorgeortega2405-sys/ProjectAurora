@@ -1,7 +1,7 @@
+import { NextFunction, Request, Response } from 'express';
 import { redis } from '../config/redis.config.js';
 import { getCurrentUser } from '../services/auth.service.js';
 import { logger } from '../services/logger.service.js';
-import { NextFunction, Request, Response } from 'express';
 
 export interface RateLimiterOptions {
   keyGenerator?: (req: Request) => string;
@@ -205,14 +205,16 @@ export const verifyCodeLimiter = createRateLimiter({
 });
 
 export const emailCodeLimiter = createRateLimiter({
-  max: 3,
+  keyGenerator: getUserOrIpKey,
+  max: 10,
   message: 'Demasiadas solicitudes de código de cambio de correo. Por favor espera 5 minutos.',
   prefix: 'email_change_code',
   windowMs: 5 * 60 * 1000,
 });
 
 export const verifyEmailCodeLimiter = createRateLimiter({
-  max: 5,
+  keyGenerator: getUserOrIpKey,
+  max: 10,
   message: 'Demasiados intentos de verificación de código de correo. Por favor espera 10 minutos.',
   prefix: 'email_change_verify',
   windowMs: 10 * 60 * 1000,

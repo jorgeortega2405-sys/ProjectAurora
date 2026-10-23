@@ -1,5 +1,5 @@
-import { redis } from '../config/redis.config.js';
 import crypto from 'crypto';
+import { redis } from '../config/redis.config.js';
 
 export interface PendingRegistration {
   attempts: number;
@@ -24,6 +24,7 @@ export interface EmailChangeCodePayload {
   createdAt: number;
   currentEmail: string;
   expiresAt: number;
+  lastSentAt: number;
   userId: string;
 }
 
@@ -154,6 +155,7 @@ export async function saveEmailChangeCode(
     createdAt: now,
     currentEmail: currentEmail.toLowerCase().trim(),
     expiresAt: now + ttlSeconds * 1000,
+    lastSentAt: now,
     userId,
   };
 
@@ -161,6 +163,57 @@ export async function saveEmailChangeCode(
   if (redis.status === 'ready') {
     try {
       await redis.setex(`${REDIS_EMAIL_PREFIX}${userId}`, ttlSeconds, JSON.stringify(payload));
+    } catch {}
+  }
+}
+
+export async function getEmailChangeCode(userId: string): Promise<EmailChangeCodePayload | null> {
+  let item = memoryEmailCodes.get(userId);
+
+  if (redis.status === 'ready') {
+    try {
+      const raw = await redis.get(`${REDIS_EMAIL_PREFIX}${userId}`);
+      if (raw) {
+        item = JSON.parse(raw) as EmailChangeCodePayload;
+      }
+    } catch {}
+  }
+
+  if (!item) return null;
+
+  if (Date.now() > item.expiresAt || item.attempts >= MAX_ATTEMPTS) {
+    await deleteEmailChangeCode(userId);
+    return null;
+  }
+
+  return item;
+}
+
+export async function updateEmailChangeCodeLastSent(
+  userId: string,
+  lastSentAt = Date.now()
+): Promise<boolean> {
+  const item = await getEmailChangeCode(userId);
+  if (!item) return false;
+
+  item.lastSentAt = lastSentAt;
+  memoryEmailCodes.set(userId, item);
+  if (redis.status === 'ready') {
+    try {
+      const remainingTtl = Math.max(1, Math.floor((item.expiresAt - Date.now()) / 1000));
+      await redis.setex(`${REDIS_EMAIL_PREFIX}${userId}`, remainingTtl, JSON.stringify(item));
+    } catch {}
+  }
+  return true;
+}
+
+export const touchEmailChangeCodeSentAt = updateEmailChangeCodeLastSent;
+
+export async function deleteEmailChangeCode(userId: string): Promise<void> {
+  memoryEmailCodes.delete(userId);
+  if (redis.status === 'ready') {
+    try {
+      await redis.del(`${REDIS_EMAIL_PREFIX}${userId}`);
     } catch {}
   }
 }
@@ -182,12 +235,7 @@ export async function verifyEmailChangeCode(
   }
 
   if (!item || Date.now() > item.expiresAt) {
-    memoryEmailCodes.delete(userId);
-    if (redis.status === 'ready') {
-      try {
-        await redis.del(`${REDIS_EMAIL_PREFIX}${userId}`);
-      } catch {}
-    }
+    await deleteEmailChangeCode(userId);
     return {
       error: 'El código de verificación ha expirado o no existe. Solicita uno nuevo.',
       success: false,
@@ -195,12 +243,7 @@ export async function verifyEmailChangeCode(
   }
 
   if (item.attempts >= MAX_ATTEMPTS) {
-    memoryEmailCodes.delete(userId);
-    if (redis.status === 'ready') {
-      try {
-        await redis.del(`${REDIS_EMAIL_PREFIX}${userId}`);
-      } catch {}
-    }
+    await deleteEmailChangeCode(userId);
     return {
       error: 'Demasiados intentos fallidos. El código ha sido invalidado. Solicita uno nuevo.',
       success: false,
@@ -209,6 +252,13 @@ export async function verifyEmailChangeCode(
 
   if (item.code !== cleanInput) {
     item.attempts += 1;
+    if (item.attempts >= MAX_ATTEMPTS) {
+      await deleteEmailChangeCode(userId);
+      return {
+        error: 'Demasiados intentos fallidos. El código ha sido invalidado. Solicita uno nuevo.',
+        success: false,
+      };
+    }
     memoryEmailCodes.set(userId, item);
     if (redis.status === 'ready') {
       try {
@@ -223,10 +273,9 @@ export async function verifyEmailChangeCode(
     };
   }
 
-  memoryEmailCodes.delete(userId);
+  await deleteEmailChangeCode(userId);
   if (redis.status === 'ready') {
     try {
-      await redis.del(`${REDIS_EMAIL_PREFIX}${userId}`);
       await redis.setex(`${REDIS_AUTH_PREFIX}${userId}`, 300, '1');
     } catch {}
   }

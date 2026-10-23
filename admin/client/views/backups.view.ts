@@ -1,3 +1,4 @@
+import { hasPermission } from '../services/auth.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
@@ -70,6 +71,10 @@ export class BackupsController implements ViewController {
     const signal = this.abortController?.signal;
     const btnRefresh = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-refresh-backups"]');
     const btnOpenCreate = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-create-modal"]');
+
+    if (btnOpenCreate) {
+      btnOpenCreate.style.display = hasPermission('system:backup:create') ? '' : 'none';
+    }
 
     btnRefresh?.addEventListener(
       'click',
@@ -292,16 +297,18 @@ export class BackupsController implements ViewController {
             </td>
             <td class="text-right" style="padding: 14px 16px;">
               <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                ${hasPermission('system:backup:restore') ? `
                 <button type="button" class="component-button component-button--h30 component-button--outline" data-ref="btn-restore-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}" data-tooltip="Restaurar copia" aria-label="Restaurar copia" style="color: var(--action-danger, #ef4444); border-color: rgba(239, 68, 68, 0.3);">
                   <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px;"><use href="/icons.svg#autorenew"></use></svg>
                   <span style="font-size: 12px;">Restaurar</span>
-                </button>
+                </button>` : ''}
                 <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-download-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}" data-tooltip="Descargar archivo ZIP" aria-label="Descargar archivo ZIP">
                   <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px;"><use href="/icons.svg#download"></use></svg>
                 </button>
+                ${hasPermission('system:backup:delete') ? `
                 <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-delete-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}" data-tooltip="Eliminar copia" aria-label="Eliminar copia" style="color: var(--action-danger, #ef4444);">
                   <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px;"><use href="/icons.svg#delete"></use></svg>
-                </button>
+                </button>` : ''}
               </div>
             </td>
           </tr>

@@ -3,11 +3,21 @@ import { MatchedRoute, RouteDefinition } from '../types/common.types.js';
 export const ADMIN_ROUTES: RouteDefinition[] = [
   {
     handler: async () => {
+      const { createAdminLoginView } = await import('../views/login.view.js');
+      return await createAdminLoginView();
+    },
+    id: 'login',
+    match: (path) => path === '/login' || path.startsWith('/login'),
+    public: true,
+  },
+  {
+    handler: async () => {
       const { createDashboardView } = await import('../views/dashboard.view.js');
       return await createDashboardView();
     },
     id: 'dashboard',
     match: (path) => path === '/' || path === '' || path === '/dashboard' || path.startsWith('/dashboard'),
+    requiredPermission: 'admin:dashboard:view',
   },
   {
     handler: async () => {
@@ -16,6 +26,7 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     id: 'users',
     match: (path) => path === '/users' || path.startsWith('/users') || path === '/usuarios' || path.startsWith('/usuarios'),
+    requiredPermission: 'admin:users:view',
   },
   {
     handler: async () => {
@@ -24,6 +35,7 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     id: 'education',
     match: (path) => path === '/education' || path.startsWith('/education') || path === '/educacion' || path.startsWith('/educacion'),
+    requiredPermission: 'admin:education:view',
   },
   {
     handler: async () => {
@@ -32,6 +44,7 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     id: 'purchases',
     match: (path) => path === '/purchases' || path.startsWith('/purchases') || path === '/compras' || path.startsWith('/compras'),
+    requiredPermission: 'admin:purchases:view',
   },
   {
     handler: async () => {
@@ -40,6 +53,7 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     id: 'organizations',
     match: (path) => path === '/organizations' || path.startsWith('/organizations') || path === '/organizaciones' || path.startsWith('/organizaciones'),
+    requiredPermission: 'admin:organizations:view',
   },
   {
     handler: async () => {
@@ -48,6 +62,7 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     id: 'inquiries',
     match: (path) => path === '/inquiries' || path.startsWith('/inquiries') || path === '/leads' || path.startsWith('/leads'),
+    requiredPermission: 'admin:inquiries:view',
   },
   {
     handler: async () => {
@@ -56,6 +71,7 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     id: 'backups',
     match: (path) => path === '/backups' || path.startsWith('/backups') || path === '/copias-de-seguridad' || path.startsWith('/copias-de-seguridad'),
+    requiredPermission: 'system:backup:read',
   },
 ];
 

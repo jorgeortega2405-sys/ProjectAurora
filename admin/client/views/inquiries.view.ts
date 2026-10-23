@@ -1,3 +1,4 @@
+import { hasPermission } from '../services/auth.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
@@ -212,6 +213,12 @@ export class InquiriesController implements ViewController {
 
     if (selectStatus) {
       selectStatus.value = inquiry.status || 'pending';
+      selectStatus.disabled = !hasPermission('admin:inquiries:manage');
+    }
+
+    const btnSave = this.container.querySelector<HTMLElement>('[data-ref="btn-save-inquiry-status"]');
+    if (btnSave) {
+      btnSave.style.display = hasPermission('admin:inquiries:manage') ? '' : 'none';
     }
 
     if (modalBackdrop) {

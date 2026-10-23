@@ -6,6 +6,7 @@ import http from 'http';
 import path from 'path';
 import { adminConfig } from './config/env.config.js';
 import adminRoutes from './routes/admin.routes.js';
+import { generateAvatarSvg } from './services/avatar.service.js';
 import { logger } from './services/logger.service.js';
 
 const adminDir = path.resolve(process.cwd(), 'admin');
@@ -141,6 +142,21 @@ async function startAdminServer(): Promise<void> {
   app.use(cookieParser());
 
   app.use('/api/admin', adminRoutes);
+
+  app.get('/api/avatar', (req: Request, res: Response) => {
+    try {
+      const name = String(req.query.name || 'Admin');
+      const size = parseInt(String(req.query.size || '128'), 10);
+      const svg = generateAvatarSvg(name, size);
+
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+      res.status(200).send(svg);
+    } catch (err) {
+      logger.app.error('Error al generar avatar SVG', err);
+      res.status(500).end();
+    }
+  });
 
   app.use('/api/*', (_req: Request, res: Response) => {
     res.status(404).json({

@@ -81,9 +81,11 @@ function setupGlobalLinks(): void {
 
 function initApp(): void {
   preloadTemplates([
+    '/views/auth/login.html',
     '/views/components/sidebar.html',
     '/views/dashboard/dashboard.html',
     '/views/education/education.html',
+    '/views/error/forbidden.html',
     '/views/inquiries/inquiries.html',
     '/views/organizations/organizations.html',
     '/views/purchases/purchases.html',

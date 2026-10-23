@@ -25,5 +25,6 @@ export const adminConfig = {
     region: process.env.S3_REGION || 'us-east-1',
     secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin',
   },
+  sessionSecret: process.env.SESSION_SECRET || 'aurora_session_secret_key_2026',
   vitePort: parseInt(process.env.ADMIN_VITE_PORT || '5175', 10),
 };

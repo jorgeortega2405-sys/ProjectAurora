@@ -1,3 +1,4 @@
+import { hasPermission } from '../services/auth.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
@@ -130,8 +131,11 @@ export class EducationController implements ViewController {
             </a>`
           : `<span class="component-badge component-badge--sm" style="font-size: 11px;">${escapeHtml(item.document_url.split(':')[0])}</span>`;
 
+        const canReview = hasPermission('admin:education:review');
         const actionMarkup = item.status === 'pending'
-          ? `<button type="button" class="component-button component-button--h32 component-button--black" data-ref="btn-review-${item.id}" data-id="${escapeHtml(item.id)}">Revisar</button>`
+          ? (canReview
+              ? `<button type="button" class="component-button component-button--h32 component-button--black" data-ref="btn-review-${item.id}" data-id="${escapeHtml(item.id)}">Revisar</button>`
+              : `<span style="font-size: 12px; color: var(--text-tertiary);">Solo lectura</span>`)
           : `<span style="font-size: 12px; color: var(--text-tertiary);">Completado</span>`;
 
         return `

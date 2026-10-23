@@ -1,5 +1,6 @@
 import { ensureSidebarMounted, setupLayoutScrollSync, updateSidebarActiveState } from './components/layout.component.js';
 import { findRoute } from './config/routes.config.js';
+import { fetchCurrentAdmin, hasPermission } from './services/auth.service.js';
 import { setNavigationHandler } from './services/navigation.service.js';
 import { hideTooltip } from './services/tooltip.service.js';
 import { ViewController } from './types/common.types.js';
@@ -49,6 +50,16 @@ export async function render(rawPath = window.location.pathname, options?: Rende
 
   hideTooltip();
 
+  const user = await fetchCurrentAdmin();
+  const isUserAuthenticated = Boolean(user && hasPermission('admin:access'));
+
+  if (!isUserAuthenticated) {
+    if (path !== '/login') {
+      navigate('/login', true);
+      return;
+    }
+  }
+
   const appRoot = document.querySelector<HTMLElement>('[data-ref="app"]');
   if (!appRoot) return;
 
@@ -60,8 +71,9 @@ export async function render(rawPath = window.location.pathname, options?: Rende
     appRoot.appendChild(layoutContent);
   }
 
+  const isLoginRoute = path === '/login';
   const sidebar = await ensureSidebarMounted(layoutContent);
-  sidebar.style.display = '';
+  sidebar.style.display = isLoginRoute ? 'none' : '';
 
   const navId = ++currentNavigation;
   let nextViewElement: HTMLElement | null = null;
@@ -69,12 +81,17 @@ export async function render(rawPath = window.location.pathname, options?: Rende
 
   try {
     if (matched) {
-      nextViewElement = await matched.route.handler({
-        params: matched.params,
-        path: matched.canonicalPath,
-        previousPath,
-        query: targetQuery,
-      });
+      if (!matched.route.public && matched.route.requiredPermission && !hasPermission(matched.route.requiredPermission)) {
+        const { createForbiddenView } = await import('./views/forbidden.view.js');
+        nextViewElement = await createForbiddenView();
+      } else {
+        nextViewElement = await matched.route.handler({
+          params: matched.params,
+          path: matched.canonicalPath,
+          previousPath,
+          query: targetQuery,
+        });
+      }
     } else {
       const { createNotFoundView } = await import('./views/not-found.view.js');
       nextViewElement = await createNotFoundView();
@@ -110,7 +127,9 @@ export async function render(rawPath = window.location.pathname, options?: Rende
     }
   }
 
-  updateSidebarActiveState(sidebar, path);
+  if (!isLoginRoute) {
+    updateSidebarActiveState(sidebar, path);
+  }
 
   layoutContent.scrollTop = 0;
   const scrollable = nextViewElement.querySelector<HTMLElement>(

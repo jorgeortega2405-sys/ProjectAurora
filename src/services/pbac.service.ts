@@ -25,7 +25,7 @@ export async function getRolePermissions(role: string): Promise<string[]> {
     return permissions;
   } catch (err) {
     logger.db.error('Error al consultar permisos de rol en base de datos', err);
-    if (role === 'ADMIN') return ['*'];
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') return ['*'];
     if (role === 'USER') {
       return [
         'account:view_profile',

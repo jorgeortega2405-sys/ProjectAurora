@@ -1,3 +1,4 @@
+import { hasPermission } from '../services/auth.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
@@ -159,9 +160,10 @@ export class OrganizationsController implements ViewController {
               ${statusBadge}
             </td>
             <td class="text-right">
+              ${hasPermission('admin:organizations:manage') ? `
               <button type="button" class="component-button component-button--h32 component-button--outline" data-ref="btn-edit-org-${item.id}" data-id="${escapeHtml(item.id)}">
                 Gestionar
-              </button>
+              </button>` : `<span style="font-size: 12px; color: var(--text-tertiary);">Solo lectura</span>`}
             </td>
           </tr>
         `;

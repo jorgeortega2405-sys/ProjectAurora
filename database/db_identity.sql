@@ -648,12 +648,12 @@ CREATE TABLE IF NOT EXISTS hr_vacation_requests (
 
 
 -- Semilla predeterminada de usuarios y equipo empresarial de RRHH
-INSERT IGNORE INTO users (id, username, email, password_hash, google_id, role, two_factor_enabled, created_at, updated_at) VALUES
-('dffc9deb-ea49-400b-b33a-ba6bf94685e3', '2310882_537', '2310882@utmatamoros.edu.mx', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'SUPER_ADMIN', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
-('b7123456-1111-4000-8000-000000000001', 'sofia.hernandez', 'sofia.hernandez@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'HR_MANAGER', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
-('b7123456-2222-4000-8000-000000000002', 'valeria.torres', 'valeria.torres@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'USER', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
-('b7123456-3333-4000-8000-000000000003', 'carlos.mendoza', 'carlos.mendoza@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'DEVOPS', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
-('b7123456-4444-4000-8000-000000000004', 'diego.ramirez', 'diego.ramirez@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'SENIOR_ENGINEER', 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00');
+INSERT IGNORE INTO users (id, username, email, password_hash, google_id, role, subscription_tier, subscription_origin, subscription_status, subscription_period_end, ai_credits_balance, two_factor_enabled, created_at, updated_at) VALUES
+('dffc9deb-ea49-400b-b33a-ba6bf94685e3', '2310882_537', '2310882@utmatamoros.edu.mx', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'SUPER_ADMIN', 'enterprise', 'admin', 'active', '2036-12-31 23:59:59', 10000, 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-1111-4000-8000-000000000001', 'sofia.hernandez', 'sofia.hernandez@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'HR_MANAGER', 'free', 'payment', 'active', NULL, 0, 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-2222-4000-8000-000000000002', 'valeria.torres', 'valeria.torres@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'USER', 'free', 'payment', 'active', NULL, 0, 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-3333-4000-8000-000000000003', 'carlos.mendoza', 'carlos.mendoza@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'DEVOPS', 'free', 'payment', 'active', NULL, 0, 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00'),
+('b7123456-4444-4000-8000-000000000004', 'diego.ramirez', 'diego.ramirez@projectaurora.com', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', NULL, 'SENIOR_ENGINEER', 'free', 'payment', 'active', NULL, 0, 0, '2026-10-12 18:00:00', '2026-10-12 18:00:00');
 
 INSERT IGNORE INTO user_preferences (user_id, theme, language, open_links_new_tab, telemetry, reduce_motion, high_contrast, extended_alerts) VALUES
 ('dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'system', 'es-MX', 1, 0, 0, 0, 0),

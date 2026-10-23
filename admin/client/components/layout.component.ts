@@ -37,6 +37,7 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const isPurchases = currentPath.startsWith('/purchases') || currentPath.startsWith('/compras');
   const isOrganizations = currentPath.startsWith('/organizations') || currentPath.startsWith('/organizaciones');
   const isInquiries = currentPath.startsWith('/inquiries') || currentPath.startsWith('/leads');
+  const isBackups = currentPath.startsWith('/backups') || currentPath.startsWith('/copias-de-seguridad');
 
   const bindNavLink = (btn: HTMLElement | null, path: string) => {
     btn?.addEventListener('click', (e) => {
@@ -76,6 +77,10 @@ function populateDrawerContent(drawer: HTMLElement): void {
       <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#mail"></use></svg>
       <span class="menu-item__text">Leads Comerciales</span>
     </button>
+    <button type="button" class="menu-item ${isBackups ? 'is-active' : ''}" data-ref="btn-drawer-nav-backups">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#cloud"></use></svg>
+      <span class="menu-item__text">Copias de Seguridad</span>
+    </button>
   `;
 
   if (drawerFooter) {
@@ -108,6 +113,8 @@ function populateDrawerContent(drawer: HTMLElement): void {
   bindNavLink(btnNavPurchases, '/purchases');
   bindNavLink(btnNavOrganizations, '/organizations');
   bindNavLink(btnNavInquiries, '/inquiries');
+  const btnNavBackups = drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-backups"]');
+  bindNavLink(btnNavBackups, '/backups');
 
   renderIcons(drawer);
 }
@@ -162,6 +169,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isPurchases = path.startsWith('/purchases') || path.startsWith('/compras');
   const isOrganizations = path.startsWith('/organizations') || path.startsWith('/organizaciones');
   const isInquiries = path.startsWith('/inquiries') || path.startsWith('/leads');
+  const isBackups = path.startsWith('/backups') || path.startsWith('/copias-de-seguridad');
 
   const itemDashboard = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-dashboard"]');
   const btnDashboard = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-dashboard"]');
@@ -175,6 +183,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnOrganizations = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-organizations"]');
   const itemInquiries = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-inquiries"]');
   const btnInquiries = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-inquiries"]');
+  const itemBackups = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-backups"]');
+  const btnBackups = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-backups"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
 
   itemDashboard?.classList.toggle('is-active', isDashboard);
@@ -189,6 +199,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnOrganizations?.classList.toggle('is-active', isOrganizations);
   itemInquiries?.classList.toggle('is-active', isInquiries);
   btnInquiries?.classList.toggle('is-active', isInquiries);
+  itemBackups?.classList.toggle('is-active', isBackups);
+  btnBackups?.classList.toggle('is-active', isBackups);
   btnToggle?.classList.toggle('is-active', isDrawerOpen);
 
   const drawer = sidebar.querySelector<HTMLElement>('[data-ref="layout-drawer"]');
@@ -229,6 +241,7 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
   bindItemNav('btn-rail-purchases', 'rail-item-purchases', '/purchases');
   bindItemNav('btn-rail-organizations', 'rail-item-organizations', '/organizations');
   bindItemNav('btn-rail-inquiries', 'rail-item-inquiries', '/inquiries');
+  bindItemNav('btn-rail-backups', 'rail-item-backups', '/backups');
 
   btnTheme?.addEventListener('click', (e) => {
     e.preventDefault();

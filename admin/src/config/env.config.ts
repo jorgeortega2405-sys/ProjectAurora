@@ -3,6 +3,11 @@ import 'dotenv/config';
 export const adminConfig = {
   appName: process.env.ADMIN_APP_NAME || 'ProjectAurora Admin',
   baseUrl: process.env.ADMIN_BASE_URL || 'http://localhost:3005',
+  cassandra: {
+    host: process.env.CASSANDRA_HOST || '127.0.0.1',
+    keyspace: process.env.CASSANDRA_KEYSPACE || 'aurora_telemetry',
+    port: parseInt(process.env.CASSANDRA_PORT || '9042', 10),
+  },
   db: {
     host: process.env.DB_HOST || '127.0.0.1',
     name: process.env.DB_NAME || 'db_aurora',
@@ -12,5 +17,13 @@ export const adminConfig = {
   },
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.ADMIN_PORT || '3005', 10),
+  s3: {
+    accessKeyId: process.env.S3_ACCESS_KEY || 'minioadmin',
+    bucket: process.env.S3_BUCKET_NAME || 'aurora-storage',
+    endpoint: process.env.S3_ENDPOINT || 'http://127.0.0.1:9000',
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
+    region: process.env.S3_REGION || 'us-east-1',
+    secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin',
+  },
   vitePort: parseInt(process.env.ADMIN_VITE_PORT || '5175', 10),
 };

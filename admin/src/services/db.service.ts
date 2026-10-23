@@ -2,6 +2,22 @@ import mysql, { RowDataPacket } from 'mysql2/promise';
 import { adminConfig } from '../config/env.config.js';
 import { logger } from './logger.service.js';
 
+export interface AdminBackupRecord {
+  checksum_sha256: string | null;
+  components: ('mysql' | 'cassandra' | 'minio')[];
+  created_at: string;
+  filename: string;
+  id: string;
+  metadata: Record<string, unknown> | null;
+  name: string;
+  notes: string | null;
+  restored_at: string | null;
+  s3_bucket: string;
+  s3_key: string;
+  size_bytes: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+}
+
 export interface AdminInquiryRecord {
   company: string;
   created_at: string;
@@ -72,6 +88,22 @@ export interface AdminVerificationRecord {
   status: 'pending' | 'approved' | 'rejected';
   user_id: string;
   username: string | null;
+}
+
+interface BackupRowPacket extends RowDataPacket {
+  checksum_sha256: string | null;
+  components_json: string;
+  created_at: Date | string;
+  filename: string;
+  id: string;
+  metadata_json: unknown;
+  name: string;
+  notes: string | null;
+  restored_at: Date | string | null;
+  s3_bucket: string;
+  s3_key: string;
+  size_bytes: number | string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
 }
 
 interface InquiryRowPacket extends RowDataPacket {
@@ -398,6 +430,167 @@ export async function updateInquiryStatus(
     return result.affectedRows > 0;
   } catch (err) {
     logger.app.error('Error al actualizar estado de solicitud comercial en base de datos', err);
+    throw err;
+  }
+}
+
+export async function getAllBackups(): Promise<AdminBackupRecord[]> {
+  try {
+    const [rows] = await adminDbPool.query<BackupRowPacket[]>(
+      'SELECT id, name, filename, s3_key, s3_bucket, size_bytes, components_json, status, checksum_sha256, notes, metadata_json, created_at, restored_at FROM backup_records ORDER BY created_at DESC'
+    );
+
+    return rows.map((r) => {
+      let components: ('mysql' | 'cassandra' | 'minio')[] = [];
+      try {
+        components = JSON.parse(r.components_json);
+      } catch {
+        components = [];
+      }
+
+      let metadata: Record<string, unknown> | null = null;
+      if (typeof r.metadata_json === 'string') {
+        try {
+          metadata = JSON.parse(r.metadata_json);
+        } catch {
+          metadata = null;
+        }
+      } else if (r.metadata_json && typeof r.metadata_json === 'object') {
+        metadata = r.metadata_json as Record<string, unknown>;
+      }
+
+      return {
+        checksum_sha256: r.checksum_sha256,
+        components,
+        created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+        filename: r.filename,
+        id: r.id,
+        metadata,
+        name: r.name,
+        notes: r.notes,
+        restored_at: r.restored_at instanceof Date ? r.restored_at.toISOString() : (r.restored_at ? String(r.restored_at) : null),
+        s3_bucket: r.s3_bucket,
+        s3_key: r.s3_key,
+        size_bytes: Number(r.size_bytes) || 0,
+        status: r.status,
+      };
+    });
+  } catch (err) {
+    logger.app.error('Error al consultar lista de respaldos en base de datos', err);
+    throw err;
+  }
+}
+
+export async function getBackupById(id: string): Promise<AdminBackupRecord | null> {
+  try {
+    const [rows] = await adminDbPool.query<BackupRowPacket[]>(
+      'SELECT id, name, filename, s3_key, s3_bucket, size_bytes, components_json, status, checksum_sha256, notes, metadata_json, created_at, restored_at FROM backup_records WHERE id = ? LIMIT 1',
+      [id]
+    );
+
+    if (rows.length === 0) return null;
+    const r = rows[0];
+
+    let components: ('mysql' | 'cassandra' | 'minio')[] = [];
+    try {
+      components = JSON.parse(r.components_json);
+    } catch {
+      components = [];
+    }
+
+    let metadata: Record<string, unknown> | null = null;
+    if (typeof r.metadata_json === 'string') {
+      try {
+        metadata = JSON.parse(r.metadata_json);
+      } catch {
+        metadata = null;
+      }
+    } else if (r.metadata_json && typeof r.metadata_json === 'object') {
+      metadata = r.metadata_json as Record<string, unknown>;
+    }
+
+    return {
+      checksum_sha256: r.checksum_sha256,
+      components,
+      created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+      filename: r.filename,
+      id: r.id,
+      metadata,
+      name: r.name,
+      notes: r.notes,
+      restored_at: r.restored_at instanceof Date ? r.restored_at.toISOString() : (r.restored_at ? String(r.restored_at) : null),
+      s3_bucket: r.s3_bucket,
+      s3_key: r.s3_key,
+      size_bytes: Number(r.size_bytes) || 0,
+      status: r.status,
+    };
+  } catch (err) {
+    logger.app.error('Error al consultar respaldo por ID en base de datos', err);
+    throw err;
+  }
+}
+
+export async function createBackupRecord(data: {
+  checksum_sha256: string | null;
+  components: ('mysql' | 'cassandra' | 'minio')[];
+  filename: string;
+  id: string;
+  metadata?: Record<string, unknown> | null;
+  name: string;
+  notes?: string | null;
+  s3_bucket: string;
+  s3_key: string;
+  size_bytes: number;
+  status?: 'pending' | 'in_progress' | 'completed' | 'failed';
+}): Promise<void> {
+  try {
+    await adminDbPool.query(
+      `INSERT INTO backup_records (id, name, filename, s3_key, s3_bucket, size_bytes, components_json, status, checksum_sha256, notes, metadata_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.id,
+        data.name,
+        data.filename,
+        data.s3_key,
+        data.s3_bucket,
+        data.size_bytes,
+        JSON.stringify(data.components),
+        data.status || 'completed',
+        data.checksum_sha256 || null,
+        data.notes || null,
+        data.metadata ? JSON.stringify(data.metadata) : null,
+      ]
+    );
+  } catch (err) {
+    logger.app.error('Error al insertar registro de respaldo en base de datos', err);
+    throw err;
+  }
+}
+
+export async function markBackupRestored(id: string): Promise<boolean> {
+  try {
+    const [result] = await adminDbPool.query<mysql.ResultSetHeader>(
+      'UPDATE backup_records SET restored_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [id]
+    );
+
+    return result.affectedRows > 0;
+  } catch (err) {
+    logger.app.error('Error al marcar respaldo restaurado en base de datos', err);
+    throw err;
+  }
+}
+
+export async function deleteBackupRecord(id: string): Promise<boolean> {
+  try {
+    const [result] = await adminDbPool.query<mysql.ResultSetHeader>(
+      'DELETE FROM backup_records WHERE id = ?',
+      [id]
+    );
+
+    return result.affectedRows > 0;
+  } catch (err) {
+    logger.app.error('Error al eliminar registro de respaldo en base de datos', err);
     throw err;
   }
 }

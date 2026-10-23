@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { adminConfig } from '../config/env.config.js';
-import { getAllInquiries, getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, updateInquiryStatus, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
+import { createBackup, deleteBackup, getBackupDownloadStream, getSystemStatus, restoreBackup } from '../services/backup.service.js';
+import { getAllBackups, getAllInquiries, getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, getBackupById, updateInquiryStatus, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
 import { logger } from '../services/logger.service.js';
 
 export function getAdminHealth(_req: Request, res: Response): void {
@@ -223,6 +224,166 @@ export async function updateAdminInquiryStatus(req: Request, res: Response): Pro
     logger.app.error('Error al actualizar estado de solicitud comercial en controlador de admin', err);
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al actualizar la solicitud comercial.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminBackups(_req: Request, res: Response): Promise<void> {
+  try {
+    const backups = await getAllBackups();
+    res.json({
+      backups,
+      success: true,
+      total: backups.length,
+    });
+  } catch (err) {
+    logger.app.error('Error al obtener lista de copias de seguridad en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar las copias de seguridad.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminBackupStatus(_req: Request, res: Response): Promise<void> {
+  try {
+    const status = await getSystemStatus();
+    res.json({
+      status,
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al consultar estado de componentes para respaldo', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar el estado del sistema.',
+      success: false,
+    });
+  }
+}
+
+export async function createAdminBackup(req: Request, res: Response): Promise<void> {
+  try {
+    const { components, name, notes } = req.body as {
+      components?: ('mysql' | 'cassandra' | 'minio')[];
+      name?: string;
+      notes?: string;
+    };
+
+    if (components && (!Array.isArray(components) || components.length === 0)) {
+      res.status(400).json({
+        error: 'Debe seleccionar al menos un componente para realizar la copia de seguridad.',
+        success: false,
+      });
+      return;
+    }
+
+    const backup = await createBackup({
+      components,
+      name,
+      notes,
+    });
+
+    res.status(201).json({
+      backup,
+      message: 'Copia de seguridad generada y almacenada en S3 exitosamente.',
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al generar copia de seguridad en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al procesar la copia de seguridad. Por favor intenta más tarde.',
+      success: false,
+    });
+  }
+}
+
+export async function restoreAdminBackup(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { components } = req.body as {
+      components?: ('mysql' | 'cassandra' | 'minio')[];
+    };
+
+    if (!id) {
+      res.status(400).json({
+        error: 'Identificador de copia de seguridad no proporcionado.',
+        success: false,
+      });
+      return;
+    }
+
+    const result = await restoreBackup(id, { components });
+
+    res.json({
+      message: 'Copia de seguridad restaurada exitosamente en el sistema.',
+      result,
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al restaurar copia de seguridad en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al restaurar la copia de seguridad. Por favor intenta más tarde.',
+      success: false,
+    });
+  }
+}
+
+export async function downloadAdminBackup(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const downloadData = await getBackupDownloadStream(id);
+
+    if (!downloadData) {
+      res.status(404).json({
+        error: 'Copia de seguridad no encontrada.',
+        success: false,
+      });
+      return;
+    }
+
+    res.setHeader('Content-Type', downloadData.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadData.filename}"`);
+    res.setHeader('Content-Length', String(downloadData.contentLength));
+
+    (downloadData.stream as any).pipe(res);
+  } catch (err) {
+    logger.app.error('Error al descargar copia de seguridad en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al descargar la copia de seguridad.',
+      success: false,
+    });
+  }
+}
+
+export async function deleteAdminBackup(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      res.status(400).json({
+        error: 'Identificador de copia de seguridad no proporcionado.',
+        success: false,
+      });
+      return;
+    }
+
+    const deleted = await deleteBackup(id);
+    if (!deleted) {
+      res.status(404).json({
+        error: 'Copia de seguridad no encontrada para eliminar.',
+        success: false,
+      });
+      return;
+    }
+
+    res.json({
+      message: 'Copia de seguridad eliminada exitosamente.',
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al eliminar copia de seguridad en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al eliminar la copia de seguridad.',
       success: false,
     });
   }

@@ -91,10 +91,18 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('tools:merge:batch_500', 'Unir PDF Lote 500', 'Procesar hasta 500 archivos por tarea en Unir PDF'),
 ('tools:split:by_size', 'Dividir PDF por Tamaño', 'Dividir archivos PDF por tamaño objetivo'),
 ('tools:ai:advanced', 'Modo IA Avanzado', 'Acceso a modelos y análisis avanzados de IA con créditos'),
-('tools:high_size_limit', 'Límite Alto de Tamaño', 'Procesar archivos de gran tamaño (hasta 1 GB/2 GB)');
+('tools:high_size_limit', 'Límite Alto de Tamaño', 'Procesar archivos de gran tamaño (hasta 1 GB/2 GB)'),
+('system:backup:create', 'Crear Copias de Seguridad', 'Crear copias de respaldo de bases de datos y archivos'),
+('system:backup:read', 'Ver Copias de Seguridad', 'Consultar historial y estado de copias'),
+('system:backup:restore', 'Restaurar Copias de Seguridad', 'Restaurar copias de seguridad del sistema'),
+('system:backup:delete', 'Eliminar Copias de Seguridad', 'Eliminar respaldos del sistema');
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('ADMIN', '*'),
+('ADMIN', 'system:backup:create'),
+('ADMIN', 'system:backup:read'),
+('ADMIN', 'system:backup:restore'),
+('ADMIN', 'system:backup:delete'),
 ('USER', 'account:view_profile'),
 ('USER', 'account:edit_identifiers'),
 ('USER', 'account:edit_security'),
@@ -289,3 +297,21 @@ INSERT IGNORE INTO educational_partner_domains (id, school_name, domain, is_acti
 ('d1a10001-0000-4000-8000-000000000008', 'Universidad Veracruzana (UV)', 'uv.mx', 1),
 ('d1a10001-0000-4000-8000-000000000009', 'Benemérita Universidad Autónoma de Puebla (BUAP)', 'buap.mx', 1),
 ('d1a10001-0000-4000-8000-000000000010', 'Dominio de Prueba Educativo', 'test-school.edu', 1);
+
+CREATE TABLE IF NOT EXISTS backup_records (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    filename VARCHAR(255) NOT NULL,
+    s3_key VARCHAR(512) NOT NULL,
+    s3_bucket VARCHAR(100) NOT NULL,
+    size_bytes BIGINT NOT NULL DEFAULT 0,
+    components_json TEXT NOT NULL,
+    status ENUM('pending', 'in_progress', 'completed', 'failed') NOT NULL DEFAULT 'completed',
+    checksum_sha256 VARCHAR(64) NULL,
+    notes TEXT NULL,
+    metadata_json JSON NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    restored_at TIMESTAMP NULL,
+    INDEX idx_backup_created (created_at DESC),
+    INDEX idx_backup_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

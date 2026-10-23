@@ -33,6 +33,7 @@ export interface HrEmployee {
   salary_currency: string;
   salary_frequency: SalaryFrequency;
   status: EmployeeStatus;
+  subscription_tier: string;
   updated_at: string;
   user_id: string;
   username: string;
@@ -87,6 +88,7 @@ export interface HrOrganigramNode {
   salary_currency: string;
   status: EmployeeStatus;
   subordinates: HrOrganigramNode[];
+  subscription_tier: string;
   user_id: string;
   vacation_balance: number;
 }

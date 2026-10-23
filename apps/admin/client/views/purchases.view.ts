@@ -3,6 +3,7 @@ import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminPurchaseItem {
   amount_total: number;
@@ -127,10 +128,19 @@ export class PurchasesController implements ViewController {
         const refId = item.stripe_session_id || item.stripe_payment_intent_id || String(item.id);
         const refShort = refId.length > 16 ? `${refId.slice(0, 8)}...${refId.slice(-6)}` : refId;
 
+        const avatarUrl = `/api/avatar?name=${encodeURIComponent(item.username || 'user')}`;
+        const tierColor = getFallbackTierColor(item.plan_id);
+        const avatarMarkup = `
+          <div class="avatar-ring" style="width: 28px; height: 28px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(item.username || 'user')}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(item.username || 'user')}'" />
+          </div>
+        `;
+
         return `
           <tr data-ref="purchase-row-${item.id}">
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
+                ${avatarMarkup}
                 <span class="component-badge component-badge--sm">${escapeHtml(item.username || 'Usuario')}</span>
                 <span class="component-badge component-badge--sm">${escapeHtml(item.email || '—')}</span>
               </div>

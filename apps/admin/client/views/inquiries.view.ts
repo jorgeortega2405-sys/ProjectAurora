@@ -4,6 +4,7 @@ import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminInquiryItem {
   company: string;
@@ -112,10 +113,19 @@ export class InquiriesController implements ViewController {
         statusLabel = 'Cerrado';
       }
 
+      const avatarUrl = `/api/avatar?name=${encodeURIComponent(fullName)}`;
+      const tierColor = getFallbackTierColor('enterprise');
+      const avatarMarkup = `
+        <div class="avatar-ring" style="width: 28px; height: 28px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+          <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(fullName)}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(fullName)}'" />
+        </div>
+      `;
+
       return `
         <tr data-ref="inquiry-row-${inquiry.id}">
           <td style="padding: 14px 16px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              ${avatarMarkup}
               <span class="component-badge component-badge--sm">${escapeHtml(fullName)}</span>
               <span class="component-badge component-badge--sm">${escapeHtml(inquiry.email)}</span>
             </div>

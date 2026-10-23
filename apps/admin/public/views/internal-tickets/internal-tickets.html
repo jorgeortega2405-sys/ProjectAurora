@@ -5,18 +5,21 @@
       <span class="component-badge component-badge--sm" data-ref="tickets-count-badge">0</span>
     </div>
 
-    <div class="component-top-right" data-ref="component-top-right" style="display: flex; align-items: center; gap: 8px;">
+    <div class="component-top-right" data-ref="component-top-right">
       <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar tickets" data-tooltip-placement="bottom" aria-label="Buscar tickets">
         <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+      </button>
+
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-filters" data-tooltip="Filtros de tickets" data-tooltip-placement="bottom" aria-label="Filtros de tickets">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#tune"></use></svg>
       </button>
 
       <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-refresh-tickets" data-tooltip="Recargar tickets" data-tooltip-placement="bottom" aria-label="Recargar tickets">
         <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
       </button>
 
-      <button type="button" class="component-button component-button--h36 component-button--black" data-ref="btn-open-create-modal" style="gap: 6px; font-weight: 600; padding: 0 14px;">
-        <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#add"></use></svg>
-        <span>Nuevo Reporte</span>
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-open-create-modal" data-tooltip="Nuevo Reporte" data-tooltip-placement="bottom" aria-label="Nuevo Reporte">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
       </button>
     </div>
 
@@ -35,67 +38,65 @@
     </div>
   </header>
 
-  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom" style="display: flex; flex-direction: column; gap: 16px; padding: 18px 24px;">
-    <div class="admin-card" data-ref="tickets-filter-bar" style="padding: 12px 16px; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
-      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: 1;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <label class="field__label" data-ref="lbl-dept-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Departamento:</label>
-          <select class="component-select" data-ref="filter-department" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 170px;">
-            <option value="all">Todos los Departamentos</option>
-          </select>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <label class="field__label" data-ref="lbl-status-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Estado:</label>
-          <select class="component-select" data-ref="filter-status" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 140px;">
-            <option value="all">Todos los Estados</option>
-            <option value="open">Abierto</option>
-            <option value="in_progress">En Progreso</option>
-            <option value="resolved">Resuelto</option>
-            <option value="closed">Cerrado</option>
-          </select>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <label class="field__label" data-ref="lbl-priority-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Prioridad:</label>
-          <select class="component-select" data-ref="filter-priority" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 140px;">
-            <option value="all">Todas las Prioridades</option>
-            <option value="urgent">Urgente</option>
-            <option value="high">Alta</option>
-            <option value="medium">Media</option>
-            <option value="low">Baja</option>
-          </select>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <label class="field__label" data-ref="lbl-assignment-filter" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Asignado:</label>
-          <select class="component-select" data-ref="filter-assigned" style="height: 34px; padding: 0 10px; font-size: 13px; min-width: 140px;">
-            <option value="all">Todos</option>
-            <option value="mine">Asignados a Mí</option>
-            <option value="unassigned">Sin Asignar</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button type="button" class="component-button component-button--h34" data-ref="btn-reset-filters" style="font-size: 12px;">
-          Limpiar Filtros
-        </button>
-      </div>
+  <div class="tickets-filters-dropdown is-hidden" data-ref="tickets-filters-dropdown" style="display: none; position: absolute; top: 56px; right: 24px; z-index: 100; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl, 12px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); padding: 16px; width: 300px; gap: 12px; flex-direction: column;">
+    <div class="tickets-filter-group" data-ref="filter-group-dept" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="lbl-dept-filter" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Departamento:</label>
+      <select class="component-select" data-ref="filter-department" style="height: 36px;">
+        <option value="all">Todos los Departamentos</option>
+      </select>
     </div>
 
-    <div class="component-table-wrapper" data-ref="tickets-table-wrapper" style="border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-surface); overflow-x: auto;">
-      <table class="component-table" data-ref="tickets-table" style="width: 100%; border-collapse: collapse;">
+    <div class="tickets-filter-group" data-ref="filter-group-status" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="lbl-status-filter" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Estado:</label>
+      <select class="component-select" data-ref="filter-status" style="height: 36px;">
+        <option value="all">Todos los Estados</option>
+        <option value="open">Abierto</option>
+        <option value="in_progress">En Progreso</option>
+        <option value="resolved">Resuelto</option>
+        <option value="closed">Cerrado</option>
+      </select>
+    </div>
+
+    <div class="tickets-filter-group" data-ref="filter-group-priority" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="lbl-priority-filter" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Prioridad:</label>
+      <select class="component-select" data-ref="filter-priority" style="height: 36px;">
+        <option value="all">Todas las Prioridades</option>
+        <option value="urgent">Urgente</option>
+        <option value="high">Alta</option>
+        <option value="medium">Media</option>
+        <option value="low">Baja</option>
+      </select>
+    </div>
+
+    <div class="tickets-filter-group" data-ref="filter-group-assigned" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="lbl-assignment-filter" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Asignado a:</label>
+      <select class="component-select" data-ref="filter-assigned" style="height: 36px;">
+        <option value="all">Todos</option>
+        <option value="mine">Asignados a Mí</option>
+        <option value="unassigned">Sin Asignar</option>
+      </select>
+    </div>
+
+    <div class="tickets-filter-group" data-ref="filter-group-actions" style="display: flex; justify-content: flex-end; margin-top: 4px;">
+      <button type="button" class="component-button component-button--h34 component-button--w-full" data-ref="btn-reset-filters" style="font-size: 12px;">
+        Limpiar Filtros
+      </button>
+    </div>
+  </div>
+
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom">
+    <div class="component-table-wrapper" data-ref="tickets-table-wrapper">
+      <table class="component-table" data-ref="tickets-table">
         <thead class="component-table__head" data-ref="tickets-thead">
           <tr>
-            <th class="th-ticket-num" data-ref="th-ticket-num" style="width: 10%; padding: 12px 14px;">Ticket</th>
-            <th class="th-title" data-ref="th-title" style="width: 28%; padding: 12px 14px;">Asunto / Incidencia</th>
-            <th class="th-target-dept" data-ref="th-target-dept" style="width: 15%; padding: 12px 14px;">Dpto. Destino</th>
-            <th class="th-creator" data-ref="th-creator" style="width: 13%; padding: 12px 14px;">Solicitante</th>
-            <th class="th-priority" data-ref="th-priority" style="width: 9%; padding: 12px 14px;">Prioridad</th>
-            <th class="th-status" data-ref="th-status" style="width: 10%; padding: 12px 14px;">Estado</th>
-            <th class="th-assignee" data-ref="th-assignee" style="width: 11%; padding: 12px 14px;">Asignado A</th>
-            <th class="text-right th-actions" data-ref="th-actions" style="width: 4%; padding: 12px 14px;">Acción</th>
+            <th class="th-ticket-num" data-ref="th-ticket-num" style="width: 10%;">Ticket</th>
+            <th class="th-title" data-ref="th-title" style="width: 28%;">Asunto / Incidencia</th>
+            <th class="th-target-dept" data-ref="th-target-dept" style="width: 15%;">Dpto. Destino</th>
+            <th class="th-creator" data-ref="th-creator" style="width: 14%;">Solicitante</th>
+            <th class="th-priority" data-ref="th-priority" style="width: 9%;">Prioridad</th>
+            <th class="th-status" data-ref="th-status" style="width: 10%;">Estado</th>
+            <th class="th-assignee" data-ref="th-assignee" style="width: 10%;">Asignado A</th>
+            <th class="text-right th-actions" data-ref="th-actions" style="width: 4%;">Acción</th>
           </tr>
         </thead>
         <tbody class="component-table__body" data-ref="tickets-tbody">
@@ -106,7 +107,7 @@
       </table>
     </div>
 
-    <div class="banner banner--danger" data-ref="tickets-page-error" style="display: none; margin: 8px 0;"></div>
+    <div class="banner banner--danger" data-ref="tickets-page-error" style="display: none; margin: 12px 24px;"></div>
   </div>
 
   <div class="modal-backdrop" data-ref="modal-create-ticket-backdrop" style="display: none;">

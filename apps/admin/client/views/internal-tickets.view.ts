@@ -6,6 +6,7 @@ import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { CreateTicketInput, DepartmentOption, InternalTicket, InternalTicketComment, StaffOption, TicketCategory, TicketPriority, TicketStatus, TicketSummaryStats, UpdateTicketInput } from '../types/tickets.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export class InternalTicketsController implements ViewController {
   private abortController: AbortController | null = null;
@@ -90,12 +91,35 @@ export class InternalTicketsController implements ViewController {
   }
 
   private setupFilterEvents(): void {
+    const btnToggleFilters = this.container.querySelector<HTMLElement>('[data-ref="btn-toggle-filters"]');
+    const filtersDropdown = this.container.querySelector<HTMLElement>('[data-ref="tickets-filters-dropdown"]');
     const selectDept = this.container.querySelector<HTMLSelectElement>('[data-ref="filter-department"]');
     const selectStatus = this.container.querySelector<HTMLSelectElement>('[data-ref="filter-status"]');
     const selectPriority = this.container.querySelector<HTMLSelectElement>('[data-ref="filter-priority"]');
     const selectAssigned = this.container.querySelector<HTMLSelectElement>('[data-ref="filter-assigned"]');
     const btnReset = this.container.querySelector<HTMLElement>('[data-ref="btn-reset-filters"]');
     const btnRefresh = this.container.querySelector<HTMLElement>('[data-ref="btn-refresh-tickets"]');
+
+    btnToggleFilters?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!filtersDropdown) return;
+      const isHidden = filtersDropdown.style.display === 'none' || filtersDropdown.classList.contains('is-hidden');
+      if (isHidden) {
+        filtersDropdown.style.display = 'flex';
+        filtersDropdown.classList.remove('is-hidden');
+      } else {
+        filtersDropdown.style.display = 'none';
+        filtersDropdown.classList.add('is-hidden');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!filtersDropdown || filtersDropdown.style.display === 'none') return;
+      if (!filtersDropdown.contains(e.target as Node) && !btnToggleFilters?.contains(e.target as Node)) {
+        filtersDropdown.style.display = 'none';
+        filtersDropdown.classList.add('is-hidden');
+      }
+    });
 
     const handleFilterChange = () => {
       void this.loadTickets();
@@ -382,21 +406,37 @@ export class InternalTicketsController implements ViewController {
           month: 'short',
         });
 
-        const assigneeHtml = t.assignee_username
-          ? `<div style="display: flex; align-items: center; gap: 6px;">
-               <div style="width: 22px; height: 22px; border-radius: 50%; overflow: hidden; background: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">
-                 ${t.assignee_avatar_url ? `<img src="${escapeHtml(t.assignee_avatar_url)}" alt="${escapeHtml(t.assignee_username)}" style="width: 100%; height: 100%; object-fit: cover;" />` : escapeHtml(t.assignee_username.slice(0, 2).toUpperCase())}
-               </div>
-               <span style="font-size: 12.5px; color: var(--text-primary); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(t.assignee_username)}</span>
-             </div>`
-          : '<span style="font-size: 12px; color: var(--text-tertiary); font-style: italic;">Sin Asignar</span>';
+        const creatorAvatarUrl = t.creator_avatar_url || `/api/avatar?name=${encodeURIComponent(t.creator_username)}`;
+        const creatorTierColor = getFallbackTierColor(t.creator_subscription_tier);
+        const creatorMarkup = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="avatar-ring" style="width: 28px; height: 28px; border-radius: 50%; --avatar-tier-bg: ${creatorTierColor}; --tier-border-color: ${creatorTierColor}; flex-shrink: 0;">
+              <img src="${escapeHtml(creatorAvatarUrl)}" alt="${escapeHtml(t.creator_username)}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(t.creator_username)}'" />
+            </div>
+            <span class="component-badge component-badge--sm">${escapeHtml(t.creator_username)}</span>
+          </div>
+        `;
+
+        let assigneeHtml = '<span class="component-badge component-badge--sm">Sin Asignar</span>';
+        if (t.assignee_username) {
+          const assigneeAvatarUrl = t.assignee_avatar_url || `/api/avatar?name=${encodeURIComponent(t.assignee_username)}`;
+          const assigneeTierColor = getFallbackTierColor(t.assignee_subscription_tier || undefined);
+          assigneeHtml = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="avatar-ring" style="width: 28px; height: 28px; border-radius: 50%; --avatar-tier-bg: ${assigneeTierColor}; --tier-border-color: ${assigneeTierColor}; flex-shrink: 0;">
+                <img src="${escapeHtml(assigneeAvatarUrl)}" alt="${escapeHtml(t.assignee_username)}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(t.assignee_username)}'" />
+              </div>
+              <span class="component-badge component-badge--sm">${escapeHtml(t.assignee_username)}</span>
+            </div>
+          `;
+        }
 
         return `
-          <tr class="ticket-row" data-ref="ticket-row-${t.id}" data-ticket-id="${t.id}" style="cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.15s ease;">
-            <td style="padding: 12px 14px;">
+          <tr class="ticket-row" data-ref="ticket-row-${t.id}" data-ticket-id="${t.id}" style="cursor: pointer;">
+            <td>
               <span class="component-badge component-badge--sm" style="font-family: monospace;">${escapeHtml(t.ticket_number)}</span>
             </td>
-            <td style="padding: 12px 14px;">
+            <td>
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <span class="component-badge component-badge--sm">${escapeHtml(catLabel)}</span>
@@ -405,28 +445,22 @@ export class InternalTicketsController implements ViewController {
                 <span style="font-size: 12px; color: var(--text-secondary); max-width: 440px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(t.description)}</span>
               </div>
             </td>
-            <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm">
-                ${escapeHtml(t.target_department_name)}
-              </span>
+            <td>
+              <span class="component-badge component-badge--sm">${escapeHtml(t.target_department_name)}</span>
             </td>
-            <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm">${escapeHtml(t.creator_username)}</span>
+            <td>
+              ${creatorMarkup}
             </td>
-            <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm">
-                ${pBadge.label}
-              </span>
+            <td>
+              <span class="component-badge component-badge--sm">${pBadge.label}</span>
             </td>
-            <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm">
-                ${sBadge.label}
-              </span>
+            <td>
+              <span class="component-badge component-badge--sm">${sBadge.label}</span>
             </td>
-            <td style="padding: 12px 14px;">
+            <td>
               ${assigneeHtml}
             </td>
-            <td style="padding: 12px 14px; text-align: right;">
+            <td class="text-right">
               <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-view-ticket-${t.id}" data-ticket-id="${t.id}" data-tooltip="Revisar ticket" aria-label="Revisar ticket">
                 <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_right"></use></svg>
               </button>

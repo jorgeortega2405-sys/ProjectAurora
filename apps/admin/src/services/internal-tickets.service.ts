@@ -8,6 +8,7 @@ interface TicketRowPacket extends RowDataPacket {
   assigned_to: string | null;
   assignee_avatar_url: string | null;
   assignee_job_title: string | null;
+  assignee_subscription_tier?: string | null;
   assignee_username: string | null;
   category: TicketCategory;
   closed_at: Date | string | null;
@@ -16,6 +17,7 @@ interface TicketRowPacket extends RowDataPacket {
   created_by: string;
   creator_avatar_url: string | null;
   creator_job_title: string | null;
+  creator_subscription_tier?: string | null;
   creator_username: string;
   description: string;
   id: string;
@@ -68,6 +70,7 @@ function mapTicketRow(r: TicketRowPacket): InternalTicket {
     assigned_to: r.assigned_to ?? null,
     assignee_avatar_url: r.assignee_avatar_url ?? null,
     assignee_job_title: r.assignee_job_title ?? null,
+    assignee_subscription_tier: r.assignee_subscription_tier ?? null,
     assignee_username: r.assignee_username ?? null,
     category: r.category,
     closed_at: r.closed_at instanceof Date ? r.closed_at.toISOString() : (r.closed_at ? String(r.closed_at) : null),
@@ -76,6 +79,7 @@ function mapTicketRow(r: TicketRowPacket): InternalTicket {
     created_by: r.created_by,
     creator_avatar_url: r.creator_avatar_url ?? null,
     creator_job_title: r.creator_job_title ?? null,
+    creator_subscription_tier: r.creator_subscription_tier || 'free',
     creator_username: r.creator_username,
     description: r.description,
     id: r.id,
@@ -156,9 +160,11 @@ export async function listInternalTickets(filters: {
         source_dept.color AS source_department_color,
         u_creator.username AS creator_username,
         u_creator.avatar_url AS creator_avatar_url,
+        u_creator.subscription_tier AS creator_subscription_tier,
         emp_creator.job_title AS creator_job_title,
         u_assignee.username AS assignee_username,
         u_assignee.avatar_url AS assignee_avatar_url,
+        u_assignee.subscription_tier AS assignee_subscription_tier,
         emp_assignee.job_title AS assignee_job_title,
         (SELECT COUNT(*) FROM internal_ticket_comments itc WHERE itc.ticket_id = t.id) AS comments_count
       FROM internal_tickets t
@@ -221,9 +227,11 @@ export async function getInternalTicketById(ticketIdOrNumber: string): Promise<I
         source_dept.color AS source_department_color,
         u_creator.username AS creator_username,
         u_creator.avatar_url AS creator_avatar_url,
+        u_creator.subscription_tier AS creator_subscription_tier,
         emp_creator.job_title AS creator_job_title,
         u_assignee.username AS assignee_username,
         u_assignee.avatar_url AS assignee_avatar_url,
+        u_assignee.subscription_tier AS assignee_subscription_tier,
         emp_assignee.job_title AS assignee_job_title,
         (SELECT COUNT(*) FROM internal_ticket_comments itc WHERE itc.ticket_id = t.id) AS comments_count
       FROM internal_tickets t

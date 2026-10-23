@@ -37,6 +37,7 @@ interface EmployeeRow extends RowDataPacket {
   salary_currency: string;
   salary_frequency: SalaryFrequency;
   status: EmployeeStatus;
+  subscription_tier: string | null;
   updated_at: Date | string;
   user_id: string;
   username: string;
@@ -143,6 +144,7 @@ function mapEmployeeRow(r: EmployeeRow): HrEmployee {
     salary_currency: r.salary_currency || 'USD',
     salary_frequency: r.salary_frequency || 'monthly',
     status: r.status || 'active',
+    subscription_tier: r.subscription_tier || 'free',
     updated_at: formatIso(r.updated_at),
     user_id: r.user_id,
     username: r.username,
@@ -176,7 +178,7 @@ export async function getAllEmployees(filter?: { department_id?: string; search?
       SELECT e.id, e.user_id, e.department_id, e.manager_id, e.job_title, e.employment_type,
              e.status, e.hire_date, e.salary_amount, e.salary_currency, e.salary_frequency,
              e.vacation_days_allocated, e.vacation_days_used, e.notes, e.created_at, e.updated_at,
-             u.username, u.email, u.avatar_url, u.role,
+             u.username, u.email, u.avatar_url, u.role, u.subscription_tier,
              d.name AS department_name, d.color AS department_color,
              mu.username AS manager_name, me.job_title AS manager_title,
              (SELECT COUNT(*) FROM hr_employees sub WHERE sub.manager_id = e.id AND sub.status != 'terminated') AS direct_reports_count
@@ -219,7 +221,7 @@ export async function getEmployeeById(id: string): Promise<HrEmployee | null> {
       SELECT e.id, e.user_id, e.department_id, e.manager_id, e.job_title, e.employment_type,
              e.status, e.hire_date, e.salary_amount, e.salary_currency, e.salary_frequency,
              e.vacation_days_allocated, e.vacation_days_used, e.notes, e.created_at, e.updated_at,
-             u.username, u.email, u.avatar_url, u.role,
+             u.username, u.email, u.avatar_url, u.role, u.subscription_tier,
              d.name AS department_name, d.color AS department_color,
              mu.username AS manager_name, me.job_title AS manager_title,
              (SELECT COUNT(*) FROM hr_employees sub WHERE sub.manager_id = e.id AND sub.status != 'terminated') AS direct_reports_count
@@ -472,6 +474,7 @@ export async function getOrganigramTree(): Promise<HrOrganigramNode[]> {
         salary_currency: emp.salary_currency,
         status: emp.status,
         subordinates: [],
+        subscription_tier: emp.subscription_tier,
         user_id: emp.user_id,
         vacation_balance: emp.vacation_balance,
       });

@@ -16,6 +16,7 @@ export interface InternalTicket {
   assigned_to: string | null;
   assignee_avatar_url: string | null;
   assignee_job_title: string | null;
+  assignee_subscription_tier: string | null;
   assignee_username: string | null;
   category: TicketCategory;
   closed_at: string | null;
@@ -24,6 +25,7 @@ export interface InternalTicket {
   created_by: string;
   creator_avatar_url: string | null;
   creator_job_title: string | null;
+  creator_subscription_tier: string;
   creator_username: string;
   description: string;
   id: string;

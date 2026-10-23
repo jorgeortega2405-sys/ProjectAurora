@@ -4,6 +4,7 @@ import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminOrganizationItem {
   active_members_count: number;
@@ -116,13 +117,25 @@ export class OrganizationsController implements ViewController {
         const ssoLabel = `<span class="component-badge component-badge--sm">${escapeHtml(ssoText)}</span>`;
         const domainText = item.domains ? escapeHtml(item.domains) : 'Sin dominio';
 
+        const ownerName = item.owner_username || item.owner_email || 'Propietario';
+        const avatarUrl = `/api/avatar?name=${encodeURIComponent(ownerName)}`;
+        const tierColor = getFallbackTierColor('enterprise');
+        const avatarMarkup = `
+          <div class="avatar-ring" style="width: 28px; height: 28px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(ownerName)}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(ownerName)}'" />
+          </div>
+        `;
+
         return `
           <tr data-ref="org-row-${item.id}">
             <td>
               <span class="component-badge component-badge--sm">${escapeHtml(item.name)}</span>
             </td>
             <td>
-              <span class="component-badge component-badge--sm">${escapeHtml(item.owner_username || item.owner_email || 'Propietario')}</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                ${avatarMarkup}
+                <span class="component-badge component-badge--sm">${escapeHtml(ownerName)}</span>
+              </div>
             </td>
             <td>
               <span class="component-badge component-badge--sm">

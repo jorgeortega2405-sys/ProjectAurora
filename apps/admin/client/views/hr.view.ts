@@ -4,6 +4,7 @@ import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { DocumentType, EmployeeStatus, EmploymentType, HireCredentials, HrDepartment, HrDocumentItem, HrEmployeeItem, HrOrganigramNodeItem, HrSummaryStats, HrVacationItem, SalaryFrequency } from '../types/hr.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export class HrController implements ViewController {
   private abortController: AbortController | null = null;
@@ -213,6 +214,12 @@ export class HrController implements ViewController {
     tbody.innerHTML = items
       .map((item) => {
         const avatarUrl = item.avatar_url || `/api/avatar?name=${encodeURIComponent(item.username)}`;
+        const tierColor = getFallbackTierColor(item.subscription_tier);
+        const avatarMarkup = `
+          <div class="avatar-ring" style="width: 32px; height: 32px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(item.username)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(item.username)}'" />
+          </div>
+        `;
         const statusMap: Record<EmployeeStatus, { class: string; label: string }> = {
           active: { class: 'badge--success', label: 'Activo' },
           on_leave: { class: 'badge--warning', label: 'En Vacaciones' },
@@ -233,9 +240,7 @@ export class HrController implements ViewController {
           <tr data-ref="employee-row-${item.id}">
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: var(--bg-hover); flex-shrink: 0;">
-                  <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(item.username)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(item.username)}'" />
-                </div>
+                ${avatarMarkup}
                 <span class="component-badge component-badge--sm">${escapeHtml(item.username)}</span>
                 <span class="component-badge component-badge--sm">${escapeHtml(item.email)}</span>
               </div>
@@ -345,14 +350,15 @@ export class HrController implements ViewController {
 
     const renderNodeHtml = (node: HrOrganigramNodeItem): string => {
       const avatarUrl = node.avatar_url || `/api/avatar?name=${encodeURIComponent(node.name)}`;
+      const tierColor = getFallbackTierColor(node.subscription_tier);
       const hasChildren = node.subordinates && node.subordinates.length > 0;
 
       return `
         <div class="tree-node-wrapper" data-ref="tree-node-${node.id}">
           <div class="org-card" data-ref="org-card-${node.id}">
             <div class="org-card__header">
-              <div class="org-card__avatar">
-                <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(node.name)}" onerror="this.src='/api/avatar?name=${encodeURIComponent(node.name)}'" />
+              <div class="avatar-ring" style="width: 36px; height: 36px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+                <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(node.name)}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(node.name)}'" />
               </div>
               <div style="display: flex; flex-direction: column; overflow: hidden;">
                 <span class="org-card__name">${escapeHtml(node.name)}</span>

@@ -4,6 +4,7 @@ import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminVerificationItem {
   admin_notes: string | null;
@@ -134,10 +135,21 @@ export class EducationController implements ViewController {
               : `<span class="component-badge component-badge--sm">Solo lectura</span>`)
           : `<span class="component-badge component-badge--sm">Completado</span>`;
 
+        const avatarUrl = `/api/avatar?name=${encodeURIComponent(item.full_name || 'student')}`;
+        const tierColor = getFallbackTierColor('free');
+        const avatarMarkup = `
+          <div class="avatar-ring" style="width: 28px; height: 28px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(item.full_name)}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(item.full_name || 'student')}'" />
+          </div>
+        `;
+
         return `
           <tr data-ref="verification-row-${item.id}">
             <td>
-              <span class="component-badge component-badge--sm">${escapeHtml(item.full_name)}</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                ${avatarMarkup}
+                <span class="component-badge component-badge--sm">${escapeHtml(item.full_name)}</span>
+              </div>
             </td>
             <td>
               <span class="component-badge component-badge--sm">${escapeHtml(item.email || '—')}</span>

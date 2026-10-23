@@ -58,6 +58,12 @@ export class BillingViewController implements ViewController {
   }
 
   private renderBillingInfo(billing: BillingDetails): void {
+    const tokensBadge = this.container.querySelector<HTMLElement>('[data-ref="tokens-balance-badge"]');
+    if (tokensBadge) {
+      const balance = currentUser?.ai_credits_balance ?? 0;
+      tokensBadge.textContent = `${balance.toLocaleString()} créditos`;
+    }
+
     const planNameEl = this.container.querySelector<HTMLElement>('[data-ref="current-plan-name"]');
     const planStatusBadge = this.container.querySelector<HTMLElement>('[data-ref="current-plan-status-badge"]');
     const planDescEl = this.container.querySelector<HTMLElement>('[data-ref="current-plan-desc"]');
@@ -79,12 +85,54 @@ export class BillingViewController implements ViewController {
     );
 
     if (hasActiveSub) {
-      let tierName = 'Aurora Pro';
-      if (effectiveTier === 'enterprise' || effectiveTier === 'business') {
-        tierName = 'Aurora Empresas';
-      } else if (effectiveTier === 'education') {
-        tierName = 'Aurora Educación Pro';
+      const isEnterpriseTier = effectiveTier === 'enterprise' || effectiveTier === 'business';
+      const isEducationTier = effectiveTier === 'education';
+
+      if (isEnterpriseTier) {
+        if (planNameEl) planNameEl.textContent = 'Aurora Empresas (Corporativo)';
+        if (planStatusBadge) {
+          planStatusBadge.style.display = 'inline-flex';
+          planStatusBadge.className = 'component-badge component-badge--sm component-badge--success';
+          planStatusBadge.textContent = 'Plan Corporativo Activo';
+        }
+        if (planDescEl) {
+          planDescEl.textContent = 'Tu suscripción corporativa es administrada directamente por la organización o contrato empresarial. Para cambios de licencias o facturación centralizada, contacta a tu administrador.';
+        }
+        if (btnUpgrade) {
+          btnUpgrade.textContent = 'Soporte empresarial';
+          btnUpgrade.onclick = (e) => {
+            e.preventDefault();
+            navigate('/contact');
+          };
+        }
+        if (itemAutoRenewal) itemAutoRenewal.style.display = 'none';
+        if (dividerAutoRenewal) dividerAutoRenewal.style.display = 'none';
+        if (itemCancelSub) itemCancelSub.style.display = 'none';
+        if (dividerCancelSub) dividerCancelSub.style.display = 'none';
+        return;
       }
+
+      if (isEducationTier) {
+        if (planNameEl) planNameEl.textContent = 'Aurora Educación Pro (Estudiantil)';
+        if (planStatusBadge) {
+          planStatusBadge.style.display = 'inline-flex';
+          planStatusBadge.className = 'component-badge component-badge--sm component-badge--success';
+          planStatusBadge.textContent = 'Beca Académica Activa';
+        }
+        if (planDescEl) {
+          planDescEl.textContent = 'Suscripción 100% bonificada para estudiantes y personal docente verificados. Válida durante tu ciclo lectivo activo.';
+        }
+        if (btnUpgrade) {
+          btnUpgrade.style.display = 'none';
+        }
+        if (itemAutoRenewal) itemAutoRenewal.style.display = 'none';
+        if (dividerAutoRenewal) dividerAutoRenewal.style.display = 'none';
+        if (itemCancelSub) itemCancelSub.style.display = 'none';
+        if (dividerCancelSub) dividerCancelSub.style.display = 'none';
+        return;
+      }
+
+      const tierName = 'Aurora Pro';
       const intervalText = billing.interval === 'year'
         ? (t('upgrade.billing_yearly') || 'Anual')
         : (t('upgrade.billing_monthly') || 'Mensual');
@@ -190,6 +238,12 @@ export class BillingViewController implements ViewController {
         tier: effectiveTier,
       });
       return;
+    }
+
+    const tokensBadge = this.container.querySelector<HTMLElement>('[data-ref="tokens-balance-badge"]');
+    if (tokensBadge) {
+      const balance = currentUser?.ai_credits_balance ?? 0;
+      tokensBadge.textContent = `${balance.toLocaleString()} créditos`;
     }
 
     const planNameEl = this.container.querySelector<HTMLElement>('[data-ref="current-plan-name"]');

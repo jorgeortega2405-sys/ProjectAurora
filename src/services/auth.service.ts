@@ -235,14 +235,24 @@ export async function removeAccountFromSession(
   }
 
   const idToRemove = userId ?? session.activeId;
-  session.accounts = session.accounts.filter((a) => a.id !== idToRemove);
+  const remainingCandidates = session.accounts.filter((a) => a.id !== idToRemove);
+  const validRemaining: SessionAccount[] = [];
+
+  for (const acc of remainingCandidates) {
+    const fresh = await findUserById(acc.id);
+    if (fresh) {
+      validRemaining.push(acc);
+    }
+  }
+
+  session.accounts = validRemaining;
 
   if (session.accounts.length === 0) {
     clearSessionCookie(res);
     return { accounts: [], activeUser: null, remainingCount: 0 };
   }
 
-  if (session.activeId === idToRemove) {
+  if (session.activeId === idToRemove || !session.accounts.some((a) => a.id === session.activeId)) {
     session.accounts.sort((a, b) => (b.last_accessed || 0) - (a.last_accessed || 0));
     session.activeId = session.accounts[0].id;
   }

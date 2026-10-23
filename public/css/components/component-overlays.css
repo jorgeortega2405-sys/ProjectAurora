@@ -349,7 +349,7 @@
   height: 18px;
   padding: 0 4px;
   border-radius: 9px;
-  background-color: var(--color-brand, #6366f1);
+  background-color: var(--action-primary, #111827);
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
@@ -395,7 +395,7 @@
 }
 
 .notification-item.is-unread {
-  border-left: 3px solid var(--color-brand, #6366f1);
+  border-left: 3px solid var(--action-primary, #111827);
   background: var(--bg-card-subtle, rgba(99, 102, 241, 0.04));
 }
 
@@ -408,7 +408,7 @@
   justify-content: center;
   background: var(--bg-hover);
   flex-shrink: 0;
-  color: var(--color-brand, #6366f1);
+  color: var(--text-primary, #111827);
 }
 
 .notification-item__content {
@@ -1854,7 +1854,7 @@ html.dark-theme .chat-panel__top .component-button:hover {
 }
 
 .chat-feedback-btn--copy.is-copied {
-  color: #6366f1;
+  color: var(--color-success, #10b981);
 }
 
 .chat-empty-state {
@@ -2445,7 +2445,7 @@ html.dark-theme .chat-empty-state__icon {
 .anchor-grid__cell:hover {
   background: var(--bg-hover, rgba(125, 125, 125, 0.15));
   color: var(--text-primary);
-  border-color: var(--border-color-hover, #6366f1);
+  border-color: var(--border-color-hover, #000000);
 }
 
 .global-dropzone-overlay {
@@ -2720,7 +2720,7 @@ html.dark-theme .chat-empty-state__icon {
 
 .guest-auth-link-alt:hover {
   text-decoration: underline;
-  color: var(--color-primary, #6366f1);
+  color: var(--text-primary, #000000);
 }
 
 .guest-auth-legal {
@@ -3261,7 +3261,7 @@ html.dark-theme .templates-explore-card--cyan {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--theme-accent, #6366f1);
+  background: var(--action-primary, #111827);
   color: #ffffff;
   display: flex;
   align-items: center;

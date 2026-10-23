@@ -10,6 +10,7 @@ import { lookupSsoByEmail } from '../services/sso.service.js';
 import { consumePending2FALogin, getPending2FALogin, savePending2FALogin, verifyTotpCode } from '../services/two-factor.service.js';
 import { createUser, findUserByEmail, findUserById, findUserDuplicates, getUser2FASecret, sanitizeUser, updateUserPassword, verifyAndConsumeBackupCode } from '../services/user.service.js';
 import { consumePasswordResetToken, generateSixDigitCode, getPendingRegistration, savePasswordResetToken, savePendingRegistration, verifyAndConsumeCode, verifyPasswordResetToken } from '../services/verification.service.js';
+import { UserPayload } from '../types/auth.types.js';
 import { validateEmail, validatePassword, validateUsername, validateVerificationCode } from '../utils/validators.util.js';
 
 
@@ -402,16 +403,37 @@ export async function me(req: Request, res: Response): Promise<void> {
     }
 
     const accounts = getLinkedAccounts(req);
-    const updatedAccounts = await Promise.all(
-      accounts.map(async (acc) => {
-        if (acc.id === user.id) return user;
+    const validAccounts: UserPayload[] = [];
+    const validSessionAccounts: typeof accounts = [];
+
+    for (const acc of accounts) {
+      if (acc.id === user.id) {
+        validAccounts.push(user);
+        validSessionAccounts.push(acc);
+      } else {
         const fresh = await findUserById(acc.id);
-        return fresh ? sanitizeUser(fresh) : sanitizeUser(acc);
-      })
-    );
+        if (fresh) {
+          validAccounts.push(sanitizeUser(fresh));
+          validSessionAccounts.push({
+            ...acc,
+            avatar_url: fresh.avatar_url ?? null,
+            email: fresh.email,
+            subscription_status: fresh.subscription_status,
+            subscription_tier: fresh.subscription_tier,
+            subscription_tier_color: fresh.subscription_tier_color,
+            username: fresh.username,
+          });
+        }
+      }
+    }
+
+    if (session && validSessionAccounts.length !== session.accounts.length) {
+      session.accounts = validSessionAccounts;
+      setMultiAccountCookie(res, session);
+    }
 
     res.status(200).json({
-      accounts: updatedAccounts,
+      accounts: validAccounts,
       success: true,
       user,
     });

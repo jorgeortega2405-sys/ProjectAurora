@@ -125,14 +125,6 @@ export async function render(rawPath = window.location.pathname, options?: Rende
     layoutContent.classList.remove('is-auth-mode');
     const sidebar = await ensureSidebarMounted(layoutContent);
     sidebar.style.display = '';
-    updateSidebarActiveState(sidebar, activeInternalPath);
-    translateElement(sidebar);
-    if (hasDesignatedMenuItems(activeInternalPath)) {
-      if (window.innerWidth > 768) {
-        const mode = activeInternalPath.includes('/settings') ? 'settings' : 'help';
-        toggleDrawer(true, mode);
-      }
-    }
   } else {
     toggleDrawer(false);
     layoutContent.classList.add('is-auth-mode');
@@ -208,8 +200,15 @@ export async function render(rawPath = window.location.pathname, options?: Rende
 
   const internalPath = matched ? matched.internalPath : path;
   const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
-  if (sidebar && !internalPath.startsWith('/login') && !internalPath.startsWith('/register') && !internalPath.startsWith('/forgot-password') && !internalPath.startsWith('/reset-password')) {
+  if (sidebar && !isAuthView) {
     updateSidebarActiveState(sidebar, internalPath);
+    translateElement(sidebar);
+    if (hasDesignatedMenuItems(internalPath)) {
+      if (window.innerWidth > 768) {
+        const mode = internalPath.includes('/settings') ? 'settings' : 'help';
+        toggleDrawer(true, mode);
+      }
+    }
   }
 
   const pendingTransfer = consumeTransferFile();

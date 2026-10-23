@@ -1,0 +1,39 @@
+<div class="layout-nav" data-ref="sidebar">
+  <div class="layout-rail" data-ref="layout-rail">
+    <div class="layout-rail__top" data-ref="rail-top">
+      <div class="rail-top-default" data-ref="rail-top-default">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn rail-btn--toggle" data-ref="btn-toggle-drawer" data-tooltip="Alternar menú lateral" aria-label="Alternar menú lateral">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dock_to_right"></use></svg>
+        </button>
+      </div>
+    </div>
+
+    <hr class="rail-divider" data-ref="rail-divider" />
+
+    <div class="layout-rail__center" data-ref="rail-center">
+      <div class="rail-center-default" data-ref="rail-center-default">
+        <div class="rail-nav-item is-active" data-ref="rail-item-dashboard">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn is-active" data-ref="btn-rail-dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dashboard"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-dashboard">Dashboard</span>
+        </div>
+
+        <div class="rail-nav-item" data-ref="rail-item-users">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-rail-users" data-tooltip="Gestionar Usuarios" aria-label="Gestionar Usuarios">
+            <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#group"></use></svg>
+          </button>
+          <span class="rail-nav-item__label" data-ref="rail-label-users">Usuarios</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout-rail__bottom" data-ref="rail-bottom">
+      <div class="rail-nav-item" data-ref="rail-item-theme">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-toggle-theme" data-tooltip="Cambiar tema (Claro / Oscuro)" aria-label="Cambiar tema">
+          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#dark_mode"></use></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

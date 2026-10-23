@@ -3,12 +3,13 @@ import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
-import { withButtonLoading } from '../utils/dom.util.js';
+import { setupDropdown, withButtonLoading } from '../utils/dom.util.js';
 import { validateEmail } from '../utils/validators.util.js';
 
 export class ContactController implements ViewController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
+  private dropdownController: { destroy: () => void } | null = null;
   private footerController: { destroy: () => void } | null = null;
 
   constructor(container: HTMLElement) {
@@ -26,6 +27,10 @@ export class ContactController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+    if (this.dropdownController) {
+      this.dropdownController.destroy();
+      this.dropdownController = null;
     }
     if (this.footerController) {
       this.footerController.destroy();
@@ -45,11 +50,25 @@ export class ContactController implements ViewController {
     const form = this.container.querySelector<HTMLFormElement>('[data-ref="contact-form"]');
     const nameInput = this.container.querySelector<HTMLInputElement>('[data-ref="contact-name"]');
     const emailInput = this.container.querySelector<HTMLInputElement>('[data-ref="contact-email"]');
-    const subjectSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="contact-subject"]');
+    const subjectDropdown = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-contact-subject"]');
+    const subjectInput = this.container.querySelector<HTMLInputElement>('[data-ref="contact-subject"]');
+    const subjectText = this.container.querySelector<HTMLElement>('[data-ref="contact-subject-selected-text"]');
     const messageInput = this.container.querySelector<HTMLTextAreaElement>('[data-ref="contact-message"]');
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-contact"]');
     const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="contact-error"]');
     const successBanner = this.container.querySelector<HTMLElement>('[data-ref="contact-success"]');
+
+    if (subjectDropdown) {
+      this.dropdownController = setupDropdown(subjectDropdown, {
+        onSelect: (val: string, item?: HTMLElement) => {
+          if (subjectInput) subjectInput.value = val;
+          if (subjectText && item) {
+            const text = item.querySelector('.menu-item__text')?.textContent || '';
+            subjectText.textContent = text;
+          }
+        },
+      });
+    }
 
     const showError = (msg: string) => {
       if (successBanner) successBanner.style.display = 'none';
@@ -74,7 +93,7 @@ export class ContactController implements ViewController {
 
         const name = (nameInput?.value || '').trim();
         const email = (emailInput?.value || '').trim();
-        const subject = (subjectSelect?.value || '').trim();
+        const subject = (subjectInput?.value || '').trim();
         const message = (messageInput?.value || '').trim();
 
         if (name.length < 2) {
@@ -92,7 +111,6 @@ export class ContactController implements ViewController {
 
         if (!subject) {
           showError('Por favor selecciona el asunto de tu consulta.');
-          subjectSelect?.focus();
           return;
         }
 
@@ -108,6 +126,8 @@ export class ContactController implements ViewController {
           await new Promise((resolve) => setTimeout(resolve, 600));
 
           form.reset();
+          if (subjectInput) subjectInput.value = '';
+          if (subjectText) subjectText.textContent = 'Selecciona un asunto...';
           showSuccess('¡Tu mensaje ha sido enviado correctamente! Nuestro equipo te responderá a la brevedad posible.');
           showToast('Mensaje enviado con éxito', 'success');
         });

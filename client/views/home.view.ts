@@ -216,11 +216,14 @@ export class HomeController {
 
     const createWorkflowCardHtml = `
       <div class="tool-card tool-card--create-workflow" data-ref="card-create-workflow" data-category="all organize optimize convert-to-pdf convert-from-pdf edit security pdf-intelligence">
-        <div class="tool-card__icon-box" data-ref="icon-box-create-workflow">
-          ${SVG_TOOL_CREATE_WORKFLOW}
+        <div class="tool-card__header-box" data-ref="create-workflow-header">
+          <h3 class="tool-card__title" data-ref="title-create-workflow">Crea un flujo de trabajo</h3>
+          <p class="tool-card__desc" data-ref="desc-create-workflow">Crea flujos de trabajo personalizados con tus herramientas favoritas y automatiza tareas para reutilizarlas en cualquier momento.</p>
         </div>
-        <h3 class="tool-card__title" data-ref="title-create-workflow">Crear flujo de trabajo</h3>
-        <p class="tool-card__desc" data-ref="desc-create-workflow">Automatiza tus tareas recurrentes combinando herramientas PDF en un solo paso.</p>
+        <div class="tool-card__action-link" data-ref="action-create-workflow">
+          <span>Crear un flujo de trabajo</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_outward"></use></svg>
+        </div>
       </div>
     `;
 

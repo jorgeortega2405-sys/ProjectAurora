@@ -47,6 +47,10 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
     if (btnMenuOrganization) {
       btnMenuOrganization.style.display = isEnterprise ? 'flex' : 'none';
     }
+    const btnMenuPrioritySupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-priority-support"]');
+    if (btnMenuPrioritySupport) {
+      btnMenuPrioritySupport.style.display = isEnterprise ? 'flex' : 'none';
+    }
 
     const avatarUrl = currentUser.avatar_url || `/api/avatar?name=${encodeURIComponent(currentUser.username)}`;
 
@@ -354,6 +358,11 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     e.preventDefault();
     closeAvatarMenu();
     navigate('/organization');
+  });
+
+  const btnMenuPrioritySupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-priority-support"]');
+  btnMenuPrioritySupport?.addEventListener('click', (e) => {
+    e.preventDefault();
   });
 
   const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');

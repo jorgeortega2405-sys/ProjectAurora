@@ -74,6 +74,7 @@ body[data-theme="dark"] .login-logo-img {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 24px;
   text-align: left;
 }
 

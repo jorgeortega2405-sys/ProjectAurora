@@ -3,7 +3,7 @@ import { escapeHtml } from '../../services/api.service.js';
 import { getCurrentLanguage, setLanguage, t, translateElement } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
 import { loadTemplate } from '../../services/template.service.js';
-import { applyAccessibilityPreferences, getTheme, setTheme } from '../../services/theme.service.js';
+import { applyAccessibilityPreferences } from '../../services/theme.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';
 import { setupDropdown } from '../../utils/dom.util.js';
@@ -89,48 +89,6 @@ export class GuestSettingsController implements ViewController {
         },
       });
       if (guestLangDropdownCtrl) this.dropdownControllers.push(guestLangDropdownCtrl);
-    }
-
-    const themeDropdown = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-guest-theme"]');
-    const themeSelectedText = this.container.querySelector<HTMLElement>('[data-ref="guest-theme-selected-text"]');
-    const themeSelectedIcon = this.container.querySelector<HTMLElement>('[data-ref="guest-theme-selected-icon"]');
-
-    const getThemeLabel = (_theme: string) => t('settings.accessibility.theme_light', 'Tema Claro');
-
-    const themeIcons: Record<string, string> = {
-      light: 'light_mode',
-    };
-
-    const updateThemeUi = (theme: string) => {
-      const validTheme = ['system', 'light', 'dark'].includes(theme) ? theme : 'system';
-      if (themeSelectedText) {
-        themeSelectedText.textContent = getThemeLabel(validTheme);
-      }
-      if (themeSelectedIcon && themeIcons[validTheme]) {
-        themeSelectedIcon.textContent = themeIcons[validTheme];
-      }
-      if (themeDropdown) {
-        const activeItem = themeDropdown.querySelector<HTMLElement>(
-          `[data-theme-value="${validTheme}"], [data-theme="${validTheme}"]`
-        );
-        if (activeItem) {
-          themeDropdown.querySelectorAll('.menu-item').forEach((i) => i.classList.remove('is-active'));
-          activeItem.classList.add('is-active');
-        }
-      }
-    };
-
-    updateThemeUi(getTheme());
-
-    if (themeDropdown) {
-      const themeCtrl = setupDropdown(themeDropdown, {
-        onSelect: async (theme: string) => {
-          updateThemeUi(theme);
-          await setTheme(theme, false);
-          showToast(t('toasts.theme_updated', 'Preferencia de tema actualizada.'), 'success');
-        },
-      });
-      if (themeCtrl) this.dropdownControllers.push(themeCtrl);
     }
 
     const toggleReduceMotion = this.container.querySelector<HTMLInputElement>('[data-ref="toggle-guest-reduce-motion"]');

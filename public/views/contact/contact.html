@@ -27,18 +27,42 @@
               <span class="field__label">Correo electrónico</span>
             </label>
 
-            <label class="field field--has-select" data-ref="field-contact-subject">
-              <select class="field__input" data-ref="contact-subject" required>
-                <option value="" disabled selected hidden></option>
-                <option value="general">Consultas generales</option>
-                <option value="technical">Soporte técnico y problemas con herramientas</option>
-                <option value="enterprise">Soluciones empresariales y licencias</option>
-                <option value="billing">Facturación, pagos y suscripciones</option>
-                <option value="security">Seguridad y Privacidad (GDPR)</option>
-                <option value="suggestion">Sugerencia de nueva función</option>
-              </select>
-              <span class="field__label">Asunto de la consulta</span>
-            </label>
+            <div class="settings-dropdown-wrapper settings-dropdown-wrapper--full" data-ref="dropdown-wrapper-contact-subject">
+              <button type="button" class="dropdown-trigger" data-ref="btn-trigger-contact-subject" aria-label="Asunto de la consulta">
+                <div class="dropdown-trigger__left">
+                  <span class="dropdown-trigger__text" data-ref="contact-subject-selected-text">Selecciona un asunto...</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="dropdown-backdrop-contact-subject">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="dropdown-menu-contact-subject">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-contact-subject" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list" data-ref="list-contact-subject">
+                    <button type="button" class="menu-item" data-ref="option-subject-general" data-value="general">
+                      <span class="menu-item__text">Consultas generales</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-technical" data-value="technical">
+                      <span class="menu-item__text">Soporte técnico y problemas con herramientas</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-enterprise" data-value="enterprise">
+                      <span class="menu-item__text">Soluciones empresariales y licencias</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-billing" data-value="billing">
+                      <span class="menu-item__text">Facturación, pagos y suscripciones</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-security" data-value="security">
+                      <span class="menu-item__text">Seguridad y Privacidad (GDPR)</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-suggestion" data-value="suggestion">
+                      <span class="menu-item__text">Sugerencia de nueva función</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <input class="hidden-field" data-ref="contact-subject" type="hidden" value="" />
+            </div>
 
             <label class="field field--textarea" data-ref="field-contact-message">
               <textarea class="field__input field__textarea" data-ref="contact-message" placeholder=" " rows="5" required></textarea>

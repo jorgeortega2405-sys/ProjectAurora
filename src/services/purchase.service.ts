@@ -106,6 +106,11 @@ export async function updateUserSubscription(
     const fields: string[] = ['subscription_tier = ?'];
     const values: (string | number | boolean | Date | null)[] = [params.tier];
 
+    if (params.tier && params.tier !== 'free') {
+      fields.push('is_student = FALSE');
+      fields.push("subscription_origin = 'stripe'");
+    }
+
     if (params.stripeCustomerId !== undefined) {
       fields.push('stripe_customer_id = ?');
       values.push(params.stripeCustomerId);

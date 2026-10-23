@@ -6,11 +6,19 @@ import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from '..
 import { addAccountToSession, getCurrentUser } from '../services/auth.service.js';
 import { activateInstantEducationalPro, checkEducationalDomain, createStudentVerification, getLatestStudentVerification, requestInstitutionalEmailOtp, verifyInstitutionalEmailOtp } from '../services/education.service.js';
 import { logger } from '../services/logger.service.js';
+import { isUserInBusinessOrganization } from '../services/organization.service.js';
 import { getUserEffectivePermissions } from '../services/pbac.service.js';
 import { findUserById, sanitizeUser } from '../services/user.service.js';
 
 const VERIFICATIONS_DIR = path.resolve(process.cwd(), 'public/uploads/student_verifications');
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function isUserDisqualifiedFromEducation(user: { id: string; subscription_tier?: string }): Promise<boolean> {
+  if (user.subscription_tier === 'enterprise') {
+    return true;
+  }
+  return isUserInBusinessOrganization(user.id);
+}
 
 function ensureVerificationsDir(): void {
   if (!fs.existsSync(VERIFICATIONS_DIR)) {
@@ -23,6 +31,15 @@ export async function submitStudentVerificationHandler(req: Request, res: Respon
     const currentUser = getCurrentUser(req);
     if (!currentUser) {
       res.status(401).json({ error: 'Debes iniciar sesión para verificar tu estado de estudiante.', success: false });
+      return;
+    }
+
+    const isBusiness = await isUserDisqualifiedFromEducation(currentUser);
+    if (isBusiness) {
+      res.status(403).json({
+        error: 'Las cuentas vinculadas a organizaciones empresariales o corporativas no son elegibles para bonificaciones educativas individuales.',
+        success: false,
+      });
       return;
     }
 
@@ -116,6 +133,22 @@ export async function getStudentVerificationStatusHandler(req: Request, res: Res
       return;
     }
 
+    const isBusiness = await isUserDisqualifiedFromEducation(currentUser);
+    if (isBusiness) {
+      res.status(200).json({
+        eligibleDomain: '',
+        eligibleSchoolName: '',
+        isBusinessAccount: true,
+        isEligibleInstant: false,
+        isStudent: false,
+        subscriptionOrigin: currentUser.subscription_origin || 'business',
+        subscriptionTier: currentUser.subscription_tier || 'enterprise',
+        success: true,
+        verification: null,
+      });
+      return;
+    }
+
     const verification = await getLatestStudentVerification(currentUser.id);
     const domainCheck = await checkEducationalDomain(currentUser.email);
     const isPro = currentUser.subscription_tier === 'pro';
@@ -145,6 +178,15 @@ export async function claimInstantStudentProHandler(req: Request, res: Response)
     const currentUser = getCurrentUser(req);
     if (!currentUser) {
       res.status(401).json({ error: 'Debes iniciar sesión para activar el beneficio educativo.', success: false });
+      return;
+    }
+
+    const isBusiness = await isUserDisqualifiedFromEducation(currentUser);
+    if (isBusiness) {
+      res.status(403).json({
+        error: 'Las cuentas asociadas a organizaciones empresariales no son elegibles para bonificaciones educativas individuales.',
+        success: false,
+      });
       return;
     }
 
@@ -233,6 +275,15 @@ export async function requestEducationalOtpHandler(req: Request, res: Response):
       return;
     }
 
+    const isBusiness = await isUserDisqualifiedFromEducation(currentUser);
+    if (isBusiness) {
+      res.status(403).json({
+        error: 'Las cuentas vinculadas a empresas o planes corporativos no pueden activar licencias educativas individuales.',
+        success: false,
+      });
+      return;
+    }
+
     const { email } = req.body || {};
 
     if (typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
@@ -265,6 +316,15 @@ export async function verifyEducationalOtpHandler(req: Request, res: Response): 
     const currentUser = getCurrentUser(req);
     if (!currentUser) {
       res.status(401).json({ error: 'Debes iniciar sesión para completar la verificación.', success: false });
+      return;
+    }
+
+    const isBusiness = await isUserDisqualifiedFromEducation(currentUser);
+    if (isBusiness) {
+      res.status(403).json({
+        error: 'Las cuentas corporativas no son elegibles para bonificaciones educativas.',
+        success: false,
+      });
       return;
     }
 

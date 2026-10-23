@@ -4,7 +4,7 @@ import { API_ROUTES } from '../config/api-routes.js';
 import { getLocalizedPath } from '../config/seo.config.js';
 import { isToolNew, TOOLS_REGISTRY } from '../config/tools.registry.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
-import { checkAuthSession, currentUser, getApi, postApi } from '../services/api.service.js';
+import { checkAuthSession, currentUser, getApi, hasPermission, postApi } from '../services/api.service.js';
 import { getCurrentLanguage, t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
@@ -20,8 +20,13 @@ interface UserWorkflowItem {
 
 export class HomeController {
   private abortController: AbortController | null = null;
+  private carouselTimer: number | null = null;
   private container: HTMLElement;
+  private currentSlideIndex = 0;
   private dropdownControllers: Array<{ destroy: () => void }> = [];
+  private eligibleSchoolName = '';
+  private isCarouselPaused = false;
+  private isEligibleInstant = false;
   private userWorkflows: UserWorkflowItem[] = [];
 
   constructor(container: HTMLElement) {
@@ -32,14 +37,21 @@ export class HomeController {
     this.abortController = new AbortController();
     if (currentUser) {
       await this.loadUserWorkflows();
-      await this.checkEducationalEligibility();
     }
     this.renderTools();
     renderIcons(this.container);
+    this.initCarousel();
     this.bindEvents();
+    if (currentUser) {
+      void this.checkEducationalEligibility();
+    }
   }
 
   destroy(): void {
+    if (this.carouselTimer) {
+      window.clearInterval(this.carouselTimer);
+      this.carouselTimer = null;
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -48,8 +60,79 @@ export class HomeController {
     this.dropdownControllers = [];
   }
 
+  private initCarousel(): void {
+    const dots = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="dot-slide-"]');
+    dots.forEach((dot) => {
+      dot.addEventListener(
+        'click',
+        (e) => {
+          e.preventDefault();
+          const slideIdx = parseInt(dot.getAttribute('data-slide-index') || '0', 10);
+          this.goToSlide(slideIdx);
+        },
+        { signal: this.abortController?.signal }
+      );
+    });
+
+    const carouselEl = this.container.querySelector<HTMLElement>('[data-ref="home-banner-carousel"]');
+    if (carouselEl) {
+      carouselEl.addEventListener(
+        'mouseenter',
+        () => {
+          this.isCarouselPaused = true;
+        },
+        { signal: this.abortController?.signal }
+      );
+      carouselEl.addEventListener(
+        'mouseleave',
+        () => {
+          this.isCarouselPaused = false;
+        },
+        { signal: this.abortController?.signal }
+      );
+    }
+
+    this.startCarouselTimer();
+  }
+
+  private startCarouselTimer(): void {
+    if (this.carouselTimer) {
+      window.clearInterval(this.carouselTimer);
+    }
+    this.carouselTimer = window.setInterval(() => {
+      if (!this.isCarouselPaused) {
+        const nextIndex = (this.currentSlideIndex + 1) % 2;
+        this.goToSlide(nextIndex);
+      }
+    }, 7000);
+  }
+
+  private goToSlide(index: number): void {
+    this.currentSlideIndex = index;
+
+    const slides = this.container.querySelectorAll<HTMLElement>('.banner-slide');
+    const dots = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="dot-slide-"]');
+
+    slides.forEach((slide, idx) => {
+      slide.classList.toggle('is-active', idx === index);
+    });
+
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('is-active', idx === index);
+    });
+
+    this.startCarouselTimer();
+  }
+
   private async checkEducationalEligibility(): Promise<void> {
-    if (!currentUser || currentUser.subscription_tier === 'pro' || currentUser.is_student) {
+    if (
+      !currentUser ||
+      currentUser.subscription_tier === 'pro' ||
+      currentUser.subscription_tier === 'enterprise' ||
+      currentUser.is_student ||
+      hasPermission(currentUser, 'subscription:feature:teams') ||
+      hasPermission(currentUser, 'subscription:feature:enterprise')
+    ) {
       return;
     }
 
@@ -58,49 +141,38 @@ export class HomeController {
       if (!res.ok) return;
 
       const data = await res.json();
-      if (!data.isEligibleInstant) return;
+      if (data.isBusinessAccount || !data.isEligibleInstant) return;
 
-      const banner = this.container.querySelector<HTMLElement>('[data-ref="home-edu-banner"]');
-      const schoolBadge = this.container.querySelector<HTMLElement>('[data-ref="badge-home-edu-school"]');
-      const descText = this.container.querySelector<HTMLElement>('[data-ref="txt-home-edu-desc"]');
-      const claimBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-claim-edu"]');
-      const dismissBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-dismiss-edu"]');
+      this.isEligibleInstant = true;
+      this.eligibleSchoolName = data.eligibleSchoolName || '';
 
-      if (!banner) return;
+      const schoolBadge = this.container.querySelector<HTMLElement>('[data-ref="edu-banner-badge-text"]');
+      const titleText = this.container.querySelector<HTMLElement>('[data-ref="edu-banner-title"]');
+      const descText = this.container.querySelector<HTMLElement>('[data-ref="edu-banner-desc"]');
+      const actionLabel = this.container.querySelector<HTMLElement>('[data-ref="btn-label-edu-action"]');
+      const actionIcon = this.container.querySelector<SVGElement>('[data-ref="btn-icon-edu-action"] use');
 
-      if (schoolBadge && data.eligibleSchoolName) {
-        schoolBadge.textContent = data.eligibleSchoolName;
+      if (schoolBadge && this.eligibleSchoolName) {
+        schoolBadge.textContent = this.eligibleSchoolName;
+      }
+      if (titleText) {
+        titleText.textContent = '¡Tu Cuenta es Elegible para 1 Año Pro Gratis!';
       }
       if (descText) {
-        descText.textContent = `Detectamos que estudias o enseñas en ${data.eligibleSchoolName || 'tu institución'}. Activa 1 año de herramientas Pro ilimitadas 100% bonificado.`;
+        descText.textContent = `Detectamos tu correo institucional en ${this.eligibleSchoolName || 'tu institución'}. Obtén y activa tu Plan Pro Estudiantil 100% bonificado con 1 solo clic.`;
+      }
+      if (actionLabel) {
+        actionLabel.textContent = 'Obtener y Activar Plan Pro Estudiantes';
+      }
+      if (actionIcon) {
+        actionIcon.setAttribute('href', '/icons.svg#bolt');
       }
 
-      banner.style.display = 'block';
-      renderIcons(banner);
-
-      if (dismissBtn) {
-        dismissBtn.addEventListener(
-          'click',
-          () => {
-            banner.style.display = 'none';
-          },
-          { signal: this.abortController?.signal }
-        );
-      }
-
-      if (claimBtn) {
-        claimBtn.addEventListener(
-          'click',
-          () => void this.handleClaimInstantPro(claimBtn, banner),
-          { signal: this.abortController?.signal }
-        );
-      }
-    } catch {
-      // Ignore background check failure
-    }
+      this.goToSlide(1);
+    } catch {}
   }
 
-  private async handleClaimInstantPro(btn: HTMLButtonElement, banner: HTMLElement): Promise<void> {
+  private async handleClaimInstantPro(btn: HTMLButtonElement): Promise<void> {
     await withButtonLoading(btn, async () => {
       try {
         const res = await postApi(API_ROUTES.education.claimInstantPro, {});
@@ -110,8 +182,13 @@ export class HomeController {
           return;
         }
 
-        showToast(data.message || '¡Plan Pro Estudiantil activado con éxito!', 'success');
-        banner.style.display = 'none';
+        showToast(data.message || '¡Plan Pro Estudiantil activado con éxito! Tienes 1 año de acceso total.', 'success');
+        this.isEligibleInstant = false;
+        const btnLabel = this.container.querySelector<HTMLElement>('[data-ref="btn-label-edu-action"]');
+        if (btnLabel) {
+          btnLabel.textContent = 'Plan Pro Estudiantil Activo';
+        }
+        btn.disabled = true;
         await checkAuthSession();
       } catch {
         showToast('Error de red al activar el plan estudiantil.', 'danger');
@@ -251,6 +328,20 @@ export class HomeController {
       (e) => {
         e.preventDefault();
         navigate('/upgrade');
+      },
+      { signal: this.abortController?.signal }
+    );
+
+    const btnHomeEdu = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-home-edu-action"]');
+    btnHomeEdu?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.isEligibleInstant) {
+          void this.handleClaimInstantPro(btnHomeEdu);
+        } else {
+          navigate('/education/verify');
+        }
       },
       { signal: this.abortController?.signal }
     );

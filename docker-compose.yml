@@ -74,6 +74,49 @@ services:
       - MINIO_ROOT_PASSWORD=minioadmin
     command: server /data --console-address ":9001"
 
+  telemetry-worker:
+    build:
+      context: ./services/telemetry-worker
+      dockerfile: Dockerfile
+    container_name: aurora-telemetry-worker
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_QUEUE=telemetry:queue:incoming
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_KEYSPACE=aurora_telemetry
+      - BATCH_SIZE=100
+      - BATCH_TIMEOUT_SECONDS=2.0
+    depends_on:
+      redis:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: aurora-cassandra
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=aurora_cluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=128M
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+      - ./database/cassandra/init_telemetry.cql:/docker-entrypoint-initdb.d/init_telemetry.cql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 25
+      start_period: 40s
+
   app:
     build: .
     container_name: aurora-app
@@ -112,6 +155,7 @@ services:
         condition: service_started
 
 volumes:
+  cassandra_data:
   mysql_data:
   redis_data:
   downloader-data:

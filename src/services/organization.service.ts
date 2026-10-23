@@ -184,6 +184,17 @@ export async function getUserOrganization(userId: string): Promise<{ memberRole:
   };
 }
 
+export async function isUserInBusinessOrganization(userId: string): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT o.id FROM organization_members m
+     INNER JOIN organizations o ON m.organization_id = o.id
+     WHERE m.user_id = ? AND m.status = 'active' AND o.org_type = 'business' AND o.subscription_status = 'active'
+     LIMIT 1`,
+    [userId]
+  );
+  return rows.length > 0;
+}
+
 export async function createCampusOrganizationFromInquiry(params: {
   inquiryId: string;
   ownerUserId: string;

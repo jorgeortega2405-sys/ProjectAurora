@@ -1,46 +1,51 @@
 <div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="purchases-wrapper">
-  <div class="component-top" data-ref="component-top">
+  <header class="component-top" data-ref="component-top">
     <div class="component-top-left" data-ref="component-top-left">
-      <h1 class="component-top-title" data-ref="purchases-title" data-i18n="settings.purchases.title">Historial de compras</h1>
+      <h1 class="component-top-title" data-ref="purchases-page-title" style="font-size: 15px; font-weight: 700;">Historial de Compras</h1>
+      <span class="component-badge component-badge--sm" data-ref="purchases-count-badge">0</span>
     </div>
 
     <div class="component-top-right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar compras" data-i18n-tooltip="settings.purchases.search_tooltip" data-i18n-aria="settings.purchases.search_tooltip" aria-label="Buscar compras">
-        <span class="material-symbols-rounded">search</span>
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar compras" data-tooltip-placement="bottom" aria-label="Buscar compras">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
       </button>
     </div>
 
     <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
       <div class="component-search component-search--full" data-ref="search-box">
         <div class="component-search__icon" data-ref="search-icon">
-          <span class="material-symbols-rounded">search</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
         </div>
         <div class="component-search__input-box" data-ref="search-input-box">
-          <input class="component-search__input" data-ref="purchases-search-input" data-i18n-placeholder="settings.purchases.search_placeholder" type="text" maxlength="100" autocomplete="off" />
+          <input class="component-search__input" data-ref="purchases-search-input" placeholder="Buscar por plan, referencia o monto..." type="text" maxlength="100" autocomplete="off" />
         </div>
-        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" data-i18n-aria="common.clear_search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
-          <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
     </div>
-  </div>
+  </header>
 
   <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom">
     <div class="component-table-wrapper" data-ref="purchases-table-wrapper">
       <table class="component-table" data-ref="purchases-table">
         <thead class="component-table__head" data-ref="purchases-thead">
           <tr>
-            <th data-ref="th-date" data-i18n="settings.purchases.col_date">Fecha</th>
-            <th data-ref="th-plan" data-i18n="settings.purchases.col_plan">Plan</th>
-            <th data-ref="th-period" data-i18n="settings.purchases.col_period">Ciclo</th>
-            <th data-ref="th-amount" data-i18n="settings.purchases.col_amount">Monto</th>
-            <th data-ref="th-status" data-i18n="settings.purchases.col_status">Estado</th>
-            <th data-ref="th-reference" data-i18n="settings.purchases.col_reference">Referencia</th>
+            <th data-ref="th-plan">Plan / Concepto</th>
+            <th data-ref="th-amount">Monto</th>
+            <th data-ref="th-period">Ciclo</th>
+            <th data-ref="th-status">Estado</th>
+            <th data-ref="th-date">Fecha de pago</th>
+            <th class="text-right" data-ref="th-reference">Referencia</th>
           </tr>
         </thead>
         <tbody class="component-table__body" data-ref="purchases-tbody">
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-secondary);">Cargando historial de compras...</td>
+          </tr>
         </tbody>
       </table>
     </div>
+    <div class="banner banner--danger" data-ref="purchases-page-error" style="display: none; margin: 12px 24px;"></div>
   </div>
 </div>

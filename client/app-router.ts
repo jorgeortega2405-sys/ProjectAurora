@@ -4,6 +4,7 @@ import { findRoute, MatchedRoute } from './config/routes.config.js';
 import { getLocalizedPath, updateDomSeo } from './config/seo.config.js';
 import { getCurrentLanguage, setLanguage, translateElement } from './services/i18n.service.js';
 import { setNavigationHandler } from './services/navigation.service.js';
+import { trackPageView, trackRouteTransition } from './services/telemetry.service.js';
 import { hideTooltip } from './services/tooltip.service.js';
 import { consumeTransferFile } from './services/transfer.service.js';
 import { ViewController } from './types/common.types.js';
@@ -88,6 +89,7 @@ export function navigate(url: string, replace = false): void {
 setNavigationHandler(navigate);
 
 export async function render(rawPath = window.location.pathname, options?: RenderOptions): Promise<void> {
+  const navigationStartTime = performance.now();
   const { pathname: path, query: targetQuery } = parseRouteUrl(options?.updateHistory?.fullUrl || rawPath);
   closeAllModals();
   hideTooltip();
@@ -230,6 +232,11 @@ export async function render(rawPath = window.location.pathname, options?: Rende
     scrollable.scrollTop = 0;
   }
   setupLayoutScrollSync();
+  const navDuration = Math.round(performance.now() - navigationStartTime);
+  if (previousPath && previousPath !== path) {
+    trackRouteTransition(previousPath, path, navDuration);
+  }
+  trackPageView(path, navDuration, { route_id: currentActiveRouteId });
   previousPath = path;
 }
 

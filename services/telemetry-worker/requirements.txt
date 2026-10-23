@@ -1,0 +1,2 @@
+cassandra-driver==3.29.2
+redis==5.2.1

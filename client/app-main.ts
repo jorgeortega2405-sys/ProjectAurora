@@ -2,6 +2,7 @@ import { initRouter, navigate } from './app-router.js';
 import { setupLayoutScrollSync } from './components/layout.component.js';
 import { checkAuthSession } from './services/api.service.js';
 import { initI18n, translateElement } from './services/i18n.service.js';
+import { initTelemetry } from './services/telemetry.service.js';
 import { preloadTemplates } from './services/template.service.js';
 import { initTheme } from './services/theme.service.js';
 import { initTooltips } from './services/tooltip.service.js';
@@ -91,6 +92,7 @@ async function initApp(): Promise<void> {
   await Promise.all([initI18n(), checkAuthSession()]);
   initTheme();
   initTooltips();
+  initTelemetry();
   setupGlobalLinks();
   initScrollShadow();
   translateElement(document.body);

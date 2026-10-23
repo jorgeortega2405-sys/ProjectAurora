@@ -1,6 +1,6 @@
+import { Request, Response } from 'express';
 import { logger } from '../services/logger.service.js';
 import { addMemberToOrganization, addOrganizationDomain, countActiveMembers, createOrganization, getOrganizationById, getUserOrganization, listOrganizationDomains, listOrganizationMembers, removeMemberFromOrganization, removeOrganizationDomain } from '../services/organization.service.js';
-import { Request, Response } from 'express';
 
 export async function createOrganizationHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -16,12 +16,22 @@ export async function createOrganizationHandler(req: Request, res: Response): Pr
       return;
     }
 
+    const targetOrgType = orgType === 'education' ? 'education' : 'business';
+
+    if ((user.is_student || user.subscription_origin === 'education') && targetOrgType === 'business') {
+      res.status(403).json({
+        error: 'Las cuentas con acreditación estudiantil activa son para uso académico individual y no pueden crear organizaciones comerciales. Para operar una empresa debes adquirir un plan comercial o usar una cuenta corporativa.',
+        success: false,
+      });
+      return;
+    }
+
     const parsedLimit = typeof seatLimit === 'number' && seatLimit > 0 ? seatLimit : 5;
 
     const organization = await createOrganization({
       domain,
       name,
-      orgType: orgType === 'education' ? 'education' : 'business',
+      orgType: targetOrgType,
       ownerId: user.id,
       seatLimit: parsedLimit,
       slug,

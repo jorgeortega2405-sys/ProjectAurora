@@ -1,4 +1,5 @@
 import { User } from '../types/auth.types.js';
+import { trackApiLatency } from './telemetry.service.js';
 
 export let currentUser: User | null = null;
 export let linkedAccounts: User[] = [];
@@ -68,8 +69,22 @@ export function hasPermission(user: User | null, permission: string): boolean {
   return false;
 }
 
+async function timedFetch(url: string, init: RequestInit): Promise<Response> {
+  const startTime = performance.now();
+  try {
+    const res = await fetch(url, init);
+    const duration = Math.round(performance.now() - startTime);
+    trackApiLatency(url, init.method || 'GET', duration, res.status);
+    return res;
+  } catch (err) {
+    const duration = Math.round(performance.now() - startTime);
+    trackApiLatency(url, init.method || 'GET', duration, 0);
+    throw err;
+  }
+}
+
 export async function getApi(url: string): Promise<Response> {
-  return fetch(url, {
+  return timedFetch(url, {
     credentials: 'same-origin',
     headers: {
       Accept: 'application/json',
@@ -80,7 +95,7 @@ export async function getApi(url: string): Promise<Response> {
 
 export async function postApi(url: string, body?: unknown): Promise<Response> {
   const token = await ensureCsrfToken();
-  return fetch(url, {
+  return timedFetch(url, {
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: 'same-origin',
     headers: {
@@ -94,7 +109,7 @@ export async function postApi(url: string, body?: unknown): Promise<Response> {
 
 export async function putApi(url: string, body?: unknown): Promise<Response> {
   const token = await ensureCsrfToken();
-  return fetch(url, {
+  return timedFetch(url, {
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: 'same-origin',
     headers: {
@@ -108,7 +123,7 @@ export async function putApi(url: string, body?: unknown): Promise<Response> {
 
 export async function deleteApi(url: string, body?: unknown): Promise<Response> {
   const token = await ensureCsrfToken();
-  return fetch(url, {
+  return timedFetch(url, {
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: 'same-origin',
     headers: {
@@ -122,7 +137,7 @@ export async function deleteApi(url: string, body?: unknown): Promise<Response> 
 
 export async function postFormApi(url: string, formData: FormData): Promise<Response> {
   const token = await ensureCsrfToken();
-  return fetch(url, {
+  return timedFetch(url, {
     body: formData,
     credentials: 'same-origin',
     headers: {

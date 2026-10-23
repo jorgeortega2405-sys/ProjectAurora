@@ -800,7 +800,7 @@ html.dark-theme .canvas-card__icon-wrap {
   gap: 40px;
   grid-template-columns: 1.15fr 0.85fr;
   overflow: hidden;
-  padding: 48px;
+  padding: 48px 48px 56px;
   position: relative;
   width: 100%;
 }
@@ -947,7 +947,7 @@ html.dark-theme .ai-banner__media-frame {
 @media (max-width: 900px) {
   .ai-banner {
     grid-template-columns: 1fr;
-    padding: 32px 20px;
+    padding: 32px 20px 48px;
     gap: 20px;
   }
 
@@ -955,6 +955,115 @@ html.dark-theme .ai-banner__media-frame {
   .home-feature-section .ai-banner__media {
     display: none !important;
   }
+}
+
+.banner-carousel {
+  position: relative;
+  width: 100%;
+}
+
+.banner-carousel__track {
+  position: relative;
+  width: 100%;
+}
+
+.banner-slide {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  width: 100%;
+}
+
+.banner-slide.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.ai-banner--education {
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+html[data-theme="dark"] .ai-banner--education,
+html.dark-theme .ai-banner--education {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.35) 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.ai-banner__glow--education {
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.16) 0%, transparent 70%);
+}
+
+.ai-banner__badge--education {
+  background-color: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.22);
+  color: #2563eb;
+}
+
+html[data-theme="dark"] .ai-banner__badge--education,
+html.dark-theme .ai-banner__badge--education {
+  background-color: rgba(37, 99, 235, 0.2);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.banner-carousel__controls {
+  align-items: center;
+  bottom: 20px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  left: 50%;
+  pointer-events: auto;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+@media (max-width: 900px) {
+  .banner-carousel__controls {
+    bottom: 14px;
+  }
+}
+
+.banner-carousel__dot {
+  background-color: rgba(148, 163, 184, 0.45);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  height: 8px;
+  padding: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+  width: 8px;
+}
+
+.banner-carousel__dot:hover {
+  background-color: rgba(148, 163, 184, 0.75);
+}
+
+.banner-carousel__dot.is-active {
+  background-color: var(--text-primary, #0f172a);
+  width: 28px;
+}
+
+html[data-theme="dark"] .banner-carousel__dot {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+html[data-theme="dark"] .banner-carousel__dot:hover {
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+html[data-theme="dark"] .banner-carousel__dot.is-active,
+html.dark-theme .banner-carousel__dot.is-active {
+  background-color: #ffffff;
 }
 
 .site-footer {

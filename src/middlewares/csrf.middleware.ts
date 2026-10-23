@@ -28,7 +28,9 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
     req.originalUrl === '/api/subscriptions/webhook' ||
     req.path.startsWith('/api/auth/sso/saml/callback') ||
     req.originalUrl.startsWith('/api/auth/sso/saml/callback') ||
-    req.path.startsWith('/auth/sso/saml/callback')
+    req.path.startsWith('/auth/sso/saml/callback') ||
+    req.path.includes('/telemetry') ||
+    req.originalUrl.includes('/telemetry')
   ) {
     return next();
   }

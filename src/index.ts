@@ -23,6 +23,7 @@ import seoRoutes from './routes/seo.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
 import ssoRoutes from './routes/sso.routes.js';
 import { subscriptionRouter } from './routes/subscription.routes.js';
+import telemetryRoutes from './routes/telemetry.routes.js';
 import toolsRoutes from './routes/tools.routes.js';
 import workflowRoutes from './routes/workflow.routes.js';
 import { logger } from './services/logger.service.js';
@@ -333,6 +334,7 @@ async function startServer(): Promise<void> {
   app.use('/api', organizationRoutes);
   app.use('/api', settingsRoutes);
   app.use('/api', ssoRoutes);
+  app.use('/api', telemetryRoutes);
   app.use('/api', toolsRoutes);
   app.use('/api', workflowRoutes);
   app.use('/api/subscriptions', subscriptionRouter);

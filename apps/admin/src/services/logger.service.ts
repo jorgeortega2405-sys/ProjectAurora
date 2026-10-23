@@ -1,7 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const LOGS_ROOT_DIR = path.resolve(process.cwd(), 'logs');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const LOGS_ROOT_DIR = path.resolve(__dirname, '../../logs');
 
 export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
 export type LogCategory = 'app' | 'db' | 'security';

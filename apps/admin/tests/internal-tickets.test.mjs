@@ -103,7 +103,10 @@ describe('Suite de Tickets Internos y Tareas Interdepartamentales', () => {
     });
 
     test('Regla 11: Esquemas de tablas definidos exclusivamente en database/db_identity.sql', () => {
-      const sqlPath = path.resolve(process.cwd(), 'database/db_identity.sql');
+      const repoRoot = fs.existsSync(path.resolve(process.cwd(), 'apps'))
+        ? process.cwd()
+        : path.resolve(process.cwd(), '../..');
+      const sqlPath = path.resolve(repoRoot, 'database/db_identity.sql');
       const sql = fs.readFileSync(sqlPath, 'utf8');
 
       assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS internal_tickets'), 'Tabla internal_tickets debe estar en db_identity.sql');

@@ -1,4 +1,3 @@
-import { navigate } from '../app-router.js';
 import { mountSiteFooter } from '../components/footer.component.js';
 import { API_ROUTES } from '../config/api-routes.js';
 import { getLocalizedPath } from '../config/seo.config.js';
@@ -7,6 +6,7 @@ import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-ic
 import { checkAuthSession, currentUser, getApi, hasPermission, postApi } from '../services/api.service.js';
 import { getCurrentLanguage, t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { withButtonLoading } from '../utils/dom.util.js';
@@ -127,9 +127,8 @@ export class HomeController {
   private async checkEducationalEligibility(): Promise<void> {
     if (
       !currentUser ||
-      currentUser.subscription_tier === 'pro' ||
-      currentUser.subscription_tier === 'enterprise' ||
       currentUser.is_student ||
+      hasPermission(currentUser, 'subscription:feature:pro') ||
       hasPermission(currentUser, 'subscription:feature:teams') ||
       hasPermission(currentUser, 'subscription:feature:enterprise')
     ) {

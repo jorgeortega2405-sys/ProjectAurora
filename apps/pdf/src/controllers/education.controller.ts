@@ -7,14 +7,15 @@ import { addAccountToSession, getCurrentUser } from '../services/auth.service.js
 import { activateInstantEducationalPro, checkEducationalDomain, createStudentVerification, getLatestStudentVerification, requestInstitutionalEmailOtp, verifyInstitutionalEmailOtp } from '../services/education.service.js';
 import { logger } from '../services/logger.service.js';
 import { isUserInBusinessOrganization } from '../services/organization.service.js';
-import { getUserEffectivePermissions } from '../services/pbac.service.js';
+import { getUserEffectivePermissions, hasPermission } from '../services/pbac.service.js';
 import { findUserById, sanitizeUser } from '../services/user.service.js';
 
 const VERIFICATIONS_DIR = path.resolve(process.cwd(), 'public/uploads/student_verifications');
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-async function isUserDisqualifiedFromEducation(user: { id: string; subscription_tier?: string }): Promise<boolean> {
-  if (user.subscription_tier === 'enterprise') {
+async function isUserDisqualifiedFromEducation(user: { id: string; role?: string; subscription_status?: string; subscription_tier?: string }): Promise<boolean> {
+  const permissions = await getUserEffectivePermissions(user);
+  if (hasPermission(permissions, 'subscription:feature:enterprise')) {
     return true;
   }
   return isUserInBusinessOrganization(user.id);
@@ -151,7 +152,8 @@ export async function getStudentVerificationStatusHandler(req: Request, res: Res
 
     const verification = await getLatestStudentVerification(currentUser.id);
     const domainCheck = await checkEducationalDomain(currentUser.email);
-    const isPro = currentUser.subscription_tier === 'pro';
+    const permissions = await getUserEffectivePermissions(currentUser);
+    const isPro = hasPermission(permissions, 'subscription:feature:pro');
     const isEligibleInstant = !isPro && domainCheck.isPartner;
 
     res.status(200).json({
@@ -190,7 +192,8 @@ export async function claimInstantStudentProHandler(req: Request, res: Response)
       return;
     }
 
-    if (currentUser.subscription_tier === 'pro' && currentUser.subscription_status === 'active') {
+    const permissions = await getUserEffectivePermissions(currentUser);
+    if (hasPermission(permissions, 'subscription:feature:pro') && currentUser.subscription_status === 'active') {
       res.status(400).json({ error: 'Tu cuenta ya cuenta con una suscripción Pro activa.', success: false });
       return;
     }

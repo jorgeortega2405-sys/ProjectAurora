@@ -1,4 +1,3 @@
-import { navigate } from '../../app-router.js';
 import { openModal } from '../../components/modal.component.js';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { getLocalizedPath } from '../../config/seo.config.js';
@@ -8,6 +7,7 @@ import { exportToDropbox } from '../../services/dropbox.service.js';
 import { exportToGoogleDrive } from '../../services/google-drive.service.js';
 import { getCurrentLanguage, t } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
+import { navigate } from '../../services/navigation.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { setTransferFile } from '../../services/transfer.service.js';

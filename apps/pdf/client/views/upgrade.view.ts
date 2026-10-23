@@ -1,8 +1,8 @@
-import { navigate } from '../app-router.js';
 import { API_ROUTES } from '../config/api-routes.js';
-import { checkAuthSession, currentUser, escapeHtml, getApi, postApi } from '../services/api.service.js';
+import { checkAuthSession, currentUser, escapeHtml, getApi, hasPermission, postApi } from '../services/api.service.js';
 import { t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { withButtonLoading } from '../utils/dom.util.js';
@@ -194,7 +194,7 @@ export class UpgradeController {
   }
 
   private async checkEducationalEligibility(): Promise<void> {
-    if (!currentUser || currentUser.subscription_tier === 'pro' || currentUser.is_student) {
+    if (!currentUser || currentUser.is_student || hasPermission(currentUser, 'subscription:feature:pro') || hasPermission(currentUser, 'subscription:feature:enterprise')) {
       return;
     }
 
@@ -367,8 +367,7 @@ export class UpgradeController {
     }
 
     if (tierId === 'pro') {
-      const userTier = (currentUser.subscription_tier || 'free').toLowerCase();
-      if (userTier === 'pro') {
+      if (hasPermission(currentUser, 'subscription:feature:pro')) {
         showToast(t('upgrade.already_subscribed') || 'Ya tienes una suscripción activa a este plan.', 'info');
         return;
       }

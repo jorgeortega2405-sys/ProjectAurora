@@ -1,8 +1,8 @@
-import { switchLanguage } from '../app-router.js';
 import { getLocalizedPath } from '../config/seo.config.js';
 import { escapeHtml } from '../services/api.service.js';
 import { getCurrentLanguage, t } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { switchLanguage } from '../services/navigation.service.js';
 import { showToast } from '../services/toast.service.js';
 import { setupDropdown } from '../utils/dom.util.js';
 import { AVAILABLE_LANGUAGES, getLanguageName } from '../utils/languages.util.js';

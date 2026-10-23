@@ -1,4 +1,3 @@
-import { navigate } from '../app-router.js';
 import { openModal } from '../components/modal.component.js';
 import { openUpgradeModal } from '../components/upgrade-modal.component.js';
 import { getMaxWorkflows } from '../config/tools-limits.config.js';
@@ -6,6 +5,7 @@ import { WORKFLOW_TOOLS } from '../config/workflow-tools.config.js';
 import { SVG_TOOL_CREATE_WORKFLOW, SVG_TOOL_WORKFLOW } from '../graphics/tool-icons.graphics.js';
 import { currentUser, deleteApi, getApi, postApi, putApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { UserWorkflow, WorkflowStep } from '../types/workflow.types.js';

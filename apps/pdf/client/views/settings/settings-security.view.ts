@@ -1,8 +1,8 @@
-import { navigate } from '../../app-router.js';
 import { open2FAModal, openModal } from '../../components/modal.component.js';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { clearUserState, currentUser, getApi, hasPermission, logoutAllApi, postApi, setCurrentUser, setLinkedAccounts } from '../../services/api.service.js';
 import { t } from '../../services/i18n.service.js';
+import { navigate } from '../../services/navigation.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { ModalInstance, ViewController } from '../../types/common.types.js';

@@ -1,7 +1,7 @@
-import { navigate } from '../app-router.js';
-import { currentUser } from '../services/api.service.js';
+import { currentUser, hasPermission } from '../services/api.service.js';
 import { t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { showToast } from '../services/toast.service.js';
 import { loadStylesheet } from '../utils/dom.util.js';
 
@@ -15,9 +15,8 @@ export function openUpgradeModal(initialPlan: UpgradeModalPlanTier = 'pro'): { c
     activeUpgradeModal.close();
   }
 
-  const userTier = (currentUser?.subscription_tier || 'free').toLowerCase();
-  const isEnterprise = userTier === 'enterprise' || userTier === 'empresas';
-  const isPro = userTier === 'pro';
+  const isEnterprise = hasPermission(currentUser, 'subscription:feature:enterprise');
+  const isPro = hasPermission(currentUser, 'subscription:feature:pro');
 
   let selectedPlan: UpgradeModalPlanTier = isEnterprise ? 'enterprise' : (isPro ? 'enterprise' : initialPlan);
 

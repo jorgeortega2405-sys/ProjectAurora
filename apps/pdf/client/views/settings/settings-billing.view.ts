@@ -1,8 +1,8 @@
-import { navigate } from '../../app-router.js';
 import { openModal } from '../../components/modal.component.js';
 import { checkAuthSession, currentUser, getApi, postApi } from '../../services/api.service.js';
 import { t, translateElement } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
+import { navigate } from '../../services/navigation.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';

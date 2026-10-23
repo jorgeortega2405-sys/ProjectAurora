@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { CreateTicketInput, DepartmentOption, InternalTicket, InternalTicketComment, StaffOption, TicketCategory, TicketPriority, TicketStatus, TicketSummaryStats, UpdateTicketInput } from '../types/tickets.types.js';
 import { adminDbPool } from './db.service.js';
 import { logger } from './logger.service.js';
-import { CreateTicketInput, DepartmentOption, InternalTicket, InternalTicketComment, StaffOption, TicketCategory, TicketPriority, TicketStatus, TicketSummaryStats, UpdateTicketInput } from '../types/tickets.types.js';
 
 interface TicketRowPacket extends RowDataPacket {
   assigned_to: string | null;

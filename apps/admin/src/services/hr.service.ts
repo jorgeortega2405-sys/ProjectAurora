@@ -4,9 +4,9 @@ import fs from 'fs';
 import { RowDataPacket } from 'mysql2/promise';
 import path from 'path';
 import { adminConfig } from '../config/env.config.js';
+import { DocumentType, EmployeeStatus, EmploymentType, HireEmployeeInput, HireEmployeeResult, HrDepartment, HrDocument, HrEmployee, HrOrganigramNode, HrSummaryStats, HrVacationRequest, SalaryFrequency, VacationStatus } from '../types/hr.types.js';
 import { adminDbPool } from './db.service.js';
 import { logger } from './logger.service.js';
-import { DocumentType, EmployeeStatus, EmploymentType, HireEmployeeInput, HireEmployeeResult, HrDepartment, HrDocument, HrEmployee, HrOrganigramNode, HrSummaryStats, HrVacationRequest, SalaryFrequency, VacationStatus } from '../types/hr.types.js';
 
 interface DepartmentRow extends RowDataPacket {
   color: string;

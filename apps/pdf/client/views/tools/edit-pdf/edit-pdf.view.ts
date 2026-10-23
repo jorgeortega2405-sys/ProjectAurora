@@ -1,4 +1,3 @@
-import { navigate } from '../../../app-router.js';
 import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
@@ -6,12 +5,13 @@ import { postFormApi, postFormWithProgress } from '../../../services/api.service
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
+import { navigate } from '../../../services/navigation.service.js';
 import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
-import { EditDrawingStroke, EditImageItem, EditPdfMode, EditPdfResponseData, EditPdfTool, EditorProperties, EditShapeItem, EditShapeType, EditTextAddition, EditTextReplacement, NativeTextItem } from './edit-pdf.types.js';
+import { EditDrawingStroke, EditImageItem, EditPdfMode, EditPdfResponseData, EditPdfTool, EditShapeItem, EditShapeType, EditTextAddition, EditTextReplacement, EditorProperties, NativeTextItem } from './edit-pdf.types.js';
 
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 B';

@@ -42,3 +42,7 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Python y bytecode
+__pycache__/
+*.pyc

@@ -1,7 +1,7 @@
-import { navigate } from '../app-router.js';
 import { API_ROUTES } from '../config/api-routes.js';
 import { getApi, postApi, setAuthState } from '../services/api.service.js';
 import { t } from '../services/i18n.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { RegistrationState, TwoFactorLoginState } from '../types/auth.types.js';
 import { bindNavigationLinks, bindSubmitOnEnter, createBannerManager, setupPasswordToggle, withButtonLoading } from '../utils/dom.util.js';

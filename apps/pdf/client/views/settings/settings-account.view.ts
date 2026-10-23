@@ -1,8 +1,8 @@
-import { navigate, switchLanguage } from '../../app-router.js';
 import { openModal } from '../../components/modal.component.js';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { currentUser, deleteApi, escapeHtml, getApi, hasPermission, postApi, postFormApi, setCurrentUser } from '../../services/api.service.js';
 import { getCurrentLanguage, t } from '../../services/i18n.service.js';
+import { navigate, switchLanguage } from '../../services/navigation.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { setToastPreferences, showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';

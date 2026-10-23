@@ -1,7 +1,7 @@
-import { navigate } from '../app-router.js';
 import { getFooterHtml, mountSiteFooter } from '../components/footer.component.js';
 import { postApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { ViewController } from '../types/common.types.js';
 import { withButtonLoading } from '../utils/dom.util.js';

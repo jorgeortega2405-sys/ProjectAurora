@@ -1,5 +1,4 @@
 import Sortable from 'sortablejs';
-import { navigate } from '../../../app-router.js';
 import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
@@ -9,6 +8,7 @@ import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
+import { navigate } from '../../../services/navigation.service.js';
 import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';

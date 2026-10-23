@@ -1,10 +1,10 @@
+import Stripe from 'stripe';
 import { config } from '../config/env.config.js';
 import { PLAN_TIER_CONFIGS, normalizeTierKey } from '../config/plans.config.js';
 import { redis } from '../config/redis.config.js';
 import { BillingInterval } from '../types/subscription.types.js';
 import { logger } from './logger.service.js';
-import { getPurchaseBySessionId, getUserByStripeCustomerId, getUserBillingInfo, recordPurchase, updateUserCustomerId, updateUserSubscription } from './purchase.service.js';
-import Stripe from 'stripe';
+import { getPurchaseBySessionId, getUserBillingInfo, getUserByStripeCustomerId, recordPurchase, updateUserCustomerId, updateUserSubscription } from './purchase.service.js';
 
 export class StripeService {
   private static instance: StripeService;

@@ -1,12 +1,12 @@
-import { navigate } from '../../app-router.js';
+import Sortable from 'sortablejs';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { getApi, postFormApi } from '../../services/api.service.js';
 import { renderIcons } from '../../services/icon.service.js';
+import { navigate } from '../../services/navigation.service.js';
 import { loadPdfJs } from '../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { withButtonLoading } from '../../utils/dom.util.js';
-import Sortable from 'sortablejs';
 
 interface WorkflowStep {
   id: string;

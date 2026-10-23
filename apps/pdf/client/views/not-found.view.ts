@@ -1,4 +1,4 @@
-import { navigate } from '../app-router.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 
 export class NotFoundController {

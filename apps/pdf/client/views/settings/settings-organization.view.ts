@@ -1,14 +1,14 @@
-import { navigate } from '../../app-router.js';
+import { ArcElement, BarController, BarElement, CategoryScale, Chart, DoughnutController, Filler, Legend, LinearScale, LineController, LineElement, PointElement, Title, Tooltip } from 'chart.js';
 import { API_ROUTES } from '../../config/api-routes.js';
 import { currentUser, deleteApi, escapeHtml, getApi, hasPermission, postApi } from '../../services/api.service.js';
 import { t, translateElement } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
+import { navigate } from '../../services/navigation.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { showToast } from '../../services/toast.service.js';
 import { ViewController } from '../../types/common.types.js';
 import { OrganizationDetailsResponse, OrganizationDomain, OrganizationSsoConfig } from '../../types/enterprise.types.js';
 import { bindNavigationLinks, createBannerManager, setupDropdown, withButtonLoading } from '../../utils/dom.util.js';
-import { ArcElement, BarController, BarElement, CategoryScale, Chart, DoughnutController, Filler, Legend, LinearScale, LineController, LineElement, PointElement, Title, Tooltip } from 'chart.js';
 
 Chart.register(
   ArcElement,

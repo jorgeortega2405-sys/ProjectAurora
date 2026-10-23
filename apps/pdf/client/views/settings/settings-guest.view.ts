@@ -1,7 +1,7 @@
-import { render, switchLanguage } from '../../app-router.js';
 import { escapeHtml } from '../../services/api.service.js';
 import { getCurrentLanguage, setLanguage, t, translateElement } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
+import { switchLanguage } from '../../services/navigation.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { applyAccessibilityPreferences } from '../../services/theme.service.js';
 import { showToast } from '../../services/toast.service.js';

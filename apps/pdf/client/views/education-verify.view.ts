@@ -1,8 +1,8 @@
-import { navigate } from '../app-router.js';
 import { getFooterHtml, mountSiteFooter } from '../components/footer.component.js';
 import { API_ROUTES } from '../config/api-routes.js';
-import { checkAuthSession, currentUser, getApi, postApi, postFormApi } from '../services/api.service.js';
+import { checkAuthSession, currentUser, getApi, hasPermission, postApi, postFormApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
+import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
@@ -71,7 +71,7 @@ export class EducationVerifyController implements ViewController {
           return;
         }
 
-        if ((verification && verification.status === 'approved') || user.is_student || user.subscription_tier === 'pro') {
+        if ((verification && verification.status === 'approved') || user.is_student || hasPermission(user, 'subscription:feature:pro')) {
           this.renderApprovedState(verification);
           this.showCard('card-approved');
           return;

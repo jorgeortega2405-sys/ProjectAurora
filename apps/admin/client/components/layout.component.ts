@@ -1,9 +1,9 @@
-import { WebsiteSelectorComponent } from './website-selector.component.js';
 import { getAdminAccounts, getAdminUser, hasPermission, logoutAdmin, logoutAllAdmin, switchAdminAccount } from '../services/auth.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { getTheme, toggleTheme } from '../services/theme.service.js';
+import { WebsiteSelectorComponent } from './website-selector.component.js';
 
 export let isDrawerOpen = false;
 let sidebarInstance: HTMLElement | null = null;

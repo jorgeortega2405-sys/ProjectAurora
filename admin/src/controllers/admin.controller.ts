@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { adminConfig } from '../config/env.config.js';
-import { getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
+import { getAllInquiries, getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, updateInquiryStatus, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
 import { logger } from '../services/logger.service.js';
 
 export function getAdminHealth(_req: Request, res: Response): void {
@@ -166,6 +166,63 @@ export async function updateAdminOrganization(req: Request, res: Response): Prom
     logger.app.error('Error al actualizar organización en controlador de admin', err);
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al actualizar la organización.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminInquiries(_req: Request, res: Response): Promise<void> {
+  try {
+    const inquiries = await getAllInquiries();
+    res.json({
+      inquiries,
+      success: true,
+      summary: {
+        closed_count: inquiries.filter((i) => i.status === 'closed').length,
+        contacted_count: inquiries.filter((i) => i.status === 'contacted').length,
+        pending_count: inquiries.filter((i) => i.status === 'pending').length,
+        total_count: inquiries.length,
+      },
+    });
+  } catch (err) {
+    logger.app.error('Error al obtener solicitudes comerciales en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar las solicitudes comerciales.',
+      success: false,
+    });
+  }
+}
+
+export async function updateAdminInquiryStatus(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { status } = req.body as { status?: string };
+
+    if (!id || (status !== 'pending' && status !== 'contacted' && status !== 'closed')) {
+      res.status(400).json({
+        error: 'Estado de solicitud comercial inválido.',
+        success: false,
+      });
+      return;
+    }
+
+    const updated = await updateInquiryStatus(id, status);
+    if (!updated) {
+      res.status(404).json({
+        error: 'Solicitud comercial no encontrada.',
+        success: false,
+      });
+      return;
+    }
+
+    res.json({
+      message: 'Estado de la solicitud comercial actualizado exitosamente.',
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al actualizar estado de solicitud comercial en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al actualizar la solicitud comercial.',
       success: false,
     });
   }

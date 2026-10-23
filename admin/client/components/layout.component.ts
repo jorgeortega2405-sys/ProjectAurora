@@ -36,6 +36,7 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const isEducation = currentPath.startsWith('/education') || currentPath.startsWith('/educacion');
   const isPurchases = currentPath.startsWith('/purchases') || currentPath.startsWith('/compras');
   const isOrganizations = currentPath.startsWith('/organizations') || currentPath.startsWith('/organizaciones');
+  const isInquiries = currentPath.startsWith('/inquiries') || currentPath.startsWith('/leads');
 
   const bindNavLink = (btn: HTMLElement | null, path: string) => {
     btn?.addEventListener('click', (e) => {
@@ -71,6 +72,10 @@ function populateDrawerContent(drawer: HTMLElement): void {
       <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
       <span class="menu-item__text">Organizaciones B2B</span>
     </button>
+    <button type="button" class="menu-item ${isInquiries ? 'is-active' : ''}" data-ref="btn-drawer-nav-inquiries">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#mail"></use></svg>
+      <span class="menu-item__text">Leads Comerciales</span>
+    </button>
   `;
 
   if (drawerFooter) {
@@ -95,12 +100,14 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const btnNavEducation = drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-education"]');
   const btnNavPurchases = drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-purchases"]');
   const btnNavOrganizations = drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-organizations"]');
+  const btnNavInquiries = drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-inquiries"]');
 
   bindNavLink(btnNavDashboard, '/');
   bindNavLink(btnNavUsers, '/users');
   bindNavLink(btnNavEducation, '/education');
   bindNavLink(btnNavPurchases, '/purchases');
   bindNavLink(btnNavOrganizations, '/organizations');
+  bindNavLink(btnNavInquiries, '/inquiries');
 
   renderIcons(drawer);
 }
@@ -154,6 +161,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isEducation = path.startsWith('/education') || path.startsWith('/educacion');
   const isPurchases = path.startsWith('/purchases') || path.startsWith('/compras');
   const isOrganizations = path.startsWith('/organizations') || path.startsWith('/organizaciones');
+  const isInquiries = path.startsWith('/inquiries') || path.startsWith('/leads');
 
   const itemDashboard = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-dashboard"]');
   const btnDashboard = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-dashboard"]');
@@ -165,6 +173,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnPurchases = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-purchases"]');
   const itemOrganizations = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-organizations"]');
   const btnOrganizations = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-organizations"]');
+  const itemInquiries = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-inquiries"]');
+  const btnInquiries = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-inquiries"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
 
   itemDashboard?.classList.toggle('is-active', isDashboard);
@@ -177,6 +187,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnPurchases?.classList.toggle('is-active', isPurchases);
   itemOrganizations?.classList.toggle('is-active', isOrganizations);
   btnOrganizations?.classList.toggle('is-active', isOrganizations);
+  itemInquiries?.classList.toggle('is-active', isInquiries);
+  btnInquiries?.classList.toggle('is-active', isInquiries);
   btnToggle?.classList.toggle('is-active', isDrawerOpen);
 
   const drawer = sidebar.querySelector<HTMLElement>('[data-ref="layout-drawer"]');
@@ -216,6 +228,7 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
   bindItemNav('btn-rail-education', 'rail-item-education', '/education');
   bindItemNav('btn-rail-purchases', 'rail-item-purchases', '/purchases');
   bindItemNav('btn-rail-organizations', 'rail-item-organizations', '/organizations');
+  bindItemNav('btn-rail-inquiries', 'rail-item-inquiries', '/inquiries');
 
   btnTheme?.addEventListener('click', (e) => {
     e.preventDefault();

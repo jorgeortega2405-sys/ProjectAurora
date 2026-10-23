@@ -2,6 +2,18 @@ import mysql, { RowDataPacket } from 'mysql2/promise';
 import { adminConfig } from '../config/env.config.js';
 import { logger } from './logger.service.js';
 
+export interface AdminInquiryRecord {
+  company: string;
+  created_at: string;
+  email: string;
+  first_name: string;
+  id: string;
+  last_name: string;
+  message: string;
+  status: 'pending' | 'contacted' | 'closed';
+  updated_at: string;
+}
+
 export interface AdminOrganizationRecord {
   active_members_count: number;
   created_at: string;
@@ -60,6 +72,18 @@ export interface AdminVerificationRecord {
   status: 'pending' | 'approved' | 'rejected';
   user_id: string;
   username: string | null;
+}
+
+interface InquiryRowPacket extends RowDataPacket {
+  company: string;
+  created_at: Date | string;
+  email: string;
+  first_name: string;
+  id: string;
+  last_name: string;
+  message: string;
+  status: 'pending' | 'contacted' | 'closed';
+  updated_at: Date | string;
 }
 
 interface OrganizationRowPacket extends RowDataPacket {
@@ -332,6 +356,48 @@ export async function updateOrganizationSettings(
     return result.affectedRows > 0;
   } catch (err) {
     logger.app.error('Error al actualizar configuración de organización en base de datos', err);
+    throw err;
+  }
+}
+
+export async function getAllInquiries(): Promise<AdminInquiryRecord[]> {
+  try {
+    const [rows] = await adminDbPool.query<InquiryRowPacket[]>(
+      `SELECT id, first_name, last_name, company, email, message, status, created_at, updated_at
+       FROM enterprise_inquiries
+       ORDER BY created_at DESC`
+    );
+
+    return rows.map((r) => ({
+      company: r.company,
+      created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+      email: r.email,
+      first_name: r.first_name,
+      id: r.id,
+      last_name: r.last_name,
+      message: r.message,
+      status: r.status,
+      updated_at: r.updated_at instanceof Date ? r.updated_at.toISOString() : String(r.updated_at),
+    }));
+  } catch (err) {
+    logger.app.error('Error al consultar solicitudes comerciales en base de datos', err);
+    throw err;
+  }
+}
+
+export async function updateInquiryStatus(
+  id: string,
+  status: 'pending' | 'contacted' | 'closed'
+): Promise<boolean> {
+  try {
+    const [result] = await adminDbPool.query<mysql.ResultSetHeader>(
+      'UPDATE enterprise_inquiries SET status = ? WHERE id = ?',
+      [status, id]
+    );
+
+    return result.affectedRows > 0;
+  } catch (err) {
+    logger.app.error('Error al actualizar estado de solicitud comercial en base de datos', err);
     throw err;
   }
 }

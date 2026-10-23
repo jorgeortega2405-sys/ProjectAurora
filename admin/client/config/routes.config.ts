@@ -41,6 +41,14 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     id: 'organizations',
     match: (path) => path === '/organizations' || path.startsWith('/organizations') || path === '/organizaciones' || path.startsWith('/organizaciones'),
   },
+  {
+    handler: async () => {
+      const { createInquiriesView } = await import('../views/inquiries.view.js');
+      return await createInquiriesView();
+    },
+    id: 'inquiries',
+    match: (path) => path === '/inquiries' || path.startsWith('/inquiries') || path === '/leads' || path.startsWith('/leads'),
+  },
 ];
 
 export function findRoute(path: string): MatchedRoute | null {

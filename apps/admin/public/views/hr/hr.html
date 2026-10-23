@@ -1,151 +1,107 @@
-<div class="hr-view-container" data-ref="hr-container">
-  <div class="view-header" data-ref="hr-header">
-    <div class="view-header__main" data-ref="hr-header-main">
-      <div class="view-header__title-row" data-ref="hr-title-row">
-        <h1 class="view-title" data-ref="hr-title">Recursos Humanos (RRHH)</h1>
-        <span class="badge badge--info" data-ref="hr-employees-badge">0 colaboradores</span>
-      </div>
-      <p class="view-subtitle" data-ref="hr-subtitle">
-        Gestión integral de personal: contrataciones, asignación de roles, control de sueldos, vacaciones, contratos, acuerdos de confidencialidad y organigrama.
-      </p>
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="admin-hr-wrapper">
+  <header class="component-top" data-ref="component-top">
+    <div class="component-top-left" data-ref="component-top-left">
+      <h1 class="component-top-title" data-ref="hr-title" style="font-size: 15px; font-weight: 700;">Recursos Humanos (RRHH)</h1>
+      <span class="component-badge component-badge--sm" data-ref="hr-employees-badge">0 colaboradores</span>
     </div>
 
-    <div class="view-header__actions" data-ref="hr-header-actions">
-      <button type="button" class="component-button component-button--secondary" data-ref="btn-open-vacation-modal">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#slideshow"></use></svg>
-        <span>Solicitar Vacaciones</span>
+    <div class="component-top-right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar colaboradores" data-tooltip-placement="bottom" aria-label="Buscar colaboradores">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
       </button>
-      <button type="button" class="component-button component-button--secondary" data-ref="btn-open-upload-modal">
+
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-filters" data-tooltip="Vistas y filtros" data-tooltip-placement="bottom" aria-label="Vistas y filtros">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#filter_list"></use></svg>
+      </button>
+
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-open-vacation-modal" data-tooltip="Solicitar Vacaciones" data-tooltip-placement="bottom" aria-label="Solicitar Vacaciones">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#slideshow"></use></svg>
+      </button>
+
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-open-upload-modal" data-tooltip="Subir Documento / NDA" data-tooltip-placement="bottom" aria-label="Subir Documento / NDA">
         <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
-        <span>Subir Documento / NDA</span>
       </button>
-      <button type="button" class="component-button component-button--primary" data-ref="btn-open-hire-modal">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-        <span>Contratar Colaborador</span>
+
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-open-hire-modal" data-tooltip="Contratar Colaborador" data-tooltip-placement="bottom" aria-label="Contratar Colaborador">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#person_add"></use></svg>
       </button>
     </div>
-  </div>
 
-  <div class="stats-grid" data-ref="hr-stats-grid">
-    <div class="stat-card" data-ref="stat-card-active">
-      <div class="stat-card__icon stat-card__icon--primary" data-ref="stat-icon-active">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
-      </div>
-      <div class="stat-card__content" data-ref="stat-content-active">
-        <span class="stat-card__label" data-ref="stat-label-active">Colaboradores Activos</span>
-        <div class="stat-card__value" data-ref="stat-active-employees">0</div>
-        <span class="stat-card__helper" data-ref="stat-helper-active">Personal con contrato activo</span>
-      </div>
-    </div>
-
-    <div class="stat-card" data-ref="stat-card-payroll">
-      <div class="stat-card__icon stat-card__icon--success" data-ref="stat-icon-payroll">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#receipt_long"></use></svg>
-      </div>
-      <div class="stat-card__content" data-ref="stat-content-payroll">
-        <span class="stat-card__label" data-ref="stat-label-payroll">Masa Salarial Mensual</span>
-        <div class="stat-card__value" data-ref="stat-monthly-payroll">$0.00</div>
-        <span class="stat-card__helper" data-ref="stat-helper-payroll">Presupuesto mensual proyectado</span>
-      </div>
-    </div>
-
-    <div class="stat-card" data-ref="stat-card-vacations">
-      <div class="stat-card__icon stat-card__icon--warning" data-ref="stat-icon-vacations">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#slideshow"></use></svg>
-      </div>
-      <div class="stat-card__content" data-ref="stat-content-vacations">
-        <span class="stat-card__label" data-ref="stat-label-vacations">Vacaciones Pendientes</span>
-        <div class="stat-card__value" data-ref="stat-pending-vacations">0</div>
-        <span class="stat-card__helper" data-ref="stat-helper-vacations">Solicitudes por revisar</span>
-      </div>
-    </div>
-
-    <div class="stat-card" data-ref="stat-card-documents">
-      <div class="stat-card__icon stat-card__icon--info" data-ref="stat-icon-documents">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
-      </div>
-      <div class="stat-card__content" data-ref="stat-content-documents">
-        <span class="stat-card__label" data-ref="stat-label-documents">Contratos & Documentos</span>
-        <div class="stat-card__value" data-ref="stat-total-documents">0</div>
-        <span class="stat-card__helper" data-ref="stat-helper-documents">Contratos laborales y NDAs</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="hr-tabs-nav" data-ref="hr-tabs-nav">
-    <button type="button" class="hr-tab is-active" data-ref="tab-btn-employees">
-      <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#groups"></use></svg>
-      <span>Colaboradores y Contrataciones</span>
-    </button>
-    <button type="button" class="hr-tab" data-ref="tab-btn-organigram">
-      <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
-      <span>Organigrama Empresarial</span>
-    </button>
-    <button type="button" class="hr-tab" data-ref="tab-btn-documents">
-      <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
-      <span>Contratos y Confidencialidad</span>
-    </button>
-    <button type="button" class="hr-tab" data-ref="tab-btn-vacations">
-      <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#slideshow"></use></svg>
-      <span>Control de Vacaciones</span>
-    </button>
-  </div>
-
-  <div class="hr-tab-panel is-active" data-ref="panel-employees">
-    <div class="filter-toolbar" data-ref="employees-toolbar">
-      <div class="search-field" data-ref="employees-search-box">
-        <svg class="component-icon search-field__icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
-        <input class="search-field__input" data-ref="employees-search-input" type="text" placeholder="Buscar por nombre, correo o puesto..." />
-      </div>
-
-      <div class="filter-toolbar__actions" data-ref="employees-filter-actions">
-        <label class="field-select-wrapper" data-ref="department-filter-wrapper">
-          <select class="field__input field__input--select" data-ref="employees-department-filter">
-            <option value="">Todos los departamentos</option>
-          </select>
-        </label>
-
-        <label class="field-select-wrapper" data-ref="status-filter-wrapper">
-          <select class="field__input field__input--select" data-ref="employees-status-filter">
-            <option value="">Todos los estados</option>
-            <option value="active">Activos</option>
-            <option value="probation">Periodo de prueba</option>
-            <option value="on_leave">En vacaciones / Permiso</option>
-            <option value="terminated">Baja finalizada</option>
-          </select>
-        </label>
-
-        <button type="button" class="component-button component-button--secondary component-button--icon-only" data-ref="btn-refresh-employees" data-tooltip="Recargar lista" aria-label="Recargar lista">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+    <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
+      <div class="component-search component-search--full" data-ref="search-box">
+        <div class="component-search__icon" data-ref="search-icon">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </div>
+        <div class="component-search__input-box" data-ref="search-input-box">
+          <input class="component-search__input" data-ref="employees-search-input" placeholder="Buscar por colaborador, correo, puesto o departamento..." type="text" maxlength="100" autocomplete="off" />
+        </div>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
     </div>
+  </header>
 
-    <div class="table-container" data-ref="employees-table-container">
-      <table class="data-table" data-ref="employees-table">
-        <thead class="data-table__head" data-ref="employees-thead">
-          <tr>
-            <th>Colaborador</th>
-            <th>Puesto y Departamento</th>
-            <th>Rol del Sistema</th>
-            <th>Sueldo Acordado</th>
-            <th>Vacaciones (Disponibles / Total)</th>
-            <th>Estado</th>
-            <th class="th-actions text-right" style="text-align: right;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="data-table__body" data-ref="employees-tbody">
-          <tr>
-            <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">
-              Cargando nómina de colaboradores...
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="hr-filters-dropdown is-hidden" data-ref="hr-filters-dropdown" style="display: none; position: absolute; top: 56px; right: 24px; z-index: 100; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-xl, 12px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); padding: 16px; width: 280px; gap: 12px; flex-direction: column;">
+    <div class="hr-filter-group" data-ref="filter-group-view" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="label-view-select" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Módulo / Vista:</label>
+      <select class="component-select" data-ref="hr-view-selector" style="height: 36px;">
+        <option value="employees">Colaboradores y Contrataciones</option>
+        <option value="organigram">Organigrama Empresarial</option>
+        <option value="documents">Contratos y Confidencialidad</option>
+        <option value="vacations">Control de Vacaciones</option>
+      </select>
     </div>
-
-    <div class="banner banner--danger" data-ref="employees-table-error" style="display: none; margin-top: 16px;"></div>
+    <div class="hr-filter-group" data-ref="filter-group-dept" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="label-dept-select" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Departamento:</label>
+      <select class="component-select" data-ref="employees-department-filter" style="height: 36px;">
+        <option value="">Todos los departamentos</option>
+      </select>
+    </div>
+    <div class="hr-filter-group" data-ref="filter-group-status" style="display: flex; flex-direction: column; gap: 4px;">
+      <label class="field__label" data-ref="label-status-select" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Estado:</label>
+      <select class="component-select" data-ref="employees-status-filter" style="height: 36px;">
+        <option value="">Todos los estados</option>
+        <option value="active">Activos</option>
+        <option value="probation">Periodo de prueba</option>
+        <option value="on_leave">En vacaciones / Permiso</option>
+        <option value="terminated">Baja finalizada</option>
+      </select>
+    </div>
+    <div class="hr-filter-actions" data-ref="filter-actions-box" style="display: flex; gap: 8px; margin-top: 4px;">
+      <button type="button" class="component-button component-button--h34 component-button--outline component-button--w-full" data-ref="btn-close-filters-dropdown">
+        Cerrar
+      </button>
+    </div>
   </div>
+
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom">
+    <div class="hr-tab-panel is-active" data-ref="panel-employees">
+      <div class="component-table-wrapper" data-ref="employees-table-container">
+        <table class="component-table" data-ref="employees-table">
+          <thead class="component-table__head" data-ref="employees-thead">
+            <tr>
+              <th style="width: 24%;">Colaborador</th>
+              <th style="width: 20%;">Puesto y Departamento</th>
+              <th style="width: 14%;">Rol del Sistema</th>
+              <th style="width: 15%;">Sueldo</th>
+              <th style="width: 12%;">Vacaciones</th>
+              <th style="width: 9%;">Estado</th>
+              <th class="th-actions text-right" style="width: 6%; text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="component-table__body" data-ref="employees-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">
+                Cargando nómina de colaboradores...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="banner banner--danger" data-ref="employees-table-error" style="display: none; margin: 12px 24px;"></div>
+    </div>
 
   <div class="hr-tab-panel" data-ref="panel-organigram" style="display: none;">
     <div class="organigram-toolbar" data-ref="organigram-toolbar">
@@ -207,9 +163,9 @@
       </div>
     </div>
 
-    <div class="table-container" data-ref="documents-table-container">
-      <table class="data-table" data-ref="documents-table">
-        <thead class="data-table__head" data-ref="documents-thead">
+    <div class="component-table-wrapper" data-ref="documents-table-container">
+      <table class="component-table" data-ref="documents-table">
+        <thead class="component-table__head" data-ref="documents-thead">
           <tr>
             <th>Documento</th>
             <th>Tipo</th>
@@ -220,7 +176,7 @@
             <th class="th-actions text-right" style="text-align: right;">Acciones</th>
           </tr>
         </thead>
-        <tbody class="data-table__body" data-ref="documents-tbody">
+        <tbody class="component-table__body" data-ref="documents-tbody">
           <tr>
             <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">
               Cargando repositorio de contratos y confidencialidad...
@@ -257,9 +213,9 @@
       </div>
     </div>
 
-    <div class="table-container" data-ref="vacations-table-container">
-      <table class="data-table" data-ref="vacations-table">
-        <thead class="data-table__head" data-ref="vacations-thead">
+    <div class="component-table-wrapper" data-ref="vacations-table-container">
+      <table class="component-table" data-ref="vacations-table">
+        <thead class="component-table__head" data-ref="vacations-thead">
           <tr>
             <th>Colaborador</th>
             <th>Periodo Solicitado</th>
@@ -282,6 +238,7 @@
 
     <div class="banner banner--danger" data-ref="vacations-table-error" style="display: none; margin-top: 16px;"></div>
   </div>
+</div>
 
   <div class="modal-backdrop" data-ref="modal-hire-backdrop" style="display: none;">
     <div class="modal-dialog modal-dialog--lg" data-ref="modal-hire-dialog">

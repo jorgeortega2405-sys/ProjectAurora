@@ -24,6 +24,7 @@ export class HrController implements ViewController {
   async init(): Promise<void> {
     this.abortController = new AbortController();
     renderIcons(this.container);
+    this.setupTopActions();
     this.bindTabs();
     this.bindModals();
     this.bindFilterEvents();
@@ -231,55 +232,45 @@ export class HrController implements ViewController {
         return `
           <tr data-ref="employee-row-${item.id}">
             <td>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: var(--bg-hover, rgba(0,0,0,0.05)); flex-shrink: 0;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: var(--bg-hover); flex-shrink: 0;">
                   <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(item.username)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(item.username)}'" />
                 </div>
-                <div style="display: flex; flex-direction: column;">
-                  <span style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.username)}</span>
-                  <span style="font-size: 12px; color: var(--text-secondary); font-family: monospace;">${escapeHtml(item.email)}</span>
-                </div>
+                <span class="component-badge component-badge--sm">${escapeHtml(item.username)}</span>
+                <span class="component-badge component-badge--sm">${escapeHtml(item.email)}</span>
               </div>
             </td>
             <td>
-              <div style="display: flex; flex-direction: column; gap: 3px;">
-                <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(item.job_title)}</span>
-                <span style="display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 700; color: #ffffff; background: ${escapeHtml(item.department_color)}; width: fit-content;">
-                  ${escapeHtml(item.department_name)}
-                </span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="component-badge component-badge--sm">${escapeHtml(item.job_title)}</span>
+                <span class="component-badge component-badge--sm">${escapeHtml(item.department_name)}</span>
               </div>
             </td>
             <td>
-              <span class="badge badge--info" style="font-size: 11px; font-weight: 700;">${escapeHtml(item.role)}</span>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.role)}</span>
             </td>
             <td>
-              <div style="display: flex; flex-direction: column;">
-                <span style="font-weight: 700; color: var(--text-primary);">${salaryFormatted}</span>
-                <span style="font-size: 11.5px; color: var(--text-secondary);">${frequencyLabel[item.salary_frequency] || ''}</span>
-              </div>
+              <span class="component-badge component-badge--sm">${salaryFormatted} ${frequencyLabel[item.salary_frequency] || ''}</span>
             </td>
             <td>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="font-size: 13px; font-weight: 700; color: var(--success, #10b981);">${item.vacation_balance} días disp.</div>
-                <div style="font-size: 11px; color: var(--text-tertiary);">(${item.vacation_days_used} de ${item.vacation_days_allocated})</div>
-              </div>
+              <span class="component-badge component-badge--sm">${item.vacation_balance} disp. / ${item.vacation_days_allocated} total</span>
             </td>
             <td>
-              <span class="badge ${statusBadge.class}" style="font-size: 11px; font-weight: 700;">${statusBadge.label}</span>
+              <span class="component-badge component-badge--sm">${statusBadge.label}</span>
             </td>
             <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                <button type="button" class="component-button component-button--secondary component-button--icon-only" data-ref="btn-edit-emp-${item.id}" data-tooltip="Editar empleado" aria-label="Editar empleado">
+                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-edit-emp-${item.id}" data-tooltip="Editar empleado" aria-label="Editar empleado">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
                 </button>
-                <button type="button" class="component-button component-button--secondary component-button--icon-only" data-ref="btn-upload-emp-${item.id}" data-tooltip="Subir contrato o NDA" aria-label="Subir contrato">
+                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-upload-emp-${item.id}" data-tooltip="Subir contrato o NDA" aria-label="Subir contrato">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
                 </button>
-                <button type="button" class="component-button component-button--secondary component-button--icon-only" data-ref="btn-vac-emp-${item.id}" data-tooltip="Solicitar vacaciones" aria-label="Solicitar vacaciones">
+                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-vac-emp-${item.id}" data-tooltip="Solicitar vacaciones" aria-label="Solicitar vacaciones">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#slideshow"></use></svg>
                 </button>
                 ${item.status !== 'terminated' ? `
-                  <button type="button" class="component-button component-button--danger component-button--icon-only" data-ref="btn-terminate-emp-${item.id}" data-tooltip="Dar de baja" aria-label="Dar de baja">
+                  <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-terminate-emp-${item.id}" data-tooltip="Dar de baja" aria-label="Dar de baja">
                     <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
                   </button>
                 ` : ''}
@@ -481,35 +472,32 @@ export class HrController implements ViewController {
         return `
           <tr data-ref="doc-row-${item.id}">
             <td>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <svg class="component-icon" aria-hidden="true" style="color: var(--primary, #0ea5e9);"><use href="/icons.svg#description"></use></svg>
-                <div style="display: flex; flex-direction: column;">
-                  <strong style="color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.title)}</strong>
-                  <span style="font-size: 11.5px; color: var(--text-tertiary); font-family: monospace;">${escapeHtml(item.file_name)}</span>
-                </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="component-badge component-badge--sm">${escapeHtml(item.title)}</span>
+                <span class="component-badge component-badge--sm" style="font-family: monospace;">${escapeHtml(item.file_name)}</span>
               </div>
             </td>
             <td>
-              <span class="badge ${typeInfo.class}" style="font-size: 11px; font-weight: 700;">${typeInfo.label}</span>
+              <span class="component-badge component-badge--sm">${typeInfo.label}</span>
             </td>
             <td>
-              <strong style="color: var(--text-primary); font-size: 13px;">${escapeHtml(item.employee_name)}</strong>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.employee_name)}</span>
             </td>
             <td>
-              <span style="font-size: 12px; color: var(--text-secondary);">${kbSize} KB</span>
+              <span class="component-badge component-badge--sm">${kbSize} KB</span>
             </td>
             <td>
-              <span style="font-size: 12.5px; color: var(--text-secondary);">${formattedDate}</span>
+              <span class="component-badge component-badge--sm">${formattedDate}</span>
             </td>
             <td>
-              <span style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(item.uploaded_by_username || 'Sistema')}</span>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.uploaded_by_username || 'Sistema')}</span>
             </td>
             <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                <a href="${escapeHtml(item.file_url)}" target="_blank" download rel="noopener noreferrer" class="component-button component-button--secondary component-button--icon-only" data-tooltip="Descargar archivo" aria-label="Descargar archivo">
+                <a href="${escapeHtml(item.file_url)}" target="_blank" download rel="noopener noreferrer" class="component-button component-button--h30 component-button--icon-only" data-tooltip="Descargar archivo" aria-label="Descargar archivo">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
                 </a>
-                <button type="button" class="component-button component-button--danger component-button--icon-only" data-ref="btn-delete-doc-${item.id}" data-tooltip="Eliminar documento" aria-label="Eliminar documento">
+                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-delete-doc-${item.id}" data-tooltip="Eliminar documento" aria-label="Eliminar documento">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
                 </button>
               </div>
@@ -592,37 +580,37 @@ export class HrController implements ViewController {
         return `
           <tr data-ref="vac-row-${item.id}">
             <td>
-              <strong style="color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.employee_name)}</strong>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.employee_name)}</span>
             </td>
             <td>
-              <span style="font-size: 12.5px; color: var(--text-primary); font-weight: 600;">
-                ${escapeHtml(item.start_date)} <span style="color: var(--text-tertiary); font-weight: normal;">hasta</span> ${escapeHtml(item.end_date)}
+              <span class="component-badge component-badge--sm">
+                ${escapeHtml(item.start_date)} - ${escapeHtml(item.end_date)}
               </span>
             </td>
             <td>
-              <span class="badge badge--info" style="font-weight: 700;">${item.days_count} días</span>
+              <span class="component-badge component-badge--sm">${item.days_count} días</span>
             </td>
             <td>
-              <span style="font-size: 12.5px; color: var(--text-secondary); font-style: italic;">
-                ${escapeHtml(item.reason || 'Sin justificación detallada')}
+              <span class="component-badge component-badge--sm">
+                ${escapeHtml(item.reason || 'Sin justificación')}
               </span>
             </td>
             <td>
-              <span class="badge ${statusInfo.class}" style="font-size: 11px; font-weight: 700;">${statusInfo.label}</span>
+              <span class="component-badge component-badge--sm">${statusInfo.label}</span>
             </td>
             <td>
-              <span style="font-size: 12px; color: var(--text-secondary);">
+              <span class="component-badge component-badge--sm">
                 ${escapeHtml(item.review_notes || '—')}
               </span>
             </td>
             <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
                 ${item.status === 'pending' ? `
-                  <button type="button" class="component-button component-button--primary" data-ref="btn-review-vac-${item.id}" style="font-size: 12px; height: 32px; padding: 0 12px;">
+                  <button type="button" class="component-button component-button--h30" data-ref="btn-review-vac-${item.id}" style="font-size: 12px; padding: 0 10px;">
                     Revisar
                   </button>
                 ` : `
-                  <button type="button" class="component-button component-button--secondary component-button--icon-only" data-ref="btn-review-vac-${item.id}" data-tooltip="Modificar resolución" aria-label="Modificar resolución">
+                  <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-review-vac-${item.id}" data-tooltip="Modificar resolución" aria-label="Modificar resolución">
                     <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
                   </button>
                 `}
@@ -641,33 +629,82 @@ export class HrController implements ViewController {
     });
   }
 
-  private bindTabs(): void {
-    const tabs = [
-      { btnRef: 'tab-btn-employees', panelRef: 'panel-employees', tab: 'employees' as const },
-      { btnRef: 'tab-btn-organigram', panelRef: 'panel-organigram', tab: 'organigram' as const },
-      { btnRef: 'tab-btn-documents', panelRef: 'panel-documents', tab: 'documents' as const },
-      { btnRef: 'tab-btn-vacations', panelRef: 'panel-vacations', tab: 'vacations' as const },
-    ];
+  private setupTopActions(): void {
+    const btnToggleSearch = this.container.querySelector<HTMLElement>('[data-ref="btn-toggle-search"]');
+    const searchToolbar = this.container.querySelector<HTMLElement>('[data-ref="search-toolbar"]');
+    const searchInput = this.container.querySelector<HTMLInputElement>('[data-ref="employees-search-input"]');
+    const btnClearSearch = this.container.querySelector<HTMLElement>('[data-ref="btn-clear-search"]');
 
-    tabs.forEach(({ btnRef, panelRef, tab }) => {
-      const btn = this.container.querySelector<HTMLElement>(`[data-ref="${btnRef}"]`);
-      btn?.addEventListener('click', () => {
-        tabs.forEach((t) => {
-          this.container.querySelector<HTMLElement>(`[data-ref="${t.btnRef}"]`)?.classList.remove('is-active');
-          const p = this.container.querySelector<HTMLElement>(`[data-ref="${t.panelRef}"]`);
-          if (p) p.style.display = 'none';
-        });
-
-        btn.classList.add('is-active');
-        const activePanel = this.container.querySelector<HTMLElement>(`[data-ref="${panelRef}"]`);
-        if (activePanel) activePanel.style.display = '';
-
-        this.currentTab = tab;
-        if (tab === 'organigram') void this.loadOrganigram();
-        if (tab === 'documents') void this.loadDocuments();
-        if (tab === 'vacations') void this.loadVacations();
-      });
+    btnToggleSearch?.addEventListener('click', () => {
+      searchToolbar?.classList.toggle('is-hidden');
+      if (!searchToolbar?.classList.contains('is-hidden')) {
+        searchInput?.focus();
+      }
     });
+
+    searchInput?.addEventListener('input', () => {
+      if (btnClearSearch) {
+        btnClearSearch.style.display = searchInput.value ? '' : 'none';
+      }
+    });
+
+    btnClearSearch?.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      btnClearSearch.style.display = 'none';
+      void this.loadEmployees();
+    });
+
+    const btnToggleFilters = this.container.querySelector<HTMLElement>('[data-ref="btn-toggle-filters"]');
+    const filtersDropdown = this.container.querySelector<HTMLElement>('[data-ref="hr-filters-dropdown"]');
+    const btnCloseFilters = this.container.querySelector<HTMLElement>('[data-ref="btn-close-filters-dropdown"]');
+
+    btnToggleFilters?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!filtersDropdown) return;
+      const isOpen = filtersDropdown.style.display === 'flex';
+      filtersDropdown.style.display = isOpen ? 'none' : 'flex';
+    });
+
+    btnCloseFilters?.addEventListener('click', () => {
+      if (filtersDropdown) filtersDropdown.style.display = 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (filtersDropdown && filtersDropdown.style.display === 'flex') {
+        if (!filtersDropdown.contains(e.target as Node) && !btnToggleFilters?.contains(e.target as Node)) {
+          filtersDropdown.style.display = 'none';
+        }
+      }
+    }, { signal: this.abortController?.signal });
+  }
+
+  private bindTabs(): void {
+    const viewSelector = this.container.querySelector<HTMLSelectElement>('[data-ref="hr-view-selector"]');
+    viewSelector?.addEventListener('change', () => {
+      const selected = viewSelector.value as 'employees' | 'organigram' | 'documents' | 'vacations';
+      this.switchTab(selected);
+    });
+  }
+
+  private switchTab(tab: 'employees' | 'organigram' | 'documents' | 'vacations'): void {
+    const panels = ['panel-employees', 'panel-organigram', 'panel-documents', 'panel-vacations'];
+    panels.forEach((pRef) => {
+      const p = this.container.querySelector<HTMLElement>(`[data-ref="${pRef}"]`);
+      if (p) p.style.display = 'none';
+    });
+
+    const activePanel = this.container.querySelector<HTMLElement>(`[data-ref="panel-${tab}"]`);
+    if (activePanel) activePanel.style.display = '';
+
+    const viewSelector = this.container.querySelector<HTMLSelectElement>('[data-ref="hr-view-selector"]');
+    if (viewSelector && viewSelector.value !== tab) {
+      viewSelector.value = tab;
+    }
+
+    this.currentTab = tab;
+    if (tab === 'organigram') void this.loadOrganigram();
+    if (tab === 'documents') void this.loadDocuments();
+    if (tab === 'vacations') void this.loadVacations();
   }
 
   private bindFilterEvents(): void {

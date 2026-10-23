@@ -106,11 +106,7 @@ export class PurchasesController implements ViewController {
       .map((item) => {
         const isEnterprise = item.plan_id === 'enterprise';
         const planName = isEnterprise ? 'Aurora Empresas' : 'Aurora Pro';
-        const periodSubtext = item.billing_period === 'yearly' ? 'Facturación Anual' : 'Facturación Mensual';
         const periodLabel = item.billing_period === 'yearly' ? 'Anual' : 'Mensual';
-        const iconBg = isEnterprise ? 'rgba(37, 99, 235, 0.1)' : 'rgba(245, 158, 11, 0.1)';
-        const iconColor = isEnterprise ? 'var(--sl-color-blue-700, #1d4ed8)' : '#f59e0b';
-        const iconHref = isEnterprise ? '/icons.svg#groups' : '/icons.svg#star';
 
         let dateFormatted = '—';
         if (item.created_at) {
@@ -125,43 +121,25 @@ export class PurchasesController implements ViewController {
 
         const amountFormatted = `$${Number(item.amount_total || 0).toFixed(2)} ${escapeHtml((item.currency || 'USD').toUpperCase())}`;
 
-        let statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-warning, #d97706); background: rgba(217, 119, 6, 0.1);">Pendiente</span>';
-        if (item.status === 'completed' || item.status === 'paid') {
-          statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-success, #16a34a); background: rgba(22, 163, 74, 0.1);">Completado</span>';
-        } else if (item.status === 'failed') {
-          statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-danger, #ef4444); background: rgba(239, 68, 68, 0.1);">Fallido</span>';
-        }
+        const statusText = (item.status === 'completed' || item.status === 'paid') ? 'Completado' : (item.status === 'failed' ? 'Fallido' : 'Pendiente');
+        const statusBadge = `<span class="component-badge component-badge--sm">${statusText}</span>`;
 
         const refId = item.stripe_session_id || item.stripe_payment_intent_id || String(item.id);
         const refShort = refId.length > 16 ? `${refId.slice(0, 8)}...${refId.slice(-6)}` : refId;
-        const initial = (item.username || item.email || 'U').charAt(0).toUpperCase();
 
         return `
           <tr data-ref="purchase-row-${item.id}">
             <td>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-hover); display: flex; align-items: center; justify-content: center; color: var(--text-primary); font-weight: 600; font-size: 13px; border: 1px solid var(--border-color); flex-shrink: 0;">
-                  ${escapeHtml(initial)}
-                </div>
-                <div style="display: flex; flex-direction: column;">
-                  <strong style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.username || 'Usuario')}</strong>
-                  <span style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(item.email || '—')}</span>
-                </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="component-badge component-badge--sm">${escapeHtml(item.username || 'Usuario')}</span>
+                <span class="component-badge component-badge--sm">${escapeHtml(item.email || '—')}</span>
               </div>
             </td>
             <td>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 28px; height: 28px; border-radius: 50%; background: ${iconBg}; display: flex; align-items: center; justify-content: center; color: ${iconColor}; flex-shrink: 0;">
-                  <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px;"><use href="${iconHref}"></use></svg>
-                </div>
-                <div style="display: flex; flex-direction: column;">
-                  <strong style="font-weight: 600; color: var(--text-primary); font-size: 13px;">${escapeHtml(planName)}</strong>
-                  <span style="font-size: 11.5px; color: var(--text-secondary);">${escapeHtml(periodSubtext)}</span>
-                </div>
-              </div>
+              <span class="component-badge component-badge--sm">${escapeHtml(planName)}</span>
             </td>
             <td>
-              <strong style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">${amountFormatted}</strong>
+              <span class="component-badge component-badge--sm">${amountFormatted}</span>
             </td>
             <td>
               <span class="component-badge component-badge--sm">${escapeHtml(periodLabel)}</span>
@@ -169,10 +147,12 @@ export class PurchasesController implements ViewController {
             <td>
               ${statusBadge}
             </td>
-            <td style="color: var(--text-secondary); font-size: 13px;">${escapeHtml(dateFormatted)}</td>
+            <td>
+              <span class="component-badge component-badge--sm">${escapeHtml(dateFormatted)}</span>
+            </td>
             <td class="text-right">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                <code style="font-family: monospace; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border-color);">${escapeHtml(refShort)}</code>
+                <span class="component-badge component-badge--sm">${escapeHtml(refShort)}</span>
                 <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-copy-ref-${item.id}" data-ref-id="${escapeHtml(refId)}" data-tooltip="Copiar referencia" aria-label="Copiar referencia">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#content_copy"></use></svg>
                 </button>

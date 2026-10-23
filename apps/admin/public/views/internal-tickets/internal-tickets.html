@@ -36,53 +36,6 @@
   </header>
 
   <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom" style="display: flex; flex-direction: column; gap: 16px; padding: 18px 24px;">
-    <div class="admin-grid" data-ref="tickets-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
-      <div class="admin-card" data-ref="card-stat-total" style="padding: 14px 16px; gap: 6px;">
-        <div class="admin-card__header">
-          <span class="admin-card__title">Total Reportes</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#description"></use></svg>
-        </div>
-        <span class="admin-card__value" data-ref="stat-total-val" style="font-size: 22px;">0</span>
-        <span class="admin-card__meta">Histórico interdepartamental</span>
-      </div>
-
-      <div class="admin-card" data-ref="card-stat-open" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #3b82f6;">
-        <div class="admin-card__header">
-          <span class="admin-card__title">Abiertos</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #3b82f6;"><use href="/icons.svg#info"></use></svg>
-        </div>
-        <span class="admin-card__value" data-ref="stat-open-val" style="font-size: 22px; color: #3b82f6;">0</span>
-        <span class="admin-card__meta">Por atender o asignar</span>
-      </div>
-
-      <div class="admin-card" data-ref="card-stat-progress" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #f59e0b;">
-        <div class="admin-card__header">
-          <span class="admin-card__title">En Progreso</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #f59e0b;"><use href="/icons.svg#build"></use></svg>
-        </div>
-        <span class="admin-card__value" data-ref="stat-progress-val" style="font-size: 22px; color: #f59e0b;">0</span>
-        <span class="admin-card__meta">En gestión activa</span>
-      </div>
-
-      <div class="admin-card" data-ref="card-stat-urgent" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #ef4444;">
-        <div class="admin-card__header">
-          <span class="admin-card__title">Alta Prioridad / Urgente</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #ef4444;"><use href="/icons.svg#warning"></use></svg>
-        </div>
-        <span class="admin-card__value" data-ref="stat-urgent-val" style="font-size: 22px; color: #ef4444;">0</span>
-        <span class="admin-card__meta">Atención prioritaria</span>
-      </div>
-
-      <div class="admin-card" data-ref="card-stat-resolved" style="padding: 14px 16px; gap: 6px; border-left: 3px solid #10b981;">
-        <div class="admin-card__header">
-          <span class="admin-card__title">Resueltos</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: #10b981;"><use href="/icons.svg#check_circle"></use></svg>
-        </div>
-        <span class="admin-card__value" data-ref="stat-resolved-val" style="font-size: 22px; color: #10b981;">0</span>
-        <span class="admin-card__meta">Solucionados satisfactoriamente</span>
-      </div>
-    </div>
-
     <div class="admin-card" data-ref="tickets-filter-bar" style="padding: 12px 16px; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
       <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: 1;">
         <div style="display: flex; align-items: center; gap: 6px;">

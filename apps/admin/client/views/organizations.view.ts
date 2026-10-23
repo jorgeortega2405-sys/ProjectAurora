@@ -108,50 +108,29 @@ export class OrganizationsController implements ViewController {
 
     tbody.innerHTML = items
       .map((item) => {
-        const initial = (item.name || 'O').charAt(0).toUpperCase();
-
         const statusLower = (item.subscription_status || '').toLowerCase();
-        let statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-success, #16a34a); background: rgba(22, 163, 74, 0.1);">Activa</span>';
-        if (statusLower === 'suspended') {
-          statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-danger, #ef4444); background: rgba(239, 68, 68, 0.1);">Suspendida</span>';
-        } else if (statusLower === 'trial') {
-          statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-warning, #d97706); background: rgba(217, 119, 6, 0.1);">Prueba</span>';
-        }
+        const statusText = statusLower === 'suspended' ? 'Suspendida' : (statusLower === 'trial' ? 'Prueba' : 'Activa');
+        const statusBadge = `<span class="component-badge component-badge--sm">${statusText}</span>`;
 
-        let ssoLabel = '<span style="color: var(--text-tertiary); font-size: 12px;">Inactivo</span>';
-        if (item.sso_enabled && item.sso_provider) {
-          const providerName = item.sso_provider.toUpperCase();
-          ssoLabel = `<span class="component-badge component-badge--sm" style="color: var(--sl-color-blue-700, #1d4ed8); background: var(--sl-color-blue-50, #eff6ff); border: 1px solid var(--sl-color-blue-200, #bfdbfe);">${escapeHtml(providerName)}</span>`;
-        }
-
-        const domainText = item.domains ? escapeHtml(item.domains) : '<span style="color: var(--text-tertiary);">Sin dominio</span>';
+        const ssoText = item.sso_enabled && item.sso_provider ? item.sso_provider.toUpperCase() : 'Inactivo';
+        const ssoLabel = `<span class="component-badge component-badge--sm">${escapeHtml(ssoText)}</span>`;
+        const domainText = item.domains ? escapeHtml(item.domains) : 'Sin dominio';
 
         return `
           <tr data-ref="org-row-${item.id}">
             <td>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center; color: var(--text-primary); font-weight: 700; font-size: 13px; border: 1px solid var(--border-color); flex-shrink: 0;">
-                  ${escapeHtml(initial)}
-                </div>
-                <div style="display: flex; flex-direction: column;">
-                  <strong style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.name)}</strong>
-                  <span style="font-size: 11.5px; color: var(--text-secondary); font-family: monospace;">/${escapeHtml(item.slug)}</span>
-                </div>
-              </div>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.name)}</span>
             </td>
             <td>
-              <div style="display: flex; flex-direction: column;">
-                <strong style="font-size: 13px; color: var(--text-primary); font-weight: 500;">${escapeHtml(item.owner_username || 'Propietario')}</strong>
-                <span style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(item.owner_email || '—')}</span>
-              </div>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.owner_username || item.owner_email || 'Propietario')}</span>
             </td>
             <td>
-              <span class="component-badge component-badge--sm" style="font-family: monospace;">
+              <span class="component-badge component-badge--sm">
                 ${item.active_members_count} / ${item.seat_limit}
               </span>
             </td>
             <td>
-              <span style="font-size: 12.5px; color: var(--text-secondary);">${domainText}</span>
+              <span class="component-badge component-badge--sm">${domainText}</span>
             </td>
             <td>
               ${ssoLabel}
@@ -163,7 +142,7 @@ export class OrganizationsController implements ViewController {
               ${hasPermission('admin:organizations:manage') ? `
               <button type="button" class="component-button component-button--h32 component-button--outline" data-ref="btn-edit-org-${item.id}" data-id="${escapeHtml(item.id)}">
                 Gestionar
-              </button>` : `<span style="font-size: 12px; color: var(--text-tertiary);">Solo lectura</span>`}
+              </button>` : `<span class="component-badge component-badge--sm">Solo lectura</span>`}
             </td>
           </tr>
         `;

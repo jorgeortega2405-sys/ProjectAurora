@@ -105,36 +105,32 @@ export class InquiriesController implements ViewController {
       const formattedDate = this.formatDate(inquiry.created_at);
       const snippetMessage = this.truncateText(inquiry.message || 'Sin mensaje especificado.', 65);
 
-      let statusBadgeClass = 'component-badge--warning';
       let statusLabel = 'Pendiente';
-
       if (inquiry.status === 'contacted') {
-        statusBadgeClass = 'component-badge--info';
         statusLabel = 'En Contacto';
       } else if (inquiry.status === 'closed') {
-        statusBadgeClass = 'component-badge--success';
         statusLabel = 'Cerrado';
       }
 
       return `
         <tr data-ref="inquiry-row-${inquiry.id}">
           <td style="padding: 14px 16px;">
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-weight: 600; font-size: 13.5px; color: var(--text-primary);">${escapeHtml(fullName)}</span>
-              <a class="link" href="mailto:${escapeHtml(inquiry.email)}" style="font-size: 12px; color: var(--text-secondary); text-decoration: none;" target="_blank" rel="noopener noreferrer">${escapeHtml(inquiry.email)}</a>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="component-badge component-badge--sm">${escapeHtml(fullName)}</span>
+              <span class="component-badge component-badge--sm">${escapeHtml(inquiry.email)}</span>
             </div>
           </td>
           <td style="padding: 14px 16px;">
-            <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">${escapeHtml(inquiry.company || 'No especificada')}</span>
+            <span class="component-badge component-badge--sm">${escapeHtml(inquiry.company || 'No especificada')}</span>
           </td>
           <td style="padding: 14px 16px;">
-            <span style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.4;" data-tooltip="${escapeHtml(inquiry.message || '')}">${escapeHtml(snippetMessage)}</span>
+            <span class="component-badge component-badge--sm" data-tooltip="${escapeHtml(inquiry.message || '')}">${escapeHtml(snippetMessage)}</span>
           </td>
           <td style="padding: 14px 16px;">
-            <span style="font-size: 12.5px; color: var(--text-secondary);">${escapeHtml(formattedDate)}</span>
+            <span class="component-badge component-badge--sm">${escapeHtml(formattedDate)}</span>
           </td>
           <td style="padding: 14px 16px;">
-            <span class="component-badge component-badge--sm ${statusBadgeClass}">${statusLabel}</span>
+            <span class="component-badge component-badge--sm">${statusLabel}</span>
           </td>
           <td class="text-right" style="padding: 14px 16px;">
             <button type="button" class="component-button component-button--h34 component-button--outline" data-ref="btn-view-inquiry" data-inquiry-id="${inquiry.id}">

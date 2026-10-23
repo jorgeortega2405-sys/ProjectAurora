@@ -116,12 +116,8 @@ export class EducationController implements ViewController {
           } catch {}
         }
 
-        let statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-warning, #d97706); background: rgba(217, 119, 6, 0.1);">Pendiente</span>';
-        if (item.status === 'approved') {
-          statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-success, #16a34a); background: rgba(22, 163, 74, 0.1);">Aprobado</span>';
-        } else if (item.status === 'rejected') {
-          statusBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-danger, #ef4444); background: rgba(239, 68, 68, 0.1);">Rechazado</span>';
-        }
+        const statusText = item.status === 'approved' ? 'Aprobado' : (item.status === 'rejected' ? 'Rechazado' : 'Pendiente');
+        const statusBadge = `<span class="component-badge component-badge--sm">${statusText}</span>`;
 
         const isUrl = item.document_url.startsWith('/') || item.document_url.startsWith('http');
         const docButton = isUrl
@@ -129,28 +125,25 @@ export class EducationController implements ViewController {
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
               <span>Ver</span>
             </a>`
-          : `<span class="component-badge component-badge--sm" style="font-size: 11px;">${escapeHtml(item.document_url.split(':')[0])}</span>`;
+          : `<span class="component-badge component-badge--sm">${escapeHtml(item.document_url.split(':')[0])}</span>`;
 
         const canReview = hasPermission('admin:education:review');
         const actionMarkup = item.status === 'pending'
           ? (canReview
               ? `<button type="button" class="component-button component-button--h32 component-button--black" data-ref="btn-review-${item.id}" data-id="${escapeHtml(item.id)}">Revisar</button>`
-              : `<span style="font-size: 12px; color: var(--text-tertiary);">Solo lectura</span>`)
-          : `<span style="font-size: 12px; color: var(--text-tertiary);">Completado</span>`;
+              : `<span class="component-badge component-badge--sm">Solo lectura</span>`)
+          : `<span class="component-badge component-badge--sm">Completado</span>`;
 
         return `
           <tr data-ref="verification-row-${item.id}">
             <td>
-              <div style="display: flex; flex-direction: column;">
-                <strong style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.full_name)}</strong>
-                <span style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(item.username || 'Usuario')}</span>
-              </div>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.full_name)}</span>
             </td>
             <td>
-              <span style="font-size: 13px; color: var(--text-primary);">${escapeHtml(item.email || '—')}</span>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.email || '—')}</span>
             </td>
             <td>
-              <span style="font-size: 13px; color: var(--text-secondary);">${escapeHtml(item.school_name)}</span>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.school_name)}</span>
             </td>
             <td>
               ${docButton}

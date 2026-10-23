@@ -393,36 +393,33 @@ export class InternalTicketsController implements ViewController {
 
         return `
           <tr class="ticket-row" data-ref="ticket-row-${t.id}" data-ticket-id="${t.id}" style="cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.15s ease;">
-            <td style="padding: 12px 14px; font-weight: 700; font-family: monospace; font-size: 12.5px; color: var(--text-primary);">
-              ${escapeHtml(t.ticket_number)}
+            <td style="padding: 12px 14px;">
+              <span class="component-badge component-badge--sm" style="font-family: monospace;">${escapeHtml(t.ticket_number)}</span>
             </td>
             <td style="padding: 12px 14px;">
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span class="component-badge component-badge--sm" style="font-size: 10.5px; padding: 1px 6px; background: var(--bg-hover, rgba(0,0,0,0.05)); color: var(--text-secondary);">${escapeHtml(catLabel)}</span>
+                  <span class="component-badge component-badge--sm">${escapeHtml(catLabel)}</span>
                   <strong style="font-size: 13.5px; color: var(--text-primary); font-weight: 600; line-height: 1.3;">${escapeHtml(t.title)}</strong>
                 </div>
                 <span style="font-size: 12px; color: var(--text-secondary); max-width: 440px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(t.description)}</span>
               </div>
             </td>
             <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm" style="background: rgba(99, 102, 241, 0.08); color: ${escapeHtml(t.target_department_color)}; font-weight: 600; font-size: 11.5px;">
+              <span class="component-badge component-badge--sm">
                 ${escapeHtml(t.target_department_name)}
               </span>
             </td>
             <td style="padding: 12px 14px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 12.5px; color: var(--text-primary); font-weight: 500;">${escapeHtml(t.creator_username)}</span>
-                ${t.source_department_name ? `<span style="font-size: 10.5px; color: var(--text-tertiary);">(${escapeHtml(t.source_department_name)})</span>` : ''}
-              </div>
+              <span class="component-badge component-badge--sm">${escapeHtml(t.creator_username)}</span>
             </td>
             <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm" style="background: ${pBadge.bg}; color: ${pBadge.color}; font-weight: 700; font-size: 11px;">
+              <span class="component-badge component-badge--sm">
                 ${pBadge.label}
               </span>
             </td>
             <td style="padding: 12px 14px;">
-              <span class="component-badge component-badge--sm" style="background: ${sBadge.bg}; color: ${sBadge.color}; font-weight: 600; font-size: 11px;">
+              <span class="component-badge component-badge--sm">
                 ${sBadge.label}
               </span>
             </td>

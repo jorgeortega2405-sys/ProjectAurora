@@ -239,15 +239,15 @@ export class BackupsController implements ViewController {
           dateFormatted = '—';
         }
 
-        let restoredFormatted = '<span class="component-badge component-badge--sm" style="background: var(--bg-hover); color: var(--text-tertiary);">Nunca</span>';
+        let restoredFormatted = '<span class="component-badge component-badge--sm">Nunca</span>';
         if (item.restored_at) {
           try {
             const rd = new Date(item.restored_at);
             if (!isNaN(rd.getTime())) {
-              restoredFormatted = `<span class="component-badge component-badge--sm" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">${rd.toLocaleDateString('es-MX')}</span>`;
+              restoredFormatted = `<span class="component-badge component-badge--sm">${rd.toLocaleDateString('es-MX')}</span>`;
             }
           } catch {
-            restoredFormatted = '<span class="component-badge component-badge--sm" style="background: var(--bg-hover); color: var(--text-tertiary);">Nunca</span>';
+            restoredFormatted = '<span class="component-badge component-badge--sm">Nunca</span>';
           }
         }
 
@@ -255,16 +255,8 @@ export class BackupsController implements ViewController {
 
         const componentsBadges = item.components
           .map((c) => {
-            if (c === 'mysql') {
-              return '<span class="component-badge component-badge--sm" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">MySQL</span>';
-            }
-            if (c === 'cassandra') {
-              return '<span class="component-badge component-badge--sm" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">Cassandra</span>';
-            }
-            if (c === 'minio') {
-              return '<span class="component-badge component-badge--sm" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">S3/MinIO</span>';
-            }
-            return `<span class="component-badge component-badge--sm">${escapeHtml(c)}</span>`;
+            const label = c === 'mysql' ? 'MySQL' : (c === 'cassandra' ? 'Cassandra' : (c === 'minio' ? 'S3/MinIO' : c));
+            return `<span class="component-badge component-badge--sm">${escapeHtml(label)}</span>`;
           })
           .join(' ');
 

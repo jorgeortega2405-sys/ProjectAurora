@@ -35,79 +35,28 @@
     </div>
   </header>
 
-  <div class="component-bottom" data-ref="component-bottom" style="display: flex; flex-direction: column; gap: 20px; padding: 20px 24px;">
-    <div class="admin-grid" data-ref="status-cards-grid">
-      <div class="admin-card" data-ref="card-status-mysql">
-        <div class="admin-card__header" data-ref="header-status-mysql">
-          <span class="admin-card__title" data-ref="title-status-mysql">MySQL Relacional</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#table_chart"></use></svg>
-        </div>
-        <div class="admin-card__value" data-ref="val-status-mysql" style="font-size: 20px;">db_aurora</div>
-        <div class="admin-card__meta" data-ref="meta-status-mysql">
-          <span class="component-badge component-badge--sm" data-ref="badge-status-mysql" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981;">Conectado</span>
-          <span data-ref="text-tables-mysql">0 tablas</span>
-        </div>
-      </div>
-
-      <div class="admin-card" data-ref="card-status-cassandra">
-        <div class="admin-card__header" data-ref="header-status-cassandra">
-          <span class="admin-card__title" data-ref="title-status-cassandra">Cassandra NoSQL</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#layers"></use></svg>
-        </div>
-        <div class="admin-card__value" data-ref="val-status-cassandra" style="font-size: 20px;">aurora_telemetry</div>
-        <div class="admin-card__meta" data-ref="meta-status-cassandra">
-          <span class="component-badge component-badge--sm" data-ref="badge-status-cassandra" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981;">Conectado</span>
-          <span data-ref="text-tables-cassandra">0 tablas</span>
-        </div>
-      </div>
-
-      <div class="admin-card" data-ref="card-status-minio">
-        <div class="admin-card__header" data-ref="header-status-minio">
-          <span class="admin-card__title" data-ref="title-status-minio">S3 / MinIO Storage</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#cloud"></use></svg>
-        </div>
-        <div class="admin-card__value" data-ref="val-status-minio" style="font-size: 20px;">aurora-storage</div>
-        <div class="admin-card__meta" data-ref="meta-status-minio">
-          <span class="component-badge component-badge--sm" data-ref="badge-status-minio" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981;">Conectado</span>
-          <span data-ref="text-objects-minio">0 objetos</span>
-        </div>
-      </div>
-
-      <div class="admin-card" data-ref="card-status-storage">
-        <div class="admin-card__header" data-ref="header-status-storage">
-          <span class="admin-card__title" data-ref="title-status-storage">Destino de Respaldo</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#save"></use></svg>
-        </div>
-        <div class="admin-card__value" data-ref="val-status-backups-count" style="font-size: 20px;">0 Respaldos</div>
-        <div class="admin-card__meta" data-ref="meta-status-storage">
-          <span data-ref="text-latest-backup">Sin copias registradas</span>
-        </div>
-      </div>
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom">
+    <div class="component-table-wrapper" data-ref="backups-table-wrapper">
+      <table class="component-table" data-ref="backups-table">
+        <thead class="component-table__head" data-ref="backups-thead">
+          <tr>
+            <th class="th-name" data-ref="th-name" style="width: 28%;">Nombre y Archivo</th>
+            <th class="th-components" data-ref="th-components" style="width: 20%;">Componentes</th>
+            <th class="th-size" data-ref="th-size" style="width: 12%;">Tamaño</th>
+            <th class="th-date" data-ref="th-date" style="width: 16%;">Fecha de Creación</th>
+            <th class="th-restored" data-ref="th-restored" style="width: 12%;">Restauración</th>
+            <th class="text-right th-actions" data-ref="th-actions" style="width: 12%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="component-table__body" data-ref="backups-tbody">
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando copias de seguridad...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div class="admin-section" data-ref="backups-table-section" style="margin-bottom: 0;">
-      <div class="component-table-wrapper" data-ref="backups-table-wrapper" style="border: 1px solid var(--border-color); border-radius: var(--sl-border-radius-large, 12px); overflow: hidden; background: var(--bg-surface);">
-        <table class="component-table" data-ref="backups-table">
-          <thead class="component-table__head" data-ref="backups-thead">
-            <tr>
-              <th class="th-name" data-ref="th-name" style="width: 28%;">Nombre y Archivo</th>
-              <th class="th-components" data-ref="th-components" style="width: 20%;">Componentes</th>
-              <th class="th-size" data-ref="th-size" style="width: 12%;">Tamaño</th>
-              <th class="th-date" data-ref="th-date" style="width: 16%;">Fecha de Creación</th>
-              <th class="th-restored" data-ref="th-restored" style="width: 12%;">Restauración</th>
-              <th class="text-right th-actions" data-ref="th-actions" style="width: 12%;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="component-table__body" data-ref="backups-tbody">
-            <tr>
-              <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando copias de seguridad...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="banner banner--danger" data-ref="backups-page-error" style="display: none; margin: 0;"></div>
+    <div class="banner banner--danger" data-ref="backups-page-error" style="display: none; margin: 12px 24px;"></div>
   </div>
 
   <div class="modal-backdrop" data-ref="modal-create-backdrop" style="display: none;">

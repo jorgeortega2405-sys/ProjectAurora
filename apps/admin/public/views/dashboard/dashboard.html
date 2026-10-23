@@ -7,32 +7,44 @@
   </header>
 
   <div class="component-bottom layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="admin-dashboard-scrollable" style="padding: 24px; overflow-y: auto;">
-    <div class="admin-grid" data-ref="dashboard-metrics-grid">
-      <div class="admin-card" data-ref="card-metric-users">
-        <div class="admin-card__header" data-ref="header-metric-users">
-          <span class="admin-card__title" data-ref="title-metric-users">Usuarios Totales</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#group"></use></svg>
+    <div class="org-kpi-grid" data-ref="dashboard-metrics-grid">
+      <div class="org-kpi-card" data-ref="card-metric-users">
+        <div class="org-kpi-card__top" data-ref="header-metric-users">
+          <span class="org-kpi-card__label" data-ref="title-metric-users">Usuarios Totales</span>
+          <div class="org-kpi-card__icon" data-ref="icon-metric-users">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#group"></use></svg>
+          </div>
         </div>
-        <div class="admin-card__value" data-ref="stat-total-users">-</div>
-        <span class="admin-card__meta" data-ref="meta-metric-users">Cuentas registradas en Aurora</span>
+        <div class="org-kpi-card__value" data-ref="stat-total-users">-</div>
+        <div class="org-kpi-card__sub" data-ref="meta-metric-users">
+          <span>Cuentas registradas en Aurora</span>
+        </div>
       </div>
 
-      <div class="admin-card" data-ref="card-metric-status">
-        <div class="admin-card__header" data-ref="header-metric-status">
-          <span class="admin-card__title" data-ref="title-metric-status">Estado del Servidor</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true" style="color: var(--color-success);"><use href="/icons.svg#check_circle"></use></svg>
+      <div class="org-kpi-card" data-ref="card-metric-status">
+        <div class="org-kpi-card__top" data-ref="header-metric-status">
+          <span class="org-kpi-card__label" data-ref="title-metric-status">Estado del Servidor</span>
+          <div class="org-kpi-card__icon" data-ref="icon-metric-status">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+          </div>
         </div>
-        <div class="admin-card__value" data-ref="stat-server-status">Activo</div>
-        <span class="admin-card__meta" data-ref="meta-metric-status">Servicios de backend en línea</span>
+        <div class="org-kpi-card__value" data-ref="stat-server-status">Activo</div>
+        <div class="org-kpi-card__sub" data-ref="meta-metric-status">
+          <span>Servicios de backend en línea</span>
+        </div>
       </div>
 
-      <div class="admin-card" data-ref="card-metric-uptime">
-        <div class="admin-card__header" data-ref="header-metric-uptime">
-          <span class="admin-card__title" data-ref="title-metric-uptime">Tiempo de Actividad</span>
-          <svg class="component-icon admin-card__icon" aria-hidden="true"><use href="/icons.svg#schedule"></use></svg>
+      <div class="org-kpi-card" data-ref="card-metric-uptime">
+        <div class="org-kpi-card__top" data-ref="header-metric-uptime">
+          <span class="org-kpi-card__label" data-ref="title-metric-uptime">Tiempo de Actividad</span>
+          <div class="org-kpi-card__icon" data-ref="icon-metric-uptime">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#schedule"></use></svg>
+          </div>
         </div>
-        <div class="admin-card__value" data-ref="stat-server-uptime">-</div>
-        <span class="admin-card__meta" data-ref="meta-metric-uptime">Tiempo continuo en ejecución</span>
+        <div class="org-kpi-card__value" data-ref="stat-server-uptime">-</div>
+        <div class="org-kpi-card__sub" data-ref="meta-metric-uptime">
+          <span>Tiempo continuo en ejecución</span>
+        </div>
       </div>
     </div>
   </div>

@@ -1,8 +1,8 @@
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
-import { toast } from '../services/toast.service.js';
 import { ViewController } from '../types/common.types.js';
 import { escapeHtml } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminUserItem {
   avatar_url: string | null;
@@ -46,7 +46,7 @@ export class UsersController implements ViewController {
       const res = await fetch('/api/admin/users', { signal: this.abortController?.signal });
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar la lista de usuarios.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar la lista de usuarios.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo cargar la lista de usuarios. Intenta nuevamente más tarde.';
@@ -61,7 +61,7 @@ export class UsersController implements ViewController {
       this.renderUsers(this.users);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar la lista de usuarios.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar la lista de usuarios.</td></tr>';
       }
       if (errorBanner) {
         errorBanner.textContent = 'Error de conexión al cargar la lista de usuarios.';
@@ -80,7 +80,7 @@ export class UsersController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="5" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#group"></use></svg>
@@ -108,57 +108,53 @@ export class UsersController implements ViewController {
           } catch {}
         }
 
-        const initial = (item.username || item.email || 'U').charAt(0).toUpperCase();
-        const idShort = item.id.length > 12 ? `${item.id.slice(0, 8)}...` : item.id;
-
         const roleUpper = (item.role || '').toUpperCase();
-        let roleBadge = '<span class="component-badge component-badge--sm">Usuario</span>';
+        let roleText = 'Usuario';
         if (roleUpper === 'ADMIN') {
-          roleBadge = '<span class="component-badge component-badge--sm" style="color: var(--sl-color-purple-700, #7e22ce); background: var(--sl-color-purple-50, #faf5ff); border: 1px solid var(--sl-color-purple-200, #e9d5ff);">Administrador</span>';
+          roleText = 'Administrador';
+        } else if (roleUpper === 'SUPER_ADMIN') {
+          roleText = 'Super Admin';
         } else if (roleUpper.includes('ORG')) {
-          roleBadge = `<span class="component-badge component-badge--sm" style="color: var(--sl-color-blue-700, #1d4ed8); background: var(--sl-color-blue-50, #eff6ff); border: 1px solid var(--sl-color-blue-200, #bfdbfe);">${escapeHtml(item.role)}</span>`;
+          roleText = item.role;
+        } else if (roleUpper) {
+          roleText = item.role;
         }
 
         const tierLower = (item.subscription_tier || '').toLowerCase();
-        let tierBadge = '<span class="component-badge component-badge--sm">Gratis</span>';
+        let tierText = 'Gratis';
         if (tierLower === 'enterprise') {
-          tierBadge = '<span class="component-badge component-badge--sm" style="color: var(--sl-color-blue-700, #1d4ed8); background: rgba(37, 99, 235, 0.1);">Empresas</span>';
+          tierText = 'Enterprise';
         } else if (tierLower === 'pro') {
-          tierBadge = '<span class="component-badge component-badge--sm" style="color: var(--color-warning, #d97706); background: rgba(217, 119, 6, 0.1);">Pro</span>';
+          tierText = 'Pro';
         }
 
-        const avatarMarkup = item.avatar_url
-          ? `<img src="${escapeHtml(item.avatar_url)}" alt="${escapeHtml(item.username)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" />`
-          : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-hover); display: flex; align-items: center; justify-content: center; color: var(--text-primary); font-weight: 600; font-size: 13px; border: 1px solid var(--border-color); flex-shrink: 0;">${escapeHtml(initial)}</div>`;
+        const avatarUrl = item.avatar_url || `/api/avatar?name=${encodeURIComponent(item.username)}`;
+        const tierColor = getFallbackTierColor(item.subscription_tier);
+        const avatarMarkup = `
+          <div class="avatar-ring" style="width: 32px; height: 32px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(item.username)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=${encodeURIComponent(item.username)}'" />
+          </div>
+        `;
 
         return `
           <tr data-ref="user-row-${item.id}">
             <td>
-              <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
                 ${avatarMarkup}
-                <div style="display: flex; flex-direction: column;">
-                  <strong style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">${escapeHtml(item.username)}</strong>
-                  <span style="font-size: 11.5px; color: var(--text-secondary); font-family: monospace;">ID: ${escapeHtml(idShort)}</span>
-                </div>
+                <span class="component-badge component-badge--sm">${escapeHtml(item.username)}</span>
               </div>
             </td>
             <td>
-              <span style="font-size: 13px; color: var(--text-primary);">${escapeHtml(item.email)}</span>
+              <span class="component-badge component-badge--sm">${escapeHtml(item.email)}</span>
             </td>
             <td>
-              ${roleBadge}
+              <span class="component-badge component-badge--sm">${escapeHtml(roleText)}</span>
             </td>
             <td>
-              ${tierBadge}
+              <span class="component-badge component-badge--sm">${escapeHtml(tierText)}</span>
             </td>
-            <td style="color: var(--text-secondary); font-size: 13px;">${escapeHtml(dateFormatted)}</td>
-            <td class="text-right">
-              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                <code style="font-family: monospace; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border-color);">${escapeHtml(idShort)}</code>
-                <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-copy-id-${item.id}" data-id="${escapeHtml(item.id)}" data-tooltip="Copiar ID de usuario" aria-label="Copiar ID de usuario">
-                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#content_copy"></use></svg>
-                </button>
-              </div>
+            <td>
+              <span class="component-badge component-badge--sm">${escapeHtml(dateFormatted)}</span>
             </td>
           </tr>
         `;
@@ -166,28 +162,6 @@ export class UsersController implements ViewController {
       .join('');
 
     renderIcons(tbody);
-    this.bindRowActions(tbody);
-  }
-
-  private bindRowActions(tbody: HTMLElement): void {
-    tbody.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-copy-id-"]').forEach((btn) => {
-      btn.addEventListener(
-        'click',
-        async (e) => {
-          e.preventDefault();
-          const userId = btn.getAttribute('data-id');
-          if (userId) {
-            try {
-              await navigator.clipboard.writeText(userId);
-              toast.success('ID de usuario copiado al portapapeles.');
-            } catch {
-              toast.error('No se pudo copiar el ID.');
-            }
-          }
-        },
-        { signal: this.abortController?.signal }
-      );
-    });
   }
 
   private setupSearchToolbar(): void {

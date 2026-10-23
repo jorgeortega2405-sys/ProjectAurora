@@ -17,6 +17,30 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     id: 'users',
     match: (path) => path === '/users' || path.startsWith('/users') || path === '/usuarios' || path.startsWith('/usuarios'),
   },
+  {
+    handler: async () => {
+      const { createEducationView } = await import('../views/education.view.js');
+      return await createEducationView();
+    },
+    id: 'education',
+    match: (path) => path === '/education' || path.startsWith('/education') || path === '/educacion' || path.startsWith('/educacion'),
+  },
+  {
+    handler: async () => {
+      const { createPurchasesView } = await import('../views/purchases.view.js');
+      return await createPurchasesView();
+    },
+    id: 'purchases',
+    match: (path) => path === '/purchases' || path.startsWith('/purchases') || path === '/compras' || path.startsWith('/compras'),
+  },
+  {
+    handler: async () => {
+      const { createOrganizationsView } = await import('../views/organizations.view.js');
+      return await createOrganizationsView();
+    },
+    id: 'organizations',
+    match: (path) => path === '/organizations' || path.startsWith('/organizations') || path === '/organizaciones' || path.startsWith('/organizaciones'),
+  },
 ];
 
 export function findRoute(path: string): MatchedRoute | null {

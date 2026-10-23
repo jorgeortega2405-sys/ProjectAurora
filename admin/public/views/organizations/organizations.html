@@ -1,0 +1,92 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="admin-organizations-wrapper">
+  <header class="component-top" data-ref="component-top">
+    <div class="component-top-left" data-ref="component-top-left">
+      <h1 class="component-top-title" data-ref="organizations-page-title" style="font-size: 15px; font-weight: 700;">Organizaciones Corporativas B2B</h1>
+      <span class="component-badge component-badge--sm" data-ref="organizations-count-badge">0</span>
+    </div>
+
+    <div class="component-top-right" data-ref="component-top-right">
+      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar organizaciones" data-tooltip-placement="bottom" aria-label="Buscar organizaciones">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+      </button>
+    </div>
+
+    <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
+      <div class="component-search component-search--full" data-ref="search-box">
+        <div class="component-search__icon" data-ref="search-icon">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </div>
+        <div class="component-search__input-box" data-ref="search-input-box">
+          <input class="component-search__input" data-ref="organizations-search-input" placeholder="Buscar por organización, slug, propietario o dominio..." type="text" maxlength="100" autocomplete="off" />
+        </div>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom">
+    <div class="component-table-wrapper" data-ref="organizations-table-wrapper">
+      <table class="component-table" data-ref="organizations-table">
+        <thead class="component-table__head" data-ref="organizations-thead">
+          <tr>
+            <th class="th-org" data-ref="th-org" style="width: 24%;">Organización</th>
+            <th class="th-owner" data-ref="th-owner" style="width: 22%;">Propietario / Contacto</th>
+            <th class="th-seats" data-ref="th-seats" style="width: 12%;">Asientos</th>
+            <th class="th-domains" data-ref="th-domains" style="width: 18%;">Dominios</th>
+            <th class="th-sso" data-ref="th-sso" style="width: 12%;">SSO</th>
+            <th class="th-status" data-ref="th-status" style="width: 12%;">Estado</th>
+            <th class="text-right th-actions" data-ref="th-actions" style="width: 10%;">Ajustes</th>
+          </tr>
+        </thead>
+        <tbody class="component-table__body" data-ref="organizations-tbody">
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando lista de organizaciones...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="banner banner--danger" data-ref="organizations-page-error" style="display: none; margin: 12px 24px;"></div>
+  </div>
+
+  <div class="modal-backdrop" data-ref="modal-org-backdrop" style="display: none;">
+    <div class="modal-container" data-ref="modal-org-container">
+      <button type="button" class="modal-close-btn" data-ref="btn-close-modal-org" aria-label="Cerrar modal">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+      </button>
+
+      <div class="modal-card modal-card--w-480" data-ref="card-modal-org">
+        <div class="modal-card__header" data-ref="header-modal-org">
+          <h2 class="modal-card__title" data-ref="title-modal-org">Gestionar Organización</h2>
+          <p class="modal-card__desc" data-ref="desc-modal-org">Ajusta el límite de asientos contratados o el estado operativo del equipo.</p>
+        </div>
+
+        <div class="modal-card__body" data-ref="body-modal-org" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="admin-card" data-ref="modal-org-info-card" style="padding: 14px; gap: 4px;">
+            <strong style="font-size: 14px; color: var(--text-primary);" data-ref="modal-org-name">Nombre Org</strong>
+            <span style="font-size: 12px; color: var(--text-secondary);" data-ref="modal-org-owner">Propietario</span>
+          </div>
+
+          <label class="field" data-ref="field-seat-limit">
+            <input class="field__input" data-ref="input-seat-limit" type="number" min="1" max="10000" placeholder=" " required />
+            <span class="field__label" data-ref="label-seat-limit">Límite de Asientos (Usuarios)</span>
+          </label>
+
+          <label class="field" data-ref="field-org-status">
+            <input class="field__input" data-ref="input-org-status" type="text" placeholder=" " maxlength="30" />
+            <span class="field__label" data-ref="label-org-status">Estado (active, suspended, trial)</span>
+          </label>
+
+          <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <button type="button" class="component-button component-button--h44 component-button--black component-button--w-full" data-ref="btn-save-org-settings">
+              Guardar Cambios
+            </button>
+          </div>
+
+          <div class="banner banner--danger" data-ref="modal-org-error" style="display: none; margin-top: 8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

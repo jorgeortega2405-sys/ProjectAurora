@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { adminConfig } from '../config/env.config.js';
-import { getAllUsers } from '../services/db.service.js';
+import { getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
 import { logger } from '../services/logger.service.js';
 
 export function getAdminHealth(_req: Request, res: Response): void {
@@ -24,6 +24,148 @@ export async function getAdminUsers(_req: Request, res: Response): Promise<void>
     logger.app.error('Error al obtener lista de usuarios en controlador de admin', err);
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al consultar los usuarios.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminPurchases(_req: Request, res: Response): Promise<void> {
+  try {
+    const purchases = await getAllPurchases();
+    const totalRevenue = purchases
+      .filter((p) => p.status === 'completed' || p.status === 'paid')
+      .reduce((sum, p) => sum + p.amount_total, 0);
+
+    res.json({
+      purchases,
+      success: true,
+      summary: {
+        completed_count: purchases.filter((p) => p.status === 'completed' || p.status === 'paid').length,
+        pending_count: purchases.filter((p) => p.status === 'pending').length,
+        total_count: purchases.length,
+        total_revenue: totalRevenue,
+      },
+    });
+  } catch (err) {
+    logger.app.error('Error al obtener lista de compras en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar el historial de compras.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminVerifications(_req: Request, res: Response): Promise<void> {
+  try {
+    const verifications = await getAllVerifications();
+    res.json({
+      success: true,
+      summary: {
+        approved_count: verifications.filter((v) => v.status === 'approved').length,
+        pending_count: verifications.filter((v) => v.status === 'pending').length,
+        rejected_count: verifications.filter((v) => v.status === 'rejected').length,
+        total_count: verifications.length,
+      },
+      verifications,
+    });
+  } catch (err) {
+    logger.app.error('Error al obtener verificaciones de estudiantes en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar las verificaciones.',
+      success: false,
+    });
+  }
+}
+
+export async function reviewAdminVerification(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { notes, status } = req.body as { notes?: string; status?: string };
+
+    if (!id || (status !== 'approved' && status !== 'rejected')) {
+      res.status(400).json({
+        error: 'Datos de revisión inválidos. El estado debe ser aprobado o rechazado.',
+        success: false,
+      });
+      return;
+    }
+
+    const updated = await updateVerificationStatus(id, status, notes);
+    if (!updated) {
+      res.status(404).json({
+        error: 'Solicitud de verificación no encontrada.',
+        success: false,
+      });
+      return;
+    }
+
+    res.json({
+      message: `Solicitud de verificación ${status === 'approved' ? 'aprobada' : 'rechazada'} exitosamente.`,
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al revisar verificación de estudiante en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al procesar la revisión.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminOrganizations(_req: Request, res: Response): Promise<void> {
+  try {
+    const organizations = await getAllOrganizations();
+    res.json({
+      organizations,
+      success: true,
+      total: organizations.length,
+    });
+  } catch (err) {
+    logger.app.error('Error al obtener organizaciones en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar las organizaciones.',
+      success: false,
+    });
+  }
+}
+
+export async function updateAdminOrganization(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { seat_limit, subscription_status } = req.body as {
+      seat_limit?: number;
+      subscription_status?: string;
+    };
+
+    if (!id) {
+      res.status(400).json({
+        error: 'Identificador de organización requerido.',
+        success: false,
+      });
+      return;
+    }
+
+    const updated = await updateOrganizationSettings(id, {
+      seat_limit: typeof seat_limit === 'number' ? seat_limit : undefined,
+      subscription_status: typeof subscription_status === 'string' ? subscription_status : undefined,
+    });
+
+    if (!updated) {
+      res.status(400).json({
+        error: 'No se realizaron cambios en la organización.',
+        success: false,
+      });
+      return;
+    }
+
+    res.json({
+      message: 'Configuración de la organización actualizada exitosamente.',
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al actualizar organización en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al actualizar la organización.',
       success: false,
     });
   }

@@ -83,6 +83,9 @@ function initApp(): void {
   preloadTemplates([
     '/views/components/sidebar.html',
     '/views/dashboard/dashboard.html',
+    '/views/education/education.html',
+    '/views/organizations/organizations.html',
+    '/views/purchases/purchases.html',
     '/views/users/users.html',
   ]);
   initTheme();

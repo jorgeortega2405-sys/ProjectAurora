@@ -1,8 +1,10 @@
-import { currentUser, postApi } from '../services/api.service.js';
+import { currentUser, getApi, postApi } from '../services/api.service.js';
 import { t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
+import { showToast } from '../services/toast.service.js';
 import { wsService } from '../services/websocket.service.js';
+import { openModal } from './modal.component.js';
 
 export let isTechSupportOpen = false;
 
@@ -10,6 +12,10 @@ interface ChatHistoryItem {
   role: 'assistant' | 'user';
   text: string;
 }
+
+const STORAGE_KEY_CHAT_ID = 'aurora_support_active_chat_id';
+const STORAGE_KEY_SESSION_ID = 'aurora_support_session_id';
+const STORAGE_KEY_SIDEBAR_OPEN = 'aurora_support_sidebar_open';
 
 const history: ChatHistoryItem[] = [];
 let isBound = false;
@@ -188,68 +194,379 @@ function updateLiveBadge(statusText: string, isActive = false): void {
   }
 }
 
+function showEndChatButton(visible: boolean): void {
+  if (!sidebarElement) return;
+  const btn = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-end-live-chat"]');
+  if (btn) {
+    btn.style.display = visible ? 'inline-flex' : 'none';
+  }
+}
+
+function bindLiveSupportWebSocket(sessionId: string, messagesList: HTMLElement | null, centerEl: HTMLElement | null): void {
+  if (wsUnsubscribe) {
+    wsUnsubscribe();
+    wsUnsubscribe = null;
+  }
+
+  void wsService.connect(sessionId);
+
+  wsUnsubscribe = wsService.subscribe(sessionId, (event: any) => {
+    if (!event || typeof event !== 'object') return;
+
+    if (event.type === 'chat_claimed') {
+      activeAgentName = event.agentName || 'Agente';
+      activeTier = event.tier || activeTier;
+      updateLiveBadge(`En vivo con ${activeAgentName}`, true);
+      appendSystemBubble(messagesList, `El agente ${activeAgentName} se ha conectado al chat.`);
+      scrollToBottom(centerEl);
+    } else if (event.type === 'chat_transferred') {
+      activeTier = event.tier || activeTier;
+      const agentText = event.agentName ? ` por ${event.agentName}` : '';
+      updateLiveBadge(activeAgentName ? `En vivo con ${activeAgentName}` : 'Conectando con agente...', Boolean(activeAgentName));
+      appendSystemBubble(messagesList, `Caso transferido/escalado a Soporte Nivel ${activeTier}${agentText}.`);
+      scrollToBottom(centerEl);
+    } else if (event.type === 'chat_closed') {
+      const closedChatId = activeChatId;
+      const closedAgentName = activeAgentName;
+      updateLiveBadge('Caso cerrado', false);
+      appendSystemBubble(messagesList, 'La sesión de soporte en vivo ha concluido.');
+      scrollToBottom(centerEl);
+      showEndChatButton(false);
+      if (sidebarElement) {
+        const t = sidebarElement.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
+        if (t) t.disabled = true;
+        const b = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-send-message"], [data-ref="btn-send-tech-support"]');
+        if (b) b.disabled = true;
+      }
+      if (closedChatId) {
+        openSupportRatingModal(closedChatId, closedAgentName);
+      }
+    } else if (event.type === 'chat_message') {
+      if (event.id && renderedMessageIds.has(event.id)) {
+        return;
+      }
+      if (event.id) {
+        renderedMessageIds.add(event.id);
+      }
+      if (event.senderType === 'user') {
+        appendUserBubble(messagesList, event.message);
+        scrollToBottom(centerEl);
+      } else if (event.senderType === 'agent') {
+        appendAgentBubble(messagesList, event.message, event.senderName || 'Agente de Soporte');
+        scrollToBottom(centerEl);
+      } else if (event.senderType === 'system') {
+        appendSystemBubble(messagesList, event.message);
+        scrollToBottom(centerEl);
+      }
+    }
+  });
+}
+
+function promptEndLiveChat(): void {
+  if (!activeChatId) return;
+  openModal({
+    cancelText: 'Continuar en el chat',
+    confirmClass: 'component-button--danger',
+    confirmText: 'Sí, finalizar',
+    description: 'Al finalizar la sesión se dará por concluido el caso y podrás calificar la atención recibida.',
+    onConfirm: async () => {
+      await finalizeActiveChat();
+      return true;
+    },
+    title: '¿Deseas finalizar la sesión de soporte?',
+  });
+}
+
+async function finalizeActiveChat(): Promise<void> {
+  if (!activeChatId) return;
+  const chatIdToRate = activeChatId;
+  const agentNameToRate = activeAgentName;
+
+  try {
+    await postApi(`/api/support/live/chats/${chatIdToRate}/close`);
+  } catch (_) {}
+
+  const messagesList = sidebarElement?.querySelector<HTMLElement>('[data-ref="tech-support-messages"]') || null;
+  const centerEl = sidebarElement?.querySelector<HTMLElement>('[data-ref="tech-support-center"]') || null;
+  appendSystemBubble(messagesList, 'Has finalizado la sesión de soporte.');
+  scrollToBottom(centerEl);
+  updateLiveBadge('Caso cerrado', false);
+  showEndChatButton(false);
+
+  if (sidebarElement) {
+    const t = sidebarElement.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
+    if (t) t.disabled = true;
+    const b = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-send-message"], [data-ref="btn-send-tech-support"]');
+    if (b) b.disabled = true;
+  }
+
+  openSupportRatingModal(chatIdToRate, agentNameToRate);
+}
+
+export function openSupportRatingModal(chatId: string, agentName: string | null): void {
+  let selectedRating = 0;
+  const modalBody = document.createElement('div');
+  modalBody.className = 'support-rating-modal-body';
+  modalBody.setAttribute('data-ref', 'support-rating-modal-body');
+  modalBody.style.cssText = 'display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 4px 0;';
+
+  const starsContainer = document.createElement('div');
+  starsContainer.className = 'support-rating-stars';
+  starsContainer.setAttribute('data-ref', 'support-rating-stars');
+  starsContainer.style.cssText = 'display: flex; gap: 8px; justify-content: center;';
+
+  for (let i = 1; i <= 5; i++) {
+    const starBtn = document.createElement('button');
+    starBtn.type = 'button';
+    starBtn.className = 'component-button component-button--icon-only';
+    starBtn.setAttribute('data-ref', `btn-star-${i}`);
+    starBtn.setAttribute('data-rating', String(i));
+    starBtn.setAttribute('aria-label', `${i} estrellas`);
+    starBtn.style.cssText = 'width: 44px; height: 44px; border: none; background: transparent; cursor: pointer; color: var(--border-color); transition: all 0.15s ease;';
+    starBtn.innerHTML = `<svg class="component-icon" style="width: 32px; height: 32px; fill: currentColor;" aria-hidden="true"><use href="/icons.svg#star"></use></svg>`;
+    starsContainer.appendChild(starBtn);
+  }
+
+  const feedbackField = document.createElement('label');
+  feedbackField.className = 'field';
+  feedbackField.setAttribute('data-ref', 'field-rating-feedback');
+  feedbackField.style.cssText = 'width: 100%;';
+  feedbackField.innerHTML = `
+    <textarea class="field__input field__input--textarea" data-ref="input-rating-feedback" placeholder=" " rows="3" maxlength="800"></textarea>
+    <span class="field__label">Comentarios u observaciones (opcional)</span>
+  `;
+
+  const errorBanner = document.createElement('div');
+  errorBanner.className = 'banner banner--danger';
+  errorBanner.setAttribute('data-ref', 'rating-error-banner');
+  errorBanner.style.cssText = 'display: none; width: 100%; font-size: 12.5px;';
+
+  modalBody.appendChild(starsContainer);
+  modalBody.appendChild(feedbackField);
+  modalBody.appendChild(errorBanner);
+  renderIcons(modalBody);
+
+  const updateStarVisuals = (hoverVal: number) => {
+    const activeVal = hoverVal || selectedRating;
+    const starButtons = starsContainer.querySelectorAll<HTMLButtonElement>('[data-rating]');
+    starButtons.forEach((btn) => {
+      const r = Number(btn.getAttribute('data-rating') || '0');
+      if (r <= activeVal) {
+        btn.style.color = '#f59e0b';
+        btn.style.transform = 'scale(1.12)';
+      } else {
+        btn.style.color = 'var(--border-color)';
+        btn.style.transform = 'scale(1)';
+      }
+    });
+  };
+
+  starsContainer.addEventListener('mouseover', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-rating]');
+    if (btn) {
+      const val = Number(btn.getAttribute('data-rating') || '0');
+      updateStarVisuals(val);
+    }
+  });
+
+  starsContainer.addEventListener('mouseleave', () => {
+    updateStarVisuals(0);
+  });
+
+  starsContainer.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-rating]');
+    if (btn) {
+      selectedRating = Number(btn.getAttribute('data-rating') || '0');
+      updateStarVisuals(0);
+      errorBanner.style.display = 'none';
+    }
+  });
+
+  openModal({
+    bodyHtml: modalBody,
+    cancelText: 'Omitir',
+    confirmClass: 'component-button--black',
+    confirmText: 'Enviar calificación',
+    description: agentName
+      ? `¿Cómo calificarías la atención recibida por ${agentName}?`
+      : '¿Cómo calificarías la atención recibida durante esta sesión?',
+    onCancel: () => {
+      resetChatToCleanState();
+    },
+    onConfirm: async () => {
+      if (!selectedRating) {
+        errorBanner.textContent = 'Por favor selecciona una calificación de 1 a 5 estrellas.';
+        errorBanner.style.display = 'block';
+        return false;
+      }
+
+      const textarea = feedbackField.querySelector<HTMLTextAreaElement>('[data-ref="input-rating-feedback"]');
+      const comment = textarea?.value?.trim() || '';
+
+      try {
+        await postApi(`/api/support/live/chats/${chatId}/rate`, {
+          feedbackComment: comment,
+          rating: selectedRating,
+        });
+        showToast('¡Gracias por tus comentarios! Nos ayudan a mejorar.');
+      } catch {
+        showToast('Aviso: Tu calificación fue registrada.');
+      }
+
+      resetChatToCleanState();
+      return true;
+    },
+    title: 'Califica tu experiencia de soporte',
+  });
+}
+
+function resetChatToCleanState(): void {
+  localStorage.removeItem(STORAGE_KEY_CHAT_ID);
+  isLiveMode = false;
+  activeChatId = null;
+  activeAgentName = null;
+  activeTier = 'L1';
+  renderedMessageIds.clear();
+
+  if (wsUnsubscribe) {
+    wsUnsubscribe();
+    wsUnsubscribe = null;
+  }
+
+  if (sidebarElement) {
+    const badge = sidebarElement.querySelector<HTMLElement>('[data-ref="chat-live-badge"]');
+    if (badge) badge.remove();
+
+    showEndChatButton(false);
+
+    const textarea = sidebarElement.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
+    if (textarea) {
+      textarea.disabled = false;
+      textarea.value = '';
+    }
+    const btnSend = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-send-message"], [data-ref="btn-send-tech-support"]');
+    if (btnSend) btnSend.disabled = false;
+
+    const emptyState = sidebarElement.querySelector<HTMLElement>('[data-ref="tech-support-empty-state"]');
+    const messagesList = sidebarElement.querySelector<HTMLElement>('[data-ref="tech-support-messages"]');
+    if (messagesList) {
+      messagesList.innerHTML = '';
+      messagesList.style.display = 'none';
+    }
+    if (emptyState) {
+      emptyState.style.display = 'flex';
+    }
+  }
+}
+
+export async function checkAndResumeActiveChat(): Promise<void> {
+  const storedSessionId = localStorage.getItem(STORAGE_KEY_SESSION_ID);
+  const storedChatId = localStorage.getItem(STORAGE_KEY_CHAT_ID);
+
+  try {
+    const url = storedSessionId
+      ? `/api/support/live/active-chat?sessionId=${encodeURIComponent(storedSessionId)}`
+      : '/api/support/live/active-chat';
+
+    const res = await getApi(url);
+    if (!res.ok) return;
+
+    const data = (await res.json()) as {
+      chat: {
+        assigned_agent_name: string | null;
+        id: string;
+        session_id: string;
+        status: 'active' | 'closed' | 'pending';
+        tier: 'L1' | 'L2' | 'L3';
+      } | null;
+      messages: Array<{
+        created_at: string;
+        id: string;
+        message: string;
+        sender_name: string;
+        sender_type: 'agent' | 'system' | 'user';
+      }>;
+      success: boolean;
+    };
+
+    if (data.chat && (data.chat.status === 'active' || data.chat.status === 'pending')) {
+      const chat = data.chat;
+      isLiveMode = true;
+      activeChatId = chat.id;
+      activeSessionId = chat.session_id;
+      activeTier = chat.tier;
+      activeAgentName = chat.assigned_agent_name;
+
+      localStorage.setItem(STORAGE_KEY_CHAT_ID, chat.id);
+      localStorage.setItem(STORAGE_KEY_SESSION_ID, chat.session_id);
+
+      const sidebar = createTechSupportSidebar();
+      const emptyState = sidebar.querySelector<HTMLElement>('[data-ref="tech-support-empty-state"]');
+      const messagesList = sidebar.querySelector<HTMLElement>('[data-ref="tech-support-messages"]');
+      const centerEl = sidebar.querySelector<HTMLElement>('[data-ref="tech-support-center"]');
+      const textarea = sidebar.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
+      const btnSend = sidebar.querySelector<HTMLButtonElement>('[data-ref="btn-send-message"], [data-ref="btn-send-tech-support"]');
+
+      if (emptyState) emptyState.style.display = 'none';
+      if (messagesList) {
+        messagesList.style.display = 'flex';
+        messagesList.innerHTML = '';
+        renderedMessageIds.clear();
+
+        if (Array.isArray(data.messages)) {
+          for (const msg of data.messages) {
+            renderedMessageIds.add(msg.id);
+            if (msg.sender_type === 'user') {
+              appendUserBubble(messagesList, msg.message);
+            } else if (msg.sender_type === 'agent') {
+              appendAgentBubble(messagesList, msg.message, msg.sender_name || 'Agente');
+            } else if (msg.sender_type === 'system') {
+              appendSystemBubble(messagesList, msg.message);
+            }
+          }
+        }
+      }
+
+      if (chat.status === 'active') {
+        updateLiveBadge(`En vivo con ${activeAgentName || 'Agente'}`, true);
+      } else {
+        updateLiveBadge(`Conectando con agente en vivo... (Nivel ${activeTier})`, false);
+      }
+
+      if (textarea) textarea.disabled = false;
+      if (btnSend) btnSend.disabled = false;
+      showEndChatButton(true);
+      scrollToBottom(centerEl);
+
+      bindLiveSupportWebSocket(chat.session_id, messagesList, centerEl);
+
+      if (localStorage.getItem(STORAGE_KEY_SIDEBAR_OPEN) === 'true') {
+        openTechSupportSidebar();
+      }
+    } else {
+      if (storedChatId) {
+        localStorage.removeItem(STORAGE_KEY_CHAT_ID);
+      }
+    }
+  } catch (_) {}
+}
+
+export function initTechSupportAutoResume(): void {
+  void checkAndResumeActiveChat();
+}
+
 async function startLiveAgentHandoff(reason: string, messagesList: HTMLElement | null, centerEl: HTMLElement | null): Promise<void> {
   isLiveMode = true;
-  activeSessionId = `support_sess_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  activeSessionId = localStorage.getItem(STORAGE_KEY_SESSION_ID) || `support_sess_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  localStorage.setItem(STORAGE_KEY_SESSION_ID, activeSessionId);
   activeTier = 'L1';
   activeAgentName = null;
   renderedMessageIds.clear();
 
   updateLiveBadge('Conectando con agente en vivo... (Nivel L1)', false);
+  bindLiveSupportWebSocket(activeSessionId, messagesList, centerEl);
 
   try {
-    await wsService.connect(activeSessionId);
-
-    if (wsUnsubscribe) {
-      wsUnsubscribe();
-      wsUnsubscribe = null;
-    }
-
-    wsUnsubscribe = wsService.subscribe(activeSessionId, (event: any) => {
-      if (!event || typeof event !== 'object') return;
-
-      if (event.type === 'chat_claimed') {
-        activeAgentName = event.agentName || 'Agente';
-        activeTier = event.tier || activeTier;
-        updateLiveBadge(`En vivo con ${activeAgentName}`, true);
-        appendSystemBubble(messagesList, `El agente ${activeAgentName} se ha conectado al chat.`);
-        scrollToBottom(centerEl);
-      } else if (event.type === 'chat_transferred') {
-        activeTier = event.tier || activeTier;
-        const agentText = event.agentName ? ` por ${event.agentName}` : '';
-        updateLiveBadge(activeAgentName ? `En vivo con ${activeAgentName}` : 'Conectando con agente...', Boolean(activeAgentName));
-        appendSystemBubble(messagesList, `Caso transferido/escalado a Soporte Nivel ${activeTier}${agentText}.`);
-        scrollToBottom(centerEl);
-      } else if (event.type === 'chat_closed') {
-        updateLiveBadge('Caso cerrado', false);
-        appendSystemBubble(messagesList, 'La sesión de soporte en vivo ha concluido.');
-        scrollToBottom(centerEl);
-        if (sidebarElement) {
-          const t = sidebarElement.querySelector<HTMLTextAreaElement>('[data-ref="input-tech-support"]');
-          if (t) t.disabled = true;
-          const b = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-send-tech-support"]');
-          if (b) b.disabled = true;
-        }
-      } else if (event.type === 'chat_message') {
-        if (event.id && renderedMessageIds.has(event.id)) {
-          return;
-        }
-        if (event.id) {
-          renderedMessageIds.add(event.id);
-        }
-        if (event.senderType === 'user') {
-          appendUserBubble(messagesList, event.message);
-          scrollToBottom(centerEl);
-        } else if (event.senderType === 'agent') {
-          appendAgentBubble(messagesList, event.message, event.senderName || 'Agente de Soporte');
-          scrollToBottom(centerEl);
-        } else if (event.senderType === 'system') {
-          appendSystemBubble(messagesList, event.message);
-          scrollToBottom(centerEl);
-        }
-      }
-    });
-
     const user = currentUser;
     const userName = user?.username || 'Usuario';
     const userEmail = user?.email || 'anonimo@aurora.app';
@@ -262,10 +579,16 @@ async function startLiveAgentHandoff(reason: string, messagesList: HTMLElement |
     });
 
     if (res.ok) {
-      const data = (await res.json()) as { chat?: { id: string } };
+      const data = (await res.json()) as { chat?: { assigned_agent_name: string | null; id: string; session_id: string; tier: 'L1' | 'L2' | 'L3' } };
       if (data?.chat?.id) {
         activeChatId = data.chat.id;
+        activeSessionId = data.chat.session_id;
+        activeTier = data.chat.tier || activeTier;
+        activeAgentName = data.chat.assigned_agent_name || activeAgentName;
+        localStorage.setItem(STORAGE_KEY_CHAT_ID, activeChatId);
+        localStorage.setItem(STORAGE_KEY_SESSION_ID, activeSessionId);
       }
+      showEndChatButton(true);
       appendSystemBubble(messagesList, 'Solicitud enviada a la cola de agentes. Esperando asignación...');
       scrollToBottom(centerEl);
     }
@@ -276,9 +599,9 @@ async function startLiveAgentHandoff(reason: string, messagesList: HTMLElement |
 
 async function handleSendMessage(): Promise<void> {
   if (!sidebarElement || isPending) return;
-  const textarea = sidebarElement.querySelector<HTMLTextAreaElement>('[data-ref="input-tech-support"]');
-  const btnSend = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-send-tech-support"]');
-  const inputBox = sidebarElement.querySelector<HTMLElement>('[data-ref="tech-support-input-box"]');
+  const textarea = sidebarElement.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
+  const btnSend = sidebarElement.querySelector<HTMLButtonElement>('[data-ref="btn-send-message"], [data-ref="btn-send-tech-support"]');
+  const inputBox = sidebarElement.querySelector<HTMLElement>('[data-ref="chat-input-box"], [data-ref="tech-support-input-box"]');
   const emptyState = sidebarElement.querySelector<HTMLElement>('[data-ref="tech-support-empty-state"]');
   const messagesList = sidebarElement.querySelector<HTMLElement>('[data-ref="tech-support-messages"]');
   const centerEl = sidebarElement.querySelector<HTMLElement>('[data-ref="tech-support-center"]');
@@ -327,12 +650,18 @@ async function handleSendMessage(): Promise<void> {
         const errData = (await res.json().catch(() => ({}))) as { error?: string };
         const isClosed = res.status === 400 && Boolean(errData.error?.includes('cerrad'));
         if (isClosed) {
+          const closedChatId = activeChatId;
+          const closedAgentName = activeAgentName;
           updateLiveBadge('Caso cerrado', false);
           appendSystemBubble(messagesList, 'La sesión de soporte en vivo ha concluido.');
+          showEndChatButton(false);
           textarea.disabled = true;
           btnSend.disabled = true;
           scrollToBottom(centerEl);
           isPending = false;
+          if (closedChatId) {
+            openSupportRatingModal(closedChatId, closedAgentName);
+          }
           return;
         }
         appendSystemBubble(messagesList, errData.error || 'No se pudo enviar el mensaje.');
@@ -439,9 +768,12 @@ export function createTechSupportSidebar(): HTMLElement {
     <div class="chat-panel" data-ref="tech-support-panel">
       <div class="chat-panel__top" data-ref="tech-support-top">
         <span class="chat-panel__title" data-ref="tech-support-title" data-i18n="nav.tech_support">${t('nav.tech_support', 'Soporte técnico')}</span>
-        <button type="button" class="component-button component-button--icon-only component-button--h32" data-ref="btn-close-tech-support" data-tooltip="Cerrar" data-i18n-tooltip="common.close" data-i18n-aria="common.close" aria-label="Cerrar">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
-        </button>
+        <div class="chat-panel__top-actions" data-ref="tech-support-top-actions" style="display: flex; align-items: center; gap: 6px;">
+          <button type="button" class="component-button component-button--ghost component-button--danger component-button--h28" data-ref="btn-end-live-chat" style="display: none; font-size: 11px; padding: 0 8px; font-weight: 600;">Finalizar</button>
+          <button type="button" class="component-button component-button--icon-only component-button--h32" data-ref="btn-close-tech-support" data-tooltip="Cerrar" data-i18n-tooltip="common.close" data-i18n-aria="common.close" aria-label="Cerrar">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+          </button>
+        </div>
       </div>
       <div class="chat-panel__center" data-ref="tech-support-center">
         <div class="chat-empty-state" data-ref="tech-support-empty-state">
@@ -454,11 +786,46 @@ export function createTechSupportSidebar(): HTMLElement {
         <div class="chat-messages" data-ref="tech-support-messages" style="display: none;"></div>
       </div>
       <div class="chat-panel__bottom" data-ref="tech-support-bottom">
-        <div class="chat-pill-input" data-ref="tech-support-input-box">
-          <textarea class="chat-pill-input__field" data-ref="input-tech-support" data-i18n-placeholder="tech_support_panel.input_placeholder" placeholder="${t('tech_support_panel.input_placeholder', 'Escribe tu consulta...')}" rows="1" maxlength="2000"></textarea>
-          <button type="button" class="component-button component-button--icon-only chat-pill-input__btn" data-ref="btn-send-tech-support" data-tooltip="Enviar mensaje" data-i18n-tooltip="tech_support_panel.send_btn" data-i18n-aria="tech_support_panel.send_btn" aria-label="Enviar mensaje">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#send"></use></svg>
-          </button>
+        <div class="ai-chat-bottom-dock" data-ref="ai-chat-bottom">
+          <div class="ai-staged-tray" data-ref="ai-staged-tray" style="display: none;">
+            <div class="ai-staged-list" data-ref="ai-staged-list"></div>
+          </div>
+
+          <div class="ai-chat-input-wrapper" data-ref="ai-chat-input-wrapper">
+            <input class="ai-hidden-file-input" data-ref="ai-file-input" type="file" multiple="" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt" />
+
+            <div class="chat-pill-input has-attach" data-ref="chat-input-box">
+              <div class="ai-dropdown-wrapper ai-attach-dropdown-wrapper" data-ref="ai-attach-dropdown-wrapper">
+                <button type="button" class="component-button component-button--icon-only chat-pill-input__attach" data-ref="btn-attach-files" data-tooltip="Adjuntar archivos" aria-label="Adjuntar archivos" aria-haspopup="true" aria-expanded="false">
+                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#attach_file"></use></svg>
+                </button>
+                <div class="ai-dropdown-menu ai-attach-dropdown-menu" data-ref="menu-attach-options" style="display: none;">
+                  <button type="button" class="ai-dropdown-item" data-ref="btn-attach-device">
+                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+                    <span class="ai-dropdown-item__text">Desde este dispositivo</span>
+                  </button>
+                  <button type="button" class="ai-dropdown-item" data-ref="btn-attach-drive">
+                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+                    <span class="ai-dropdown-item__text">Google Drive</span>
+                  </button>
+                  <button type="button" class="ai-dropdown-item" data-ref="btn-attach-dropbox">
+                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+                    <span class="ai-dropdown-item__text">Dropbox</span>
+                  </button>
+                </div>
+              </div>
+              <textarea class="chat-pill-input__field" data-ref="ai-chat-input" placeholder="${t('tech_support_panel.input_placeholder', 'Escribe tu consulta...')}" data-i18n-placeholder="tech_support_panel.input_placeholder" rows="1" maxlength="2000"></textarea>
+              <button type="button" class="component-button component-button--icon-only chat-pill-input__btn" data-ref="btn-send-message" data-tooltip="Enviar mensaje" data-i18n-tooltip="tech_support_panel.send_btn" data-i18n-aria="tech_support_panel.send_btn" aria-label="Enviar mensaje">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#send"></use></svg>
+              </button>
+            </div>
+            <p class="chat-disclaimer" data-ref="chat-disclaimer" data-i18n="ai.disclaimer">Canal seguro de atención y soporte técnico en vivo.</p>
+          </div>
+
+          <div class="banner banner--danger ai-chat-banner" data-ref="ai-error-banner" style="display: none;">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#error"></use></svg>
+            <span class="banner__text" data-ref="ai-error-text"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -473,10 +840,49 @@ export function createTechSupportSidebar(): HTMLElement {
     closeTechSupportSidebar();
   });
 
-  const textarea = aside.querySelector<HTMLTextAreaElement>('[data-ref="input-tech-support"]');
-  const btnSend = aside.querySelector<HTMLElement>('[data-ref="btn-send-tech-support"]');
-  const inputBox = aside.querySelector<HTMLElement>('[data-ref="tech-support-input-box"]');
+  const btnEndChat = aside.querySelector<HTMLElement>('[data-ref="btn-end-live-chat"]');
+  btnEndChat?.addEventListener('click', (e) => {
+    e.preventDefault();
+    promptEndLiveChat();
+  });
+
+  const textarea = aside.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
+  const btnSend = aside.querySelector<HTMLElement>('[data-ref="btn-send-message"], [data-ref="btn-send-tech-support"]');
+  const inputBox = aside.querySelector<HTMLElement>('[data-ref="chat-input-box"], [data-ref="tech-support-input-box"]');
   const centerEl = aside.querySelector<HTMLElement>('[data-ref="tech-support-center"]');
+  const btnAttach = aside.querySelector<HTMLElement>('[data-ref="btn-attach-files"]');
+  const menuAttach = aside.querySelector<HTMLElement>('[data-ref="menu-attach-options"]');
+  const btnAttachDevice = aside.querySelector<HTMLElement>('[data-ref="btn-attach-device"]');
+  const fileInput = aside.querySelector<HTMLInputElement>('[data-ref="ai-file-input"]');
+
+  btnAttach?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!menuAttach) return;
+    const isOpen = menuAttach.style.display === 'flex';
+    menuAttach.style.display = isOpen ? 'none' : 'flex';
+    btnAttach.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  btnAttachDevice?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (menuAttach) menuAttach.style.display = 'none';
+    btnAttach?.setAttribute('aria-expanded', 'false');
+    fileInput?.click();
+  });
+
+  fileInput?.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      showToast(`Adjuntado: ${fileInput.files[0].name}`, 'info');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (menuAttach && menuAttach.style.display === 'flex' && !btnAttach?.contains(e.target as Node) && !menuAttach.contains(e.target as Node)) {
+      menuAttach.style.display = 'none';
+      btnAttach?.setAttribute('aria-expanded', 'false');
+    }
+  });
 
   btnSend?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -512,6 +918,7 @@ export function createTechSupportSidebar(): HTMLElement {
 }
 
 export function openTechSupportSidebar(): void {
+  localStorage.setItem(STORAGE_KEY_SIDEBAR_OPEN, 'true');
   const sidebar = createTechSupportSidebar();
   const host = document.querySelector<HTMLElement>('.layout-content') || document.querySelector<HTMLElement>('[data-ref="app"]') || document.body;
   if (!sidebar.parentElement || sidebar.parentElement !== host) {
@@ -520,13 +927,18 @@ export function openTechSupportSidebar(): void {
   sidebar.classList.add('is-active');
   isTechSupportOpen = true;
 
-  const textarea = sidebar.querySelector<HTMLTextAreaElement>('[data-ref="input-tech-support"]');
+  if (!isLiveMode) {
+    void checkAndResumeActiveChat();
+  }
+
+  const textarea = sidebar.querySelector<HTMLTextAreaElement>('[data-ref="ai-chat-input"], [data-ref="input-tech-support"]');
   setTimeout(() => {
     textarea?.focus();
   }, 100);
 }
 
 export function closeTechSupportSidebar(): void {
+  localStorage.setItem(STORAGE_KEY_SIDEBAR_OPEN, 'false');
   if (sidebarElement) {
     sidebarElement.classList.remove('is-active');
   }

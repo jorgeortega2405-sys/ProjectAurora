@@ -812,6 +812,10 @@
   overflow: hidden !important;
 }
 
+.support-filter-tabs {
+  background: transparent !important;
+}
+
 .support-chat-viewport {
   flex: 1 1 0% !important;
   min-width: 0 !important;
@@ -819,7 +823,7 @@
   min-height: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  background: var(--bg-surface-elevated, var(--bg-surface));
+  background: var(--bg-surface) !important;
   overflow: hidden !important;
 }
 
@@ -829,6 +833,7 @@
   height: 100% !important;
   min-height: 0 !important;
   flex: 1 1 0% !important;
+  background: var(--bg-surface) !important;
   overflow: hidden !important;
 }
 
@@ -840,6 +845,18 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: var(--bg-surface) !important;
+}
+
+.support-input-toolbar {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.support-input-toolbar .ai-chat-bottom-dock {
+  width: 100%;
 }
 
 .support-chats-scroll {

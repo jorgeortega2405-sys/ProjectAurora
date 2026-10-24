@@ -140,7 +140,9 @@ body[data-theme="dark"] .login-logo-img {
 }
 
 .settings-dropdown-wrapper--full,
-.dropdown-wrapper--full {
+.dropdown-wrapper--full,
+.settings-dropdown-wrapper--full .dropdown-trigger,
+.dropdown-wrapper--full .dropdown-trigger {
   max-width: 100% !important;
   width: 100% !important;
 }

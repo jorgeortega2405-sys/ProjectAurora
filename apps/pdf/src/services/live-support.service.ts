@@ -9,7 +9,10 @@ export interface LiveChatRecord {
   assigned_agent_name: string | null;
   closed_at: string | null;
   created_at: string;
+  feedback_comment: string | null;
   id: string;
+  rated_at: string | null;
+  rating: number | null;
   session_id: string;
   status: 'pending' | 'active' | 'closed';
   subject: string;
@@ -41,6 +44,15 @@ export class LiveSupportService {
     userId?: string | null;
     userName: string;
   }): Promise<LiveChatRecord> {
+    const existingActive = await this.getActiveChat({
+      sessionId: data.sessionId,
+      userEmail: data.userEmail,
+      userId: data.userId,
+    });
+    if (existingActive) {
+      return existingActive;
+    }
+
     const id = crypto.randomUUID();
     const initialTier: 'L1' | 'L2' | 'L3' = 'L1';
     const initialStatus: 'pending' | 'active' | 'closed' = 'pending';
@@ -180,5 +192,124 @@ export class LiveSupportService {
     }
 
     return msgRecord;
+  }
+
+  static async getActiveChat(criteria: {
+    sessionId?: string | null;
+    userEmail?: string | null;
+    userId?: string | null;
+  }): Promise<LiveChatRecord | null> {
+    if (criteria.userId) {
+      const [rows] = await pool.query<ChatRow[]>(
+        'SELECT * FROM live_support_chats WHERE user_id = ? AND status IN (\'pending\', \'active\') ORDER BY created_at DESC LIMIT 1',
+        [criteria.userId]
+      );
+      if (rows.length > 0) {
+        return rows[0];
+      }
+    }
+
+    if (criteria.sessionId) {
+      const [rows] = await pool.query<ChatRow[]>(
+        'SELECT * FROM live_support_chats WHERE session_id = ? AND status IN (\'pending\', \'active\') ORDER BY created_at DESC LIMIT 1',
+        [criteria.sessionId]
+      );
+      if (rows.length > 0) {
+        return rows[0];
+      }
+    }
+
+    if (criteria.userEmail) {
+      const [rows] = await pool.query<ChatRow[]>(
+        'SELECT * FROM live_support_chats WHERE user_email = ? AND status IN (\'pending\', \'active\') ORDER BY created_at DESC LIMIT 1',
+        [criteria.userEmail.trim().toLowerCase()]
+      );
+      if (rows.length > 0) {
+        return rows[0];
+      }
+    }
+
+    return null;
+  }
+
+  static async closeChat(chatId: string, closedBy: 'user' | 'agent' = 'user'): Promise<LiveChatRecord> {
+    const chat = await this.getChatById(chatId);
+    if (!chat) {
+      throw new Error('El chat no existe.');
+    }
+
+    if (chat.status === 'closed') {
+      return chat;
+    }
+
+    await pool.query(
+      `UPDATE live_support_chats 
+       SET status = 'closed', closed_at = NOW() 
+       WHERE id = ?`,
+      [chatId]
+    );
+
+    const closeMsgId = crypto.randomUUID();
+    const closeText = closedBy === 'user'
+      ? 'Sesión de soporte finalizada por el usuario.'
+      : 'Sesión de soporte finalizada.';
+
+    await pool.query(
+      `INSERT INTO live_support_messages (id, chat_id, sender_type, sender_id, sender_name, message)
+       VALUES (?, ?, 'system', NULL, 'Sistema', ?)`,
+      [closeMsgId, chatId, closeText]
+    );
+
+    const updated = await this.getChatById(chatId);
+    if (!updated) {
+      throw new Error('No se pudo verificar el cierre del caso.');
+    }
+
+    try {
+      if (redis.status === 'ready') {
+        const payload = JSON.stringify({
+          chatId,
+          closedBy,
+          sessionId: chat.session_id,
+          status: 'closed',
+          type: 'chat_closed',
+        });
+        await redis.publish('aurora:support:events', payload);
+      }
+    } catch (err) {
+      logger.app.warn('Fallo al publicar evento de chat_closed en Redis', { error: err });
+    }
+
+    return updated;
+  }
+
+  static async rateChat(data: {
+    chatId: string;
+    feedbackComment?: string | null;
+    rating: number;
+  }): Promise<LiveChatRecord> {
+    const chat = await this.getChatById(data.chatId);
+    if (!chat) {
+      throw new Error('El chat no existe.');
+    }
+
+    const ratingVal = Math.max(1, Math.min(5, Math.round(data.rating)));
+    const comment = typeof data.feedbackComment === 'string' && data.feedbackComment.trim()
+      ? data.feedbackComment.trim()
+      : null;
+
+    await pool.query(
+      `UPDATE live_support_chats 
+       SET rating = ?, feedback_comment = ?, rated_at = NOW() 
+       WHERE id = ?`,
+      [ratingVal, comment, data.chatId]
+    );
+
+    const updated = await this.getChatById(data.chatId);
+    if (!updated) {
+      throw new Error('No se pudo verificar el registro de la calificación.');
+    }
+
+    return updated;
   }
 }

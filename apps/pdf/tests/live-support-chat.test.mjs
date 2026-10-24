@@ -8,10 +8,11 @@ import { LiveSupportService } from '../dist/services/live-support.service.js';
 import { SupportAiService } from '../dist/services/support-ai.service.js';
 
 const ROOT_DIR = process.cwd();
-const LIVE_SERVICE_PATH = path.resolve(ROOT_DIR, 'apps/pdf/src/services/live-support.service.ts');
-const LIVE_CONTROLLER_PATH = path.resolve(ROOT_DIR, 'apps/pdf/src/controllers/live-support.controller.ts');
-const LIVE_ROUTES_PATH = path.resolve(ROOT_DIR, 'apps/pdf/src/routes/live-support.routes.ts');
-const SUPPORT_COMPONENT_PATH = path.resolve(ROOT_DIR, 'apps/pdf/client/components/support-sidebar.component.ts');
+const PDF_DIR = fs.existsSync(path.resolve(ROOT_DIR, 'apps/pdf')) ? path.resolve(ROOT_DIR, 'apps/pdf') : ROOT_DIR;
+const LIVE_SERVICE_PATH = path.resolve(PDF_DIR, 'src/services/live-support.service.ts');
+const LIVE_CONTROLLER_PATH = path.resolve(PDF_DIR, 'src/controllers/live-support.controller.ts');
+const LIVE_ROUTES_PATH = path.resolve(PDF_DIR, 'src/routes/live-support.routes.ts');
+const SUPPORT_COMPONENT_PATH = path.resolve(PDF_DIR, 'client/components/support-sidebar.component.ts');
 
 describe('Suite: Live Support Chat & AI Agent Handoff (apps/pdf)', () => {
   it('Requirement AGENTS.md: Zero console.log/warn/error across Live Support files', () => {
@@ -79,10 +80,11 @@ describe('Suite: Live Support Chat & AI Agent Handoff (apps/pdf)', () => {
 
   it('LiveSupportService: creates chat, stores initial system message, and saves user messages', async () => {
     const testSessionId = `test_sess_${Date.now()}`;
+    const testEmail = `usuario.prueba.${Date.now()}@aurora.app`;
     const chat = await LiveSupportService.createChat({
       sessionId: testSessionId,
       subject: 'Problema al procesar foliado en archivo protegido',
-      userEmail: 'usuario.prueba@aurora.app',
+      userEmail: testEmail,
       userName: 'Carlos Prueba',
     });
 
@@ -107,6 +109,9 @@ describe('Suite: Live Support Chat & AI Agent Handoff (apps/pdf)', () => {
     assert.ok(messages.length >= 2, 'Must contain initial system welcome and user message');
     assert.ok(messages.some((m) => m.sender_type === 'system'), 'Must contain system message');
     assert.ok(messages.some((m) => m.sender_type === 'user'), 'Must contain user message');
+
+    await pool.query('DELETE FROM live_support_messages WHERE chat_id = ?', [chat.id]);
+    await pool.query('DELETE FROM live_support_chats WHERE id = ?', [chat.id]);
   });
 
   it('LiveSupportService: rejects adding user message if chat is closed', async () => {
@@ -133,6 +138,65 @@ describe('Suite: Live Support Chat & AI Agent Handoff (apps/pdf)', () => {
 
     await pool.query('DELETE FROM live_support_messages WHERE chat_id = ?', [chat.id]);
     await pool.query('DELETE FROM live_support_chats WHERE id = ?', [chat.id]);
+  });
+
+  it('LiveSupportService: prevents duplicate cases by reusing existing active chat for same user/session', async () => {
+    const testSessionId = `test_unique_sess_${Date.now()}`;
+    const firstChat = await LiveSupportService.createChat({
+      sessionId: testSessionId,
+      subject: 'Caso inicial de prueba única',
+      userEmail: 'cliente.unico@aurora.app',
+      userName: 'Cliente Único',
+    });
+
+    const secondChat = await LiveSupportService.createChat({
+      sessionId: testSessionId,
+      subject: 'Intento de abrir segundo caso duplicado',
+      userEmail: 'cliente.unico@aurora.app',
+      userName: 'Cliente Único',
+    });
+
+    assert.strictEqual(firstChat.id, secondChat.id, 'Debe reusar el mismo chat activo en lugar de abrir otro caso');
+
+    const [rows] = await pool.query(
+      'SELECT COUNT(*) AS total FROM live_support_chats WHERE session_id = ?',
+      [testSessionId]
+    );
+    assert.strictEqual(rows[0].total, 1, 'Solo debe existir exactamente 1 caso registrado en base de datos');
+
+    const activeChat = await LiveSupportService.getActiveChat({ sessionId: testSessionId });
+    assert.ok(activeChat);
+    assert.strictEqual(activeChat.id, firstChat.id);
+
+    await LiveSupportService.closeChat(firstChat.id, 'user');
+    const closed = await LiveSupportService.getChatById(firstChat.id);
+    assert.strictEqual(closed?.status, 'closed');
+    assert.ok(closed?.closed_at);
+
+    await LiveSupportService.rateChat({
+      chatId: firstChat.id,
+      feedbackComment: 'Excelente atención rápida y concisa',
+      rating: 5,
+    });
+
+    const rated = await LiveSupportService.getChatById(firstChat.id);
+    assert.strictEqual(rated?.rating, 5);
+    assert.strictEqual(rated?.feedback_comment, 'Excelente atención rápida y concisa');
+    assert.ok(rated?.rated_at);
+
+    await pool.query('DELETE FROM live_support_messages WHERE chat_id = ?', [firstChat.id]);
+    await pool.query('DELETE FROM live_support_chats WHERE id = ?', [firstChat.id]);
+  });
+
+  it('Requirement AGENTS.md: support-sidebar.component.ts implements persistence, finalize button and rating modal', () => {
+    const componentContent = fs.readFileSync(SUPPORT_COMPONENT_PATH, 'utf8');
+    assert.ok(componentContent.includes('STORAGE_KEY_CHAT_ID'), 'Must define STORAGE_KEY_CHAT_ID');
+    assert.ok(componentContent.includes('STORAGE_KEY_SESSION_ID'), 'Must define STORAGE_KEY_SESSION_ID');
+    assert.ok(componentContent.includes('STORAGE_KEY_SIDEBAR_OPEN'), 'Must define STORAGE_KEY_SIDEBAR_OPEN');
+    assert.ok(componentContent.includes('btn-end-live-chat'), 'Must include btn-end-live-chat');
+    assert.ok(componentContent.includes('openSupportRatingModal'), 'Must include openSupportRatingModal');
+    assert.ok(componentContent.includes('checkAndResumeActiveChat'), 'Must include checkAndResumeActiveChat');
+    assert.ok(!componentContent.includes('id="') && !componentContent.includes("id='"), 'Zero id attributes');
   });
 
   it('Requirement AGENTS.md: Deduplication and transport unification in support-sidebar.component.ts', () => {

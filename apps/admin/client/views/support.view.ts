@@ -4,24 +4,30 @@ import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
 import { adminWsService } from '../services/websocket.service.js';
 import { ViewController } from '../types/common.types.js';
-import { debounce, escapeHtml } from '../utils/dom.util.js';
+import { debounce, DropdownController, escapeHtml, setupDropdown } from '../utils/dom.util.js';
+import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminChatSummary {
   assigned_agent_id: string | null;
   assigned_agent_name: string | null;
   closed_at: string | null;
   created_at: string;
+  feedback_comment?: string | null;
   id: string;
   last_message?: string;
   message_count?: number;
+  rated_at?: string | null;
+  rating?: number | null;
   session_id: string;
   status: 'pending' | 'active' | 'closed';
   subject: string;
   tier: 'L1' | 'L2' | 'L3';
   updated_at: string;
+  user_avatar_url?: string | null;
   user_email: string;
   user_id: string | null;
   user_name: string;
+  user_tier?: string | null;
 }
 
 export interface AdminChatMessage {
@@ -37,14 +43,20 @@ export interface AdminChatMessage {
 export class LiveSupportController implements ViewController {
   private abortController: AbortController | null = null;
   private activeChat: AdminChatSummary | null = null;
+  private approvedMessageText: string | null = null;
   private chatMessages: AdminChatMessage[] = [];
   private chats: AdminChatSummary[] = [];
   private container: HTMLElement;
   private currentSearch = '';
   private currentStatus = 'all';
   private currentTier = 'all';
+  private isRefiningMessage = false;
+  private isSoundEnabled = true;
   private notifiedChatCreatedIds = new Set<string>();
   private renderedMessageIds = new Set<string>();
+  private soundNewChat: HTMLAudioElement | null = null;
+  private soundNewMessage: HTMLAudioElement | null = null;
+  private tierDropdown: DropdownController | null = null;
   private wsChatUnsubscribe: (() => void) | null = null;
   private wsGlobalUnsubscribe: (() => void) | null = null;
 
@@ -54,7 +66,9 @@ export class LiveSupportController implements ViewController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+    this.initAudio();
     renderIcons(this.container);
+    this.setupSoundToggle();
     this.setupSearch();
     this.setupFilters();
     this.setupChatListDelegation();
@@ -77,8 +91,81 @@ export class LiveSupportController implements ViewController {
       this.wsChatUnsubscribe();
       this.wsChatUnsubscribe = null;
     }
+    if (this.tierDropdown) {
+      this.tierDropdown.destroy();
+      this.tierDropdown = null;
+    }
+    this.approvedMessageText = null;
+    this.isRefiningMessage = false;
+    this.soundNewChat = null;
+    this.soundNewMessage = null;
     this.notifiedChatCreatedIds.clear();
     this.renderedMessageIds.clear();
+  }
+
+  private initAudio(): void {
+    const saved = localStorage.getItem('aurora_support_sound_enabled');
+    this.isSoundEnabled = saved !== 'false';
+
+    try {
+      this.soundNewChat = new Audio('/sounds/support-new-chat.wav');
+      this.soundNewChat.volume = 0.35;
+      this.soundNewMessage = new Audio('/sounds/support-new-message.wav');
+      this.soundNewMessage.volume = 0.3;
+    } catch {
+      this.soundNewChat = null;
+      this.soundNewMessage = null;
+    }
+  }
+
+  private setupSoundToggle(): void {
+    const signal = this.abortController?.signal;
+    const btn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-toggle-sound"]');
+    if (!btn) return;
+
+    this.updateSoundButtonUi(btn);
+
+    btn.addEventListener(
+      'click',
+      () => {
+        this.isSoundEnabled = !this.isSoundEnabled;
+        localStorage.setItem('aurora_support_sound_enabled', String(this.isSoundEnabled));
+        this.updateSoundButtonUi(btn);
+        if (this.isSoundEnabled) {
+          toast.info('Alertas de sonido activadas.');
+          this.playNotificationSound('message');
+        } else {
+          toast.info('Alertas de sonido silenciadas.');
+        }
+      },
+      { signal }
+    );
+  }
+
+  private updateSoundButtonUi(btn: HTMLButtonElement): void {
+    const icon = btn.querySelector<SVGElement>('[data-ref="icon-toggle-sound"] use');
+    if (this.isSoundEnabled) {
+      btn.setAttribute('data-tooltip', 'Sonidos activados (clic para silenciar)');
+      btn.setAttribute('aria-label', 'Sonidos activados');
+      btn.classList.add('is-active');
+      if (icon) icon.setAttribute('href', '/icons.svg#volume_up');
+    } else {
+      btn.setAttribute('data-tooltip', 'Sonidos silenciados (clic para activar)');
+      btn.setAttribute('aria-label', 'Sonidos silenciados');
+      btn.classList.remove('is-active');
+      if (icon) icon.setAttribute('href', '/icons.svg#volume_off');
+    }
+  }
+
+  private playNotificationSound(type: 'chat' | 'message'): void {
+    if (!this.isSoundEnabled) return;
+    try {
+      const audio = type === 'chat' ? this.soundNewChat : this.soundNewMessage;
+      if (audio) {
+        audio.currentTime = 0;
+        void audio.play().catch(() => {});
+      }
+    } catch {}
   }
 
   private setupWebSocket(): void {
@@ -101,6 +188,7 @@ export class LiveSupportController implements ViewController {
           this.notifiedChatCreatedIds.add(eventChatId);
         }
         toast.info(`Nuevo chat de soporte: ${event.userName || 'Usuario'} (Nivel ${event.tier || 'L1'})`);
+        this.playNotificationSound('chat');
         void this.loadChats();
       } else if (event.type === 'chat_claimed' || event.type === 'chat_transferred' || event.type === 'chat_closed') {
         void this.loadChats();
@@ -166,7 +254,12 @@ export class LiveSupportController implements ViewController {
   private setupFilters(): void {
     const signal = this.abortController?.signal;
     const tabButtons = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="tab-status-"]');
-    const tierSelect = this.container.querySelector<HTMLSelectElement>('[data-ref="filter-tier-select"]');
+    const tierWrapper =
+      this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-support-tier"]') ||
+      this.container.querySelector<HTMLElement>('[data-ref="wrapper-tier-filter"]');
+    const tierSearchInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-search-support-tier"]');
+    const tierList = this.container.querySelector<HTMLElement>('[data-ref="list-support-tiers"]');
+    const tierEmpty = this.container.querySelector<HTMLElement>('[data-ref="empty-support-tiers"]');
 
     tabButtons.forEach((btn) => {
       btn.addEventListener(
@@ -181,14 +274,36 @@ export class LiveSupportController implements ViewController {
       );
     });
 
-    tierSelect?.addEventListener(
-      'change',
-      () => {
-        this.currentTier = tierSelect.value || 'all';
-        void this.loadChats();
-      },
-      { signal }
-    );
+    if (tierSearchInput && tierList) {
+      tierSearchInput.addEventListener(
+        'input',
+        () => {
+          const query = tierSearchInput.value.toLowerCase().trim();
+          let matchCount = 0;
+          const items = tierList.querySelectorAll<HTMLButtonElement>('.menu-item');
+          items.forEach((item) => {
+            const text = item.textContent?.toLowerCase() || '';
+            const match = !query || text.includes(query);
+            item.style.display = match ? 'flex' : 'none';
+            if (match) matchCount++;
+          });
+          if (tierEmpty) {
+            tierEmpty.style.display = matchCount === 0 ? 'block' : 'none';
+          }
+          this.tierDropdown?.update();
+        },
+        { signal }
+      );
+    }
+
+    if (tierWrapper) {
+      this.tierDropdown = setupDropdown(tierWrapper, {
+        onSelect: (val) => {
+          this.currentTier = val || 'all';
+          void this.loadChats();
+        },
+      });
+    }
   }
 
   private async loadChats(): Promise<void> {
@@ -232,13 +347,6 @@ export class LiveSupportController implements ViewController {
     container.innerHTML = this.chats
       .map((chat) => {
         const isSelected = this.activeChat?.id === chat.id;
-        const statusBadgeColor =
-          chat.status === 'active'
-            ? 'background: rgba(16, 185, 129, 0.15); color: #10b981;'
-            : chat.status === 'pending'
-            ? 'background: rgba(245, 158, 11, 0.15); color: #f59e0b;'
-            : 'background: rgba(156, 163, 175, 0.15); color: #9ca3af;';
-
         const statusLabel =
           chat.status === 'active'
             ? 'Activo'
@@ -246,22 +354,20 @@ export class LiveSupportController implements ViewController {
             ? 'Pendiente'
             : 'Cerrado';
 
-        const tierBg =
-          chat.tier === 'L3'
-            ? '#ef4444'
-            : chat.tier === 'L2'
-            ? '#8b5cf6'
-            : '#0ea5e9';
+        const ratingBadge = chat.rating
+          ? `<span class="component-badge component-badge--sm">★ ${chat.rating}</span>`
+          : '';
 
         const lastMsg = chat.last_message || chat.subject || 'Sin mensajes';
 
         return `
-          <div class="support-chat-card ${isSelected ? 'is-selected' : ''}" data-ref="chat-card-${escapeHtml(chat.id)}" data-chat-item="${escapeHtml(chat.id)}" style="padding: 10px 12px; border: 1px solid ${isSelected ? 'var(--primary, #0ea5e9)' : 'var(--border-color)'}; border-radius: var(--radius-md, 8px); background: ${isSelected ? 'var(--bg-hover, rgba(14, 165, 233, 0.08))' : 'var(--bg-surface)'}; cursor: pointer; transition: all 0.15s ease;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+          <div class="support-chat-card ${isSelected ? 'is-selected' : ''}" data-ref="chat-card-${escapeHtml(chat.id)}" data-chat-item="${escapeHtml(chat.id)}" style="padding: 10px 12px; border: 1px solid ${isSelected ? 'var(--text-primary)' : 'var(--border-color)'}; border-radius: var(--radius-md, 8px); background: ${isSelected ? 'var(--bg-hover)' : 'var(--bg-surface)'}; cursor: pointer; transition: all 0.15s ease;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px;">
               <span style="font-weight: 700; font-size: 13px; color: var(--text-primary);">${escapeHtml(chat.user_name)}</span>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <span class="component-badge component-badge--xs" style="${statusBadgeColor}; font-size: 10px; font-weight: 700;">${statusLabel}</span>
-                <span class="component-badge component-badge--xs" style="background: ${tierBg}; color: #ffffff; font-size: 10px; font-weight: 700;">${chat.tier}</span>
+                ${ratingBadge}
+                <span class="component-badge component-badge--sm">${statusLabel}</span>
+                <span class="component-badge component-badge--sm">${escapeHtml(chat.tier)}</span>
               </div>
             </div>
             <div style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -298,6 +404,9 @@ export class LiveSupportController implements ViewController {
 
   private async selectChat(chat: AdminChatSummary): Promise<void> {
     this.activeChat = chat;
+    this.approvedMessageText = null;
+    this.isRefiningMessage = false;
+    this.resetQualityBanners();
     this.renderedMessageIds.clear();
 
     const noSelection = this.container.querySelector<HTMLElement>('[data-ref="support-no-selection"]');
@@ -310,7 +419,8 @@ export class LiveSupportController implements ViewController {
     cards.forEach((c) => {
       const isCurrent = c.getAttribute('data-chat-item') === chat.id;
       c.classList.toggle('is-selected', isCurrent);
-      c.style.borderColor = isCurrent ? 'var(--primary, #0ea5e9)' : 'var(--border-color)';
+      c.style.borderColor = isCurrent ? 'var(--text-primary)' : 'var(--border-color)';
+      c.style.background = isCurrent ? 'var(--bg-hover)' : 'var(--bg-surface)';
     });
 
     this.renderChatHeader();
@@ -323,15 +433,19 @@ export class LiveSupportController implements ViewController {
     this.wsChatUnsubscribe = adminWsService.subscribe(chat.session_id, (event: any) => {
       if (!event || typeof event !== 'object') return;
       if (event.type === 'chat_message') {
+        const isUser = event.senderType === 'user';
         this.appendMessageBubble({
           chat_id: chat.id,
           created_at: event.createdAt || new Date().toISOString(),
           id: event.id || `msg-${Date.now()}`,
           message: event.message,
           sender_id: event.senderId || null,
-          sender_name: event.senderName || (event.senderType === 'agent' ? 'Agente' : 'Usuario'),
+          sender_name: event.senderName || (isUser ? 'Usuario' : 'Agente'),
           sender_type: event.senderType || 'user',
         });
+        if (isUser) {
+          this.playNotificationSound('message');
+        }
       }
     });
 
@@ -341,6 +455,8 @@ export class LiveSupportController implements ViewController {
   private renderChatHeader(): void {
     if (!this.activeChat) return;
 
+    const avatarRingEl = this.container.querySelector<HTMLElement>('[data-ref="support-header-avatar-ring"]');
+    const avatarImgEl = this.container.querySelector<HTMLImageElement>('[data-ref="support-header-avatar-img"]');
     const userNameEl = this.container.querySelector<HTMLElement>('[data-ref="support-header-user"]');
     const statusBadge = this.container.querySelector<HTMLElement>('[data-ref="support-header-status-badge"]');
     const tierBadge = this.container.querySelector<HTMLElement>('[data-ref="support-header-tier-badge"]');
@@ -349,40 +465,52 @@ export class LiveSupportController implements ViewController {
     const btnClaim = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-claim-chat"]');
     const btnTransfer = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-transfer"]');
     const btnClose = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-chat"]');
-    const input = this.container.querySelector<HTMLInputElement>('[data-ref="support-agent-input"]');
-    const btnSend = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-send-agent-message"]');
+    const input = this.container.querySelector<HTMLTextAreaElement | HTMLInputElement>(
+      '[data-ref="ai-chat-input"], [data-ref="support-agent-input"]'
+    );
+    const btnSend = this.container.querySelector<HTMLButtonElement>(
+      '[data-ref="btn-send-message"], [data-ref="btn-send-agent-message"]'
+    );
     const hintEl = this.container.querySelector<HTMLElement>('[data-ref="support-input-hint"]');
+
+    const avatarUrl = this.activeChat.user_avatar_url || `/api/avatar?name=${encodeURIComponent(this.activeChat.user_name || 'user')}`;
+    const tierColor = getFallbackTierColor(this.activeChat.user_tier || this.activeChat.tier);
+
+    if (avatarRingEl) {
+      avatarRingEl.style.setProperty('--avatar-tier-bg', tierColor);
+      avatarRingEl.style.setProperty('--tier-border-color', tierColor);
+    }
+    if (avatarImgEl) {
+      avatarImgEl.src = avatarUrl;
+      avatarImgEl.alt = this.activeChat.user_name;
+      avatarImgEl.onerror = () => {
+        avatarImgEl.src = `/api/avatar?name=${encodeURIComponent(this.activeChat?.user_name || 'user')}`;
+      };
+    }
 
     if (userNameEl) userNameEl.textContent = this.activeChat.user_name;
     if (emailEl) emailEl.textContent = this.activeChat.user_email;
     if (subjectEl) subjectEl.textContent = this.activeChat.subject;
 
     if (statusBadge) {
+      statusBadge.removeAttribute('style');
       statusBadge.textContent =
         this.activeChat.status === 'active'
           ? 'Activo'
           : this.activeChat.status === 'pending'
           ? 'Pendiente'
           : 'Cerrado';
-
-      const color =
-        this.activeChat.status === 'active'
-          ? 'background: rgba(16, 185, 129, 0.15); color: #10b981;'
-          : this.activeChat.status === 'pending'
-          ? 'background: rgba(245, 158, 11, 0.15); color: #f59e0b;'
-          : 'background: rgba(156, 163, 175, 0.15); color: #9ca3af;';
-      statusBadge.setAttribute('style', `${color}; font-size: 11px; font-weight: 700;`);
+      if (this.activeChat.rating) {
+        statusBadge.textContent = `${statusBadge.textContent} • ★ ${this.activeChat.rating}/5`;
+        if (this.activeChat.feedback_comment) {
+          statusBadge.setAttribute('data-tooltip', `Calificación: ${this.activeChat.rating}/5 - "${this.activeChat.feedback_comment}"`);
+        }
+      }
     }
 
     if (tierBadge) {
+      tierBadge.removeAttribute('style');
       tierBadge.textContent = this.activeChat.tier;
-      const tierBg =
-        this.activeChat.tier === 'L3'
-          ? '#ef4444'
-          : this.activeChat.tier === 'L2'
-          ? '#8b5cf6'
-          : '#0ea5e9';
-      tierBadge.setAttribute('style', `background: ${tierBg}; color: #ffffff; font-size: 11px; font-weight: 700;`);
     }
 
     const isActive = this.activeChat.status === 'active';
@@ -390,7 +518,7 @@ export class LiveSupportController implements ViewController {
     if (input) {
       input.disabled = !isActive;
       if (this.activeChat.status === 'pending') {
-        input.placeholder = 'Debes tomar el caso antes de enviar mensajes...';
+        input.placeholder = 'Debes tomar el caso antes de responder...';
       } else if (this.activeChat.status === 'closed') {
         input.placeholder = 'Este caso ha sido cerrado (solo lectura).';
       } else {
@@ -405,7 +533,7 @@ export class LiveSupportController implements ViewController {
     if (hintEl) {
       if (this.activeChat.status === 'pending') {
         hintEl.style.display = 'block';
-        hintEl.style.color = '#f59e0b';
+        hintEl.style.color = 'var(--text-secondary)';
         hintEl.textContent = 'Caso pendiente de asignación. Haz clic en "Tomar caso" para responder.';
       } else if (this.activeChat.status === 'closed') {
         hintEl.style.display = 'block';
@@ -525,12 +653,101 @@ export class LiveSupportController implements ViewController {
     feed.scrollTop = feed.scrollHeight;
   }
 
+  private resetQualityBanners(): void {
+    const offensiveBanner = this.container.querySelector<HTMLElement>('[data-ref="support-offensive-error"]');
+    const refinementBanner = this.container.querySelector<HTMLElement>('[data-ref="support-refinement-info"]');
+    const input = this.container.querySelector<HTMLTextAreaElement | HTMLInputElement>(
+      '[data-ref="ai-chat-input"], [data-ref="support-agent-input"]'
+    );
+    if (offensiveBanner) {
+      offensiveBanner.style.display = 'none';
+      offensiveBanner.classList.add('is-hidden');
+    }
+    if (refinementBanner) {
+      refinementBanner.style.display = 'none';
+      refinementBanner.classList.add('is-hidden');
+    }
+    if (input) {
+      input.style.borderColor = '';
+    }
+  }
+
   private setupChatActions(): void {
     const signal = this.abortController?.signal;
     const btnClaim = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-claim-chat"]');
     const btnClose = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-chat"]');
-    const btnSend = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-send-agent-message"]');
-    const input = this.container.querySelector<HTMLInputElement>('[data-ref="support-agent-input"]');
+    const btnSend = this.container.querySelector<HTMLButtonElement>(
+      '[data-ref="btn-send-message"], [data-ref="btn-send-agent-message"]'
+    );
+    const input = this.container.querySelector<HTMLTextAreaElement | HTMLInputElement>(
+      '[data-ref="ai-chat-input"], [data-ref="support-agent-input"]'
+    );
+    const inputBox = this.container.querySelector<HTMLElement>('[data-ref="chat-input-box"]');
+    const btnAttach = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-attach-files"]');
+    const menuAttach = this.container.querySelector<HTMLElement>('[data-ref="menu-attach-options"]');
+    const btnAttachDevice = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-attach-device"]');
+    const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="ai-file-input"]');
+    const offensiveBanner = this.container.querySelector<HTMLElement>('[data-ref="support-offensive-error"]');
+    const offensiveText = this.container.querySelector<HTMLElement>('[data-ref="support-offensive-error-text"]');
+    const refinementBanner = this.container.querySelector<HTMLElement>('[data-ref="support-refinement-info"]');
+    const sendLabel = this.container.querySelector<HTMLElement>('[data-ref="support-send-label"]');
+
+    const adjustInputHeight = () => {
+      if (!input || !inputBox) return;
+      input.style.height = 'auto';
+      const newHeight = Math.min(Math.max(input.scrollHeight, 20), 120);
+      input.style.height = `${newHeight}px`;
+      if (newHeight > 24 || input.value.includes('\n')) {
+        inputBox.classList.add('is-multiline');
+      } else {
+        inputBox.classList.remove('is-multiline');
+      }
+    };
+
+    btnAttach?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!menuAttach) return;
+        const isOpen = menuAttach.style.display === 'flex';
+        menuAttach.style.display = isOpen ? 'none' : 'flex';
+        btnAttach.setAttribute('aria-expanded', String(!isOpen));
+      },
+      { signal }
+    );
+
+    btnAttachDevice?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (menuAttach) menuAttach.style.display = 'none';
+        btnAttach?.setAttribute('aria-expanded', 'false');
+        fileInput?.click();
+      },
+      { signal }
+    );
+
+    fileInput?.addEventListener(
+      'change',
+      () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+          toast.info(`Adjuntado: ${fileInput.files[0].name}`);
+        }
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      'click',
+      (e) => {
+        if (menuAttach && menuAttach.style.display === 'flex' && !btnAttach?.contains(e.target as Node) && !menuAttach.contains(e.target as Node)) {
+          menuAttach.style.display = 'none';
+          btnAttach?.setAttribute('aria-expanded', 'false');
+        }
+      },
+      { signal }
+    );
 
     btnClaim?.addEventListener(
       'click',
@@ -591,36 +808,107 @@ export class LiveSupportController implements ViewController {
     );
 
     const sendMessage = async () => {
-      if (!this.activeChat || !input || this.activeChat.status !== 'active') return;
+      if (!this.activeChat || !input || this.activeChat.status !== 'active' || this.isRefiningMessage) return;
       const text = input.value.trim();
       if (!text) return;
 
-      input.value = '';
+      if (this.approvedMessageText !== null && this.approvedMessageText === text) {
+        input.value = '';
+        input.style.height = '';
+        inputBox?.classList.remove('is-multiline');
+        input.disabled = true;
+        if (btnSend) btnSend.disabled = true;
+        this.approvedMessageText = null;
+        this.resetQualityBanners();
+        if (sendLabel) sendLabel.textContent = 'Enviar';
+
+        try {
+          const res = await fetch(`/api/admin/support/chats/${this.activeChat.id}/messages`, {
+            body: JSON.stringify({ message: text }),
+            headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+          });
+          if (!res.ok) {
+            const errData = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
+            if (errData.error?.includes('cerrado') || errData.error?.includes('cerrada')) {
+              if (this.activeChat) this.activeChat.status = 'closed';
+              this.renderChatHeader();
+              void this.loadChats();
+            }
+            if (errData.reason && offensiveBanner && offensiveText) {
+              offensiveBanner.style.display = 'block';
+              offensiveBanner.classList.remove('is-hidden');
+              offensiveText.textContent = errData.reason;
+              input.value = text;
+              input.style.borderColor = 'var(--color-error, #ef4444)';
+            }
+            throw new Error(errData.error || 'Error al persistir mensaje');
+          }
+          const data = (await res.json()) as { message?: AdminChatMessage };
+          if (data?.message) {
+            this.appendMessageBubble(data.message);
+          }
+        } catch {
+          toast.error('Error al enviar el mensaje de soporte.');
+        } finally {
+          if (this.activeChat && this.activeChat.status === 'active') {
+            input.disabled = false;
+            if (btnSend) btnSend.disabled = false;
+          }
+          input.focus();
+        }
+        return;
+      }
+
+      this.isRefiningMessage = true;
       input.disabled = true;
       if (btnSend) btnSend.disabled = true;
+      if (sendLabel) sendLabel.textContent = 'Corrigiendo con IA...';
+      this.resetQualityBanners();
 
       try {
-        const res = await fetch(`/api/admin/support/chats/${this.activeChat.id}/messages`, {
+        const res = await fetch(`/api/admin/support/chats/${this.activeChat.id}/refine-message`, {
           body: JSON.stringify({ message: text }),
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
         });
+
         if (!res.ok) {
-          const errData = (await res.json().catch(() => ({}))) as { error?: string };
-          if (errData.error?.includes('cerrado') || errData.error?.includes('cerrada')) {
-            if (this.activeChat) this.activeChat.status = 'closed';
-            this.renderChatHeader();
-            void this.loadChats();
-          }
-          throw new Error(errData.error || 'Error al persistir mensaje');
+          throw new Error('Error al evaluar calidad del mensaje');
         }
-        const data = (await res.json()) as { message?: AdminChatMessage };
-        if (data?.message) {
-          this.appendMessageBubble(data.message);
+
+        const data = (await res.json()) as {
+          isOffensive?: boolean;
+          reason?: string | null;
+          refinedMessage?: string | null;
+        };
+
+        if (data.isOffensive) {
+          this.approvedMessageText = null;
+          if (offensiveBanner && offensiveText) {
+            offensiveBanner.style.display = 'block';
+            offensiveBanner.classList.remove('is-hidden');
+            offensiveText.textContent = data.reason || 'El mensaje contiene expresiones ofensivas o inadecuadas. Debes corregirlo antes de enviarlo.';
+          }
+          input.style.borderColor = 'var(--color-error, #ef4444)';
+          toast.warning('Mensaje bloqueado: contiene contenido ofensivo o inapropiado.');
+        } else {
+          const polished = data.refinedMessage || text;
+          input.value = polished;
+          adjustInputHeight();
+          this.approvedMessageText = polished;
+          input.style.borderColor = '';
+          if (refinementBanner) {
+            refinementBanner.style.display = 'flex';
+            refinementBanner.classList.remove('is-hidden');
+          }
+          toast.info('Mensaje corregido y formalizado con IA. Haz clic en Enviar para despacharlo.');
         }
       } catch {
-        toast.error('Error al enviar el mensaje de soporte.');
+        toast.error('Error al procesar la revisión de calidad con IA.');
       } finally {
+        this.isRefiningMessage = false;
+        if (sendLabel) sendLabel.textContent = 'Enviar';
         if (this.activeChat && this.activeChat.status === 'active') {
           input.disabled = false;
           if (btnSend) btnSend.disabled = false;
@@ -632,10 +920,31 @@ export class LiveSupportController implements ViewController {
     btnSend?.addEventListener('click', () => void sendMessage(), { signal });
     input?.addEventListener(
       'keydown',
-      (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
+      (e: Event) => {
+        const evt = e as KeyboardEvent;
+        if (evt.key === 'Enter' && !evt.shiftKey) {
+          evt.preventDefault();
           void sendMessage();
+        }
+      },
+      { signal }
+    );
+
+    input?.addEventListener(
+      'input',
+      () => {
+        adjustInputHeight();
+        if (this.approvedMessageText !== null && input.value !== this.approvedMessageText) {
+          this.approvedMessageText = null;
+          if (refinementBanner) {
+            refinementBanner.style.display = 'none';
+            refinementBanner.classList.add('is-hidden');
+          }
+        }
+        if (offensiveBanner && !offensiveBanner.classList.contains('is-hidden')) {
+          offensiveBanner.style.display = 'none';
+          offensiveBanner.classList.add('is-hidden');
+          input.style.borderColor = '';
         }
       },
       { signal }

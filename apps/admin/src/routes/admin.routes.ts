@@ -2,7 +2,7 @@ import { createAdminBackup, deleteAdminBackup, downloadAdminBackup, getAdminAcce
 import { getMe, loginAdmin, logoutAdmin, logoutAllAdminController, switchAdminAccountController } from '../controllers/auth.controller.js';
 import { deleteDocument, deleteEmployee, getEmployee, getHrOverview, getOrganigram, listDepartments, listDocuments, listEmployees, listVacationRequests, patchEmployee, patchVacationRequest, postHireEmployee, postUploadDocument, postVacationRequest } from '../controllers/hr.controller.js';
 import { addInternalTicketCommentController, createInternalTicketController, getInternalTicketByIdController, getInternalTicketOptionsController, getInternalTicketsController, getInternalTicketStatsController, updateInternalTicketController } from '../controllers/internal-tickets.controller.js';
-import { claimLiveChatController, closeLiveChatController, getLiveChatByIdController, getLiveChatMessagesController, listLiveChatsController, sendAgentMessageController, transferLiveChatController } from '../controllers/support.controller.js';
+import { claimLiveChatController, closeLiveChatController, getLiveChatByIdController, getLiveChatMessagesController, listLiveChatsController, refineAgentMessageController, sendAgentMessageController, transferLiveChatController } from '../controllers/support.controller.js';
 import { requireAdminAuth, requireAdminPermission, requireAdminWebsiteAccess } from '../middlewares/auth.middleware.js';
 import { requireAdminTurnstile } from '../middlewares/turnstile.middleware.js';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -106,5 +106,6 @@ router.post('/support/chats/:id/claim', requireAdminAuth, requireAdminPermission
 router.post('/support/chats/:id/transfer', requireAdminAuth, requireAdminPermission('admin:support:manage'), transferLiveChatController);
 router.post('/support/chats/:id/close', requireAdminAuth, requireAdminPermission('admin:support:manage'), closeLiveChatController);
 router.post('/support/chats/:id/messages', requireAdminAuth, requireAdminPermission('admin:support:manage'), sendAgentMessageController);
+router.post('/support/chats/:id/refine-message', requireAdminAuth, requireAdminPermission('admin:support:manage'), refineAgentMessageController);
 
 export default router;

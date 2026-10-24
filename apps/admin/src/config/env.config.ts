@@ -3,6 +3,10 @@ import fs from 'fs';
 import path from 'path';
 
 dotenv.config();
+const localEnvPath = path.resolve(process.cwd(), '.env');
+if (fs.existsSync(localEnvPath)) {
+  dotenv.config({ path: localEnvPath });
+}
 const adminEnvPath = path.resolve(import.meta.dirname, '../../.env');
 if (fs.existsSync(adminEnvPath)) {
   dotenv.config({ path: adminEnvPath });
@@ -43,6 +47,10 @@ export const adminConfig = {
     enabled: process.env.TURNSTILE_ENABLED === 'true' || Boolean(process.env.TURNSTILE_SECRET_KEY),
     secretKey: process.env.TURNSTILE_SECRET_KEY || '',
     siteKey: process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '',
+  },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || '',
+    model: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
   },
   originProtection: {
     enforceCloudflare: process.env.ENFORCE_CLOUDFLARE_ORIGIN === 'true',

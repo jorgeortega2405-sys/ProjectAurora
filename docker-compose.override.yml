@@ -36,6 +36,8 @@ services:
       - S3_SECRET_KEY=minioadmin
       - S3_BUCKET_NAME=aurora-storage
       - S3_FORCE_PATH_STYLE=true
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=gemini-flash-lite-latest
     volumes:
       - ./apps/admin:/app
       - /app/node_modules

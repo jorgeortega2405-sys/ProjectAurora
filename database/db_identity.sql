@@ -773,11 +773,15 @@ CREATE TABLE IF NOT EXISTS live_support_chats (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     closed_at TIMESTAMP NULL,
+    rating TINYINT UNSIGNED NULL,
+    feedback_comment TEXT NULL,
+    rated_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (assigned_agent_id) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_support_status (status),
     INDEX idx_support_tier (tier),
     INDEX idx_support_session (session_id),
+    INDEX idx_support_rating (rating),
     INDEX idx_support_created (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

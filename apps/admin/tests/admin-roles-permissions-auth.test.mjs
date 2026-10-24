@@ -275,7 +275,7 @@ describe('Suite Integral: Roles en BD, Login Obligatorio en Admin y PBAC por Per
       const loginRes1 = await fetch('http://localhost:3005/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: admin1Email, password: testPassword }),
+        body: JSON.stringify({ email: admin1Email, password: testPassword, turnstileToken: '1x00000000000000000000AA' }),
       });
       assert.strictEqual(loginRes1.status, 200);
       const setCookie1 = loginRes1.headers.get('set-cookie');
@@ -293,7 +293,7 @@ describe('Suite Integral: Roles en BD, Login Obligatorio en Admin y PBAC por Per
           'Content-Type': 'application/json',
           Cookie: cookie1Value,
         },
-        body: JSON.stringify({ email: admin2Email, password: testPassword }),
+        body: JSON.stringify({ email: admin2Email, password: testPassword, turnstileToken: '1x00000000000000000000AA' }),
       });
       assert.strictEqual(loginRes2.status, 200);
       const setCookie2 = loginRes2.headers.get('set-cookie');

@@ -9,10 +9,11 @@ import { AdminLiveSupportService } from '../dist/services/live-support.service.j
 import { hashPassword } from '../dist/services/crypto.service.js';
 
 const ROOT_DIR = process.cwd();
-const ADMIN_SERVICE_PATH = path.resolve(ROOT_DIR, 'apps/admin/src/services/live-support.service.ts');
-const ADMIN_CONTROLLER_PATH = path.resolve(ROOT_DIR, 'apps/admin/src/controllers/support.controller.ts');
-const ADMIN_VIEW_PATH = path.resolve(ROOT_DIR, 'apps/admin/client/views/support.view.ts');
-const ADMIN_HTML_PATH = path.resolve(ROOT_DIR, 'apps/admin/public/views/support/support.html');
+const ADMIN_DIR = fs.existsSync(path.resolve(ROOT_DIR, 'apps/admin')) ? path.resolve(ROOT_DIR, 'apps/admin') : ROOT_DIR;
+const ADMIN_SERVICE_PATH = path.resolve(ADMIN_DIR, 'src/services/live-support.service.ts');
+const ADMIN_CONTROLLER_PATH = path.resolve(ADMIN_DIR, 'src/controllers/support.controller.ts');
+const ADMIN_VIEW_PATH = path.resolve(ADMIN_DIR, 'client/views/support.view.ts');
+const ADMIN_HTML_PATH = path.resolve(ADMIN_DIR, 'public/views/support/support.html');
 
 describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => {
   it('Requirement AGENTS.md: Zero console.log/warn/error across Admin Live Support files', () => {
@@ -65,7 +66,16 @@ describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => 
   let sharedClaimedChatId = '';
 
   it('AdminLiveSupportService: accepts/claims a pending chat and assigns agent', async () => {
-    const pendingList = await AdminLiveSupportService.listChats({ status: 'pending' });
+    let pendingList = await AdminLiveSupportService.listChats({ status: 'pending' });
+    if (pendingList.length === 0) {
+      const newPendingId = crypto.randomUUID();
+      await adminDbPool.query(
+        `INSERT INTO live_support_chats (id, session_id, user_name, user_email, subject, status, tier, created_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', 'L1', NOW())`,
+        [newPendingId, `sess-${Date.now()}`, 'Usuario de Prueba', 'testuser@example.com', 'Consulta de prueba']
+      );
+      pendingList = await AdminLiveSupportService.listChats({ status: 'pending' });
+    }
     assert.ok(pendingList.length > 0, 'Must have at least one pending chat');
     const targetChat = pendingList[0];
     sharedClaimedChatId = targetChat.id;

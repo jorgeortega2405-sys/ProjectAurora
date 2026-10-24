@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AdminLiveSupportService } from '../services/live-support.service.js';
 import { logger } from '../services/logger.service.js';
+import { SupportQualityService } from '../services/support-quality.service.js';
 
 export async function listLiveChatsController(req: Request, res: Response): Promise<void> {
   try {
@@ -180,10 +181,91 @@ export async function sendAgentMessageController(req: Request, res: Response): P
       return;
     }
 
+    const moderation = await SupportQualityService.refineAndModerateMessage(rawMessage, {
+      subject: chat.subject,
+      tier: chat.tier,
+      userName: chat.user_name,
+    });
+
+    if (moderation.isOffensive) {
+      logger.security.warn('Bloqueo definitivo de mensaje ofensivo en persistencia', {
+        agentId,
+        chatId,
+        reason: moderation.reason,
+      });
+      res.status(400).json({
+        error: 'El mensaje contiene lenguaje ofensivo o inapropiado y no puede ser enviado.',
+        reason: moderation.reason,
+        success: false,
+      });
+      return;
+    }
+
     const message = await AdminLiveSupportService.addAgentMessage(chatId, agentId, agentName, rawMessage);
     res.status(201).json({ message, success: true });
   } catch (error) {
     logger.app.error('Error al enviar mensaje de agente en soporte en vivo', { error });
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al procesar la solicitud. Por favor intenta más tarde.',
+      success: false,
+    });
+  }
+}
+
+export async function refineAgentMessageController(req: Request, res: Response): Promise<void> {
+  try {
+    const chatId = String(req.params.id || req.body?.chatId || '');
+    const rawMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+
+    if (!chatId) {
+      res.status(400).json({ error: 'ID de chat no proporcionado.', success: false });
+      return;
+    }
+
+    if (!rawMessage) {
+      res.status(400).json({ error: 'El mensaje a evaluar no puede estar vacío.', success: false });
+      return;
+    }
+
+    const chat = await AdminLiveSupportService.getChatById(chatId);
+    if (!chat) {
+      res.status(404).json({ error: 'Caso de soporte no encontrado.', success: false });
+      return;
+    }
+
+    const authUser = (req as any).adminUser || (req as any).user;
+    const agentId = authUser?.id || null;
+
+    if (!chat.assigned_agent_id || (agentId && chat.assigned_agent_id !== agentId)) {
+      res.status(403).json({
+        error: 'No tienes autorización para operar sobre un caso no asignado o asignado a otro agente.',
+        success: false,
+      });
+      return;
+    }
+
+    const result = await SupportQualityService.refineAndModerateMessage(rawMessage, {
+      subject: chat.subject,
+      tier: chat.tier,
+      userName: chat.user_name,
+    });
+
+    if (result.isOffensive) {
+      logger.security.warn('Intento de mensaje ofensivo detectado y bloqueado en soporte', {
+        agentId,
+        chatId,
+        reason: result.reason,
+      });
+    }
+
+    res.json({
+      isOffensive: result.isOffensive,
+      reason: result.reason,
+      refinedMessage: result.refinedMessage,
+      success: true,
+    });
+  } catch (error) {
+    logger.app.error('Error al procesar refinamiento y moderación de mensaje con IA', { error });
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al procesar la solicitud. Por favor intenta más tarde.',
       success: false,

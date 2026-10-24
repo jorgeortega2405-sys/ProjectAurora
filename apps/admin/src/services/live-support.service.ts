@@ -9,17 +9,22 @@ export interface AdminLiveChatRecord {
   assigned_agent_name: string | null;
   closed_at: string | null;
   created_at: string;
+  feedback_comment?: string | null;
   id: string;
   last_message?: string;
   message_count?: number;
+  rated_at?: string | null;
+  rating?: number | null;
   session_id: string;
   status: 'pending' | 'active' | 'closed';
   subject: string;
   tier: 'L1' | 'L2' | 'L3';
   updated_at: string;
+  user_avatar_url?: string | null;
   user_email: string;
   user_id: string | null;
   user_name: string;
+  user_tier?: string | null;
 }
 
 export interface AdminLiveMessageRecord {
@@ -43,9 +48,12 @@ export class AdminLiveSupportService {
   } = {}): Promise<AdminLiveChatRecord[]> {
     let sql = `
       SELECT c.*,
+        u.avatar_url AS user_avatar_url,
+        u.subscription_tier AS user_tier,
         (SELECT COUNT(*) FROM live_support_messages m WHERE m.chat_id = c.id) AS message_count,
         (SELECT m2.message FROM live_support_messages m2 WHERE m2.chat_id = c.id ORDER BY m2.created_at DESC LIMIT 1) AS last_message
       FROM live_support_chats c
+      LEFT JOIN users u ON u.id = c.user_id
       WHERE 1=1
     `;
     const params: unknown[] = [];
@@ -74,7 +82,10 @@ export class AdminLiveSupportService {
 
   static async getChatById(id: string): Promise<AdminLiveChatRecord | null> {
     const [rows] = await adminDbPool.query<ChatRowPacket[]>(
-      'SELECT * FROM live_support_chats WHERE id = ? LIMIT 1',
+      `SELECT c.*, u.avatar_url AS user_avatar_url, u.subscription_tier AS user_tier
+       FROM live_support_chats c
+       LEFT JOIN users u ON u.id = c.user_id
+       WHERE c.id = ? LIMIT 1`,
       [id]
     );
     return rows.length > 0 ? rows[0] : null;

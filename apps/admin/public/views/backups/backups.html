@@ -6,17 +6,37 @@
     </div>
 
     <div class="component-top-right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar copias" data-tooltip-placement="bottom" aria-label="Buscar copias de seguridad">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
-      </button>
+      <div class="component-top-actions" data-ref="backups-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar copias" data-tooltip-placement="bottom" aria-label="Buscar copias de seguridad">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </button>
 
-      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-refresh-backups" data-tooltip="Actualizar lista y estado" data-tooltip-placement="bottom" aria-label="Actualizar copias de seguridad">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-      </button>
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-refresh-backups" data-tooltip="Actualizar lista y estado" data-tooltip-placement="bottom" aria-label="Actualizar copias de seguridad">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+        </button>
 
-      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-open-create-modal" data-tooltip="Nueva Copia de Seguridad" data-tooltip-placement="bottom" aria-label="Nueva Copia de Seguridad">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-      </button>
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-open-create-modal" data-tooltip="Nueva Copia de Seguridad" data-tooltip-placement="bottom" aria-label="Nueva Copia de Seguridad">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+        </button>
+      </div>
+
+      <div class="component-top-actions" data-ref="backups-selected-actions" style="display: none; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-deselect" data-tooltip="Cancelar selección" data-tooltip-placement="bottom" aria-label="Cancelar selección">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-restore" data-tooltip="Restaurar copia seleccionada" data-tooltip-placement="bottom" aria-label="Restaurar copia" style="color: var(--action-danger, #ef4444);">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#autorenew"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-download" data-tooltip="Descargar archivo ZIP" data-tooltip-placement="bottom" aria-label="Descargar archivo ZIP">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-delete" data-tooltip="Eliminar copia" data-tooltip-placement="bottom" aria-label="Eliminar copia" style="color: var(--action-danger, #ef4444);">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
+        </button>
+      </div>
     </div>
 
     <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
@@ -39,17 +59,16 @@
       <table class="component-table" data-ref="backups-table">
         <thead class="component-table__head" data-ref="backups-thead">
           <tr>
-            <th class="th-name" data-ref="th-name" style="width: 28%;">Nombre y Archivo</th>
-            <th class="th-components" data-ref="th-components" style="width: 20%;">Componentes</th>
-            <th class="th-size" data-ref="th-size" style="width: 12%;">Tamaño</th>
-            <th class="th-date" data-ref="th-date" style="width: 16%;">Fecha de Creación</th>
-            <th class="th-restored" data-ref="th-restored" style="width: 12%;">Restauración</th>
-            <th class="text-right th-actions" data-ref="th-actions" style="width: 12%;">Acciones</th>
+            <th class="th-name" data-ref="th-name" style="width: 32%;">Nombre y Archivo</th>
+            <th class="th-components" data-ref="th-components" style="width: 24%;">Componentes</th>
+            <th class="th-size" data-ref="th-size" style="width: 14%;">Tamaño</th>
+            <th class="th-date" data-ref="th-date" style="width: 15%;">Fecha de Creación</th>
+            <th class="th-restored" data-ref="th-restored" style="width: 15%;">Restauración</th>
           </tr>
         </thead>
         <tbody class="component-table__body" data-ref="backups-tbody">
           <tr>
-            <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando copias de seguridad...</td>
+            <td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando copias de seguridad...</td>
           </tr>
         </tbody>
       </table>

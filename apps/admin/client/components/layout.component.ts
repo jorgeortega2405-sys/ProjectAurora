@@ -3,6 +3,7 @@ import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { getTheme, toggleTheme } from '../services/theme.service.js';
+import { openCreateTicketModal } from './create-ticket-modal.component.js';
 import { WebsiteSelectorComponent } from './website-selector.component.js';
 
 export let isDrawerOpen = false;
@@ -318,6 +319,11 @@ export function updateSidebarProfile(sidebar: HTMLElement): void {
     btnAvatar.setAttribute('data-tooltip', user.username);
     btnAvatar.setAttribute('aria-label', user.username);
   }
+
+  const btnMenuReportTicket = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-report-ticket"]');
+  if (btnMenuReportTicket) {
+    btnMenuReportTicket.style.display = hasPermission('admin:tickets:create') ? 'flex' : 'none';
+  }
 }
 
 export function updateSidebarActiveState(sidebar: HTMLElement, path = window.location.pathname): void {
@@ -330,6 +336,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isHr = path.startsWith('/hr') || path.startsWith('/rrhh');
   const isBackups = path.startsWith('/backups') || path.startsWith('/copias-de-seguridad');
   const isTickets = path.startsWith('/internal-tickets') || path.startsWith('/tickets-internos') || path.startsWith('/tickets');
+  const isSupport = path.startsWith('/support') || path.startsWith('/soporte');
 
   const canDashboard = hasPermission('admin:dashboard:view') || hasPermission('admin:access');
   const canUsers = hasPermission('admin:users:view');
@@ -340,6 +347,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const canHr = hasPermission('admin:hr:view');
   const canBackups = hasPermission('system:backup:read');
   const canTickets = hasPermission('admin:tickets:view');
+  const canSupport = hasPermission('admin:support:view');
 
   const itemDashboard = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-dashboard"]');
   const btnDashboard = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-dashboard"]');
@@ -359,6 +367,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnBackups = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-backups"]');
   const itemTickets = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-tickets"]');
   const btnTickets = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-tickets"]');
+  const itemSupport = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-support"]');
+  const btnSupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-support"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
 
   if (itemDashboard) itemDashboard.style.display = canDashboard ? '' : 'none';
@@ -370,6 +380,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   if (itemHr) itemHr.style.display = canHr ? '' : 'none';
   if (itemBackups) itemBackups.style.display = canBackups ? '' : 'none';
   if (itemTickets) itemTickets.style.display = canTickets ? '' : 'none';
+  if (itemSupport) itemSupport.style.display = canSupport ? '' : 'none';
 
   itemDashboard?.classList.toggle('is-active', isDashboard);
   btnDashboard?.classList.toggle('is-active', isDashboard);
@@ -389,6 +400,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnBackups?.classList.toggle('is-active', isBackups);
   itemTickets?.classList.toggle('is-active', isTickets);
   btnTickets?.classList.toggle('is-active', isTickets);
+  itemSupport?.classList.toggle('is-active', isSupport);
+  btnSupport?.classList.toggle('is-active', isSupport);
   btnBackups?.classList.toggle('is-active', isBackups);
   btnToggle?.classList.toggle('is-active', isDrawerOpen);
 
@@ -415,6 +428,7 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
   const btnLogoutAll = sidebar.querySelector<HTMLElement>('[data-ref="btn-logout-all"]');
   const accountSwitcherList = sidebar.querySelector<HTMLElement>('[data-ref="account-switcher-list"]');
   const btnMenuTheme = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-theme"]');
+  const btnMenuReportTicket = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-report-ticket"]');
   const btnLogout = sidebar.querySelector<HTMLElement>('[data-ref="btn-logout"]');
 
   btnToggle?.addEventListener('click', (e) => {
@@ -448,6 +462,7 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
   bindItemNav('btn-rail-hr', 'rail-item-hr', '/hr');
   bindItemNav('btn-rail-backups', 'rail-item-backups', '/backups');
   bindItemNav('btn-rail-tickets', 'rail-item-tickets', '/internal-tickets');
+  bindItemNav('btn-rail-support', 'rail-item-support', '/support');
 
   btnTheme?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -577,6 +592,19 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
     if (drawer && isDrawerOpen) {
       populateDrawerContent(drawer);
     }
+  });
+
+  btnMenuReportTicket?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAvatarMenu();
+    void openCreateTicketModal({
+      onSuccess: () => {
+        const ticketsContainer = document.querySelector<HTMLElement>('[data-ref="admin-tickets-wrapper"]');
+        if (ticketsContainer && (ticketsContainer as any).__controller) {
+          void (ticketsContainer as any).__controller.loadTickets?.();
+        }
+      },
+    });
   });
 
   btnLogout?.addEventListener('click', (e) => {

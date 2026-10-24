@@ -1,7 +1,8 @@
-import { createAdminBackup, deleteAdminBackup, downloadAdminBackup, getAdminAccessibleWebsitesController, getAdminBackupStatus, getAdminBackups, getAdminHealth, getAdminInquiries, getAdminOrganizations, getAdminPurchases, getAdminUsers, getAdminVerifications, restoreAdminBackup, reviewAdminVerification, updateAdminInquiryStatus, updateAdminOrganization } from '../controllers/admin.controller.js';
+import { createAdminBackup, deleteAdminBackup, downloadAdminBackup, getAdminAccessibleWebsitesController, getAdminBackupStatus, getAdminBackups, getAdminDashboardStats, getAdminHealth, getAdminInquiries, getAdminOrganizations, getAdminPurchases, getAdminUsers, getAdminVerifications, restoreAdminBackup, reviewAdminVerification, updateAdminInquiryStatus, updateAdminOrganization } from '../controllers/admin.controller.js';
 import { getMe, loginAdmin, logoutAdmin, logoutAllAdminController, switchAdminAccountController } from '../controllers/auth.controller.js';
 import { deleteDocument, deleteEmployee, getEmployee, getHrOverview, getOrganigram, listDepartments, listDocuments, listEmployees, listVacationRequests, patchEmployee, patchVacationRequest, postHireEmployee, postUploadDocument, postVacationRequest } from '../controllers/hr.controller.js';
 import { addInternalTicketCommentController, createInternalTicketController, getInternalTicketByIdController, getInternalTicketOptionsController, getInternalTicketsController, getInternalTicketStatsController, updateInternalTicketController } from '../controllers/internal-tickets.controller.js';
+import { claimLiveChatController, closeLiveChatController, getLiveChatByIdController, getLiveChatMessagesController, listLiveChatsController, sendAgentMessageController, transferLiveChatController } from '../controllers/support.controller.js';
 import { requireAdminAuth, requireAdminPermission, requireAdminWebsiteAccess } from '../middlewares/auth.middleware.js';
 import { requireAdminTurnstile } from '../middlewares/turnstile.middleware.js';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -57,6 +58,8 @@ router.post('/auth/logout', requireAdminAuth, logoutAdmin);
 router.post('/auth/logout-all', requireAdminAuth, logoutAllAdminController);
 
 router.get('/health', requireAdminAuth, requireAdminPermission('admin:access'), getAdminHealth);
+router.get('/dashboard', requireAdminAuth, requireAdminPermission('admin:dashboard:view'), getAdminDashboardStats);
+router.get('/dashboard/stats', requireAdminAuth, requireAdminPermission('admin:dashboard:view'), getAdminDashboardStats);
 router.get('/websites/accessible', requireAdminAuth, getAdminAccessibleWebsitesController);
 router.get('/users', requireAdminAuth, requireAdminPermission('admin:users:view'), getAdminUsers);
 router.get('/purchases', requireAdminAuth, requireAdminPermission('admin:purchases:view'), requireAdminWebsiteAccess(), getAdminPurchases);
@@ -90,10 +93,18 @@ router.patch('/hr/vacations/:id', requireAdminAuth, requireAdminPermission('admi
 
 router.get('/internal-tickets', requireAdminAuth, requireAdminPermission('admin:tickets:view'), getInternalTicketsController);
 router.get('/internal-tickets/stats', requireAdminAuth, requireAdminPermission('admin:tickets:view'), getInternalTicketStatsController);
-router.get('/internal-tickets/options', requireAdminAuth, requireAdminPermission('admin:tickets:view'), getInternalTicketOptionsController);
+router.get('/internal-tickets/options', requireAdminAuth, requireAdminPermission(['admin:tickets:view', 'admin:tickets:create']), getInternalTicketOptionsController);
 router.get('/internal-tickets/:id', requireAdminAuth, requireAdminPermission('admin:tickets:view'), getInternalTicketByIdController);
 router.post('/internal-tickets', requireAdminAuth, requireAdminPermission('admin:tickets:create'), createInternalTicketController);
 router.patch('/internal-tickets/:id', requireAdminAuth, requireAdminPermission('admin:tickets:manage'), updateInternalTicketController);
 router.post('/internal-tickets/:id/comments', requireAdminAuth, requireAdminPermission('admin:tickets:view'), addInternalTicketCommentController);
+
+router.get('/support/chats', requireAdminAuth, requireAdminPermission('admin:support:view'), listLiveChatsController);
+router.get('/support/chats/:id', requireAdminAuth, requireAdminPermission('admin:support:view'), getLiveChatByIdController);
+router.get('/support/chats/:id/messages', requireAdminAuth, requireAdminPermission('admin:support:view'), getLiveChatMessagesController);
+router.post('/support/chats/:id/claim', requireAdminAuth, requireAdminPermission('admin:support:manage'), claimLiveChatController);
+router.post('/support/chats/:id/transfer', requireAdminAuth, requireAdminPermission('admin:support:manage'), transferLiveChatController);
+router.post('/support/chats/:id/close', requireAdminAuth, requireAdminPermission('admin:support:manage'), closeLiveChatController);
+router.post('/support/chats/:id/messages', requireAdminAuth, requireAdminPermission('admin:support:manage'), sendAgentMessageController);
 
 export default router;

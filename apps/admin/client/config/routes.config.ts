@@ -99,6 +99,15 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     },
     requiredPermission: 'admin:tickets:view',
   },
+  {
+    handler: async () => {
+      const { createLiveSupportView } = await import('../views/support.view.js');
+      return await createLiveSupportView();
+    },
+    id: 'support',
+    match: (path) => path === '/support' || path.startsWith('/support') || path === '/soporte' || path.startsWith('/soporte'),
+    requiredPermission: 'admin:support:view',
+  },
 ];
 
 export function findRoute(path: string): MatchedRoute | null {

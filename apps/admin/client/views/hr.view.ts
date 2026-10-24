@@ -8,15 +8,34 @@ import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export class HrController implements ViewController {
   private abortController: AbortController | null = null;
+  private btnActionDeselect: HTMLButtonElement | null = null;
+  private btnActionDocDelete: HTMLButtonElement | null = null;
+  private btnActionDocDeselect: HTMLButtonElement | null = null;
+  private btnActionDocDownload: HTMLButtonElement | null = null;
+  private btnActionEditEmp: HTMLButtonElement | null = null;
+  private btnActionTerminateEmp: HTMLButtonElement | null = null;
+  private btnActionUploadDoc: HTMLButtonElement | null = null;
+  private btnActionVacDeselect: HTMLButtonElement | null = null;
+  private btnActionVacEmp: HTMLButtonElement | null = null;
+  private btnActionVacReview: HTMLButtonElement | null = null;
   private container: HTMLElement;
   private currentTab: 'employees' | 'organigram' | 'documents' | 'vacations' = 'employees';
+  private defaultActions: HTMLElement | null = null;
   private departments: HrDepartment[] = [];
   private documents: HrDocumentItem[] = [];
+  private documentsDefaultActions: HTMLElement | null = null;
+  private documentsSelectedActions: HTMLElement | null = null;
   private employees: HrEmployeeItem[] = [];
   private organigramTree: HrOrganigramNodeItem[] = [];
   private organigramZoom = 1;
+  private selectedActions: HTMLElement | null = null;
+  private selectedDocument: HrDocumentItem | null = null;
+  private selectedEmployee: HrEmployeeItem | null = null;
   private selectedUploadFile: File | null = null;
+  private selectedVacation: HrVacationItem | null = null;
   private vacations: HrVacationItem[] = [];
+  private vacationsDefaultActions: HTMLElement | null = null;
+  private vacationsSelectedActions: HTMLElement | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -26,6 +45,7 @@ export class HrController implements ViewController {
     this.abortController = new AbortController();
     renderIcons(this.container);
     this.setupTopActions();
+    this.setupSelectionActions();
     this.bindTabs();
     this.bindModals();
     this.bindFilterEvents();
@@ -165,7 +185,7 @@ export class HrController implements ViewController {
       const res = await fetch(`/api/admin/hr/employees?${params.toString()}`, { signal: this.abortController?.signal });
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar nómina de colaboradores.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar nómina de colaboradores.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo cargar la lista de colaboradores. Intenta nuevamente más tarde.';
@@ -176,6 +196,8 @@ export class HrController implements ViewController {
 
       const data = await res.json() as { employees: HrEmployeeItem[]; success: boolean; total: number };
       this.employees = Array.isArray(data.employees) ? data.employees : [];
+      this.selectedEmployee = null;
+      this.updateEmployeeSelectionUi();
 
       if (badge) badge.textContent = `${this.employees.length} colaboradores`;
       if (errorBanner) errorBanner.style.display = 'none';
@@ -184,7 +206,7 @@ export class HrController implements ViewController {
       this.renderEmployeesTable(this.employees);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar colaboradores.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar colaboradores.</td></tr>';
       }
     }
   }
@@ -196,7 +218,7 @@ export class HrController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#groups"></use></svg>
@@ -213,6 +235,7 @@ export class HrController implements ViewController {
 
     tbody.innerHTML = items
       .map((item) => {
+        const isSelected = this.selectedEmployee?.id === item.id;
         const avatarUrl = item.avatar_url || `/api/avatar?name=${encodeURIComponent(item.username)}`;
         const tierColor = getFallbackTierColor(item.subscription_tier);
         const avatarMarkup = `
@@ -237,7 +260,7 @@ export class HrController implements ViewController {
         };
 
         return `
-          <tr data-ref="employee-row-${item.id}">
+          <tr class="is-selectable ${isSelected ? 'is-selected' : ''}" data-ref="employee-row-${item.id}" data-id="${item.id}">
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${avatarMarkup}
@@ -263,24 +286,6 @@ export class HrController implements ViewController {
             <td>
               <span class="component-badge component-badge--sm">${statusBadge.label}</span>
             </td>
-            <td style="text-align: right;">
-              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-edit-emp-${item.id}" data-tooltip="Editar empleado" aria-label="Editar empleado">
-                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-                </button>
-                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-upload-emp-${item.id}" data-tooltip="Subir contrato o NDA" aria-label="Subir contrato">
-                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
-                </button>
-                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-vac-emp-${item.id}" data-tooltip="Solicitar vacaciones" aria-label="Solicitar vacaciones">
-                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#slideshow"></use></svg>
-                </button>
-                ${item.status !== 'terminated' ? `
-                  <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-terminate-emp-${item.id}" data-tooltip="Dar de baja" aria-label="Dar de baja">
-                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
-                  </button>
-                ` : ''}
-              </div>
-            </td>
           </tr>
         `;
       })
@@ -288,16 +293,17 @@ export class HrController implements ViewController {
 
     renderIcons(tbody);
 
-    items.forEach((item) => {
-      const btnEdit = tbody.querySelector<HTMLElement>(`[data-ref="btn-edit-emp-${item.id}"]`);
-      const btnUpload = tbody.querySelector<HTMLElement>(`[data-ref="btn-upload-emp-${item.id}"]`);
-      const btnVac = tbody.querySelector<HTMLElement>(`[data-ref="btn-vac-emp-${item.id}"]`);
-      const btnTerminate = tbody.querySelector<HTMLElement>(`[data-ref="btn-terminate-emp-${item.id}"]`);
-
-      btnEdit?.addEventListener('click', () => this.openEditModal(item));
-      btnUpload?.addEventListener('click', () => this.openUploadModal(item.id));
-      btnVac?.addEventListener('click', () => this.openVacationModal(item.id));
-      btnTerminate?.addEventListener('click', () => this.confirmTerminateEmployee(item));
+    tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]').forEach((row) => {
+      row.addEventListener(
+        'click',
+        (e) => {
+          e.preventDefault();
+          const id = row.getAttribute('data-id');
+          const emp = this.employees.find((item) => item.id === id);
+          if (emp) this.toggleEmployeeSelection(emp);
+        },
+        { signal: this.abortController?.signal }
+      );
     });
   }
 
@@ -416,17 +422,19 @@ export class HrController implements ViewController {
     try {
       const res = await fetch('/api/admin/hr/documents', { signal: this.abortController?.signal });
       if (!res.ok) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar repositorio de contratos y documentos.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar repositorio de contratos y documentos.</td></tr>';
         return;
       }
 
       const data = await res.json() as { documents: HrDocumentItem[]; success: boolean; total: number };
       this.documents = Array.isArray(data.documents) ? data.documents : [];
+      this.selectedDocument = null;
+      this.updateDocumentSelectionUi();
       if (errorBanner) errorBanner.style.display = 'none';
 
       this.renderDocumentsTable(this.documents);
     } catch {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar documentos.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar documentos.</td></tr>';
     }
   }
 
@@ -446,7 +454,7 @@ export class HrController implements ViewController {
     if (filtered.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#description"></use></svg>
@@ -471,12 +479,13 @@ export class HrController implements ViewController {
 
     tbody.innerHTML = filtered
       .map((item) => {
+        const isSelected = this.selectedDocument?.id === item.id;
         const typeInfo = typeLabels[item.document_type] || { class: 'badge--info', label: item.document_type };
         const kbSize = (item.file_size_bytes / 1024).toFixed(1);
         const formattedDate = item.created_at ? item.created_at.split('T')[0] : '—';
 
         return `
-          <tr data-ref="doc-row-${item.id}">
+          <tr class="is-selectable ${isSelected ? 'is-selected' : ''}" data-ref="doc-row-${item.id}" data-id="${item.id}">
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="component-badge component-badge--sm">${escapeHtml(item.title)}</span>
@@ -498,16 +507,6 @@ export class HrController implements ViewController {
             <td>
               <span class="component-badge component-badge--sm">${escapeHtml(item.uploaded_by_username || 'Sistema')}</span>
             </td>
-            <td style="text-align: right;">
-              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                <a href="${escapeHtml(item.file_url)}" target="_blank" download rel="noopener noreferrer" class="component-button component-button--h30 component-button--icon-only" data-tooltip="Descargar archivo" aria-label="Descargar archivo">
-                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
-                </a>
-                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-delete-doc-${item.id}" data-tooltip="Eliminar documento" aria-label="Eliminar documento">
-                  <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
-                </button>
-              </div>
-            </td>
           </tr>
         `;
       })
@@ -515,9 +514,17 @@ export class HrController implements ViewController {
 
     renderIcons(tbody);
 
-    filtered.forEach((item) => {
-      const btnDelete = tbody.querySelector<HTMLElement>(`[data-ref="btn-delete-doc-${item.id}"]`);
-      btnDelete?.addEventListener('click', () => this.confirmDeleteDocument(item));
+    tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]').forEach((row) => {
+      row.addEventListener(
+        'click',
+        (e) => {
+          e.preventDefault();
+          const id = row.getAttribute('data-id');
+          const doc = this.documents.find((d) => d.id === id);
+          if (doc) this.toggleDocumentSelection(doc);
+        },
+        { signal: this.abortController?.signal }
+      );
     });
   }
 
@@ -529,17 +536,19 @@ export class HrController implements ViewController {
     try {
       const res = await fetch('/api/admin/hr/vacations', { signal: this.abortController?.signal });
       if (!res.ok) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar solicitudes de vacaciones.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar solicitudes de vacaciones.</td></tr>';
         return;
       }
 
       const data = await res.json() as { success: boolean; total: number; vacations: HrVacationItem[] };
       this.vacations = Array.isArray(data.vacations) ? data.vacations : [];
+      this.selectedVacation = null;
+      this.updateVacationSelectionUi();
       if (errorBanner) errorBanner.style.display = 'none';
 
       this.renderVacationsTable(this.vacations);
     } catch {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar solicitudes de vacaciones.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar solicitudes de vacaciones.</td></tr>';
     }
   }
 
@@ -559,7 +568,7 @@ export class HrController implements ViewController {
     if (filtered.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#slideshow"></use></svg>
@@ -576,6 +585,7 @@ export class HrController implements ViewController {
 
     tbody.innerHTML = filtered
       .map((item) => {
+        const isSelected = this.selectedVacation?.id === item.id;
         const statusMap = {
           approved: { class: 'badge--success', label: 'Aprobada' },
           pending: { class: 'badge--warning', label: 'Pendiente de Revisión' },
@@ -584,7 +594,7 @@ export class HrController implements ViewController {
         const statusInfo = statusMap[item.status] || { class: 'badge--info', label: item.status };
 
         return `
-          <tr data-ref="vac-row-${item.id}">
+          <tr class="is-selectable ${isSelected ? 'is-selected' : ''}" data-ref="vac-row-${item.id}" data-id="${item.id}">
             <td>
               <span class="component-badge component-badge--sm">${escapeHtml(item.employee_name)}</span>
             </td>
@@ -609,19 +619,6 @@ export class HrController implements ViewController {
                 ${escapeHtml(item.review_notes || '—')}
               </span>
             </td>
-            <td style="text-align: right;">
-              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                ${item.status === 'pending' ? `
-                  <button type="button" class="component-button component-button--h30" data-ref="btn-review-vac-${item.id}" style="font-size: 12px; padding: 0 10px;">
-                    Revisar
-                  </button>
-                ` : `
-                  <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-review-vac-${item.id}" data-tooltip="Modificar resolución" aria-label="Modificar resolución">
-                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-                  </button>
-                `}
-              </div>
-            </td>
           </tr>
         `;
       })
@@ -629,9 +626,17 @@ export class HrController implements ViewController {
 
     renderIcons(tbody);
 
-    filtered.forEach((item) => {
-      const btnReview = tbody.querySelector<HTMLElement>(`[data-ref="btn-review-vac-${item.id}"]`);
-      btnReview?.addEventListener('click', () => this.openReviewVacationModal(item));
+    tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]').forEach((row) => {
+      row.addEventListener(
+        'click',
+        (e) => {
+          e.preventDefault();
+          const id = row.getAttribute('data-id');
+          const vac = this.vacations.find((v) => v.id === id);
+          if (vac) this.toggleVacationSelection(vac);
+        },
+        { signal: this.abortController?.signal }
+      );
     });
   }
 
@@ -684,6 +689,178 @@ export class HrController implements ViewController {
     }, { signal: this.abortController?.signal });
   }
 
+  private setupSelectionActions(): void {
+    const signal = this.abortController?.signal;
+
+    this.defaultActions = this.container.querySelector<HTMLElement>('[data-ref="hr-default-actions"]');
+    this.selectedActions = this.container.querySelector<HTMLElement>('[data-ref="hr-selected-actions"]');
+    this.btnActionDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-deselect"]');
+    this.btnActionEditEmp = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-edit-emp"]');
+    this.btnActionUploadDoc = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-upload-doc"]');
+    this.btnActionVacEmp = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-vac-emp"]');
+    this.btnActionTerminateEmp = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-terminate-emp"]');
+
+    this.btnActionDeselect?.addEventListener('click', () => {
+      this.selectedEmployee = null;
+      this.updateEmployeeSelectionUi();
+    }, { signal });
+
+    this.btnActionEditEmp?.addEventListener('click', () => {
+      if (this.selectedEmployee) this.openEditModal(this.selectedEmployee);
+    }, { signal });
+
+    this.btnActionUploadDoc?.addEventListener('click', () => {
+      if (this.selectedEmployee) this.openUploadModal(this.selectedEmployee.id);
+    }, { signal });
+
+    this.btnActionVacEmp?.addEventListener('click', () => {
+      if (this.selectedEmployee) this.openVacationModal(this.selectedEmployee.id);
+    }, { signal });
+
+    this.btnActionTerminateEmp?.addEventListener('click', () => {
+      if (this.selectedEmployee) void this.confirmTerminateEmployee(this.selectedEmployee);
+    }, { signal });
+
+    this.documentsDefaultActions = this.container.querySelector<HTMLElement>('[data-ref="documents-default-actions"]');
+    this.documentsSelectedActions = this.container.querySelector<HTMLElement>('[data-ref="documents-selected-actions"]');
+    this.btnActionDocDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-doc-deselect"]');
+    this.btnActionDocDownload = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-doc-download"]');
+    this.btnActionDocDelete = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-doc-delete"]');
+
+    this.btnActionDocDeselect?.addEventListener('click', () => {
+      this.selectedDocument = null;
+      this.updateDocumentSelectionUi();
+    }, { signal });
+
+    this.btnActionDocDownload?.addEventListener('click', () => {
+      if (this.selectedDocument?.file_url) {
+        window.open(this.selectedDocument.file_url, '_blank');
+      }
+    }, { signal });
+
+    this.btnActionDocDelete?.addEventListener('click', () => {
+      if (this.selectedDocument) void this.confirmDeleteDocument(this.selectedDocument);
+    }, { signal });
+
+    this.vacationsDefaultActions = this.container.querySelector<HTMLElement>('[data-ref="vacations-default-actions"]');
+    this.vacationsSelectedActions = this.container.querySelector<HTMLElement>('[data-ref="vacations-selected-actions"]');
+    this.btnActionVacDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-vac-deselect"]');
+    this.btnActionVacReview = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-vac-review"]');
+
+    this.btnActionVacDeselect?.addEventListener('click', () => {
+      this.selectedVacation = null;
+      this.updateVacationSelectionUi();
+    }, { signal });
+
+    this.btnActionVacReview?.addEventListener('click', () => {
+      if (this.selectedVacation) this.openReviewVacationModal(this.selectedVacation);
+    }, { signal });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (this.selectedEmployee) {
+          this.selectedEmployee = null;
+          this.updateEmployeeSelectionUi();
+        }
+        if (this.selectedDocument) {
+          this.selectedDocument = null;
+          this.updateDocumentSelectionUi();
+        }
+        if (this.selectedVacation) {
+          this.selectedVacation = null;
+          this.updateVacationSelectionUi();
+        }
+      }
+    }, { signal });
+  }
+
+  private toggleEmployeeSelection(emp: HrEmployeeItem): void {
+    if (this.selectedEmployee?.id === emp.id) {
+      this.selectedEmployee = null;
+    } else {
+      this.selectedEmployee = emp;
+    }
+    this.updateEmployeeSelectionUi();
+  }
+
+  private updateEmployeeSelectionUi(): void {
+    const hasSelection = this.selectedEmployee !== null;
+    if (this.defaultActions) {
+      this.defaultActions.style.display = hasSelection ? 'none' : 'flex';
+    }
+    if (this.selectedActions) {
+      this.selectedActions.style.display = hasSelection ? 'flex' : 'none';
+    }
+
+    const rows = this.container.querySelectorAll<HTMLTableRowElement>('[data-ref="employees-tbody"] tr[data-id]');
+    rows.forEach((row) => {
+      const rowId = row.getAttribute('data-id');
+      if (this.selectedEmployee && rowId === this.selectedEmployee.id) {
+        row.classList.add('is-selected');
+      } else {
+        row.classList.remove('is-selected');
+      }
+    });
+  }
+
+  private toggleDocumentSelection(doc: HrDocumentItem): void {
+    if (this.selectedDocument?.id === doc.id) {
+      this.selectedDocument = null;
+    } else {
+      this.selectedDocument = doc;
+    }
+    this.updateDocumentSelectionUi();
+  }
+
+  private updateDocumentSelectionUi(): void {
+    const hasSelection = this.selectedDocument !== null;
+    if (this.documentsDefaultActions) {
+      this.documentsDefaultActions.style.display = hasSelection ? 'none' : 'flex';
+    }
+    if (this.documentsSelectedActions) {
+      this.documentsSelectedActions.style.display = hasSelection ? 'flex' : 'none';
+    }
+
+    const rows = this.container.querySelectorAll<HTMLTableRowElement>('[data-ref="documents-tbody"] tr[data-id]');
+    rows.forEach((row) => {
+      const rowId = row.getAttribute('data-id');
+      if (this.selectedDocument && rowId === this.selectedDocument.id) {
+        row.classList.add('is-selected');
+      } else {
+        row.classList.remove('is-selected');
+      }
+    });
+  }
+
+  private toggleVacationSelection(vac: HrVacationItem): void {
+    if (this.selectedVacation?.id === vac.id) {
+      this.selectedVacation = null;
+    } else {
+      this.selectedVacation = vac;
+    }
+    this.updateVacationSelectionUi();
+  }
+
+  private updateVacationSelectionUi(): void {
+    const hasSelection = this.selectedVacation !== null;
+    if (this.vacationsDefaultActions) {
+      this.vacationsDefaultActions.style.display = hasSelection ? 'none' : 'flex';
+    }
+    if (this.vacationsSelectedActions) {
+      this.vacationsSelectedActions.style.display = hasSelection ? 'flex' : 'none';
+    }
+
+    const rows = this.container.querySelectorAll<HTMLTableRowElement>('[data-ref="vacations-tbody"] tr[data-id]');
+    rows.forEach((row) => {
+      const rowId = row.getAttribute('data-id');
+      if (this.selectedVacation && rowId === this.selectedVacation.id) {
+        row.classList.add('is-selected');
+      } else {
+        row.classList.remove('is-selected');
+      }
+    });
+  }
+
   private bindTabs(): void {
     const viewSelector = this.container.querySelector<HTMLSelectElement>('[data-ref="hr-view-selector"]');
     viewSelector?.addEventListener('change', () => {
@@ -693,6 +870,13 @@ export class HrController implements ViewController {
   }
 
   private switchTab(tab: 'employees' | 'organigram' | 'documents' | 'vacations'): void {
+    this.selectedEmployee = null;
+    this.selectedDocument = null;
+    this.selectedVacation = null;
+    this.updateEmployeeSelectionUi();
+    this.updateDocumentSelectionUi();
+    this.updateVacationSelectionUi();
+
     const panels = ['panel-employees', 'panel-organigram', 'panel-documents', 'panel-vacations'];
     panels.forEach((pRef) => {
       const p = this.container.querySelector<HTMLElement>(`[data-ref="${pRef}"]`);

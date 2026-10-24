@@ -25,6 +25,11 @@ export const adminConfig = {
   },
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.ADMIN_PORT || '3005', 10),
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    password: process.env.REDIS_PASSWORD || undefined,
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  },
   s3: {
     accessKeyId: process.env.S3_ACCESS_KEY || 'minioadmin',
     bucket: process.env.S3_BUCKET_NAME || 'aurora-storage',

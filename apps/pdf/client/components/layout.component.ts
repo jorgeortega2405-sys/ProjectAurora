@@ -7,6 +7,9 @@ import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { UserWorkflow } from '../types/workflow.types.js';
 import { applyAvatarTier } from '../utils/tier.util.js';
+import { closeTechSupportSidebar, toggleTechSupportSidebar } from './support-sidebar.component.js';
+
+export { closeTechSupportSidebar, toggleTechSupportSidebar } from './support-sidebar.component.js';
 
 export let isDrawerOpen = false;
 export let currentDrawerMode: 'apps' | 'settings' | 'navigation' | 'help' = 'navigation';
@@ -46,10 +49,6 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
     const isEnterprise = hasPermission(currentUser, 'subscription:feature:enterprise');
     if (btnMenuOrganization) {
       btnMenuOrganization.style.display = isEnterprise ? 'flex' : 'none';
-    }
-    const btnMenuPrioritySupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-priority-support"]');
-    if (btnMenuPrioritySupport) {
-      btnMenuPrioritySupport.style.display = isEnterprise ? 'flex' : 'none';
     }
 
     const avatarUrl = currentUser.avatar_url || `/api/avatar?name=${encodeURIComponent(currentUser.username)}`;
@@ -360,9 +359,11 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     navigate('/organization');
   });
 
-  const btnMenuPrioritySupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-priority-support"]');
-  btnMenuPrioritySupport?.addEventListener('click', (e) => {
+  const btnMenuTechSupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-tech-support"]');
+  btnMenuTechSupport?.addEventListener('click', (e) => {
     e.preventDefault();
+    closeAvatarMenu();
+    toggleTechSupportSidebar();
   });
 
   const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');

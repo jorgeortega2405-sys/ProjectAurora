@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { adminConfig } from '../config/env.config.js';
 import { getAdminAccessibleWebsites } from '../services/auth.service.js';
 import { createBackup, deleteBackup, getBackupDownloadStream, getSystemStatus, restoreBackup } from '../services/backup.service.js';
+import { getDashboardStats } from '../services/dashboard.service.js';
 import { getAllBackups, getAllInquiries, getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, getBackupById, updateInquiryStatus, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
 import { logger } from '../services/logger.service.js';
 
@@ -410,6 +411,22 @@ export async function getAdminAccessibleWebsitesController(req: Request, res: Re
     logger.app.error('Error al obtener lista de sitios web accesibles', err);
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al procesar la solicitud. Por favor intenta más tarde.',
+      success: false,
+    });
+  }
+}
+
+export async function getAdminDashboardStats(_req: Request, res: Response): Promise<void> {
+  try {
+    const stats = await getDashboardStats();
+    res.json({
+      stats,
+      success: true,
+    });
+  } catch (err) {
+    logger.app.error('Error al obtener estadísticas del dashboard en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al consultar las métricas del sistema.',
       success: false,
     });
   }

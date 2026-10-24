@@ -18,7 +18,7 @@
     "infra:stop": "docker compose stop mysql redis downloader websocket",
     "infra:up": "docker compose up -d mysql redis downloader websocket",
     "start": "node dist/index.js",
-    "test": "node --test tests/verification-lifecycle-redis-cache.test.mjs && node --test tests/cache-aside-db.test.mjs && node --test tests/stress-m1-concurrency.test.mjs && node --test tests/stress-m1-memory-fallback.test.mjs && node --test tests/adversarial-email-change-m1.test.mjs && node --test tests/adversarial-mutex-memory.test.mjs && node --test tests/turnstile-cloudflare.test.mjs",
+    "test": "node --test tests/verification-lifecycle-redis-cache.test.mjs && node --test tests/cache-aside-db.test.mjs && node --test tests/stress-m1-concurrency.test.mjs && node --test tests/stress-m1-memory-fallback.test.mjs && node --test tests/adversarial-email-change-m1.test.mjs && node --test tests/adversarial-mutex-memory.test.mjs && node --test tests/turnstile-cloudflare.test.mjs && node --test tests/support-ai.test.mjs && node --test tests/live-support-chat.test.mjs",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "typecheck:all": "npm run typecheck"
   },

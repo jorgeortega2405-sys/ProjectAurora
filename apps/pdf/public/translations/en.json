@@ -358,6 +358,7 @@
     "settings": "Settings",
     "toggle_theme": "Toggle theme",
     "tools": "Tools",
+    "tech_support": "Technical Support",
     "upcoming": "Coming soon",
     "upgrade": "Upgrade plan",
     "workflows": "Workflows",
@@ -365,6 +366,14 @@
     "rail_workflows": "Workflows",
     "rail_ai": "AI",
     "rail_tools": "Tools"
+  },
+  "tech_support_panel": {
+    "title": "Technical Support",
+    "empty_title": "Technical Support",
+    "empty_desc": "Live technical assistance and support channel.",
+    "input_placeholder": "Type your message...",
+    "send_btn": "Send message",
+    "close_btn": "Close"
   },
   "settings": {
     "accessibility": {

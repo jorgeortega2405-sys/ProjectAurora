@@ -1,4 +1,4 @@
-import { ensureSidebarMounted, hasDesignatedMenuItems, setupLayoutScrollSync, toggleDrawer, updateSidebarActiveState } from './components/layout.component.js';
+import { closeTechSupportSidebar, ensureSidebarMounted, hasDesignatedMenuItems, setupLayoutScrollSync, toggleDrawer, updateSidebarActiveState } from './components/layout.component.js';
 import { closeAllModals } from './components/modal.component.js';
 import { findRoute, MatchedRoute } from './config/routes.config.js';
 import { getLocalizedPath, updateDomSeo } from './config/seo.config.js';
@@ -93,6 +93,7 @@ export async function render(rawPath = window.location.pathname, options?: Rende
   const navigationStartTime = performance.now();
   const { pathname: path, query: targetQuery } = parseRouteUrl(options?.updateHistory?.fullUrl || rawPath);
   closeAllModals();
+  closeTechSupportSidebar();
   hideTooltip();
 
   const appRoot = document.querySelector<HTMLElement>('[data-ref="app"]');

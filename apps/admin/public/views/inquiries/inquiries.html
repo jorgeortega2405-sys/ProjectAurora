@@ -6,9 +6,21 @@
     </div>
 
     <div class="component-top-right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar leads" data-tooltip-placement="bottom" aria-label="Buscar leads">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
-      </button>
+      <div class="component-top-actions" data-ref="inquiries-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar leads" data-tooltip-placement="bottom" aria-label="Buscar leads">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </button>
+      </div>
+
+      <div class="component-top-actions" data-ref="inquiries-selected-actions" style="display: none; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-deselect" data-tooltip="Cancelar selección" data-tooltip-placement="bottom" aria-label="Cancelar selección">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-view-inquiry" data-tooltip="Ver detalle del lead" data-tooltip-placement="bottom" aria-label="Ver detalle del lead">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+        </button>
+      </div>
     </div>
 
     <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
@@ -31,17 +43,16 @@
       <table class="component-table" data-ref="inquiries-table">
         <thead class="component-table__head" data-ref="inquiries-thead">
           <tr>
-            <th class="th-contact" data-ref="th-contact" style="width: 25%;">Contacto</th>
-            <th class="th-company" data-ref="th-company" style="width: 20%;">Empresa</th>
-            <th class="th-message" data-ref="th-message" style="width: 25%;">Requerimientos</th>
+            <th class="th-contact" data-ref="th-contact" style="width: 26%;">Contacto</th>
+            <th class="th-company" data-ref="th-company" style="width: 22%;">Empresa</th>
+            <th class="th-message" data-ref="th-message" style="width: 28%;">Requerimientos</th>
             <th class="th-date" data-ref="th-date" style="width: 12%;">Fecha</th>
-            <th class="th-status" data-ref="th-status" style="width: 10%;">Estado</th>
-            <th class="text-right th-actions" data-ref="th-actions" style="width: 8%;">Acción</th>
+            <th class="th-status" data-ref="th-status" style="width: 12%;">Estado</th>
           </tr>
         </thead>
         <tbody class="component-table__body" data-ref="inquiries-tbody">
           <tr>
-            <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando leads comerciales...</td>
+            <td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando leads comerciales...</td>
           </tr>
         </tbody>
       </table>

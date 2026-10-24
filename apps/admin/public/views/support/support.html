@@ -1,0 +1,170 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="admin-support-wrapper">
+  <header class="component-top" data-ref="component-top">
+    <div class="component-top-left" data-ref="component-top-left">
+      <h1 class="component-top-title" data-ref="support-page-title" style="font-size: 15px; font-weight: 700;">Soporte en Vivo</h1>
+      <span class="component-badge component-badge--sm" data-ref="support-count-badge">0</span>
+    </div>
+
+    <div class="component-top-right" data-ref="component-top-right">
+      <div class="component-top-actions" data-ref="support-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar chats" data-tooltip-placement="bottom" aria-label="Buscar chats">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-refresh-chats" data-tooltip="Recargar lista" data-tooltip-placement="bottom" aria-label="Recargar lista">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
+      <div class="component-search component-search--full" data-ref="search-box">
+        <div class="component-search__icon" data-ref="search-icon">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </div>
+        <div class="component-search__input-box" data-ref="search-input-box">
+          <input class="component-search__input" data-ref="support-search-input" placeholder="Buscar por usuario, correo electrónico o motivo de consulta..." type="text" maxlength="100" autocomplete="off" />
+        </div>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="component-bottom component-bottom--no-padding support-split-layout" data-ref="component-bottom">
+    <div class="support-sidebar-queue" data-ref="support-sidebar-queue">
+      <div class="support-filter-tabs" data-ref="support-filter-tabs" style="display: flex; padding: 8px 12px; gap: 6px; border-bottom: 1px solid var(--border-color); background: var(--bg-hover, rgba(0,0,0,0.02)); flex-shrink: 0;">
+        <button type="button" class="component-button component-button--h32 component-button--xs is-active" data-ref="tab-status-all" data-status="all">Todos</button>
+        <button type="button" class="component-button component-button--h32 component-button--xs" data-ref="tab-status-pending" data-status="pending">Pendientes</button>
+        <button type="button" class="component-button component-button--h32 component-button--xs" data-ref="tab-status-active" data-status="active">Activos</button>
+        <button type="button" class="component-button component-button--h32 component-button--xs" data-ref="tab-status-closed" data-status="closed">Cerrados</button>
+      </div>
+
+      <div class="support-tier-filter-box" data-ref="support-tier-filter-box" style="padding: 8px 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0;">
+        <span class="field__label" data-ref="lbl-tier-filter" style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-tertiary);">Nivel:</span>
+        <select class="component-select" data-ref="filter-tier-select" style="height: 30px; font-size: 12px; flex: 1;">
+          <option value="all">Todos los Niveles</option>
+          <option value="L1">Nivel L1 (General / Básico)</option>
+          <option value="L2">Nivel L2 (Técnico Especializado)</option>
+          <option value="L3">Nivel L3 (Ingeniería / Arquitectura)</option>
+        </select>
+      </div>
+
+      <div class="support-chats-scroll" data-ref="support-chats-scroll">
+        <div class="support-empty-list" data-ref="support-empty-list" style="padding: 32px 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;"><use href="/icons.svg#headset_mic"></use></svg>
+          <div>No hay casos de soporte que coincidan con el filtro.</div>
+        </div>
+        <div class="support-chats-container" data-ref="support-chats-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+    </div>
+
+    <div class="support-chat-viewport" data-ref="support-chat-viewport">
+      <div class="support-no-selection" data-ref="support-no-selection" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-tertiary); padding: 40px; text-align: center;">
+        <svg class="component-icon" aria-hidden="true" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4;"><use href="/icons.svg#forum"></use></svg>
+        <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 600; color: var(--text-primary);">Ningún caso seleccionado</h3>
+        <p style="margin: 0; font-size: 13px; max-width: 320px;">Selecciona una conversación de la lista lateral para visualizar el historial, interactuar en vivo o escalar el caso.</p>
+      </div>
+
+      <div class="support-active-chat" data-ref="support-active-chat">
+        <div class="support-chat-header" data-ref="support-chat-header" style="padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg-surface); flex-shrink: 0;">
+          <div class="support-chat-header__info" data-ref="support-header-info" style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="support-header__user" data-ref="support-header-user" style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Usuario</span>
+              <span class="component-badge component-badge--sm" data-ref="support-header-status-badge">Pendiente</span>
+              <span class="component-badge component-badge--sm" data-ref="support-header-tier-badge" style="background: var(--primary, #0ea5e9); color: #fff;">L1</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+              <span data-ref="support-header-email">correo@ejemplo.com</span>
+              <span>•</span>
+              <span data-ref="support-header-subject" style="color: var(--text-tertiary); font-style: italic;">Motivo de consulta</span>
+            </div>
+          </div>
+
+          <div class="support-chat-header__actions" data-ref="support-header-actions" style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="component-button component-button--h34 component-button--primary" data-ref="btn-claim-chat" style="font-size: 12px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px;"><use href="/icons.svg#check"></use></svg>
+              <span>Tomar caso</span>
+            </button>
+
+            <button type="button" class="component-button component-button--h34 component-button--secondary" data-ref="btn-open-transfer" style="font-size: 12px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px;"><use href="/icons.svg#swap_horiz"></use></svg>
+              <span>Escalar / Transferir</span>
+            </button>
+
+            <button type="button" class="component-button component-button--h34 component-button--danger" data-ref="btn-close-chat" style="font-size: 12px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px;"><use href="/icons.svg#lock"></use></svg>
+              <span>Cerrar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="support-messages-feed" data-ref="support-messages-feed"></div>
+
+        <div class="support-input-hint" data-ref="support-input-hint" style="display: none; padding: 6px 16px; font-size: 11.5px; border-top: 1px solid var(--border-color); background: var(--bg-hover, rgba(0,0,0,0.02)); text-align: center;"></div>
+
+        <div class="support-input-toolbar" data-ref="support-input-toolbar" style="padding: 12px 16px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+          <input class="field__input" data-ref="support-agent-input" type="text" placeholder="Escribe una respuesta para el usuario..." style="flex: 1; height: 40px; padding: 0 14px; font-size: 13px;" />
+          <button type="button" class="component-button component-button--h40 component-button--primary" data-ref="btn-send-agent-message" style="padding: 0 16px; font-size: 13px;">
+            <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px; margin-right: 6px;"><use href="/icons.svg#send"></use></svg>
+            <span>Enviar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop is-hidden" data-ref="modal-transfer-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;">
+    <div class="modal-card modal-card--w-480" data-ref="modal-transfer-card" style="background: var(--bg-surface); border-radius: var(--radius-xl, 12px); border: 1px solid var(--border-color); box-shadow: 0 12px 40px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column;">
+      <div class="modal-card__header" data-ref="modal-transfer-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 700;">Transferir o Escalar Caso</h3>
+        <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-close-transfer-modal" aria-label="Cerrar modal">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="modal-card__body" data-ref="modal-transfer-body" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="font-size: 13px; color: var(--text-secondary);">
+          Selecciona el nivel de soporte de destino al cual deseas remitir este caso:
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label class="field" data-ref="lbl-target-l1" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
+            <input class="field__radio" data-ref="radio-tier-l1" type="radio" name="target-tier" value="L1" />
+            <div>
+              <div style="font-weight: 600; font-size: 13px;">Nivel L1 — Soporte General</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">Atención inicial, orientación sobre herramientas y dudas de planes.</div>
+            </div>
+          </label>
+
+          <label class="field" data-ref="lbl-target-l2" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
+            <input class="field__radio" data-ref="radio-tier-l2" type="radio" name="target-tier" value="L2" />
+            <div>
+              <div style="font-weight: 600; font-size: 13px;">Nivel L2 — Soporte Técnico Especializado</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">Incidencias de conversión, licencias empresariales y verificación académica.</div>
+            </div>
+          </label>
+
+          <label class="field" data-ref="lbl-target-l3" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer;">
+            <input class="field__radio" data-ref="radio-tier-l3" type="radio" name="target-tier" value="L3" />
+            <div>
+              <div style="font-weight: 600; font-size: 13px;">Nivel L3 — Ingeniería y Arquitectura</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">Configuración SAML/OIDC SSO, auditoría de fallos y escalación profunda.</div>
+            </div>
+          </label>
+        </div>
+
+        <label class="field" data-ref="field-transfer-notes" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+          <span class="field__label" data-ref="lbl-transfer-notes" style="font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary);">Notas o motivo de transferencia:</span>
+          <textarea class="field__input" data-ref="transfer-notes-input" placeholder="Ej. El cliente requiere asistencia técnica para integrar SSO corporativo con Azure AD..." rows="3" style="font-size: 12.5px; padding: 8px 10px; resize: vertical;"></textarea>
+        </label>
+      </div>
+
+      <div class="modal-card__footer" data-ref="modal-transfer-footer" style="padding: 14px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; background: var(--bg-surface);">
+        <button type="button" class="component-button component-button--h36 component-button--secondary" data-ref="btn-cancel-transfer">Cancelar</button>
+        <button type="button" class="component-button component-button--h36 component-button--primary" data-ref="btn-confirm-transfer">Confirmar Transferencia</button>
+      </div>
+    </div>
+  </div>
+</div>

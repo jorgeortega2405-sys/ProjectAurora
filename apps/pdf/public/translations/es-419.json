@@ -346,6 +346,7 @@
     "settings": "Configuración",
     "toggle_theme": "Cambiar tema",
     "tools": "Herramientas",
+    "tech_support": "Soporte técnico",
     "upcoming": "Próximamente",
     "upgrade": "Actualizar plan",
     "workflows": "Flujos de trabajo",
@@ -353,6 +354,14 @@
     "rail_workflows": "Flujos",
     "rail_ai": "IA",
     "rail_tools": "Herramientas"
+  },
+  "tech_support_panel": {
+    "title": "Soporte técnico",
+    "empty_title": "Soporte técnico",
+    "empty_desc": "Canal de asistencia y soporte técnico en vivo.",
+    "input_placeholder": "Escribe tu mensaje...",
+    "send_btn": "Enviar mensaje",
+    "close_btn": "Cerrar"
   },
   "upcoming": {
     "back_home": "Ir a Inicio",

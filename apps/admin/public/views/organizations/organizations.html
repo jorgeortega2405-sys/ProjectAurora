@@ -6,9 +6,21 @@
     </div>
 
     <div class="component-top-right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar organizaciones" data-tooltip-placement="bottom" aria-label="Buscar organizaciones">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
-      </button>
+      <div class="component-top-actions" data-ref="organizations-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar organizaciones" data-tooltip-placement="bottom" aria-label="Buscar organizaciones">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </button>
+      </div>
+
+      <div class="component-top-actions" data-ref="organizations-selected-actions" style="display: none; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-deselect" data-tooltip="Cancelar selección" data-tooltip-placement="bottom" aria-label="Cancelar selección">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-manage-org" data-tooltip="Gestionar organización" data-tooltip-placement="bottom" aria-label="Gestionar organización">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
+        </button>
+      </div>
     </div>
 
     <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
@@ -31,18 +43,17 @@
       <table class="component-table" data-ref="organizations-table">
         <thead class="component-table__head" data-ref="organizations-thead">
           <tr>
-            <th class="th-org" data-ref="th-org" style="width: 24%;">Organización</th>
-            <th class="th-owner" data-ref="th-owner" style="width: 22%;">Propietario / Contacto</th>
+            <th class="th-org" data-ref="th-org" style="width: 25%;">Organización</th>
+            <th class="th-owner" data-ref="th-owner" style="width: 25%;">Propietario / Contacto</th>
             <th class="th-seats" data-ref="th-seats" style="width: 12%;">Asientos</th>
             <th class="th-domains" data-ref="th-domains" style="width: 18%;">Dominios</th>
-            <th class="th-sso" data-ref="th-sso" style="width: 12%;">SSO</th>
-            <th class="th-status" data-ref="th-status" style="width: 12%;">Estado</th>
-            <th class="text-right th-actions" data-ref="th-actions" style="width: 10%;">Ajustes</th>
+            <th class="th-sso" data-ref="th-sso" style="width: 10%;">SSO</th>
+            <th class="th-status" data-ref="th-status" style="width: 10%;">Estado</th>
           </tr>
         </thead>
         <tbody class="component-table__body" data-ref="organizations-tbody">
           <tr>
-            <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando lista de organizaciones...</td>
+            <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando lista de organizaciones...</td>
           </tr>
         </tbody>
       </table>

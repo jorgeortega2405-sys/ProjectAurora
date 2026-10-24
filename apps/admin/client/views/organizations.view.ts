@@ -26,8 +26,12 @@ export interface AdminOrganizationItem {
 
 export class OrganizationsController implements ViewController {
   private abortController: AbortController | null = null;
+  private btnActionDeselect: HTMLButtonElement | null = null;
+  private btnActionManageOrg: HTMLButtonElement | null = null;
   private container: HTMLElement;
+  private defaultActions: HTMLElement | null = null;
   private organizations: AdminOrganizationItem[] = [];
+  private selectedActions: HTMLElement | null = null;
   private selectedOrg: AdminOrganizationItem | null = null;
 
   constructor(container: HTMLElement) {
@@ -39,6 +43,7 @@ export class OrganizationsController implements ViewController {
     renderIcons(this.container);
     this.setupSearchToolbar();
     this.setupModalEvents();
+    this.setupSelectionActions();
     await this.loadOrganizations();
   }
 
@@ -58,7 +63,7 @@ export class OrganizationsController implements ViewController {
       const res = await fetch('/api/admin/organizations', { signal: this.abortController?.signal });
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las organizaciones.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las organizaciones.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo cargar la lista de organizaciones corporativas. Intenta más tarde.';
@@ -69,11 +74,13 @@ export class OrganizationsController implements ViewController {
 
       const data = await res.json() as { organizations: AdminOrganizationItem[]; success: boolean };
       this.organizations = Array.isArray(data.organizations) ? data.organizations : [];
+      this.selectedOrg = null;
+      this.updateSelectionUi();
       if (badge) badge.textContent = String(this.organizations.length);
       this.renderOrganizations(this.organizations);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar las organizaciones.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar las organizaciones.</td></tr>';
       }
       if (errorBanner) {
         errorBanner.textContent = 'Error de conexión al cargar las organizaciones corporativas.';
@@ -92,7 +99,7 @@ export class OrganizationsController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#groups"></use></svg>
@@ -109,6 +116,7 @@ export class OrganizationsController implements ViewController {
 
     tbody.innerHTML = items
       .map((item) => {
+        const isSelected = this.selectedOrg?.id === item.id;
         const statusLower = (item.subscription_status || '').toLowerCase();
         const statusText = statusLower === 'suspended' ? 'Suspendida' : (statusLower === 'trial' ? 'Prueba' : 'Activa');
         const statusBadge = `<span class="component-badge component-badge--sm">${statusText}</span>`;
@@ -127,7 +135,7 @@ export class OrganizationsController implements ViewController {
         `;
 
         return `
-          <tr data-ref="org-row-${item.id}">
+          <tr class="is-selectable ${isSelected ? 'is-selected' : ''}" data-ref="org-row-${item.id}" data-id="${escapeHtml(item.id)}">
             <td>
               <span class="component-badge component-badge--sm">${escapeHtml(item.name)}</span>
             </td>
@@ -151,12 +159,6 @@ export class OrganizationsController implements ViewController {
             <td>
               ${statusBadge}
             </td>
-            <td class="text-right">
-              ${hasPermission('admin:organizations:manage') ? `
-              <button type="button" class="component-button component-button--h32 component-button--outline" data-ref="btn-edit-org-${item.id}" data-id="${escapeHtml(item.id)}">
-                Gestionar
-              </button>` : `<span class="component-badge component-badge--sm">Solo lectura</span>`}
-            </td>
           </tr>
         `;
       })
@@ -167,19 +169,74 @@ export class OrganizationsController implements ViewController {
   }
 
   private bindRowActions(tbody: HTMLElement): void {
-    tbody.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-edit-org-"]').forEach((btn) => {
-      btn.addEventListener(
+    tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]').forEach((row) => {
+      row.addEventListener(
         'click',
         (e) => {
           e.preventDefault();
-          const id = btn.getAttribute('data-id');
+          const id = row.getAttribute('data-id');
           const org = this.organizations.find((o) => o.id === id);
           if (org) {
-            this.openOrgModal(org);
+            this.toggleOrgSelection(org);
           }
         },
         { signal: this.abortController?.signal }
       );
+    });
+  }
+
+  private setupSelectionActions(): void {
+    const signal = this.abortController?.signal;
+    this.defaultActions = this.container.querySelector<HTMLElement>('[data-ref="organizations-default-actions"]');
+    this.selectedActions = this.container.querySelector<HTMLElement>('[data-ref="organizations-selected-actions"]');
+    this.btnActionDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-deselect"]');
+    this.btnActionManageOrg = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-manage-org"]');
+
+    this.btnActionDeselect?.addEventListener('click', () => {
+      this.selectedOrg = null;
+      this.updateSelectionUi();
+    }, { signal });
+
+    this.btnActionManageOrg?.addEventListener('click', () => {
+      if (this.selectedOrg && hasPermission('admin:organizations:manage')) {
+        this.openOrgModal(this.selectedOrg);
+      }
+    }, { signal });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.selectedOrg) {
+        this.selectedOrg = null;
+        this.updateSelectionUi();
+      }
+    }, { signal });
+  }
+
+  private toggleOrgSelection(org: AdminOrganizationItem): void {
+    if (this.selectedOrg?.id === org.id) {
+      this.selectedOrg = null;
+    } else {
+      this.selectedOrg = org;
+    }
+    this.updateSelectionUi();
+  }
+
+  private updateSelectionUi(): void {
+    const hasSelection = this.selectedOrg !== null;
+    if (this.defaultActions) {
+      this.defaultActions.style.display = hasSelection ? 'none' : 'flex';
+    }
+    if (this.selectedActions) {
+      this.selectedActions.style.display = hasSelection ? 'flex' : 'none';
+    }
+
+    const rows = this.container.querySelectorAll<HTMLTableRowElement>('[data-ref="organizations-tbody"] tr[data-id]');
+    rows.forEach((row) => {
+      const rowId = row.getAttribute('data-id');
+      if (this.selectedOrg && rowId === this.selectedOrg.id) {
+        row.classList.add('is-selected');
+      } else {
+        row.classList.remove('is-selected');
+      }
     });
   }
 

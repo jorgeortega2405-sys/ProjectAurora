@@ -72,12 +72,18 @@ class WebSocketClientService {
 
         ws.onmessage = (event) => {
           try {
-            const data: AiProgressEvent = JSON.parse(event.data);
-            if (data.sessionId && this.activeSubscriptions.has(data.sessionId)) {
-              const callbacks = this.activeSubscriptions.get(data.sessionId);
+            const data = JSON.parse(event.data);
+            const targets = [data.sessionId, data.chatId, data.target].filter(Boolean) as string[];
+            const executedCallbacks = new Set<ProgressCallback>();
+
+            for (const targetKey of targets) {
+              const callbacks = this.activeSubscriptions.get(targetKey);
               if (callbacks) {
                 for (const cb of callbacks) {
-                  cb(data);
+                  if (!executedCallbacks.has(cb)) {
+                    executedCallbacks.add(cb);
+                    cb(data);
+                  }
                 }
               }
             }
@@ -106,6 +112,18 @@ class WebSocketClientService {
     });
   }
 
+  subscribe(sessionId: string, callback: (event: any) => void): () => void {
+    return this.subscribeAiProgress(sessionId, callback as ProgressCallback);
+  }
+
+  send(data: Record<string, unknown>): boolean {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(data));
+      return true;
+    }
+    return false;
+  }
+
   subscribeAiProgress(sessionId: string, callback: ProgressCallback): () => void {
     if (!this.activeSubscriptions.has(sessionId)) {
       this.activeSubscriptions.set(sessionId, new Set());
@@ -119,19 +137,32 @@ class WebSocketClientService {
     }
 
     return () => {
-      const set = this.activeSubscriptions.get(sessionId);
-      if (set) {
-        set.delete(callback);
-        if (set.size === 0) {
-          this.activeSubscriptions.delete(sessionId);
-        }
-      }
+      this.unsubscribe(sessionId, callback);
     };
+  }
+
+  unsubscribe(sessionId: string, callback?: ProgressCallback): void {
+    const set = this.activeSubscriptions.get(sessionId);
+    if (set) {
+      if (callback) {
+        set.delete(callback);
+      }
+      if (!callback || set.size === 0) {
+        this.activeSubscriptions.delete(sessionId);
+        this.sendUnsubscribe(sessionId);
+      }
+    }
   }
 
   private sendSubscribe(sessionId: string): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({ sessionId, type: 'subscribe' }));
+    }
+  }
+
+  private sendUnsubscribe(sessionId: string): void {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ sessionId, type: 'unsubscribe' }));
     }
   }
 

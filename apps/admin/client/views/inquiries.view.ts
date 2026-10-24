@@ -20,8 +20,12 @@ export interface AdminInquiryItem {
 
 export class InquiriesController implements ViewController {
   private abortController: AbortController | null = null;
+  private btnActionDeselect: HTMLButtonElement | null = null;
+  private btnActionViewInquiry: HTMLButtonElement | null = null;
   private container: HTMLElement;
+  private defaultActions: HTMLElement | null = null;
   private inquiries: AdminInquiryItem[] = [];
+  private selectedActions: HTMLElement | null = null;
   private selectedInquiry: AdminInquiryItem | null = null;
 
   constructor(container: HTMLElement) {
@@ -33,6 +37,7 @@ export class InquiriesController implements ViewController {
     renderIcons(this.container);
     this.setupSearchToolbar();
     this.setupModalEvents();
+    this.setupSelectionActions();
     await this.loadInquiries();
   }
 
@@ -40,6 +45,74 @@ export class InquiriesController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+  }
+
+  private setupSelectionActions(): void {
+    const signal = this.abortController?.signal;
+    this.defaultActions = this.container.querySelector<HTMLElement>('[data-ref="inquiries-default-actions"]');
+    this.selectedActions = this.container.querySelector<HTMLElement>('[data-ref="inquiries-selected-actions"]');
+    this.btnActionDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-deselect"]');
+    this.btnActionViewInquiry = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-view-inquiry"]');
+
+    this.btnActionDeselect?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        this.selectedInquiry = null;
+        this.updateSelectionUi();
+      },
+      { signal }
+    );
+
+    this.btnActionViewInquiry?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.selectedInquiry) {
+          this.openInquiryModal(this.selectedInquiry);
+        }
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Escape' && this.selectedInquiry) {
+          this.selectedInquiry = null;
+          this.updateSelectionUi();
+        }
+      },
+      { signal }
+    );
+  }
+
+  private toggleInquirySelection(item: AdminInquiryItem): void {
+    if (this.selectedInquiry?.id === item.id) {
+      this.selectedInquiry = null;
+    } else {
+      this.selectedInquiry = item;
+    }
+    this.updateSelectionUi();
+  }
+
+  private updateSelectionUi(): void {
+    const isSelected = this.selectedInquiry !== null;
+    if (this.defaultActions) {
+      this.defaultActions.style.display = isSelected ? 'none' : 'flex';
+    }
+    if (this.selectedActions) {
+      this.selectedActions.style.display = isSelected ? 'flex' : 'none';
+    }
+    const tbody = this.container.querySelector<HTMLElement>('[data-ref="inquiries-tbody"]');
+    if (tbody) {
+      this.inquiries.forEach((item) => {
+        const row = tbody.querySelector<HTMLElement>(`[data-ref="inquiry-row-${item.id}"]`);
+        if (row) {
+          row.classList.toggle('is-selected', this.selectedInquiry?.id === item.id);
+        }
+      });
     }
   }
 
@@ -52,7 +125,7 @@ export class InquiriesController implements ViewController {
       const res = await fetch('/api/admin/inquiries', { signal: this.abortController?.signal });
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las solicitudes comerciales.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las solicitudes comerciales.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo cargar la lista de solicitudes. Intenta más tarde.';
@@ -63,11 +136,14 @@ export class InquiriesController implements ViewController {
 
       const data = await res.json() as { inquiries: AdminInquiryItem[]; success: boolean };
       this.inquiries = Array.isArray(data.inquiries) ? data.inquiries : [];
+      this.selectedInquiry = null;
+      this.updateSelectionUi();
+
       if (badge) badge.textContent = String(this.inquiries.length);
       this.renderInquiries(this.inquiries);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar las solicitudes.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar las solicitudes.</td></tr>';
       }
       if (errorBanner) {
         errorBanner.textContent = 'Error de conexión al cargar los leads comerciales.';
@@ -86,7 +162,7 @@ export class InquiriesController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="5" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#mail"></use></svg>
@@ -121,8 +197,10 @@ export class InquiriesController implements ViewController {
         </div>
       `;
 
+      const isSelected = this.selectedInquiry?.id === inquiry.id;
+
       return `
-        <tr data-ref="inquiry-row-${inquiry.id}">
+        <tr class="is-selectable${isSelected ? ' is-selected' : ''}" data-ref="inquiry-row-${inquiry.id}">
           <td style="padding: 14px 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               ${avatarMarkup}
@@ -142,12 +220,6 @@ export class InquiriesController implements ViewController {
           <td style="padding: 14px 16px;">
             <span class="component-badge component-badge--sm">${statusLabel}</span>
           </td>
-          <td class="text-right" style="padding: 14px 16px;">
-            <button type="button" class="component-button component-button--h34 component-button--outline" data-ref="btn-view-inquiry" data-inquiry-id="${inquiry.id}">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
-              <span>Detalle</span>
-            </button>
-          </td>
         </tr>
       `;
     }).join('');
@@ -158,17 +230,15 @@ export class InquiriesController implements ViewController {
   }
 
   private bindRowActionButtons(tbody: HTMLElement): void {
-    const actionButtons = tbody.querySelectorAll<HTMLElement>('[data-ref="btn-view-inquiry"]');
-    actionButtons.forEach((btn) => {
-      btn.addEventListener(
+    const rows = tbody.querySelectorAll<HTMLTableRowElement>('[data-ref^="inquiry-row-"]');
+    rows.forEach((row) => {
+      row.addEventListener(
         'click',
-        (e) => {
-          e.preventDefault();
-          const inquiryId = btn.getAttribute('data-inquiry-id');
-          if (!inquiryId) return;
-          const found = this.inquiries.find((i) => String(i.id) === inquiryId);
+        () => {
+          const id = row.getAttribute('data-ref')?.replace('inquiry-row-', '');
+          const found = this.inquiries.find((i) => String(i.id) === id);
           if (found) {
-            this.openInquiryModal(found);
+            this.toggleInquirySelection(found);
           }
         },
         { signal: this.abortController?.signal }

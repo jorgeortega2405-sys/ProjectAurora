@@ -10,9 +10,13 @@ import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export class InternalTicketsController implements ViewController {
   private abortController: AbortController | null = null;
+  private btnActionDeselect: HTMLButtonElement | null = null;
+  private btnActionViewTicket: HTMLButtonElement | null = null;
   private container: HTMLElement;
+  private defaultActions: HTMLElement | null = null;
   private departments: DepartmentOption[] = [];
   private initialTicketId: string = '';
+  private selectedActions: HTMLElement | null = null;
   private selectedComments: InternalTicketComment[] = [];
   private selectedTicket: InternalTicket | null = null;
   private staff: StaffOption[] = [];
@@ -29,6 +33,7 @@ export class InternalTicketsController implements ViewController {
     this.setupSearchToolbar();
     this.setupFilterEvents();
     this.setupModalEvents();
+    this.setupSelectionActions();
 
     await Promise.all([
       this.loadOptions(),
@@ -149,15 +154,10 @@ export class InternalTicketsController implements ViewController {
   }
 
   private setupModalEvents(): void {
-    const btnOpenCreate = this.container.querySelector<HTMLElement>('[data-ref="btn-open-create-modal"]');
     const btnCloseCreate = this.container.querySelector<HTMLElement>('[data-ref="btn-close-create-modal"]');
     const btnCancelCreate = this.container.querySelector<HTMLElement>('[data-ref="btn-cancel-create-ticket"]');
     const formCreate = this.container.querySelector<HTMLFormElement>('[data-ref="form-create-ticket"]');
     const modalCreateBackdrop = this.container.querySelector<HTMLElement>('[data-ref="modal-create-ticket-backdrop"]');
-
-    btnOpenCreate?.addEventListener('click', () => {
-      this.openCreateModal();
-    });
 
     btnCloseCreate?.addEventListener('click', () => {
       this.closeCreateModal();
@@ -200,6 +200,74 @@ export class InternalTicketsController implements ViewController {
     btnSubmitComment?.addEventListener('click', () => {
       void this.handleSubmitComment();
     });
+  }
+
+  private setupSelectionActions(): void {
+    const signal = this.abortController?.signal;
+    this.defaultActions = this.container.querySelector<HTMLElement>('[data-ref="tickets-default-actions"]');
+    this.selectedActions = this.container.querySelector<HTMLElement>('[data-ref="tickets-selected-actions"]');
+    this.btnActionDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-deselect"]');
+    this.btnActionViewTicket = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-view-ticket"]');
+
+    this.btnActionDeselect?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        this.selectedTicket = null;
+        this.updateSelectionUi();
+      },
+      { signal }
+    );
+
+    this.btnActionViewTicket?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.selectedTicket) {
+          void this.openTicketDetail(this.selectedTicket.id);
+        }
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Escape' && this.selectedTicket) {
+          this.selectedTicket = null;
+          this.updateSelectionUi();
+        }
+      },
+      { signal }
+    );
+  }
+
+  private toggleTicketSelection(item: InternalTicket): void {
+    if (this.selectedTicket?.id === item.id) {
+      this.selectedTicket = null;
+    } else {
+      this.selectedTicket = item;
+    }
+    this.updateSelectionUi();
+  }
+
+  private updateSelectionUi(): void {
+    const isSelected = this.selectedTicket !== null;
+    if (this.defaultActions) {
+      this.defaultActions.style.display = isSelected ? 'none' : 'flex';
+    }
+    if (this.selectedActions) {
+      this.selectedActions.style.display = isSelected ? 'flex' : 'none';
+    }
+    const tbody = this.container.querySelector<HTMLElement>('[data-ref="tickets-tbody"]');
+    if (tbody) {
+      this.tickets.forEach((t) => {
+        const row = tbody.querySelector<HTMLElement>(`[data-ref="ticket-row-${t.id}"]`);
+        if (row) {
+          row.classList.toggle('is-selected', this.selectedTicket?.id === t.id);
+        }
+      });
+    }
   }
 
   private async loadOptions(): Promise<void> {
@@ -289,7 +357,7 @@ export class InternalTicketsController implements ViewController {
     } catch {}
   }
 
-  private async loadTickets(): Promise<void> {
+  async loadTickets(): Promise<void> {
     const tbody = this.container.querySelector<HTMLElement>('[data-ref="tickets-tbody"]');
     const badge = this.container.querySelector<HTMLElement>('[data-ref="tickets-count-badge"]');
     const errorBanner = this.container.querySelector<HTMLElement>('[data-ref="tickets-page-error"]');
@@ -322,7 +390,7 @@ export class InternalTicketsController implements ViewController {
 
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar los tickets internos.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar los tickets internos.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo cargar la lista de tickets. Intenta más tarde.';
@@ -333,13 +401,16 @@ export class InternalTicketsController implements ViewController {
 
       const data = await res.json() as { success: boolean; tickets: InternalTicket[] };
       this.tickets = Array.isArray(data.tickets) ? data.tickets : [];
+      this.selectedTicket = null;
+      this.updateSelectionUi();
+
       if (badge) badge.textContent = String(this.tickets.length);
       if (errorBanner) errorBanner.style.display = 'none';
 
       this.renderTicketsTable(this.tickets);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar los tickets.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar los tickets.</td></tr>';
       }
       if (errorBanner) {
         errorBanner.textContent = 'Error de conexión al cargar los tickets internos.';
@@ -355,7 +426,7 @@ export class InternalTicketsController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="7" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#support_agent"></use></svg>
@@ -401,11 +472,6 @@ export class InternalTicketsController implements ViewController {
         const sBadge = statusBadges[t.status] || statusBadges.open;
         const catLabel = categoryLabels[t.category] || 'General';
 
-        const createdDate = new Date(t.created_at).toLocaleDateString('es-MX', {
-          day: '2-digit',
-          month: 'short',
-        });
-
         const creatorAvatarUrl = t.creator_avatar_url || `/api/avatar?name=${encodeURIComponent(t.creator_username)}`;
         const creatorTierColor = getFallbackTierColor(t.creator_subscription_tier);
         const creatorMarkup = `
@@ -431,8 +497,10 @@ export class InternalTicketsController implements ViewController {
           `;
         }
 
+        const isSelected = this.selectedTicket?.id === t.id;
+
         return `
-          <tr class="ticket-row" data-ref="ticket-row-${t.id}" data-ticket-id="${t.id}" style="cursor: pointer;">
+          <tr class="ticket-row is-selectable${isSelected ? ' is-selected' : ''}" data-ref="ticket-row-${t.id}" data-ticket-id="${t.id}">
             <td>
               <span class="component-badge component-badge--sm" style="font-family: monospace;">${escapeHtml(t.ticket_number)}</span>
             </td>
@@ -460,11 +528,6 @@ export class InternalTicketsController implements ViewController {
             <td>
               ${assigneeHtml}
             </td>
-            <td class="text-right">
-              <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-view-ticket-${t.id}" data-ticket-id="${t.id}" data-tooltip="Revisar ticket" aria-label="Revisar ticket">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#chevron_right"></use></svg>
-              </button>
-            </td>
           </tr>
         `;
       })
@@ -475,7 +538,10 @@ export class InternalTicketsController implements ViewController {
     tbody.querySelectorAll<HTMLTableRowElement>('.ticket-row').forEach((row) => {
       row.addEventListener('click', () => {
         const id = row.getAttribute('data-ticket-id');
-        if (id) void this.openTicketDetail(id);
+        const found = this.tickets.find((t) => t.id === id);
+        if (found) {
+          this.toggleTicketSelection(found);
+        }
       });
     });
   }

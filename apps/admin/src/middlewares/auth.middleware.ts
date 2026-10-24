@@ -24,7 +24,7 @@ export async function requireAdminAuth(req: Request, res: Response, next: NextFu
   }
 }
 
-export function requireAdminPermission(permission: string) {
+export function requireAdminPermission(permission: string | string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const user = (req as any).adminUser;
     if (!user) {
@@ -35,10 +35,13 @@ export function requireAdminPermission(permission: string) {
       return;
     }
 
-    if (!hasPermission(user.permissions, permission)) {
+    const perms = Array.isArray(permission) ? permission : [permission];
+    const allowed = perms.some((p) => hasPermission(user.permissions, p));
+
+    if (!allowed) {
       logger.security.warn('Acceso a recurso administrativo denegado por falta de permiso requerido', {
         path: req.path,
-        permission,
+        permission: perms.join(' | '),
         role: user.role,
         userId: user.id,
       });

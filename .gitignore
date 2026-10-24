@@ -4,6 +4,7 @@ node_modules/
 # Compilacion y distribucion
 dist/
 build/
+target/
 
 # Logs
 logs/

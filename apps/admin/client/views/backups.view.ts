@@ -42,7 +42,14 @@ export interface AdminSystemStatus {
 export class BackupsController implements ViewController {
   private abortController: AbortController | null = null;
   private backups: AdminBackupItem[] = [];
+  private btnActionDelete: HTMLButtonElement | null = null;
+  private btnActionDeselect: HTMLButtonElement | null = null;
+  private btnActionDownload: HTMLButtonElement | null = null;
+  private btnActionRestore: HTMLButtonElement | null = null;
   private container: HTMLElement;
+  private defaultActions: HTMLElement | null = null;
+  private selectedActions: HTMLElement | null = null;
+  private selectedBackup: AdminBackupItem | null = null;
   private selectedRestoreBackup: AdminBackupItem | null = null;
   private status: AdminSystemStatus | null = null;
 
@@ -72,6 +79,13 @@ export class BackupsController implements ViewController {
     const btnRefresh = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-refresh-backups"]');
     const btnOpenCreate = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-create-modal"]');
 
+    this.defaultActions = this.container.querySelector<HTMLElement>('[data-ref="backups-default-actions"]');
+    this.selectedActions = this.container.querySelector<HTMLElement>('[data-ref="backups-selected-actions"]');
+    this.btnActionDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-deselect"]');
+    this.btnActionRestore = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-restore"]');
+    this.btnActionDownload = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-download"]');
+    this.btnActionDelete = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-delete"]');
+
     if (btnOpenCreate) {
       btnOpenCreate.style.display = hasPermission('system:backup:create') ? '' : 'none';
     }
@@ -96,6 +110,111 @@ export class BackupsController implements ViewController {
       },
       { signal }
     );
+
+    this.btnActionDeselect?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        this.selectedBackup = null;
+        this.updateSelectionUi();
+      },
+      { signal }
+    );
+
+    this.btnActionRestore?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.selectedBackup) {
+          this.openRestoreModal(this.selectedBackup);
+        }
+      },
+      { signal }
+    );
+
+    this.btnActionDownload?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.selectedBackup) {
+          window.open(`/api/admin/backups/${this.selectedBackup.id}/download`, '_blank');
+        }
+      },
+      { signal }
+    );
+
+    this.btnActionDelete?.addEventListener(
+      'click',
+      async (e) => {
+        e.preventDefault();
+        if (!this.selectedBackup || !this.btnActionDelete) return;
+        const backup = this.selectedBackup;
+        const confirmed = window.confirm(`¿Estás seguro de que deseas eliminar la copia de seguridad "${backup.name}"? Esta acción no se puede deshacer.`);
+        if (!confirmed) return;
+
+        await withButtonLoading(this.btnActionDelete, async () => {
+          try {
+            const res = await fetch(`/api/admin/backups/${backup.id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              throw new Error('Error al eliminar');
+            }
+            toast.success('Copia de seguridad eliminada exitosamente.');
+            this.selectedBackup = null;
+            this.backups = this.backups.filter((b) => b.id !== backup.id);
+            this.renderBackups(this.backups);
+            await this.loadSystemStatus();
+          } catch {
+            toast.error('No se pudo eliminar la copia de seguridad.');
+          }
+        });
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Escape' && this.selectedBackup) {
+          this.selectedBackup = null;
+          this.updateSelectionUi();
+        }
+      },
+      { signal }
+    );
+  }
+
+  private toggleBackupSelection(item: AdminBackupItem): void {
+    if (this.selectedBackup?.id === item.id) {
+      this.selectedBackup = null;
+    } else {
+      this.selectedBackup = item;
+    }
+    this.updateSelectionUi();
+  }
+
+  private updateSelectionUi(): void {
+    const isSelected = this.selectedBackup !== null;
+    if (this.defaultActions) {
+      this.defaultActions.style.display = isSelected ? 'none' : 'flex';
+    }
+    if (this.selectedActions) {
+      this.selectedActions.style.display = isSelected ? 'flex' : 'none';
+    }
+    if (this.btnActionRestore) {
+      this.btnActionRestore.style.display = hasPermission('system:backup:restore') ? '' : 'none';
+    }
+    if (this.btnActionDelete) {
+      this.btnActionDelete.style.display = hasPermission('system:backup:delete') ? '' : 'none';
+    }
+    const tbody = this.container.querySelector<HTMLElement>('[data-ref="backups-tbody"]');
+    if (tbody) {
+      this.backups.forEach((b) => {
+        const row = tbody.querySelector<HTMLElement>(`[data-ref="row-backup-${b.id}"]`);
+        if (row) {
+          row.classList.toggle('is-selected', this.selectedBackup?.id === b.id);
+        }
+      });
+    }
   }
 
   private async loadSystemStatus(): Promise<void> {
@@ -162,7 +281,7 @@ export class BackupsController implements ViewController {
       const res = await fetch('/api/admin/backups', { signal });
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las copias de seguridad.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las copias de seguridad.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo consultar el registro de respaldos. Intenta más tarde.';
@@ -173,6 +292,8 @@ export class BackupsController implements ViewController {
 
       const data = (await res.json()) as { backups: AdminBackupItem[]; success: boolean };
       this.backups = Array.isArray(data.backups) ? data.backups : [];
+      this.selectedBackup = null;
+      this.updateSelectionUi();
 
       if (badge) badge.textContent = String(this.backups.length);
       if (valBackupsCount) valBackupsCount.textContent = `${this.backups.length} Respaldos`;
@@ -193,7 +314,7 @@ export class BackupsController implements ViewController {
       this.renderBackups(this.backups);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de conexión al cargar copias de seguridad.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de conexión al cargar copias de seguridad.</td></tr>';
       }
       if (errorBanner) {
         errorBanner.textContent = 'Error de conexión al cargar copias de seguridad.';
@@ -212,7 +333,7 @@ export class BackupsController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="5" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#save"></use></svg>
@@ -264,8 +385,10 @@ export class BackupsController implements ViewController {
           ? `<span style="font-size: 11.5px; color: var(--text-tertiary); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.notes)}</span>`
           : '';
 
+        const isSelected = this.selectedBackup?.id === item.id;
+
         return `
-          <tr data-ref="row-backup-${escapeHtml(item.id)}">
+          <tr class="is-selectable${isSelected ? ' is-selected' : ''}" data-ref="row-backup-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}">
             <td style="padding: 14px 16px;">
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <strong style="font-weight: 600; font-size: 13.5px; color: var(--text-primary);">${escapeHtml(item.name)}</strong>
@@ -287,22 +410,6 @@ export class BackupsController implements ViewController {
             <td style="padding: 14px 16px;">
               ${restoredFormatted}
             </td>
-            <td class="text-right" style="padding: 14px 16px;">
-              <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-                ${hasPermission('system:backup:restore') ? `
-                <button type="button" class="component-button component-button--h30 component-button--outline" data-ref="btn-restore-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}" data-tooltip="Restaurar copia" aria-label="Restaurar copia" style="color: var(--action-danger, #ef4444); border-color: rgba(239, 68, 68, 0.3);">
-                  <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px;"><use href="/icons.svg#autorenew"></use></svg>
-                  <span style="font-size: 12px;">Restaurar</span>
-                </button>` : ''}
-                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-download-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}" data-tooltip="Descargar archivo ZIP" aria-label="Descargar archivo ZIP">
-                  <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px;"><use href="/icons.svg#download"></use></svg>
-                </button>
-                ${hasPermission('system:backup:delete') ? `
-                <button type="button" class="component-button component-button--h30 component-button--icon-only" data-ref="btn-delete-${escapeHtml(item.id)}" data-backup-id="${escapeHtml(item.id)}" data-tooltip="Eliminar copia" aria-label="Eliminar copia" style="color: var(--action-danger, #ef4444);">
-                  <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px;"><use href="/icons.svg#delete"></use></svg>
-                </button>` : ''}
-              </div>
-            </td>
           </tr>
         `;
       })
@@ -313,69 +420,17 @@ export class BackupsController implements ViewController {
   }
 
   private bindRowActions(): void {
-    const signal = this.abortController?.signal;
-
-    const restoreButtons = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-restore-"]');
-    restoreButtons.forEach((btn) => {
-      btn.addEventListener(
-        'click',
-        (e) => {
-          e.preventDefault();
-          const backupId = btn.getAttribute('data-backup-id');
-          const backup = this.backups.find((b) => b.id === backupId);
-          if (backup) {
-            this.openRestoreModal(backup);
-          }
-        },
-        { signal }
-      );
-    });
-
-    const downloadButtons = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-download-"]');
-    downloadButtons.forEach((btn) => {
-      btn.addEventListener(
-        'click',
-        (e) => {
-          e.preventDefault();
-          const backupId = btn.getAttribute('data-backup-id');
-          if (backupId) {
-            window.open(`/api/admin/backups/${backupId}/download`, '_blank');
-          }
-        },
-        { signal }
-      );
-    });
-
-    const deleteButtons = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-delete-"]');
-    deleteButtons.forEach((btn) => {
-      btn.addEventListener(
-        'click',
-        async (e) => {
-          e.preventDefault();
-          const backupId = btn.getAttribute('data-backup-id');
-          const backup = this.backups.find((b) => b.id === backupId);
-          if (!backup || !backupId) return;
-
-          const confirmed = window.confirm(`¿Estás seguro de que deseas eliminar la copia de seguridad "${backup.name}"? Esta acción no se puede deshacer.`);
-          if (!confirmed) return;
-
-          await withButtonLoading(btn, async () => {
-            try {
-              const res = await fetch(`/api/admin/backups/${backupId}`, { method: 'DELETE' });
-              if (!res.ok) {
-                throw new Error('Error al eliminar');
-              }
-              toast.success('Copia de seguridad eliminada exitosamente.');
-              this.backups = this.backups.filter((b) => b.id !== backupId);
-              this.renderBackups(this.backups);
-              await this.loadSystemStatus();
-            } catch {
-              toast.error('No se pudo eliminar la copia de seguridad.');
-            }
-          });
-        },
-        { signal }
-      );
+    const tbody = this.container.querySelector<HTMLElement>('[data-ref="backups-tbody"]');
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll<HTMLTableRowElement>('[data-ref^="row-backup-"]');
+    rows.forEach((row) => {
+      row.addEventListener('click', () => {
+        const backupId = row.getAttribute('data-backup-id');
+        const backup = this.backups.find((b) => b.id === backupId);
+        if (backup) {
+          this.toggleBackupSelection(backup);
+        }
+      });
     });
   }
 

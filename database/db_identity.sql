@@ -176,7 +176,9 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('system:backup:delete', 'Eliminar Copias de Seguridad', 'Eliminar respaldos del sistema'),
 ('admin:tickets:view', 'Ver Tickets Internos', 'Permite consultar y listar tickets interdepartamentales en el panel'),
 ('admin:tickets:create', 'Crear Tickets Internos', 'Permite reportar incidencias y tareas entre departamentos'),
-('admin:tickets:manage', 'Gestionar Tickets Internos', 'Permite asignar, cambiar estado, prioridad y resolver tickets departamentales');
+('admin:tickets:manage', 'Gestionar Tickets Internos', 'Permite asignar, cambiar estado, prioridad y resolver tickets departamentales'),
+('admin:support:view', 'Ver Soporte en Vivo', 'Permite consultar chats y colas de atención en vivo'),
+('admin:support:manage', 'Gestionar Soporte en Vivo', 'Permite aceptar, responder, escalar y resolver chats de soporte en tiempo real');
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SUPER_ADMIN', '*'),
@@ -316,6 +318,20 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SUPPORT_MANAGER', 'admin:tickets:view'),
 ('SUPPORT_MANAGER', 'admin:tickets:create'),
 ('SUPPORT_MANAGER', 'admin:tickets:manage'),
+('SUPER_ADMIN', 'admin:support:view'),
+('SUPER_ADMIN', 'admin:support:manage'),
+('ADMIN', 'admin:support:view'),
+('ADMIN', 'admin:support:manage'),
+('PLATFORM_ADMIN', 'admin:support:view'),
+('PLATFORM_ADMIN', 'admin:support:manage'),
+('SUPPORT_L1', 'admin:support:view'),
+('SUPPORT_L1', 'admin:support:manage'),
+('SUPPORT_L2', 'admin:support:view'),
+('SUPPORT_L2', 'admin:support:manage'),
+('SUPPORT_L3', 'admin:support:view'),
+('SUPPORT_L3', 'admin:support:manage'),
+('SUPPORT_MANAGER', 'admin:support:view'),
+('SUPPORT_MANAGER', 'admin:support:manage'),
 ('OPERATIONS_AGENT', 'admin:tickets:view'),
 ('OPERATIONS_AGENT', 'admin:tickets:create'),
 ('OPERATIONS_AGENT', 'admin:tickets:manage'),
@@ -742,3 +758,50 @@ INSERT IGNORE INTO staff_website_access (id, user_id, website_id, role_id) VALUE
 ('swa-004', 'b7123456-3333-4000-8000-000000000003', 'aurora-pdf', 'DEVOPS'),
 ('swa-005', 'b7123456-4444-4000-8000-000000000004', 'aurora-pdf', 'SENIOR_ENGINEER'),
 ('swa-006', 'b7123456-2222-4000-8000-000000000002', 'aurora-img', 'OPERATIONS_AGENT');
+
+CREATE TABLE IF NOT EXISTS live_support_chats (
+    id VARCHAR(36) PRIMARY KEY,
+    session_id VARCHAR(64) NOT NULL,
+    user_id VARCHAR(36) NULL,
+    user_name VARCHAR(120) NOT NULL,
+    user_email VARCHAR(191) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    status ENUM('pending', 'active', 'closed') NOT NULL DEFAULT 'pending',
+    tier ENUM('L1', 'L2', 'L3') NOT NULL DEFAULT 'L1',
+    assigned_agent_id VARCHAR(36) NULL,
+    assigned_agent_name VARCHAR(120) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    closed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_agent_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_support_status (status),
+    INDEX idx_support_tier (tier),
+    INDEX idx_support_session (session_id),
+    INDEX idx_support_created (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS live_support_messages (
+    id VARCHAR(36) PRIMARY KEY,
+    chat_id VARCHAR(36) NOT NULL,
+    sender_type ENUM('user', 'agent', 'system') NOT NULL,
+    sender_id VARCHAR(36) NULL,
+    sender_name VARCHAR(120) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (chat_id) REFERENCES live_support_chats(id) ON DELETE CASCADE,
+    INDEX idx_support_msg_chat (chat_id, created_at ASC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO live_support_chats (id, session_id, user_id, user_name, user_email, subject, status, tier, assigned_agent_id, assigned_agent_name, created_at) VALUES
+('chat-seed-001', 'chat_seed_sess_001', 'b7123456-2222-4000-8000-000000000002', 'Valeria Torres', 'valeria.torres@projectaurora.com', 'Dificultad al exportar documento comprimido a Word', 'active', 'L1', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', '2026-10-24 10:15:00'),
+('chat-seed-002', 'chat_seed_sess_002', NULL, 'Roberto Gómez', 'roberto.gomez@gmail.com', 'Consulta sobre límite de páginas en plan educación', 'pending', 'L1', NULL, NULL, '2026-10-24 11:20:00'),
+('chat-seed-003', 'chat_seed_sess_003', NULL, 'Mariana Silva', 'msilva@fintechcorp.io', 'Configuración de SAML SSO corporativo con Okta', 'active', 'L2', 'dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'Admin Principal', '2026-10-24 09:30:00');
+
+INSERT IGNORE INTO live_support_messages (id, chat_id, sender_type, sender_id, sender_name, message, created_at) VALUES
+('msg-seed-001', 'chat-seed-001', 'user', 'b7123456-2222-4000-8000-000000000002', 'Valeria Torres', 'Hola, he intentado comprimir un PDF de 80 MB y luego convertirlo a Word, pero el formato se alteró un poco.', '2026-10-24 10:15:10'),
+('msg-seed-002', 'chat-seed-001', 'system', NULL, 'Sistema', 'El caso ha sido asignado al agente Soporte Aurora (Nivel L1).', '2026-10-24 10:16:00'),
+('msg-seed-003', 'chat-seed-001', 'agent', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', '¡Hola Valeria! Con gusto te apoyo. En modo compresión extrema los vectores complejos pueden rasterizarse. Te sugiero usar la compresión recomendada para mantener fuentes editables.', '2026-10-24 10:16:45'),
+('msg-seed-004', 'chat-seed-002', 'user', NULL, 'Roberto Gómez', 'Buenas tardes, quisiera saber cuántas páginas por documento se pueden procesar con el beneficio de estudiante.', '2026-10-24 11:20:10'),
+('msg-seed-005', 'chat-seed-003', 'user', NULL, 'Mariana Silva', 'Hola equipo, estamos migrando a SSO Okta y requerimos el Metadata XML de Aurora.', '2026-10-24 09:30:15'),
+('msg-seed-006', 'chat-seed-003', 'system', NULL, 'Sistema', 'Caso escalado a Soporte Nivel L2 por soporte técnico especializado.', '2026-10-24 09:35:00');

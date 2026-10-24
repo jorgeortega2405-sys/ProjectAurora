@@ -1,6 +1,6 @@
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -14,6 +14,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 type SubscriberMap = Arc<RwLock<HashMap<String, Vec<mpsc::UnboundedSender<String>>>>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 struct ProgressBroadcast {
     #[serde(rename = "sessionId", default)]
     session_id: String,
@@ -43,17 +44,17 @@ struct ClientCommand {
 
 async fn start_redis_listener(redis_url: String, subscribers: SubscriberMap) {
     tokio::spawn(async move {
-        let channel_name = "aurora:ai:progress";
-        println!("[Aurora WS] Iniciando listener Redis en {} (canal: {})...", redis_url, channel_name);
+        let channels = ["aurora:ai:progress", "aurora:support:events"];
+        println!("[Aurora WS] Iniciando listener Redis en {} (canales: {:?})...", redis_url, channels);
         loop {
             match redis::Client::open(redis_url.as_str()) {
                 Ok(client) => match client.get_async_pubsub().await {
                     Ok(mut pubsub) => {
                         println!("[Aurora WS] Conexión PubSub con Redis establecida exitosamente.");
-                        if let Err(e) = pubsub.subscribe(channel_name).await {
-                            eprintln!("[Aurora WS] Error al suscribirse a canal {}: {}", channel_name, e);
-                            tokio::time::sleep(Duration::from_secs(2)).await;
-                            continue;
+                        for chan in &channels {
+                            if let Err(e) = pubsub.subscribe(*chan).await {
+                                eprintln!("[Aurora WS] Error al suscribirse a canal {}: {}", chan, e);
+                            }
                         }
                         let mut msg_stream = pubsub.on_message();
                         while let Some(msg) = msg_stream.next().await {
@@ -61,12 +62,49 @@ async fn start_redis_listener(redis_url: String, subscribers: SubscriberMap) {
                                 Ok(p) => p,
                                 Err(_) => continue,
                             };
-                            let parsed: Result<ProgressBroadcast, _> = serde_json::from_str(&payload);
-                            if let Ok(event) = parsed {
-                                if !event.session_id.is_empty() {
+                            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&payload) {
+                                let mut target_keys = Vec::new();
+                                if let Some(sid) = val.get("sessionId").or_else(|| val.get("session_id")).and_then(|v| v.as_str()) {
+                                    target_keys.push(sid);
+                                }
+                                if let Some(cid) = val.get("chatId").and_then(|v| v.as_str()) {
+                                    if !target_keys.contains(&cid) {
+                                        target_keys.push(cid);
+                                    }
+                                }
+                                if let Some(target) = val.get("target").and_then(|t| t.as_str()) {
+                                    if !target_keys.contains(&target) {
+                                        target_keys.push(target);
+                                    }
+                                }
+
+                                let mut delivered: Vec<mpsc::UnboundedSender<String>> = Vec::new();
+                                let mut empty_keys: Vec<String> = Vec::new();
+                                {
                                     let mut subs = subscribers.write().await;
-                                    if let Some(senders) = subs.get_mut(&event.session_id) {
-                                        senders.retain(|tx| tx.send(payload.clone()).is_ok());
+                                    for key in target_keys {
+                                        if let Some(senders) = subs.get_mut(key) {
+                                            senders.retain(|tx| {
+                                                if tx.is_closed() {
+                                                    return false;
+                                                }
+                                                let already_sent = delivered.iter().any(|d| d.same_channel(tx));
+                                                if already_sent {
+                                                    true
+                                                } else if tx.send(payload.clone()).is_ok() {
+                                                    delivered.push(tx.clone());
+                                                    true
+                                                } else {
+                                                    false
+                                                }
+                                            });
+                                            if senders.is_empty() {
+                                                empty_keys.push(key.to_string());
+                                            }
+                                        }
+                                    }
+                                    for k in empty_keys {
+                                        subs.remove(&k);
                                     }
                                 }
                             }
@@ -148,15 +186,23 @@ async fn handle_connection(mut stream: TcpStream, addr: SocketAddr, subscribers:
     let (mut ws_sender, mut ws_receiver) = ws_stream.split();
     let (tx, mut rx) = mpsc::unbounded_channel::<String>();
 
-    let mut current_session_id = initial_session_id.clone();
-    if let Some(ref sid) = current_session_id {
-        let mut subs = subscribers.write().await;
-        subs.entry(sid.clone()).or_default().push(tx.clone());
+    let mut subscribed_sessions: HashSet<String> = HashSet::new();
+
+    if let Some(ref sid) = initial_session_id {
+        if !sid.is_empty() {
+            let mut subs = subscribers.write().await;
+            let entry = subs.entry(sid.clone()).or_default();
+            entry.retain(|s| !s.is_closed());
+            if !entry.iter().any(|s| s.same_channel(&tx)) {
+                entry.push(tx.clone());
+            }
+            subscribed_sessions.insert(sid.clone());
+        }
     }
 
     let welcome_msg = serde_json::json!({
         "stage": "ws_connected",
-        "sessionId": current_session_id,
+        "sessionId": initial_session_id,
         "runtime": "rust",
         "message": "Conexión WebSocket activa (ProjectAurora Rust Core)"
     })
@@ -190,13 +236,36 @@ async fn handle_connection(mut stream: TcpStream, addr: SocketAddr, subscribers:
                             if cmd.cmd_type == "subscribe" {
                                 if let Some(sid) = cmd.session_id {
                                     if !sid.is_empty() {
-                                        current_session_id = Some(sid.clone());
                                         let mut subs = subscribers.write().await;
-                                        subs.entry(sid.clone()).or_default().push(tx.clone());
+                                        let entry = subs.entry(sid.clone()).or_default();
+                                        entry.retain(|s| !s.is_closed());
+                                        if !entry.iter().any(|s| s.same_channel(&tx)) {
+                                            entry.push(tx.clone());
+                                        }
+                                        subscribed_sessions.insert(sid.clone());
                                         let ack = serde_json::json!({
                                             "stage": "subscribed",
                                             "sessionId": sid,
                                             "message": "Suscripción confirmada"
+                                        }).to_string();
+                                        let _ = ws_sender.send(Message::Text(ack)).await;
+                                    }
+                                }
+                            } else if cmd.cmd_type == "unsubscribe" {
+                                if let Some(sid) = cmd.session_id {
+                                    if !sid.is_empty() {
+                                        let mut subs = subscribers.write().await;
+                                        if let Some(senders) = subs.get_mut(&sid) {
+                                            senders.retain(|s| !s.same_channel(&tx) && !s.is_closed());
+                                            if senders.is_empty() {
+                                                subs.remove(&sid);
+                                            }
+                                        }
+                                        subscribed_sessions.remove(&sid);
+                                        let ack = serde_json::json!({
+                                            "stage": "unsubscribed",
+                                            "sessionId": sid,
+                                            "message": "Desuscripción confirmada"
                                         }).to_string();
                                         let _ = ws_sender.send(Message::Text(ack)).await;
                                     }
@@ -217,11 +286,14 @@ async fn handle_connection(mut stream: TcpStream, addr: SocketAddr, subscribers:
         }
     }
 
-    if let Some(ref sid) = current_session_id {
+    {
         let mut subs = subscribers.write().await;
-        if let Some(list) = subs.get_mut(sid) {
-            list.retain(|sender| !sender.is_closed());
+        for sid in &subscribed_sessions {
+            if let Some(list) = subs.get_mut(sid) {
+                list.retain(|sender| !sender.same_channel(&tx) && !sender.is_closed());
+            }
         }
+        subs.retain(|_, v| !v.is_empty());
     }
 }
 

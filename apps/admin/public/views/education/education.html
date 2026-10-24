@@ -6,9 +6,25 @@
     </div>
 
     <div class="component-top-right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar solicitudes" data-tooltip-placement="bottom" aria-label="Buscar solicitudes">
-        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
-      </button>
+      <div class="component-top-actions" data-ref="education-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar solicitudes" data-tooltip-placement="bottom" aria-label="Buscar solicitudes">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </button>
+      </div>
+
+      <div class="component-top-actions" data-ref="education-selected-actions" style="display: none; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-deselect" data-tooltip="Cancelar selección" data-tooltip-placement="bottom" aria-label="Cancelar selección">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-action-view-doc" data-tooltip="Ver comprobante original" data-tooltip-placement="bottom" aria-label="Ver comprobante original">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only component-button--black" data-ref="btn-action-review" data-tooltip="Revisar solicitud académica" data-tooltip-placement="bottom" aria-label="Revisar solicitud académica">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rate_review"></use></svg>
+        </button>
+      </div>
     </div>
 
     <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
@@ -31,17 +47,16 @@
       <table class="component-table" data-ref="education-table">
         <thead class="component-table__head" data-ref="education-thead">
           <tr>
-            <th class="th-student" data-ref="th-student" style="width: 24%;">Estudiante</th>
-            <th class="th-email" data-ref="th-email" style="width: 20%;">Correo Electrónico</th>
-            <th class="th-school" data-ref="th-school" style="width: 22%;">Institución</th>
+            <th class="th-student" data-ref="th-student" style="width: 28%;">Estudiante</th>
+            <th class="th-email" data-ref="th-email" style="width: 24%;">Correo Electrónico</th>
+            <th class="th-school" data-ref="th-school" style="width: 24%;">Institución</th>
             <th class="th-document" data-ref="th-document" style="width: 12%;">Comprobante</th>
-            <th class="th-status" data-ref="th-status" style="width: 10%;">Estado</th>
-            <th class="text-right th-actions" data-ref="th-actions" style="width: 12%;">Decisión</th>
+            <th class="th-status" data-ref="th-status" style="width: 12%;">Estado</th>
           </tr>
         </thead>
         <tbody class="component-table__body" data-ref="education-tbody">
           <tr>
-            <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando solicitudes de verificación...</td>
+            <td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando solicitudes de verificación...</td>
           </tr>
         </tbody>
       </table>

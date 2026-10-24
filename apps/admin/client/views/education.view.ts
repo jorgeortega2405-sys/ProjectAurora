@@ -23,7 +23,12 @@ export interface AdminVerificationItem {
 
 export class EducationController implements ViewController {
   private abortController: AbortController | null = null;
+  private btnActionDeselect: HTMLButtonElement | null = null;
+  private btnActionReview: HTMLButtonElement | null = null;
+  private btnActionViewDoc: HTMLButtonElement | null = null;
   private container: HTMLElement;
+  private defaultActions: HTMLElement | null = null;
+  private selectedActions: HTMLElement | null = null;
   private selectedVerification: AdminVerificationItem | null = null;
   private verifications: AdminVerificationItem[] = [];
 
@@ -36,6 +41,7 @@ export class EducationController implements ViewController {
     renderIcons(this.container);
     this.setupSearchToolbar();
     this.setupModalEvents();
+    this.setupSelectionActions();
     await this.loadVerifications();
   }
 
@@ -43,6 +49,95 @@ export class EducationController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+  }
+
+  private setupSelectionActions(): void {
+    const signal = this.abortController?.signal;
+    this.defaultActions = this.container.querySelector<HTMLElement>('[data-ref="education-default-actions"]');
+    this.selectedActions = this.container.querySelector<HTMLElement>('[data-ref="education-selected-actions"]');
+    this.btnActionDeselect = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-deselect"]');
+    this.btnActionViewDoc = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-view-doc"]');
+    this.btnActionReview = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-action-review"]');
+
+    this.btnActionDeselect?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        this.selectedVerification = null;
+        this.updateSelectionUi();
+      },
+      { signal }
+    );
+
+    this.btnActionViewDoc?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.selectedVerification) {
+          const url = this.selectedVerification.document_url;
+          if (url.startsWith('/') || url.startsWith('http')) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          } else {
+            toast.error('El comprobante no tiene una URL pública directa.');
+          }
+        }
+      },
+      { signal }
+    );
+
+    this.btnActionReview?.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        if (this.selectedVerification) {
+          this.openReviewModal(this.selectedVerification);
+        }
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Escape' && this.selectedVerification) {
+          this.selectedVerification = null;
+          this.updateSelectionUi();
+        }
+      },
+      { signal }
+    );
+  }
+
+  private toggleVerificationSelection(item: AdminVerificationItem): void {
+    if (this.selectedVerification?.id === item.id) {
+      this.selectedVerification = null;
+    } else {
+      this.selectedVerification = item;
+    }
+    this.updateSelectionUi();
+  }
+
+  private updateSelectionUi(): void {
+    const isSelected = this.selectedVerification !== null;
+    if (this.defaultActions) {
+      this.defaultActions.style.display = isSelected ? 'none' : 'flex';
+    }
+    if (this.selectedActions) {
+      this.selectedActions.style.display = isSelected ? 'flex' : 'none';
+    }
+    if (this.btnActionReview) {
+      const canReview = this.selectedVerification?.status === 'pending' && hasPermission('admin:education:review');
+      this.btnActionReview.style.display = canReview ? '' : 'none';
+    }
+    const tbody = this.container.querySelector<HTMLElement>('[data-ref="education-tbody"]');
+    if (tbody) {
+      this.verifications.forEach((v) => {
+        const row = tbody.querySelector<HTMLElement>(`[data-ref="verification-row-${v.id}"]`);
+        if (row) {
+          row.classList.toggle('is-selected', this.selectedVerification?.id === v.id);
+        }
+      });
     }
   }
 
@@ -55,7 +150,7 @@ export class EducationController implements ViewController {
       const res = await fetch('/api/admin/education/verifications', { signal: this.abortController?.signal });
       if (!res.ok) {
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las verificaciones de estudiantes.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error al consultar las verificaciones de estudiantes.</td></tr>';
         }
         if (errorBanner) {
           errorBanner.textContent = 'No se pudo cargar la lista de solicitudes. Intenta más tarde.';
@@ -66,11 +161,14 @@ export class EducationController implements ViewController {
 
       const data = await res.json() as { success: boolean; verifications: AdminVerificationItem[] };
       this.verifications = Array.isArray(data.verifications) ? data.verifications : [];
+      this.selectedVerification = null;
+      this.updateSelectionUi();
+
       if (badge) badge.textContent = String(this.verifications.length);
       this.renderVerifications(this.verifications);
     } catch {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar las solicitudes.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Error de red al consultar las solicitudes.</td></tr>';
       }
       if (errorBanner) {
         errorBanner.textContent = 'Error de conexión al cargar las verificaciones.';
@@ -89,7 +187,7 @@ export class EducationController implements ViewController {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
+          <td colspan="5" style="text-align: center; padding: 64px 20px; color: var(--text-secondary);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0 auto;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-hover, rgba(0,0,0,0.05)); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
                 <svg class="component-icon" aria-hidden="true" style="width: 24px; height: 24px;"><use href="/icons.svg#school"></use></svg>
@@ -121,19 +219,9 @@ export class EducationController implements ViewController {
         const statusBadge = `<span class="component-badge component-badge--sm">${statusText}</span>`;
 
         const isUrl = item.document_url.startsWith('/') || item.document_url.startsWith('http');
-        const docButton = isUrl
-          ? `<a class="component-button component-button--h32 component-button--outline" href="${escapeHtml(item.document_url)}" target="_blank" rel="noopener noreferrer" data-ref="link-doc-${item.id}">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
-              <span>Ver</span>
-            </a>`
+        const docBadge = isUrl
+          ? '<span class="component-badge component-badge--sm">Comprobante adjunto</span>'
           : `<span class="component-badge component-badge--sm">${escapeHtml(item.document_url.split(':')[0])}</span>`;
-
-        const canReview = hasPermission('admin:education:review');
-        const actionMarkup = item.status === 'pending'
-          ? (canReview
-              ? `<button type="button" class="component-button component-button--h32 component-button--black" data-ref="btn-review-${item.id}" data-id="${escapeHtml(item.id)}">Revisar</button>`
-              : `<span class="component-badge component-badge--sm">Solo lectura</span>`)
-          : `<span class="component-badge component-badge--sm">Completado</span>`;
 
         const avatarUrl = `/api/avatar?name=${encodeURIComponent(item.full_name || 'student')}`;
         const tierColor = getFallbackTierColor('free');
@@ -143,8 +231,10 @@ export class EducationController implements ViewController {
           </div>
         `;
 
+        const isSelected = this.selectedVerification?.id === item.id;
+
         return `
-          <tr data-ref="verification-row-${item.id}">
+          <tr class="is-selectable${isSelected ? ' is-selected' : ''}" data-ref="verification-row-${item.id}">
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
                 ${avatarMarkup}
@@ -158,13 +248,10 @@ export class EducationController implements ViewController {
               <span class="component-badge component-badge--sm">${escapeHtml(item.school_name)}</span>
             </td>
             <td>
-              ${docButton}
+              ${docBadge}
             </td>
             <td>
               ${statusBadge}
-            </td>
-            <td class="text-right">
-              ${actionMarkup}
             </td>
           </tr>
         `;
@@ -176,19 +263,14 @@ export class EducationController implements ViewController {
   }
 
   private bindRowActions(tbody: HTMLElement): void {
-    tbody.querySelectorAll<HTMLButtonElement>('[data-ref^="btn-review-"]').forEach((btn) => {
-      btn.addEventListener(
-        'click',
-        (e) => {
-          e.preventDefault();
-          const id = btn.getAttribute('data-id');
-          const item = this.verifications.find((v) => v.id === id);
-          if (item) {
-            this.openReviewModal(item);
-          }
-        },
-        { signal: this.abortController?.signal }
-      );
+    tbody.querySelectorAll<HTMLTableRowElement>('[data-ref^="verification-row-"]').forEach((row) => {
+      row.addEventListener('click', () => {
+        const id = row.getAttribute('data-ref')?.replace('verification-row-', '');
+        const item = this.verifications.find((v) => v.id === id);
+        if (item) {
+          this.toggleVerificationSelection(item);
+        }
+      });
     });
   }
 

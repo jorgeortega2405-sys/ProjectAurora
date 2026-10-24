@@ -3,6 +3,7 @@ import { getMe, loginAdmin, logoutAdmin, logoutAllAdminController, switchAdminAc
 import { deleteDocument, deleteEmployee, getEmployee, getHrOverview, getOrganigram, listDepartments, listDocuments, listEmployees, listVacationRequests, patchEmployee, patchVacationRequest, postHireEmployee, postUploadDocument, postVacationRequest } from '../controllers/hr.controller.js';
 import { addInternalTicketCommentController, createInternalTicketController, getInternalTicketByIdController, getInternalTicketOptionsController, getInternalTicketsController, getInternalTicketStatsController, updateInternalTicketController } from '../controllers/internal-tickets.controller.js';
 import { requireAdminAuth, requireAdminPermission, requireAdminWebsiteAccess } from '../middlewares/auth.middleware.js';
+import { requireAdminTurnstile } from '../middlewares/turnstile.middleware.js';
 import { NextFunction, Request, Response, Router } from 'express';
 import multer from 'multer';
 
@@ -49,7 +50,7 @@ function hrUploadMiddleware(req: Request, res: Response, next: NextFunction): vo
   });
 }
 
-router.post('/auth/login', loginAdmin);
+router.post('/auth/login', requireAdminTurnstile(), loginAdmin);
 router.get('/auth/me', requireAdminAuth, getMe);
 router.post('/auth/switch-account', requireAdminAuth, switchAdminAccountController);
 router.post('/auth/logout', requireAdminAuth, logoutAdmin);

@@ -190,6 +190,7 @@ async function startServer(): Promise<void> {
   void checkDbConnection();
   void ensureBucketExists();
   const app = express();
+  app.set('trust proxy', 1);
   const server = http.createServer(app);
 
   app.use(compression({

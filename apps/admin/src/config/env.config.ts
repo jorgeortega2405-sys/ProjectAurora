@@ -1,4 +1,12 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+
+dotenv.config();
+const adminEnvPath = path.resolve(import.meta.dirname, '../../.env');
+if (fs.existsSync(adminEnvPath)) {
+  dotenv.config({ path: adminEnvPath });
+}
 
 export const adminConfig = {
   appName: process.env.ADMIN_APP_NAME || 'ProjectAurora Admin',
@@ -26,5 +34,10 @@ export const adminConfig = {
     secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin',
   },
   sessionSecret: process.env.SESSION_SECRET || 'aurora_session_secret_key_2026',
+  turnstile: {
+    enabled: process.env.TURNSTILE_ENABLED === 'true' || Boolean(process.env.TURNSTILE_SECRET_KEY),
+    secretKey: process.env.TURNSTILE_SECRET_KEY || '',
+    siteKey: process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '',
+  },
   vitePort: parseInt(process.env.ADMIN_VITE_PORT || '5175', 10),
 };

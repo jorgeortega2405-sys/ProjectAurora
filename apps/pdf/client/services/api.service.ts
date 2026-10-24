@@ -84,7 +84,7 @@ export async function getApi(url: string): Promise<Response> {
   });
 }
 
-export async function postApi(url: string, body?: unknown): Promise<Response> {
+export async function postApi(url: string, body?: unknown, customHeaders?: Record<string, string>): Promise<Response> {
   const token = await ensureCsrfToken();
   return timedFetch(url, {
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -93,6 +93,7 @@ export async function postApi(url: string, body?: unknown): Promise<Response> {
       Accept: 'application/json',
       'Content-Type': 'application/json',
       'x-csrf-token': token,
+      ...(customHeaders || {}),
     },
     method: 'POST',
   });

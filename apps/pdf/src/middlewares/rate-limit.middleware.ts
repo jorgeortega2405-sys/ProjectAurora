@@ -65,6 +65,10 @@ end
 `;
 
 export function getClientIp(req: Request): string {
+  const cfConnectingIp = req.headers['cf-connecting-ip'];
+  if (typeof cfConnectingIp === 'string' && cfConnectingIp.trim()) {
+    return cfConnectingIp.trim();
+  }
   let ip = req.ip || req.socket?.remoteAddress || '127.0.0.1';
   if (ip.startsWith('::ffff:')) {
     ip = ip.substring(7);

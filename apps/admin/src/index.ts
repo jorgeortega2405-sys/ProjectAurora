@@ -110,6 +110,7 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
 
 async function startAdminServer(): Promise<void> {
   const app = express();
+  app.set('trust proxy', 1);
   const server = http.createServer(app);
 
   app.use(compression({

@@ -2,12 +2,14 @@ import { isAuthenticated, loginAdmin } from '../services/auth.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
+import { mountTurnstile, TurnstileInstance, unmountTurnstile } from '../services/turnstile.service.js';
 import { ViewController } from '../types/common.types.js';
 
 export class AdminLoginController implements ViewController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
   private isSubmitting = false;
+  private turnstileInstance: TurnstileInstance | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -15,11 +17,23 @@ export class AdminLoginController implements ViewController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+
+    const turnstileBox = this.container.querySelector<HTMLElement>('[data-ref="turnstile-admin-login-container"]');
+    if (turnstileBox) {
+      void mountTurnstile(turnstileBox, { action: 'admin-login' }).then((inst) => {
+        this.turnstileInstance = inst;
+      });
+    }
+
     renderIcons(this.container);
     this.bindEvents();
   }
 
   destroy(): void {
+    if (this.turnstileInstance) {
+      unmountTurnstile(this.turnstileInstance.widgetId);
+      this.turnstileInstance = null;
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -98,9 +112,12 @@ export class AdminLoginController implements ViewController {
         submitBtn.textContent = 'Verificando acceso...';
       }
 
+      const turnstileToken = this.turnstileInstance?.getResponse() || '';
+
       try {
-        const result = await loginAdmin(identifier, password);
+        const result = await loginAdmin(identifier, password, turnstileToken);
         if (!result.success || !result.user) {
+          this.turnstileInstance?.reset();
           showError(result.error || 'Credenciales inválidas.');
           return;
         }

@@ -3,6 +3,7 @@ import { getApi, postApi, setAuthState } from '../services/api.service.js';
 import { t } from '../services/i18n.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
+import { mountTurnstile, TurnstileInstance, unmountTurnstile } from '../services/turnstile.service.js';
 import { RegistrationState, TwoFactorLoginState } from '../types/auth.types.js';
 import { bindNavigationLinks, bindSubmitOnEnter, createBannerManager, setupPasswordToggle, withButtonLoading } from '../utils/dom.util.js';
 import { validateEmail, validatePassword, validateUsername, validateVerificationCode } from '../utils/validators.util.js';
@@ -132,6 +133,7 @@ export class LoginController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
   private startAt2FA: boolean;
+  private turnstileInstance: TurnstileInstance | null = null;
 
   constructor(container: HTMLElement, startAt2FA = false) {
     this.container = container;
@@ -140,6 +142,13 @@ export class LoginController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+
+    const turnstileBox = this.container.querySelector<HTMLElement>('[data-ref="turnstile-login-container"]');
+    if (turnstileBox) {
+      void mountTurnstile(turnstileBox, { action: 'login' }).then((inst) => {
+        this.turnstileInstance = inst;
+      });
+    }
 
     const stepMain = this.container.querySelector<HTMLElement>('[data-ref="login-step-main"]');
     const step2FA = this.container.querySelector<HTMLElement>('[data-ref="login-step-2fa"]');
@@ -258,12 +267,19 @@ export class LoginController {
         return;
       }
 
+      const turnstileToken = this.turnstileInstance?.getResponse() || '';
+
       await withButtonLoading(submitBtn, t('auth.login.loading') || 'Iniciando sesión...', async () => {
         try {
-          const res = await postApi(API_ROUTES.auth.login, { email, password });
+          const res = await postApi(
+            API_ROUTES.auth.login,
+            { email, password, turnstileToken },
+            turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
+          );
           const data = await res.json();
 
           if (!res.ok) {
+            this.turnstileInstance?.reset();
             if (data.requiresSso) {
               if (ssoEmailInput) ssoEmailInput.value = email;
               activateStep('sso');
@@ -370,6 +386,10 @@ export class LoginController {
   }
 
   destroy(): void {
+    if (this.turnstileInstance) {
+      unmountTurnstile(this.turnstileInstance.widgetId);
+      this.turnstileInstance = null;
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -393,6 +413,7 @@ export class RegisterController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
   private initialStage: number;
+  private turnstileInstance: TurnstileInstance | null = null;
 
   constructor(container: HTMLElement, initialStage = 1) {
     this.container = container;
@@ -401,6 +422,13 @@ export class RegisterController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+
+    const turnstileBox = this.container.querySelector<HTMLElement>('[data-ref="turnstile-register-container"]');
+    if (turnstileBox) {
+      void mountTurnstile(turnstileBox, { action: 'register' }).then((inst) => {
+        this.turnstileInstance = inst;
+      });
+    }
 
     const step1 = this.container.querySelector<HTMLElement>('[data-ref="register-step-1"]');
     const step2 = this.container.querySelector<HTMLElement>('[data-ref="register-step-2"]');
@@ -500,12 +528,19 @@ export class RegisterController {
         return;
       }
 
+      const turnstileToken = this.turnstileInstance?.getResponse() || '';
+
       await withButtonLoading(submitStage1Btn, t('auth.register.loading') || 'Comprobando...', async () => {
         try {
-          const res = await postApi('/api/register/stage1-validate', { email, password });
+          const res = await postApi(
+            '/api/register/stage1-validate',
+            { email, password, turnstileToken },
+            turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
+          );
           const data = await res.json();
 
           if (!res.ok) {
+            this.turnstileInstance?.reset();
             bannersStage1.showError(data.error || 'Error al validar datos.');
             return;
           }
@@ -655,6 +690,10 @@ export class RegisterController {
   }
 
   destroy(): void {
+    if (this.turnstileInstance) {
+      unmountTurnstile(this.turnstileInstance.widgetId);
+      this.turnstileInstance = null;
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -677,6 +716,7 @@ export async function createRegisterView(targetStage = 1): Promise<HTMLElement> 
 export class ForgotPasswordController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
+  private turnstileInstance: TurnstileInstance | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -684,6 +724,13 @@ export class ForgotPasswordController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+
+    const turnstileBox = this.container.querySelector<HTMLElement>('[data-ref="turnstile-forgot-container"]');
+    if (turnstileBox) {
+      void mountTurnstile(turnstileBox, { action: 'forgot-password' }).then((inst) => {
+        this.turnstileInstance = inst;
+      });
+    }
 
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-forgot"]');
     const emailInput = this.container.querySelector<HTMLInputElement>('[data-ref="forgot-email"]');
@@ -708,9 +755,15 @@ export class ForgotPasswordController {
         return;
       }
 
+      const turnstileToken = this.turnstileInstance?.getResponse() || '';
+
       await withButtonLoading(submitBtn, t('auth.forgot_password.loading'), async () => {
         try {
-          const res = await postApi(API_ROUTES.auth.forgotPassword, { email });
+          const res = await postApi(
+            API_ROUTES.auth.forgotPassword,
+            { email, turnstileToken },
+            turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
+          );
           const data = await res.json().catch(() => ({}));
 
           if (res.ok) {
@@ -719,6 +772,7 @@ export class ForgotPasswordController {
               emailInput.value = '';
             }
           } else {
+            this.turnstileInstance?.reset();
             const errorMsg = data.error || t('toasts.generic_error');
             banners.showError(errorMsg);
           }
@@ -733,6 +787,10 @@ export class ForgotPasswordController {
   }
 
   destroy(): void {
+    if (this.turnstileInstance) {
+      unmountTurnstile(this.turnstileInstance.widgetId);
+      this.turnstileInstance = null;
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -751,6 +809,7 @@ export async function createForgotPasswordView(): Promise<HTMLElement> {
 export class ResetPasswordController {
   private abortController: AbortController | null = null;
   private container: HTMLElement;
+  private turnstileInstance: TurnstileInstance | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -758,6 +817,13 @@ export class ResetPasswordController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+
+    const turnstileBox = this.container.querySelector<HTMLElement>('[data-ref="turnstile-reset-container"]');
+    if (turnstileBox) {
+      void mountTurnstile(turnstileBox, { action: 'reset-password' }).then((inst) => {
+        this.turnstileInstance = inst;
+      });
+    }
 
     const submitBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-reset"]');
     const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="reset-password"]');
@@ -829,9 +895,15 @@ export class ResetPasswordController {
         return;
       }
 
+      const turnstileToken = this.turnstileInstance?.getResponse() || '';
+
       await withButtonLoading(submitBtn, t('auth.reset_password.loading'), async () => {
         try {
-          const res = await postApi(API_ROUTES.auth.resetPassword, { password, token });
+          const res = await postApi(
+            API_ROUTES.auth.resetPassword,
+            { password, token, turnstileToken },
+            turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
+          );
           const data = await res.json().catch(() => ({}));
 
           if (res.ok) {
@@ -844,6 +916,7 @@ export class ResetPasswordController {
               navigate('/login');
             }, 2000);
           } else {
+            this.turnstileInstance?.reset();
             banners.showError(data.error || t('toasts.generic_error'));
           }
         } catch {
@@ -857,6 +930,10 @@ export class ResetPasswordController {
   }
 
   destroy(): void {
+    if (this.turnstileInstance) {
+      unmountTurnstile(this.turnstileInstance.widgetId);
+      this.turnstileInstance = null;
+    }
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;

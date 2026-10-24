@@ -1,4 +1,12 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+
+dotenv.config();
+const localEnvPath = path.resolve(import.meta.dirname, '../../.env');
+if (fs.existsSync(localEnvPath)) {
+  dotenv.config({ path: localEnvPath });
+}
 
 export const config = {
   appName: process.env.APP_NAME || 'ProjectAurora',
@@ -68,6 +76,11 @@ export const config = {
   googlePicker: {
     apiKey: process.env.VITE_GOOGLE_API_KEY || '',
     clientId: process.env.VITE_GOOGLE_CLIENT_ID || '',
+  },
+  turnstile: {
+    enabled: process.env.TURNSTILE_ENABLED === 'true' || Boolean(process.env.TURNSTILE_SECRET_KEY),
+    secretKey: process.env.TURNSTILE_SECRET_KEY || '',
+    siteKey: process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '',
   },
 };
 

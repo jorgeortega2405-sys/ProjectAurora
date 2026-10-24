@@ -73,13 +73,17 @@ export async function fetchCurrentAdmin(force = false): Promise<AdminUser | null
 
 export async function loginAdmin(
   identifier: string,
-  passwordPlain: string
+  passwordPlain: string,
+  turnstileToken?: string
 ): Promise<{ accounts?: AdminUser[]; error?: string; success: boolean; user?: AdminUser }> {
   try {
     const res = await fetch('/api/admin/auth/login', {
-      body: JSON.stringify({ identifier, password: passwordPlain }),
+      body: JSON.stringify({ identifier, password: passwordPlain, turnstileToken }),
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(turnstileToken ? { 'x-turnstile-token': turnstileToken } : {}),
+      },
       method: 'POST',
     });
 

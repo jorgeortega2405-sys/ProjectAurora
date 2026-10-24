@@ -68,7 +68,6 @@ export class LiveSupportController implements ViewController {
     this.abortController = new AbortController();
     this.initAudio();
     renderIcons(this.container);
-    this.setupSoundToggle();
     this.setupSearch();
     this.setupFilters();
     this.setupChatListDelegation();
@@ -104,8 +103,7 @@ export class LiveSupportController implements ViewController {
   }
 
   private initAudio(): void {
-    const saved = localStorage.getItem('aurora_support_sound_enabled');
-    this.isSoundEnabled = saved !== 'false';
+    this.isSoundEnabled = true;
 
     try {
       this.soundNewChat = new Audio('/sounds/support-new-chat.wav');
@@ -115,45 +113,6 @@ export class LiveSupportController implements ViewController {
     } catch {
       this.soundNewChat = null;
       this.soundNewMessage = null;
-    }
-  }
-
-  private setupSoundToggle(): void {
-    const signal = this.abortController?.signal;
-    const btn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-toggle-sound"]');
-    if (!btn) return;
-
-    this.updateSoundButtonUi(btn);
-
-    btn.addEventListener(
-      'click',
-      () => {
-        this.isSoundEnabled = !this.isSoundEnabled;
-        localStorage.setItem('aurora_support_sound_enabled', String(this.isSoundEnabled));
-        this.updateSoundButtonUi(btn);
-        if (this.isSoundEnabled) {
-          toast.info('Alertas de sonido activadas.');
-          this.playNotificationSound('message');
-        } else {
-          toast.info('Alertas de sonido silenciadas.');
-        }
-      },
-      { signal }
-    );
-  }
-
-  private updateSoundButtonUi(btn: HTMLButtonElement): void {
-    const icon = btn.querySelector<SVGElement>('[data-ref="icon-toggle-sound"] use');
-    if (this.isSoundEnabled) {
-      btn.setAttribute('data-tooltip', 'Sonidos activados (clic para silenciar)');
-      btn.setAttribute('aria-label', 'Sonidos activados');
-      btn.classList.add('is-active');
-      if (icon) icon.setAttribute('href', '/icons.svg#volume_up');
-    } else {
-      btn.setAttribute('data-tooltip', 'Sonidos silenciados (clic para activar)');
-      btn.setAttribute('aria-label', 'Sonidos silenciados');
-      btn.classList.remove('is-active');
-      if (icon) icon.setAttribute('href', '/icons.svg#volume_off');
     }
   }
 
@@ -533,11 +492,13 @@ export class LiveSupportController implements ViewController {
     if (hintEl) {
       if (this.activeChat.status === 'pending') {
         hintEl.style.display = 'block';
-        hintEl.style.color = 'var(--text-secondary)';
+        hintEl.style.background = '#000000';
+        hintEl.style.color = '#ffffff';
         hintEl.textContent = 'Caso pendiente de asignación. Haz clic en "Tomar caso" para responder.';
       } else if (this.activeChat.status === 'closed') {
         hintEl.style.display = 'block';
-        hintEl.style.color = 'var(--text-tertiary)';
+        hintEl.style.background = '#000000';
+        hintEl.style.color = '#ffffff';
         hintEl.textContent = 'Este caso ha sido cerrado y marcado como resuelto. No se permiten nuevos mensajes.';
       } else {
         hintEl.style.display = 'none';
@@ -612,7 +573,7 @@ export class LiveSupportController implements ViewController {
       div.setAttribute('data-ref', 'support-msg-system');
       div.textContent = msg.message;
       div.style.alignSelf = 'center';
-      div.style.background = 'var(--bg-hover, rgba(0,0,0,0.04))';
+      div.style.background = 'transparent';
       div.style.color = 'var(--text-tertiary)';
       div.style.fontSize = '11px';
       div.style.padding = '4px 10px';
@@ -622,7 +583,7 @@ export class LiveSupportController implements ViewController {
       div.className = 'chat-message chat-message--agent';
       div.setAttribute('data-ref', 'support-msg-agent');
       div.style.alignSelf = 'flex-end';
-      div.style.background = 'var(--primary, #0ea5e9)';
+      div.style.background = '#000000';
       div.style.color = '#ffffff';
       div.style.borderRadius = '12px 12px 2px 12px';
       div.style.padding = '8px 12px';
@@ -636,7 +597,7 @@ export class LiveSupportController implements ViewController {
       div.className = 'chat-message chat-message--user';
       div.setAttribute('data-ref', 'support-msg-user');
       div.style.alignSelf = 'flex-start';
-      div.style.background = 'var(--bg-surface)';
+      div.style.background = '#ffffff';
       div.style.border = '1px solid var(--border-color)';
       div.style.color = 'var(--text-primary)';
       div.style.borderRadius = '12px 12px 12px 2px';
@@ -644,7 +605,7 @@ export class LiveSupportController implements ViewController {
       div.style.maxWidth = '75%';
       div.style.fontSize = '13px';
       div.innerHTML = `
-        <div style="font-size: 10px; font-weight: 700; color: var(--primary, #0ea5e9); margin-bottom: 2px;">${escapeHtml(msg.sender_name)}</div>
+        <div style="font-size: 10px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">${escapeHtml(msg.sender_name)}</div>
         <div style="line-height: 1.4;">${escapeHtml(msg.message)}</div>
       `;
     }

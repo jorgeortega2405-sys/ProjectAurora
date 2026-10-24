@@ -1691,8 +1691,8 @@ html.dark-theme .chat-panel__top .component-button:hover {
 
 .chat-message--user {
   align-self: flex-end;
-  background-color: var(--action-primary);
-  color: var(--action-primary-text);
+  background-color: #000000;
+  color: #ffffff;
   border-bottom-right-radius: 4px;
 }
 
@@ -1731,7 +1731,7 @@ html.dark-theme .chat-panel__top .component-button:hover {
 
 /* Burbuja del texto del agente */
 .chat-agent-bubble {
-  background-color: transparent;
+  background-color: #ffffff;
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -1929,7 +1929,7 @@ html.dark-theme .chat-panel__top .component-button:hover {
 
 .chat-message--system {
   align-self: center;
-  background-color: var(--bg-hover);
+  background-color: transparent;
   color: var(--text-tertiary);
   border: 1px dashed var(--border-color);
   font-size: 11px;

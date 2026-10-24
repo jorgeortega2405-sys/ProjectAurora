@@ -62,10 +62,13 @@ describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => 
     assert.ok(l1Chats.every((c) => c.tier === 'L1'));
   });
 
+  let sharedClaimedChatId = '';
+
   it('AdminLiveSupportService: accepts/claims a pending chat and assigns agent', async () => {
     const pendingList = await AdminLiveSupportService.listChats({ status: 'pending' });
     assert.ok(pendingList.length > 0, 'Must have at least one pending chat');
     const targetChat = pendingList[0];
+    sharedClaimedChatId = targetChat.id;
 
     const claimed = await AdminLiveSupportService.claimChat(
       targetChat.id,
@@ -83,14 +86,13 @@ describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => 
   });
 
   it('AdminLiveSupportService: sends agent message in live conversation', async () => {
-    const activeChats = await AdminLiveSupportService.listChats({ status: 'active' });
-    assert.ok(activeChats.length > 0);
-    const chat = activeChats[0];
+    const chat = (await AdminLiveSupportService.getChatById(sharedClaimedChatId)) || (await AdminLiveSupportService.listChats({ status: 'active' }))[0];
+    assert.ok(chat);
 
     const agentMsg = await AdminLiveSupportService.addAgentMessage(
       chat.id,
-      'b7123456-1111-4000-8000-000000000001',
-      'Agente Sofía',
+      chat.assigned_agent_id || 'b7123456-1111-4000-8000-000000000001',
+      chat.assigned_agent_name || 'Agente Sofía',
       'Hola, he revisado tu consulta y procederé a asistirte.'
     );
 
@@ -100,9 +102,8 @@ describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => 
   });
 
   it('AdminLiveSupportService: transfers and escalates case through support tiers (L1 -> L2 -> L3)', async () => {
-    const activeChats = await AdminLiveSupportService.listChats({ status: 'active' });
-    assert.ok(activeChats.length > 0);
-    const chat = activeChats[0];
+    const chat = (await AdminLiveSupportService.getChatById(sharedClaimedChatId)) || (await AdminLiveSupportService.listChats({ status: 'active' }))[0];
+    assert.ok(chat);
 
     const escalatedL2 = await AdminLiveSupportService.transferChat(
       chat.id,
@@ -128,9 +129,8 @@ describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => 
   });
 
   it('AdminLiveSupportService: closes chat and marks as resolved', async () => {
-    const activeChats = await AdminLiveSupportService.listChats({ status: 'active' });
-    assert.ok(activeChats.length > 0);
-    const chat = activeChats[0];
+    const chat = (await AdminLiveSupportService.getChatById(sharedClaimedChatId)) || (await AdminLiveSupportService.listChats({ status: 'active' }))[0];
+    assert.ok(chat);
 
     const closed = await AdminLiveSupportService.closeChat(chat.id, 'Agente Sofía');
     assert.strictEqual(closed.status, 'closed');

@@ -2,7 +2,9 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
+import { config } from '../dist/config/env.config.js';
 import { getClientIp } from '../dist/middlewares/rate-limit.middleware.js';
+import { originProtection, securityHeaders } from '../dist/middlewares/security-headers.middleware.js';
 import { requireTurnstile } from '../dist/middlewares/turnstile.middleware.js';
 import { verifyTurnstileToken } from '../dist/services/turnstile.service.js';
 
@@ -176,5 +178,93 @@ describe('Suite de Verificación Cloudflare Turnstile & Proxy DDoS', () => {
         }
       }
     }
+  });
+
+  it('8. Cabeceras HTTP de seguridad: CSP, HSTS, X-Frame-Options, X-Content-Type-Options y Referrer-Policy', () => {
+    const middleware = securityHeaders();
+    const headersEmitted = {};
+
+    const reqMock = {
+      headers: {
+        'x-forwarded-proto': 'https',
+      },
+      secure: true,
+    };
+
+    const resMock = {
+      setHeader(name, value) {
+        headersEmitted[name.toLowerCase()] = value;
+      },
+    };
+
+    let nextCalled = false;
+    middleware(reqMock, resMock, () => {
+      nextCalled = true;
+    });
+
+    assert.strictEqual(nextCalled, true);
+    assert.strictEqual(headersEmitted['x-frame-options'], 'DENY');
+    assert.strictEqual(headersEmitted['x-content-type-options'], 'nosniff');
+    assert.strictEqual(headersEmitted['referrer-policy'], 'strict-origin-when-cross-origin');
+    assert.strictEqual(headersEmitted['strict-transport-security'], 'max-age=31536000; includeSubDomains; preload');
+
+    const csp = headersEmitted['content-security-policy'];
+    assert.ok(csp, 'Content-Security-Policy debe existir');
+    assert.ok(csp.includes('https://challenges.cloudflare.com'), 'CSP debe autorizar Cloudflare Turnstile');
+    assert.ok(csp.includes('frame-ancestors \'none\''), 'CSP debe impedir embebido en frames externos');
+  });
+
+  it('9. Blindaje de servidor de origen: Bloqueo de accesos directos que omiten Cloudflare cuando está activo', () => {
+    config.originProtection.enforceCloudflare = true;
+    const middleware = originProtection();
+
+    let statusSet = 0;
+    let responseBody = null;
+    let nextCalled = false;
+
+    const directReqMock = {
+      headers: {},
+      ip: '198.51.100.99',
+      path: '/api/login',
+    };
+
+    const resMock = {
+      json(payload) {
+        responseBody = payload;
+        return this;
+      },
+      status(code) {
+        statusSet = code;
+        return this;
+      },
+    };
+
+    middleware(directReqMock, resMock, () => {
+      nextCalled = true;
+    });
+
+    assert.strictEqual(statusSet, 403);
+    assert.strictEqual(nextCalled, false);
+    assert.strictEqual(responseBody?.success, false);
+
+    statusSet = 0;
+    nextCalled = false;
+    const cfReqMock = {
+      headers: {
+        'cf-connecting-ip': '203.0.113.195',
+        'cf-ray': '8db7f891bca1001-MIA',
+      },
+      ip: '108.162.219.50',
+      path: '/api/login',
+    };
+
+    middleware(cfReqMock, resMock, () => {
+      nextCalled = true;
+    });
+
+    assert.strictEqual(nextCalled, true);
+    assert.strictEqual(statusSet, 0);
+
+    config.originProtection.enforceCloudflare = false;
   });
 });

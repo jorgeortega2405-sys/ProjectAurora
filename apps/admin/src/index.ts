@@ -5,6 +5,7 @@ import fs from 'fs';
 import http from 'http';
 import path from 'path';
 import { adminConfig } from './config/env.config.js';
+import { adminOriginProtection, adminSecurityHeaders } from './middlewares/security-headers.middleware.js';
 import adminRoutes from './routes/admin.routes.js';
 import { generateAvatarSvg } from './services/avatar.service.js';
 import { logger } from './services/logger.service.js';
@@ -111,6 +112,8 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
 async function startAdminServer(): Promise<void> {
   const app = express();
   app.set('trust proxy', 1);
+  app.use(adminOriginProtection());
+  app.use(adminSecurityHeaders());
   const server = http.createServer(app);
 
   app.use(compression({

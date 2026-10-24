@@ -1,13 +1,26 @@
 import fs from 'fs';
 import nodemailer from 'nodemailer';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from '../config/env.config.js';
 import { logger } from './logger.service.js';
 
-function loadTemplates(): Record<string, any> {
-  const srcPath = path.resolve(process.cwd(), 'src/config/email-templates.json');
-  const distPath = path.resolve(process.cwd(), 'dist/config/email-templates.json');
-  const target = fs.existsSync(srcPath) ? srcPath : distPath;
+export interface EmailTemplate {
+  html: string;
+  subject: string;
+  text: string;
+}
+
+function loadTemplates(): Record<string, EmailTemplate> {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const candidatePaths = [
+    path.resolve(currentDir, '../config/email-templates.json'),
+    path.resolve(currentDir, '../../src/config/email-templates.json'),
+  ];
+  const target = candidatePaths.find((candidate) => fs.existsSync(candidate));
+  if (!target) {
+    return {};
+  }
   try {
     return JSON.parse(fs.readFileSync(target, 'utf-8'));
   } catch {
@@ -17,24 +30,27 @@ function loadTemplates(): Record<string, any> {
 
 const emailTemplates = loadTemplates();
 
-export interface EmailTemplate {
-  html: string;
-  subject: string;
-  text: string;
-}
+const isTestOrUnconfigured =
+  config.nodeEnv === 'test' ||
+  process.env.NODE_ENV === 'test' ||
+  process.env.SMTP_MOCK === 'true' ||
+  !config.smtp.user ||
+  !config.smtp.pass;
 
-const transporter = nodemailer.createTransport({
-  auth: {
-    pass: config.smtp.pass,
-    user: config.smtp.user,
-  },
-  connectionTimeout: 5000,
-  greetingTimeout: 5000,
-  host: config.smtp.host,
-  port: config.smtp.port,
-  secure: config.smtp.port === 465,
-  socketTimeout: 10000,
-});
+const transporter = isTestOrUnconfigured
+  ? nodemailer.createTransport({ jsonTransport: true })
+  : nodemailer.createTransport({
+      auth: {
+        pass: config.smtp.pass,
+        user: config.smtp.user,
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      host: config.smtp.host,
+      port: config.smtp.port,
+      secure: config.smtp.port === 465,
+      socketTimeout: 10000,
+    });
 
 export function escapeHtml(str: unknown): string {
   return String(str)

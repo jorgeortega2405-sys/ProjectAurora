@@ -8,9 +8,11 @@ import { EngineConversionParams, EngineConversionResult, IConverterEngine } from
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const SCRIPT_DIST = path.resolve(__dirname, '../scripts/converter_worker.py');
-const SCRIPT_SRC = path.resolve(process.cwd(), 'src/tools/pdf-converter/scripts/converter_worker.py');
-const WORKER_SCRIPT_PATH = fs.existsSync(SCRIPT_DIST) ? SCRIPT_DIST : SCRIPT_SRC;
+const candidatePaths = [
+  path.resolve(__dirname, '../scripts/converter_worker.py'),
+  path.resolve(__dirname, '../../../../src/tools/pdf-converter/scripts/converter_worker.py'),
+];
+const WORKER_SCRIPT_PATH = candidatePaths.find((p) => fs.existsSync(p)) || candidatePaths[0];
 
 export class LocalConverterEngine implements IConverterEngine {
   public async convert(params: EngineConversionParams): Promise<EngineConversionResult> {

@@ -39,5 +39,9 @@ export const adminConfig = {
     secretKey: process.env.TURNSTILE_SECRET_KEY || '',
     siteKey: process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '',
   },
+  originProtection: {
+    enforceCloudflare: process.env.ENFORCE_CLOUDFLARE_ORIGIN === 'true',
+    secret: process.env.CLOUDFLARE_ORIGIN_SECRET || '',
+  },
   vitePort: parseInt(process.env.ADMIN_VITE_PORT || '5175', 10),
 };

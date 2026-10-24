@@ -13,6 +13,7 @@ import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from './
 import { injectHtmlSeo, isSupportedLanguage, normalizeLanguageCode } from './config/seo.config.js';
 import { csrfProtection } from './middlewares/csrf.middleware.js';
 import { requestLogger } from './middlewares/request-logger.middleware.js';
+import { originProtection, securityHeaders } from './middlewares/security-headers.middleware.js';
 import aiRoutes from './routes/ai.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import downloadRoutes from './routes/download.routes.js';
@@ -191,6 +192,8 @@ async function startServer(): Promise<void> {
   void ensureBucketExists();
   const app = express();
   app.set('trust proxy', 1);
+  app.use(originProtection());
+  app.use(securityHeaders());
   const server = http.createServer(app);
 
   app.use(compression({

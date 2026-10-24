@@ -19,16 +19,16 @@ The primary objective was to ensure complete repository hygiene, eliminate archi
 
 | Milestone | Focus Area | Status | Key Results |
 |---|---|---|---|
-| **M1 (R1)** | Residual File & Directory Purge | **100% Completed** | Purged 8 legacy artifacts: loose root Dockerfile/.dockerignore, 34 root log files (~2.2MB), legacy empty data trees, root `.env`/`.env.example`, duplicate admin database schema, 9 committed `.pyc` bytecode files, root TS18003 error resolved, and admin logger anchored. |
+| **M1 (R1)** | Residual File & Directory Purge | **100% Completed** | Purged 9 legacy artifacts: loose root Dockerfile/.dockerignore, 34 root log files (~2.2MB), legacy empty data trees, root `.env`/`.env.example`, duplicate admin database schema, 9 committed `.pyc` bytecode files, root TS18003 error resolved, admin logger anchored, and mail service / python worker paths decoupled from process.cwd(). |
 | **M2 (R2)** | Architectural & Security Compliance | **100% Completed** | Zero sensitive data leaks in HTTP responses; 0 unauthorized `console.*` calls (7 authorized in `websocket.service.ts`); 0 HTML `id` attributes; 100% HTML attribute ordering compliance; full PBAC adoption replacing hardcoded tier strings; 0 inline DDL; 100% horizontal sorted imports; 42 circular dependencies decoupled to 0. |
-| **M3 (R3)** | Workspace Integrity & Build Verification | **100% Verified** | Root `tsc --noEmit` exits with code 0; `npm run typecheck` passes with 0 errors across all workspaces; `npm run build` compiles server and Vite client bundles cleanly; all 11 monorepo test suites (110 tests) pass 100%; madge detects 0 circular dependencies across all 320 TypeScript files. |
+| **M3 (R3)** | Workspace Integrity & Build Verification | **100% Verified** | Root `tsc --noEmit` exits with code 0; `npm run typecheck` passes with 0 errors across all workspaces; `npm run build` compiles server and Vite client bundles cleanly; all 12 monorepo test suites (127 tests) pass 100%; madge detects 0 circular dependencies across all 320 TypeScript files. |
 | **M4 (R4)** | Audit Report & Maintenance Guidelines | **Delivered** | Complete actionable audit documentation and long-term CI/CD maintenance recommendations authored in `docs/monorepo_audit_report.md`. |
 
 ---
 
 ## Part 1: Residual File & Directory Purge (R1)
 
-During monorepo unification, several legacy files, pre-migration artifacts, and duplicate assets remained at the root or within sub-workspaces. All 8 identified residual areas were systematically analyzed, remediated, and purged.
+During monorepo unification, several legacy files, pre-migration artifacts, and duplicate assets remained at the root or within sub-workspaces. All 9 identified residual areas were systematically analyzed, remediated, and purged.
 
 ### 1.1 Detailed Inventory of Purged and Remediated Items
 
@@ -42,6 +42,7 @@ During monorepo unification, several legacy files, pre-migration artifacts, and 
 | **6** | `qa_suite/**/__pycache__/*.pyc` | 9 compiled Python bytecode files committed to git tracking. | Untracked via `git rm`, deleted from disk, added `__pycache__/` and `*.pyc` to root `.gitignore`. | Python bytecode is machine-dependent and must not be tracked in version control. Automated test suite `run_qa.py` generates bytecode dynamically at runtime. |
 | **7** | `tsconfig.json` (Root)<br>`apps/pdf/tsconfig.json` | Root `tsconfig.json` included `src/**/*`, throwing `error TS18003: No inputs were found` because root has no `src/`. | Converted root `tsconfig.json` and `apps/pdf/tsconfig.json` to monorepo solution project references. | Enables standard TypeScript project references (`{ "path": "./apps/pdf" }, { "path": "./apps/admin" }`). `npx tsc --noEmit` at root now exits with code 0. |
 | **8** | `apps/admin/src/services/logger.service.ts` | Line 4 resolved logs via `path.resolve(process.cwd(), 'logs')`, which created root `logs/` when commands ran from root. | Anchored to `import.meta.url` (`path.resolve(__dirname, '../../logs')`). | Ensures admin logging writes exclusively to `apps/admin/logs/` regardless of execution working directory, matching `apps/pdf/src/services/logger.service.ts`. |
+| **9** | `apps/pdf/src/services/mail.service.ts`<br>`apps/pdf/src/tools/pdf-converter/engine/local-converter.engine.ts` | Resolving `email-templates.json` and `converter_worker.py` via `process.cwd()`, breaking resolution when commands run from monorepo root. | Anchored paths using `path.dirname(fileURLToPath(import.meta.url))` with candidate paths (`../config/` and `../../src/config/`), completely decoupled from `process.cwd()`. | Eliminates `ENOENT` / `Plantilla de email no encontrada` runtime errors when tests and services execute from repository root or sub-workspaces. |
 
 ### 1.2 Empirical Verification of Purged Assets
 
@@ -155,6 +156,19 @@ An exhaustive audit of all backend and frontend services was performed against t
   - Full Monorepo Scan (`apps/pdf/src`, `apps/admin/src`, `apps/admin/client`, `apps/pdf/client` across 320 files) -> **`√ No circular dependency found!`**
 - **Compliance Rating**: **100% Compliant**.
 
+### 2.9 Mail Service CWD Anchoring & Isolated Test Transport
+- **Standard**: Zero runtime failures due to unanchored `process.cwd()` path resolution; zero unmocked outbound live SMTP network connections during automated tests; strict adherence to error handling and logging per `AGENTS.md` and `GEMINI.md`.
+- **Root Cause Identified**:
+  1. `apps/pdf/src/services/mail.service.ts` resolved template paths using `path.resolve(process.cwd(), 'src/config/email-templates.json')`. When invoked from the monorepo root, this evaluated to non-existent root folders, returning `{}` and throwing `Error: Plantilla de email no encontrada: email_change_code`.
+  2. The `transporter` in `mail.service.ts` attempted live SMTP connections to `smtp.gmail.com:465` with empty credentials during automated tests, causing `EDNS / ETIMEOUT` DNS timeouts and Google `550-5.4.5 Daily user sending limit exceeded` rejections during concurrent burst testing.
+- **Remediation Executed**:
+  1. Anchored template resolution in `loadTemplates()` using `path.dirname(fileURLToPath(import.meta.url))` with candidate paths (`../config/email-templates.json` in dist and `../../src/config/email-templates.json` in src), completely decoupled from `process.cwd()`.
+  2. Conditioned `transporter` instantiation: if `config.nodeEnv === 'test' || process.env.NODE_ENV === 'test' || process.env.SMTP_MOCK === 'true' || !config.smtp.user || !config.smtp.pass`, it initializes `nodemailer.createTransport({ jsonTransport: true })`. Real SMTP transport is reserved exclusively for production environments with configured credentials.
+  3. In `apps/pdf/src/tools/pdf-converter/engine/local-converter.engine.ts`, anchored `converter_worker.py` script resolution using `fileURLToPath(import.meta.url)` and `path.dirname`, eliminating `process.cwd()` dependency.
+  4. Enforced all AGENTS.md / GEMINI.md rules: single horizontal line alphabetical imports, zero `console.*`, zero comments/JSDoc annotations.
+- **Verification**: `npm test` executes all verification and adversarial burst test suites with 100% pass rate.
+- **Compliance Rating**: **100% Compliant**.
+
 ---
 
 ## Part 3: Workspace Integrity & Build Verification (R3)
@@ -200,8 +214,8 @@ All verification commands were executed directly against the active monorepo wor
 - **Command**: `npm test`
 - **Execution Directory**: `f:\ProjectAurora`
 - **Exit Code**: `0`
-- **Total Test Files (Suites)**: 11
-- **Total Tests Passed**: 118 (75 in admin, 43 in pdf)
+- **Total Test Files (Suites)**: 12 (5 in admin, 7 in pdf)
+- **Total Tests Passed**: 127 (75 in admin, 52 in pdf)
 - **Total Test Failures**: 0 (100% Pass Rate)
 
 #### Test Concurrency Remediation in `apps/admin`:
@@ -212,6 +226,16 @@ In `apps/admin/package.json`, the test script was updated to serialize test file
 ```json
 "test": "node --test tests/admin-roles-permissions-auth.test.mjs && node --test tests/hr-management.test.mjs && node --test tests/internal-tickets.test.mjs && node --test tests/backup-restore.test.mjs && node --test tests/multi-website-access.test.mjs"
 ```
+
+#### Mail Service CWD Anchoring & Test Transport Remediation:
+In `apps/pdf`, test suites `stress-m1-concurrency.test.mjs` and `adversarial-email-change-m1.test.mjs` experienced failures when executed from the monorepo root. Investigation revealed two compounding root causes in `apps/pdf/src/services/mail.service.ts`:
+1. `loadTemplates()` resolved `src/config/email-templates.json` against `process.cwd()`, evaluating to non-existent root folders when called from `f:\ProjectAurora` and throwing `Plantilla de email no encontrada: email_change_code`.
+2. `nodemailer.createTransport` initiated live socket connections to `smtp.gmail.com:465` with empty credentials, which triggered DNS lookup timeouts (`EDNS / ETIMEOUT`) and Gmail rate limits (`550-5.4.5 Daily user sending limit exceeded`) during concurrent test bursts.
+
+**Remediation Applied**:
+1. Anchored `loadTemplates()` via `path.dirname(fileURLToPath(import.meta.url))` to inspect candidate relative paths (`../config/email-templates.json` in dist and `../../src/config/email-templates.json` in src), completely decoupled from `process.cwd()`.
+2. Configured conditional transporter initialization: if `config.nodeEnv === 'test' || process.env.NODE_ENV === 'test' || process.env.SMTP_MOCK === 'true' || !config.smtp.user || !config.smtp.pass`, Nodemailer instantiates `nodemailer.createTransport({ jsonTransport: true })`, completely eliminating network dependencies and timeouts during tests.
+3. In `apps/pdf/src/tools/pdf-converter/engine/local-converter.engine.ts`, anchored `converter_worker.py` script resolution to `import.meta.url` candidate paths.
 
 #### Verbatim Execution Summary:
 ```
@@ -264,7 +288,7 @@ ok 1 - Suite Multi-Web Hub & Spoke: Catálogo de Sitios, PBAC Scoped y Aislamien
 
 
 > projectaurora-pdf@1.0.0 test
-> node --test tests/verification-lifecycle-redis-cache.test.mjs && node --test tests/cache-aside-db.test.mjs && node --test tests/stress-m1-concurrency.test.mjs && node --test tests/stress-m1-memory-fallback.test.mjs && node --test tests/adversarial-email-change-m1.test.mjs && node --test tests/adversarial-mutex-memory.test.mjs
+> node --test tests/verification-lifecycle-redis-cache.test.mjs && node --test tests/cache-aside-db.test.mjs && node --test tests/stress-m1-concurrency.test.mjs && node --test tests/stress-m1-memory-fallback.test.mjs && node --test tests/adversarial-email-change-m1.test.mjs && node --test tests/adversarial-mutex-memory.test.mjs && node --test tests/turnstile-cloudflare.test.mjs
 
 TAP version 13
 # Subtest: Project Aurora Security, Redis Cache & Verification Optimization Suite
@@ -313,6 +337,14 @@ ok 1 - Adversarial Empirical Stress Test: userMutexes (userLocks) Map Cleanup an
 # suites 1
 # pass 7
 # fail 0
+
+TAP version 13
+# Subtest: Suite de Verificación Cloudflare Turnstile & Proxy DDoS
+ok 1 - Suite de Verificación Cloudflare Turnstile & Proxy DDoS
+# tests 9
+# suites 1
+# pass 9
+# fail 0
 ```
 
 #### Detailed Breakdown of Executed Test Suites:
@@ -324,13 +356,14 @@ ok 1 - Adversarial Empirical Stress Test: userMutexes (userLocks) Map Cleanup an
    - `backup-restore.test.mjs` (13 tests, 3 sub-suites): System status detection, multi-engine backup generation (MySQL, Cassandra, MinIO), download streaming, and live restoration tests.
    - `multi-website-access.test.mjs` (6 tests, 1 sub-suite): Hub-and-spoke multi-site PBAC data isolation, website catalog scoping, purchase filtering, and lead inquiry routing tests.
 
-2. **`apps/pdf` Test Suites (43 tests, 6 sub-suites, 0 failures)**:
+2. **`apps/pdf` Test Suites (52 tests, 7 sub-suites, 0 failures)**:
    - `verification-lifecycle-redis-cache.test.mjs` (11 tests, 1 sub-suite): Email verification codes, cooldown timers, Redis cache-aside, and rate-limiting tests.
    - `cache-aside-db.test.mjs` (10 tests, 1 sub-suite): Database caching, atomic invalidations, composite indexes, and cache consistency tests.
    - `stress-m1-concurrency.test.mjs` (2 tests, 1 sub-suite): Concurrency and race condition stress tests for simultaneous code generation and resends.
    - `stress-m1-memory-fallback.test.mjs` (4 tests, 1 sub-suite): In-memory fallback and lockout state retention during Redis simulated downtime.
    - `adversarial-email-change-m1.test.mjs` (9 tests, 1 sub-suite): Adversarial burst concurrency, code reuse within TTL, and progressive 5-attempt lockout enforcement.
    - `adversarial-mutex-memory.test.mjs` (7 tests, 1 sub-suite): Memory safety, user lock lifecycle, deadlock resistance, and burst interleaving (5,000 operations across 250 users).
+   - `turnstile-cloudflare.test.mjs` (9 tests, 1 sub-suite): Cloudflare proxy IP detection, Turnstile token validation, header & body ingestion, rule compliance, security headers (CSP, HSTS, X-Frame-Options), and origin shield direct-access blocking.
 
 
 ### 3.5 Monorepo Circular Dependency Analysis (Madge)

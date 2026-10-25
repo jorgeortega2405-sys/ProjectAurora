@@ -399,8 +399,10 @@ export class RemovePdfPagesController implements ViewController {
       const isRemoved = this.removedPages.has(p.num);
       return `
         <div class="remove-page-card ${isRemoved ? 'is-marked-remove' : ''}" data-ref="page-card-${p.num}" data-page-index="${index}" data-page-num="${p.num}">
-          <div class="remove-page-card__action-badge" data-ref="btn-toggle-${p.num}">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+          <div class="pdf-card__actions">
+            <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-toggle-${p.num}" title="Eliminar página" aria-label="Eliminar página">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
           </div>
           <div class="remove-page-card__overlay" data-ref="overlay-page-${p.num}">
             <div class="remove-page-card__remove-badge">

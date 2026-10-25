@@ -1026,7 +1026,7 @@ html.dark-theme .component-badge--interactive:hover .component-badge__icon--colo
 }
 
 .component-toggle-pill {
-  background-color: var(--bg-hover-light, rgba(0, 0, 0, 0.04));
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: 9999px;
   display: grid;

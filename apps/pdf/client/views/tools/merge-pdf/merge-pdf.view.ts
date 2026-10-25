@@ -183,13 +183,6 @@ export class MergePdfController implements ViewController {
       }
     }, { signal });
 
-    const mergeNotice = this.container.querySelector<HTMLElement>('[data-ref="merge-info-notice"]');
-    mergeNotice?.addEventListener('click', () => {
-      if (this.selectedFiles.length < 2) {
-        addMoreInput?.click();
-      }
-    }, { signal });
-
     mainActionBtn?.addEventListener('click', () => {
       if (this.currentResult) {
         this.downloadMergedResult();
@@ -447,9 +440,11 @@ export class MergePdfController implements ViewController {
 
     return `
       <div class="pdf-card" data-ref="card-pdf-${item.id}" data-id="${item.id}">
-        <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-pdf" data-id="${item.id}" title="Eliminar archivo" aria-label="Eliminar archivo">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
-        </button>
+        <div class="pdf-card__actions">
+          <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-pdf" data-id="${item.id}" title="Eliminar archivo" aria-label="Eliminar archivo">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+          </button>
+        </div>
 
         <div class="pdf-card__sheet-wrapper" data-ref="sheet-wrapper-${item.id}">
           <div class="pdf-card__sheet" data-ref="sheet-${item.id}">
@@ -475,7 +470,7 @@ export class MergePdfController implements ViewController {
     this.sortable = new Sortable(itemsGrid, {
       animation: 200,
       chosenClass: 'pdf-card--chosen',
-      filter: 'button, .pdf-card__btn-remove',
+      filter: 'button, .pdf-card__btn-remove, .pdf-card__actions',
       ghostClass: 'pdf-card--ghost',
       onEnd: () => {
         this.syncOrderFromDom();

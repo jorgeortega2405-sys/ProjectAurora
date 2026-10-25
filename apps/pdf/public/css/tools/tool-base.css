@@ -1077,15 +1077,15 @@
 
 .pdf-reorder-hint {
   align-items: center;
-  background-color: var(--bg-hover);
-  border: 1px solid var(--border-lighter, var(--border-color));
+  background-color: #ffffff;
+  border: 1px solid #00000020;
   border-radius: 10px;
   box-sizing: border-box;
   color: var(--text-secondary);
   display: flex;
   font-size: 0.8125rem;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   padding: 8px 14px;
   width: 100%;
 }
@@ -1104,9 +1104,9 @@
 .remove-pages-grid {
   box-sizing: border-box;
   display: grid;
-  gap: 20px;
+  gap: 16px;
   grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  padding: 4px 2px;
+  padding: 8px 2px 4px 2px;
   width: 100%;
 }
 
@@ -1118,23 +1118,23 @@
 .pdf-card {
   align-items: center;
   background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 1px solid #00000020;
   border-radius: 14px;
-  box-shadow: var(--sl-shadow-x-small);
+  box-shadow: none;
   box-sizing: border-box;
   cursor: grab;
   display: flex;
   flex-direction: column;
   padding: 16px 14px 14px 14px;
   position: relative;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: border-color 0.18s ease;
   user-select: none;
   width: 100%;
 }
 
 .pdf-card:hover {
   border-color: var(--border-color-hover);
-  box-shadow: var(--sl-shadow-medium);
+  box-shadow: none;
   transform: none;
 }
 
@@ -1170,40 +1170,76 @@
   z-index: 3;
 }
 
+.pdf-card__actions {
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #00000020;
+  border-radius: 8px;
+  box-sizing: border-box;
+  display: flex;
+  gap: 2px;
+  height: 32px;
+  opacity: 0;
+  padding: 2px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  transition: opacity 0.15s ease;
+  z-index: 5;
+}
+
+.pdf-card:hover .pdf-card__actions {
+  opacity: 1;
+}
+
 .pdf-card__btn-remove {
   align-items: center;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  box-shadow: var(--sl-shadow-small);
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   height: 28px;
   justify-content: center;
-  opacity: 0;
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
   width: 28px;
-  z-index: 3;
-}
-
-.pdf-card:hover .pdf-card__btn-remove {
-  opacity: 1;
 }
 
 .pdf-card__btn-remove:hover {
-  background-color: var(--action-danger-bg);
-  border-color: var(--color-error-border);
-  color: var(--action-danger);
-  transform: scale(1.1);
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.06));
+  color: var(--text-primary);
 }
 
 .pdf-card__btn-remove .component-icon {
   height: 16px;
   width: 16px;
+}
+
+.pdf-card > .pdf-card__btn-remove {
+  background-color: #ffffff;
+  border: 1px solid #00000020;
+  border-radius: 8px;
+  box-sizing: border-box;
+  height: 32px;
+  opacity: 0;
+  padding: 2px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  width: 32px;
+  z-index: 5;
+}
+
+.pdf-card:hover > .pdf-card__btn-remove {
+  opacity: 1;
+}
+
+.pdf-card > .pdf-card__btn-remove:hover {
+  background-color: var(--bg-hover, rgba(0, 0, 0, 0.06));
+  color: var(--text-primary);
 }
 
 .pdf-card__sheet-wrapper {

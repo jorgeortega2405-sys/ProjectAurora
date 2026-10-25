@@ -35,9 +35,11 @@
 
         <div class="pdf-items-grid" data-ref="pdf-items-grid">
           <div class="pdf-card" data-ref="selected-file-card">
-            <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-file" title="Eliminar archivo" aria-label="Eliminar archivo">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
-            </button>
+            <div class="pdf-card__actions">
+              <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-file" title="Eliminar archivo" aria-label="Eliminar archivo">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+              </button>
+            </div>
             <div class="pdf-card__sheet-wrapper" data-ref="sheet-wrapper">
               <div class="pdf-card__sheet" data-ref="sheet">
                 <canvas class="pdf-card__canvas" data-ref="doc-preview-canvas"></canvas>

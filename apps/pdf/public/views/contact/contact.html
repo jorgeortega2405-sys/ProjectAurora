@@ -79,6 +79,41 @@
           </form>
         </div>
 
+        <div class="contact-card contact-card--ticket" data-ref="contact-card-ticket" style="display: none;">
+          <div class="contact-ticket-header" data-ref="ticket-header">
+            <div class="contact-ticket-header__meta" data-ref="ticket-header-meta">
+              <span class="contact-ticket-tag" data-ref="ticket-number">#TK-0000-0000</span>
+              <span class="contact-ticket-status-badge" data-ref="ticket-status-badge">Abierto</span>
+            </div>
+            <h2 class="contact-card__title" data-ref="ticket-title">Cargando incidencia...</h2>
+            <p class="contact-card__desc" data-ref="ticket-meta-desc">Iniciada por <strong data-ref="ticket-author">...</strong></p>
+          </div>
+
+          <div class="contact-ticket-conversation" data-ref="ticket-messages-list"></div>
+
+          <form class="contact-ticket-reply-form" data-ref="ticket-reply-form">
+            <label class="field field--textarea" data-ref="field-ticket-reply-message">
+              <textarea class="field__input field__textarea" data-ref="ticket-reply-message" placeholder=" " rows="4" required></textarea>
+              <span class="field__label">Escribe tu respuesta a soporte...</span>
+            </label>
+            <div class="contact-ticket-reply-actions" data-ref="ticket-reply-actions">
+              <button type="submit" class="component-button component-button--primary component-button--h44" data-ref="btn-submit-ticket-reply">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#send"></use></svg>
+                <span>Enviar respuesta</span>
+              </button>
+              <a class="component-button component-button--secondary component-button--h44" data-ref="btn-new-ticket" href="/contact">
+                <span>Nueva consulta</span>
+              </a>
+            </div>
+            <div class="banner banner--danger" data-ref="ticket-reply-error" style="display: none;"></div>
+            <div class="banner banner--success" data-ref="ticket-reply-success" style="display: none;"></div>
+          </form>
+
+          <div class="banner banner--info" data-ref="ticket-closed-notice" style="display: none;">
+            Este ticket ha sido resuelto y cerrado. Si necesitas asistencia adicional, por favor crea una <a class="link" data-ref="link-new-ticket" href="/contact">nueva consulta</a>.
+          </div>
+        </div>
+
         <div class="contact-sidebar" data-ref="contact-sidebar">
           <div class="contact-info-card" data-ref="contact-info-card">
             <div class="contact-info-item" data-ref="contact-item-support">

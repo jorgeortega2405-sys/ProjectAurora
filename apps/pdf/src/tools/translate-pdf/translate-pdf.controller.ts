@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
 import { getToolLimits } from '../../config/tools-limits.config.js';
-import { AI_CREDIT_COSTS, deductUserCredits } from '../../services/credits.service.js';
 import { logger } from '../../services/logger.service.js';
 import { getTranslatedPdf, translatePdf } from './translate-pdf.service.js';
 
@@ -33,40 +32,18 @@ export async function translatePdfHandler(req: Request, res: Response): Promise<
       return;
     }
 
-    const user = (req as any).user;
-    const userPerms: string[] = user?.permissions || [];
-    const limits = getToolLimits('translate-pdf', userPerms);
+    const limits = getToolLimits('translate-pdf');
     const maxBytes = limits.maxFileSizeMB * 1024 * 1024;
 
     if (file.buffer.length > maxBytes) {
       res.status(400).json({
-        error: `El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB. Actualiza a Pro para procesar documentos de hasta 200 MB.`,
+        error: `El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB.`,
         success: false,
       });
       return;
     }
 
-    const mode = req.body.mode === 'advanced' ? 'advanced' : 'standard';
-
-    if (mode === 'advanced') {
-      if (!user) {
-        res.status(401).json({
-          error: 'Debes iniciar sesión con una cuenta Pro o Empresas para utilizar Advanced AI.',
-          success: false,
-        });
-        return;
-      }
-
-      const deduction = await deductUserCredits(user.id, AI_CREDIT_COSTS.advancedTranslate, 'translate_pdf_advanced');
-      if (!deduction.success) {
-        res.status(403).json({
-          error: `Créditos de IA insuficientes (${deduction.remaining} disponibles). Esta tarea requiere ${AI_CREDIT_COSTS.advancedTranslate} créditos.`,
-          success: false,
-        });
-        return;
-      }
-    }
-
+    const mode = req.body.mode === 'standard' ? 'standard' : 'advanced';
     const targetLang = typeof req.body.targetLang === 'string' ? req.body.targetLang.trim() : '';
     const sourceLang = typeof req.body.sourceLang === 'string' ? req.body.sourceLang.trim() : undefined;
 
@@ -97,7 +74,7 @@ export async function translatePdfHandler(req: Request, res: Response): Promise<
 
     if (error?.message === 'DEEPL_QUOTA_EXCEEDED') {
       res.status(429).json({
-        error: 'Se ha alcanzado la cuota mensual de traducción de documentos de DeepL Free. Por favor intenta más tarde o actualiza el plan.',
+        error: 'Se ha alcanzado la cuota de traducción de documentos de DeepL. Por favor intenta más tarde.',
         success: false,
       });
       return;

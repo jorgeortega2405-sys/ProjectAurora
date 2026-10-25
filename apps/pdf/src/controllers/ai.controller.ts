@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import { processAiChat } from '../services/ai-agent.service.js';
-import { getUserCredits } from '../services/credits.service.js';
 import { logger } from '../services/logger.service.js';
 import { getTempFile, storeTempFile } from '../services/temp-storage.service.js';
 import { AiFileAttachment } from '../types/ai.types.js';
@@ -167,35 +166,13 @@ export async function handleAiDownload(req: Request, res: Response): Promise<voi
   }
 }
 
-export async function handleAiCredits(req: Request, res: Response): Promise<void> {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(200).json({
-        data: {
-          credits: 0,
-          isLoggedIn: false,
-          plan: 'Invitado',
-        },
-        success: true,
-      });
-      return;
-    }
-
-    const credits = await getUserCredits(user.id);
-    res.status(200).json({
-      data: {
-        credits,
-        isLoggedIn: true,
-        plan: user.subscription_tier || 'Plan Gratuito',
-      },
-      success: true,
-    });
-  } catch (err) {
-    logger.app.error('Error al consultar créditos de IA en handleAiCredits', err);
-    res.status(500).json({
-      error: 'Ha ocurrido un error al consultar tu saldo de créditos.',
-      success: false,
-    });
-  }
+export async function handleAiCredits(_req: Request, res: Response): Promise<void> {
+  res.status(200).json({
+    data: {
+      credits: 9999,
+      isLoggedIn: true,
+      plan: 'Ilimitado',
+    },
+    success: true,
+  });
 }

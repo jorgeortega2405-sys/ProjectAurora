@@ -498,30 +498,6 @@ export const SERVER_SEO_ROUTES: Record<string, ServerRouteSeoInfo> = {
       es: 'PDF a Markdown - Extrae texto limpio con formato | ProjectAurora',
     },
   },
-  upgrade: {
-    descriptions: {
-      en: 'Explore plans for individuals, teams, and enterprises. Enjoy unlimited processing, premium tools, and dedicated support.',
-      es: 'Descubre nuestros planes para profesionales y empresas. Más capacidad, herramientas premium y procesamiento ilimitado.',
-    },
-    routeId: 'upgrade',
-    slugs: { de: 'preise', en: 'pricing', es: 'precio', fr: 'tarifs', it: 'prezzi', pt: 'precos' },
-    titles: {
-      en: 'Pricing & Plans - ProjectAurora',
-      es: 'Precios y Planes - ProjectAurora',
-    },
-  },
-  features: {
-    descriptions: {
-      en: 'Discover the comprehensive suite of advanced PDF tools and capabilities offered by ProjectAurora.',
-      es: 'Conoce todas las herramientas avanzadas y capacidades que ProjectAurora te ofrece para transformar tus PDFs.',
-    },
-    routeId: 'features',
-    slugs: { de: 'funktionen', en: 'features', es: 'caracteristicas', fr: 'fonctionnalites', it: 'funzionalita', pt: 'recursos' },
-    titles: {
-      en: 'Features & Capabilities - ProjectAurora',
-      es: 'Características y Funciones - ProjectAurora',
-    },
-  },
   'help-documentation': {
     descriptions: {
       en: 'Comprehensive user guides and tutorials to make the most of every tool on ProjectAurora.',
@@ -594,18 +570,6 @@ export const SERVER_SEO_ROUTES: Record<string, ServerRouteSeoInfo> = {
       es: 'Política de Cookies - ProjectAurora',
     },
   },
-  workflows: {
-    descriptions: {
-      en: 'Automate multi-step PDF workflows with custom processing sequences.',
-      es: 'Automatiza flujos de trabajo multi-paso para procesamiento por lotes de tus PDFs.',
-    },
-    routeId: 'workflows',
-    slugs: { en: 'workflows', es: 'workflows' },
-    titles: {
-      en: 'Workflows - ProjectAurora',
-      es: 'Flujos de Trabajo - ProjectAurora',
-    },
-  },
   about: {
     descriptions: {
       en: 'Learn about the story, mission, and core values driving ProjectAurora.',
@@ -630,78 +594,6 @@ export const SERVER_SEO_ROUTES: Record<string, ServerRouteSeoInfo> = {
       es: 'Contacto | ProjectAurora',
     },
   },
-  press: {
-    descriptions: {
-      en: 'Official brand assets, media kit, press releases, and media contact for journalists.',
-      es: 'Recursos oficiales de marca, kit de medios, notas de prensa y contacto para periodistas.',
-    },
-    routeId: 'press',
-    slugs: { en: 'press', es: 'prensa' },
-    titles: {
-      en: 'Press & Media Kit | ProjectAurora',
-      es: 'Sala de Prensa y Media Kit | ProjectAurora',
-    },
-  },
-  business: {
-    descriptions: {
-      en: 'Enterprise PDF solutions with SSO, dedicated compute, team management, and SLA for your organization.',
-      es: 'Soluciones PDF para empresas con SSO, cómputo dedicado, gestión de equipos y SLA corporativo.',
-    },
-    routeId: 'business',
-    slugs: { en: 'business', es: 'empresas' },
-    titles: {
-      en: 'Enterprise Solutions & Team Workspaces | ProjectAurora',
-      es: 'Soluciones Empresariales y Equipos | ProjectAurora',
-    },
-  },
-  'business-contact': {
-    descriptions: {
-      en: 'Contact our enterprise sales team to request a customized proposal and live demo.',
-      es: 'Contacta a nuestro equipo de ventas corporativas para solicitar una propuesta a medida.',
-    },
-    routeId: 'business-contact',
-    slugs: { en: 'business-contact', es: 'contacto-empresas' },
-    titles: {
-      en: 'Contact Enterprise Sales | ProjectAurora',
-      es: 'Contacto Ventas Corporativas | ProjectAurora',
-    },
-  },
-  education: {
-    descriptions: {
-      en: 'Education and academic program. Powerful, accessible, and secure PDF tools for students, teachers, and schools.',
-      es: 'Programa educativo y académico. Herramientas PDF potentes, accesibles y seguras para estudiantes, docentes y escuelas.',
-    },
-    routeId: 'education',
-    slugs: { en: 'education', es: 'educacion' },
-    titles: {
-      en: 'Education & Academic Program | ProjectAurora',
-      es: 'Educación y Programa Académico | ProjectAurora',
-    },
-  },
-  'education-verify': {
-    descriptions: {
-      en: 'Verify your student or teacher status to unlock educational Pro benefits on ProjectAurora.',
-      es: 'Verifica tu estado de estudiante o docente para desbloquear los beneficios Pro educativos en ProjectAurora.',
-    },
-    routeId: 'education-verify',
-    slugs: { en: 'education/verify', es: 'educacion/verificar' },
-    titles: {
-      en: 'Verify Student Status | ProjectAurora',
-      es: 'Verificar Estado de Estudiante | ProjectAurora',
-    },
-  },
-  'education-institutions': {
-    descriptions: {
-      en: 'Partner with ProjectAurora to empower your school or university with enterprise document processing and campus licenses.',
-      es: 'Convenios educativos y soluciones integrales de gestión documental para escuelas, colegios y universidades con ProjectAurora.',
-    },
-    routeId: 'education-institutions',
-    slugs: { en: 'education/institutions', es: 'educacion/instituciones' },
-    titles: {
-      en: 'Education for Institutions & Universities | ProjectAurora',
-      es: 'Educación para Instituciones y Universidades | ProjectAurora',
-    },
-  },
 };
 
 const SERVER_SLUG_MAP = new Map<string, string>();
@@ -717,11 +609,6 @@ SERVER_SLUG_MAP.set('numerar-pdf', 'page-numbers');
 SERVER_SLUG_MAP.set('add-watermark', 'watermark-pdf');
 SERVER_SLUG_MAP.set('marca-de-agua-pdf', 'watermark-pdf');
 SERVER_SLUG_MAP.set('redactar-pdf', 'redact-pdf');
-SERVER_SLUG_MAP.set('upgrade', 'upgrade');
-SERVER_SLUG_MAP.set('pricing', 'upgrade');
-SERVER_SLUG_MAP.set('precio', 'upgrade');
-SERVER_SLUG_MAP.set('features', 'features');
-SERVER_SLUG_MAP.set('caracteristicas', 'features');
 SERVER_SLUG_MAP.set('documentation', 'help-documentation');
 SERVER_SLUG_MAP.set('herramientas', 'help-documentation');
 SERVER_SLUG_MAP.set('faq', 'help-faq');
@@ -734,18 +621,6 @@ SERVER_SLUG_MAP.set('about', 'about');
 SERVER_SLUG_MAP.set('sobre-nosotros', 'about');
 SERVER_SLUG_MAP.set('contact', 'contact');
 SERVER_SLUG_MAP.set('contacto', 'contact');
-SERVER_SLUG_MAP.set('press', 'press');
-SERVER_SLUG_MAP.set('prensa', 'press');
-SERVER_SLUG_MAP.set('business', 'business');
-SERVER_SLUG_MAP.set('empresas', 'business');
-SERVER_SLUG_MAP.set('business-contact', 'business-contact');
-SERVER_SLUG_MAP.set('contacto-empresas', 'business-contact');
-SERVER_SLUG_MAP.set('education', 'education');
-SERVER_SLUG_MAP.set('educacion', 'education');
-SERVER_SLUG_MAP.set('education/verify', 'education-verify');
-SERVER_SLUG_MAP.set('educacion/verificar', 'education-verify');
-SERVER_SLUG_MAP.set('education/institutions', 'education-institutions');
-SERVER_SLUG_MAP.set('educacion/instituciones', 'education-institutions');
 
 export function getServerCanonicalSlug(routeId: string, lang = DEFAULT_LANGUAGE): string {
   const norm = normalizeLanguageCode(lang);

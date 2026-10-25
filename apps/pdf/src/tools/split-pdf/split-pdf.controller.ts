@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import { getToolLimits } from '../../config/tools-limits.config.js';
 import { logger } from '../../services/logger.service.js';
-import { hasPermission } from '../../services/pbac.service.js';
 import { getSplitResult, splitPdfFile } from './split-pdf.service.js';
 import { SplitPdfOptions } from './split-pdf.types.js';
 
@@ -41,7 +40,7 @@ export function handleSplitUploadMiddleware(req: Request, res: Response, next: N
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo PDF seleccionado supera el límite permitido de 50 MB.',
+          error: 'El archivo PDF seleccionado supera el límite permitido.',
           success: false,
         });
         return;
@@ -118,28 +117,15 @@ export async function handleSplitPdf(req: Request, res: Response): Promise<void>
     return;
   }
 
-  const userPerms: string[] = (req as any).user?.permissions || [];
-  const limits = getToolLimits('split-pdf', userPerms);
+  const limits = getToolLimits('split-pdf');
   const maxBytes = limits.maxFileSizeMB * 1024 * 1024;
 
   if (file.buffer.length > maxBytes) {
     res.status(400).json({
-      error: `El archivo seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB. Actualiza a Pro para procesar documentos de hasta 1 GB.`,
+      error: `El archivo seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB.`,
       success: false,
     });
     return;
-  }
-
-  if (options.mode === 'size') {
-    const canSplitBySize = hasPermission(userPerms, 'tools:split:by_size')
-      || hasPermission(userPerms, 'subscription:feature:pro');
-    if (!canSplitBySize) {
-      res.status(403).json({
-        error: 'La función de dividir por tamaño es exclusiva del plan Pro. Actualiza tu suscripción para utilizarla.',
-        success: false,
-      });
-      return;
-    }
   }
 
   try {

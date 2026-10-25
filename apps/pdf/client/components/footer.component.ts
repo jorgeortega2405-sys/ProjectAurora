@@ -21,29 +21,11 @@ export function getFooterHtml(): string {
               <li class="footer-col__item" data-ref="footer-item-inicio">
                 <a class="footer-col__link" data-ref="footer-link-inicio" href="${getLocalizedPath('home', currentLang)}">Inicio</a>
               </li>
-              <li class="footer-col__item" data-ref="footer-item-caracteristicas">
-                <a class="footer-col__link" data-ref="footer-link-caracteristicas" href="${getLocalizedPath('features', currentLang)}">Características</a>
-              </li>
-              <li class="footer-col__item" data-ref="footer-item-precio">
-                <a class="footer-col__link" data-ref="footer-link-precio" href="${getLocalizedPath('upgrade', currentLang)}">Precio</a>
-              </li>
               <li class="footer-col__item" data-ref="footer-item-herramientas">
                 <a class="footer-col__link" data-ref="footer-link-herramientas" href="${getLocalizedPath('help-documentation', currentLang)}">Herramientas</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-faq">
                 <a class="footer-col__link" data-ref="footer-link-faq" href="${getLocalizedPath('help-faq', currentLang)}">Preguntas frecuentes</a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="footer-col" data-ref="footer-col-soluciones">
-            <h4 class="footer-col__title" data-ref="footer-title-soluciones">Soluciones</h4>
-            <ul class="footer-col__list" data-ref="footer-list-soluciones">
-              <li class="footer-col__item" data-ref="footer-item-business">
-                <a class="footer-col__link" data-ref="footer-link-business" href="${getLocalizedPath('business', currentLang)}">Business</a>
-              </li>
-              <li class="footer-col__item" data-ref="footer-item-educacion">
-                <a class="footer-col__link" data-ref="footer-link-educacion" href="${getLocalizedPath('education', currentLang)}">Educación</a>
               </li>
             </ul>
           </div>
@@ -74,9 +56,6 @@ export function getFooterHtml(): string {
               </li>
               <li class="footer-col__item" data-ref="footer-item-contacto">
                 <a class="footer-col__link" data-ref="footer-link-contacto" href="${getLocalizedPath('contact', currentLang)}">Contacto</a>
-              </li>
-              <li class="footer-col__item" data-ref="footer-item-prensa">
-                <a class="footer-col__link" data-ref="footer-link-prensa" href="${getLocalizedPath('press', currentLang)}">Prensa</a>
               </li>
             </ul>
           </div>

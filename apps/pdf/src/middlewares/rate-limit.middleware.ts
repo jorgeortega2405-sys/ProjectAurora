@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { redis } from '../config/redis.config.js';
-import { getCurrentUser } from '../services/auth.service.js';
 import { logger } from '../services/logger.service.js';
 
 export interface RateLimiterOptions {
@@ -77,7 +76,7 @@ export function getClientIp(req: Request): string {
 }
 
 export function getUserOrIpKey(req: Request): string {
-  const user = (req as any).user || getCurrentUser(req);
+  const user = (req as any).user;
   return user?.id ? `user:${user.id}` : getClientIp(req);
 }
 

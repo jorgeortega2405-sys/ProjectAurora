@@ -1,37 +1,23 @@
-import { GetObjectCommand } from '@aws-sdk/client-s3';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import express, { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
-import { Readable } from 'stream';
 import { checkDbConnection, closeDbPools } from './config/database.config.js';
 import { config } from './config/env.config.js';
-import { checkRedisConnection, redis } from './config/redis.config.js';
-import { ensureBucketExists, isS3Configured, S3_BUCKET_NAME, s3Client } from './config/s3.config.js';
+import { checkRedisConnection } from './config/redis.config.js';
+import { ensureBucketExists } from './config/s3.config.js';
 import { injectHtmlSeo, isSupportedLanguage, normalizeLanguageCode } from './config/seo.config.js';
 import { csrfProtection } from './middlewares/csrf.middleware.js';
 import { requestLogger } from './middlewares/request-logger.middleware.js';
 import { originProtection, securityHeaders } from './middlewares/security-headers.middleware.js';
 import aiRoutes from './routes/ai.routes.js';
-import authRoutes from './routes/auth.routes.js';
 import downloadRoutes from './routes/download.routes.js';
-import educationRoutes from './routes/education.routes.js';
-import enterpriseRoutes from './routes/enterprise.routes.js';
-import liveSupportRoutes from './routes/live-support.routes.js';
-import organizationRoutes from './routes/organization.routes.js';
 import seoRoutes from './routes/seo.routes.js';
-import settingsRoutes from './routes/settings.routes.js';
-import ssoRoutes from './routes/sso.routes.js';
-import { subscriptionRouter } from './routes/subscription.routes.js';
-import supportRoutes from './routes/support.routes.js';
 import telemetryRoutes from './routes/telemetry.routes.js';
 import toolsRoutes from './routes/tools.routes.js';
-import workflowRoutes from './routes/workflow.routes.js';
 import { logger } from './services/logger.service.js';
-
-
 
 process.on('SIGINT', async () => {
   await closeDbPools();
@@ -230,90 +216,6 @@ async function startServer(): Promise<void> {
     );
   }
 
-  app.get('/uploads/avatars/:filename', async (req: Request, res: Response, next: NextFunction) => {
-    const filename = path.basename(req.params.filename);
-    const localPath = path.join(process.cwd(), 'public/uploads/avatars', filename);
-
-    if (fs.existsSync(localPath)) {
-      next();
-      return;
-    }
-
-    if (isS3Configured()) {
-      try {
-        const s3Res = await s3Client.send(
-          new GetObjectCommand({
-            Bucket: S3_BUCKET_NAME,
-            Key: `avatars/${filename}`,
-          })
-        );
-        if (s3Res.Body) {
-          res.setHeader('Content-Type', s3Res.ContentType || 'image/jpeg');
-          res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000');
-          (s3Res.Body as Readable).pipe(res);
-          return;
-        }
-      } catch {}
-    }
-
-    try {
-      if (redis.status === 'ready') {
-        const [buffer, mimeType] = await Promise.all([
-          redis.getBuffer(`avatar:file:${filename}`),
-          redis.get(`avatar:mime:${filename}`),
-        ]);
-
-        if (buffer && buffer.length > 0) {
-          try {
-            const avatarsDir = path.dirname(localPath);
-            if (!fs.existsSync(avatarsDir)) {
-              fs.mkdirSync(avatarsDir, { recursive: true });
-            }
-            fs.writeFileSync(localPath, buffer);
-          } catch {}
-
-          res.setHeader('Content-Type', mimeType || 'image/jpeg');
-          res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000');
-          res.send(buffer);
-          return;
-        }
-      }
-    } catch (err) {
-      logger.app.warn('Error al recuperar avatar distribuido desde Redis', err);
-    }
-
-    next();
-  });
-
-  app.get('/uploads/student_verifications/:filename', async (req: Request, res: Response, next: NextFunction) => {
-    const filename = path.basename(req.params.filename);
-    const localPath = path.join(process.cwd(), 'public/uploads/student_verifications', filename);
-
-    if (fs.existsSync(localPath)) {
-      next();
-      return;
-    }
-
-    if (isS3Configured()) {
-      try {
-        const s3Res = await s3Client.send(
-          new GetObjectCommand({
-            Bucket: S3_BUCKET_NAME,
-            Key: `student_verifications/${filename}`,
-          })
-        );
-        if (s3Res.Body) {
-          res.setHeader('Content-Type', s3Res.ContentType || 'application/octet-stream');
-          res.setHeader('Cache-Control', 'private, max-age=3600');
-          (s3Res.Body as Readable).pipe(res);
-          return;
-        }
-      } catch {}
-    }
-
-    next();
-  });
-
   app.use(express.json({
     verify: (req, _res, buf) => {
       (req as any).rawBody = buf;
@@ -331,23 +233,11 @@ async function startServer(): Promise<void> {
     });
   });
 
-
   app.use('/api', aiRoutes);
-  app.use('/api', authRoutes);
   app.use('/api', downloadRoutes);
-  app.use('/api', educationRoutes);
-  app.use('/api', enterpriseRoutes);
-  app.use('/api', organizationRoutes);
-  app.use('/api', settingsRoutes);
-  app.use('/api', ssoRoutes);
-  app.use('/api', supportRoutes);
-  app.use('/api/support/live', liveSupportRoutes);
   app.use('/api', telemetryRoutes);
   app.use('/api', toolsRoutes);
-  app.use('/api', workflowRoutes);
-  app.use('/api/subscriptions', subscriptionRouter);
   app.use(seoRoutes);
-
 
   await setupClient(app, server);
 

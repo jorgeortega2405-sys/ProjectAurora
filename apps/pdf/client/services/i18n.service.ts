@@ -1,6 +1,4 @@
-import { API_ROUTES } from '../config/api-routes.js';
 import { DEFAULT_LANGUAGE, detectBrowserLanguage, isSupportedLanguage, normalizeLanguageCode } from '../utils/languages.util.js';
-import { currentUser, postApi } from './api.service.js';
 
 let currentLanguage = DEFAULT_LANGUAGE;
 let currentTranslations: Record<string, unknown> = {};
@@ -165,12 +163,6 @@ export async function setLanguage(code: string): Promise<void> {
   document.documentElement.lang = norm;
 
   await loadTranslationFile(norm);
-
-  if (currentUser) {
-    try {
-      await postApi(API_ROUTES.settings.preferences, { language: norm });
-    } catch {}
-  }
 }
 
 export function translateElement<T extends HTMLElement>(element: T): T {

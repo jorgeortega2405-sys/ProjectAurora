@@ -1,6 +1,3 @@
-import { API_ROUTES } from '../config/api-routes.js';
-import { postApi } from './api.service.js';
-
 const STORAGE_KEY = 'aurora_theme';
 
 export function getEffectiveTheme(): 'light' {
@@ -24,18 +21,12 @@ function applyThemeToDom(): void {
   );
 }
 
-export async function setTheme(_newTheme: string, syncBackend = false): Promise<void> {
+export async function setTheme(_newTheme: string, _syncBackend = false): Promise<void> {
   try {
     localStorage.setItem(STORAGE_KEY, 'light');
   } catch {}
 
   applyThemeToDom();
-
-  if (syncBackend) {
-    try {
-      await postApi(API_ROUTES.settings.preferences, { theme: 'light' });
-    } catch {}
-  }
 }
 
 export function applyAccessibilityPreferences(prefs: { high_contrast?: boolean; reduce_motion?: boolean } = {}): void {

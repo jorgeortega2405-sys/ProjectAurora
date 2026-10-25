@@ -99,43 +99,25 @@ export const TOOLS_LIMITS: Record<string, ToolLimitDefinition> = {
   },
 };
 
-export function getToolLimits(toolId: string, permissions: string[] = []): { maxFiles: number; maxFileSizeMB: number; maxTotalSizeMB: number } {
+export function getToolLimits(toolId: string, _permissions: string[] = []): { maxFiles: number; maxFileSizeMB: number; maxTotalSizeMB: number } {
   const config = TOOLS_LIMITS[toolId];
   if (!config) {
-    return { maxFiles: 1, maxFileSizeMB: 50, maxTotalSizeMB: 50 };
-  }
-
-  const hasWildcard = permissions.includes('*');
-  const hasSpecific = config.premium.requiredPermission ? permissions.includes(config.premium.requiredPermission) : false;
-  const hasPro = permissions.includes('subscription:feature:pro') || permissions.includes('subscription:feature:enterprise');
-
-  if (hasWildcard || hasSpecific || hasPro) {
-    return {
-      maxFiles: config.premium.maxFiles,
-      maxFileSizeMB: config.premium.maxFileSizeMB,
-      maxTotalSizeMB: config.premium.maxTotalSizeMB,
-    };
+    return { maxFiles: 50, maxFileSizeMB: 1000, maxTotalSizeMB: 2000 };
   }
 
   return {
-    maxFiles: config.free.maxFiles,
-    maxFileSizeMB: config.free.maxFileSizeMB,
-    maxTotalSizeMB: config.free.maxTotalSizeMB,
+    maxFiles: config.premium.maxFiles,
+    maxFileSizeMB: config.premium.maxFileSizeMB,
+    maxTotalSizeMB: config.premium.maxTotalSizeMB,
   };
 }
 
 export const WORKFLOW_LIMITS = {
   enterprise: 1000,
-  free: 1,
-  pro: 100,
+  free: 1000,
+  pro: 1000,
 };
 
-export function getMaxWorkflows(permissions: string[] = []): number {
-  if (permissions.includes('*') || permissions.includes('subscription:feature:enterprise')) {
-    return WORKFLOW_LIMITS.enterprise;
-  }
-  if (permissions.includes('subscription:feature:pro')) {
-    return WORKFLOW_LIMITS.pro;
-  }
-  return WORKFLOW_LIMITS.free;
+export function getMaxWorkflows(_permissions: string[] = []): number {
+  return 1000;
 }

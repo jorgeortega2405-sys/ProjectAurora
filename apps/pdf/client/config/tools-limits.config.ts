@@ -1,5 +1,3 @@
-import { currentUser, hasPermission } from '../services/api.service.js';
-
 export interface ToolLimitDefinition {
   free: {
     maxFiles: number;
@@ -104,42 +102,23 @@ export const TOOLS_LIMITS: Record<string, ToolLimitDefinition> = {
 export function getCurrentUserToolLimits(toolId: string): { isPremium: boolean; maxFiles: number; maxFileSizeMB: number; maxTotalSizeMB: number } {
   const config = TOOLS_LIMITS[toolId];
   if (!config) {
-    return { isPremium: false, maxFiles: 1, maxFileSizeMB: 50, maxTotalSizeMB: 50 };
-  }
-
-  const hasSpecific = config.premium.requiredPermission ? hasPermission(currentUser, config.premium.requiredPermission) : false;
-  const isPremium = hasPermission(currentUser, '*') || hasSpecific || hasPermission(currentUser, 'subscription:feature:pro') || hasPermission(currentUser, 'subscription:feature:enterprise');
-
-  if (isPremium) {
-    return {
-      isPremium: true,
-      maxFiles: config.premium.maxFiles,
-      maxFileSizeMB: config.premium.maxFileSizeMB,
-      maxTotalSizeMB: config.premium.maxTotalSizeMB,
-    };
+    return { isPremium: true, maxFiles: 50, maxFileSizeMB: 1000, maxTotalSizeMB: 2000 };
   }
 
   return {
-    isPremium: false,
-    maxFiles: config.free.maxFiles,
-    maxFileSizeMB: config.free.maxFileSizeMB,
-    maxTotalSizeMB: config.free.maxTotalSizeMB,
+    isPremium: true,
+    maxFiles: config.premium.maxFiles,
+    maxFileSizeMB: config.premium.maxFileSizeMB,
+    maxTotalSizeMB: config.premium.maxTotalSizeMB,
   };
 }
 
 export const WORKFLOW_LIMITS = {
   enterprise: 1000,
-  free: 1,
-  pro: 100,
+  free: 1000,
+  pro: 1000,
 };
 
-export function getMaxWorkflows(user = currentUser): number {
-  if (!user) return WORKFLOW_LIMITS.free;
-  if (hasPermission(user, '*') || hasPermission(user, 'subscription:feature:enterprise')) {
-    return WORKFLOW_LIMITS.enterprise;
-  }
-  if (hasPermission(user, 'subscription:feature:pro')) {
-    return WORKFLOW_LIMITS.pro;
-  }
-  return WORKFLOW_LIMITS.free;
+export function getMaxWorkflows(_user?: any): number {
+  return 1000;
 }

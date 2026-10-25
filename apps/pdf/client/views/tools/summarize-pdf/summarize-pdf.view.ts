@@ -1,7 +1,6 @@
-import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { currentUser, hasPermission, postFormApi } from '../../../services/api.service.js';
+import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -11,7 +10,7 @@ import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
 import { animateTypewriter, bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
-import { ClientSummaryMode, SummarizePdfResultData } from './summarize-pdf.types.js';
+import { SummarizePdfResultData } from './summarize-pdf.types.js';
 
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 B';
@@ -101,7 +100,6 @@ export class SummarizePdfController implements ViewController {
   private isProcessing = false;
   private isRenderingPages = false;
   private pdfDocument: any = null;
-  private selectedMode: ClientSummaryMode = 'standard';
   private sidebarModal: ToolSidebarModalController | null = null;
   private zoomScale = 1.0;
 
@@ -201,36 +199,6 @@ export class SummarizePdfController implements ViewController {
       signal,
     });
 
-    const modeOptions = this.container.querySelectorAll<HTMLElement>('.ai-mode-option');
-    modeOptions.forEach((opt) => {
-      opt.addEventListener('click', () => {
-        const mode = opt.getAttribute('data-mode') as ClientSummaryMode;
-        if (!mode) return;
-
-        if (mode === 'advanced') {
-          if (!currentUser) {
-            showToast('Inicia sesión para utilizar Advanced AI con tus créditos de suscripción.', 'info');
-            navigate('/login');
-            return;
-          }
-          const credits = currentUser.ai_credits_balance ?? 0;
-          if (credits < 10 && !hasPermission(currentUser, '*')) {
-            showToast('No tienes suficientes créditos de IA (10 requeridos). Actualiza tu plan para obtener más.', 'info');
-            openUpgradeModal('pro');
-            return;
-          }
-        }
-
-        this.selectedMode = mode;
-        modeOptions.forEach((o) => {
-          const isMatch = o === opt;
-          o.classList.toggle('is-active', isMatch);
-          const radio = o.querySelector<HTMLInputElement>('input[type="radio"]');
-          if (radio) radio.checked = isMatch;
-        });
-      }, { signal });
-    });
-
     zoomInBtn?.addEventListener('click', () => {
       if (this.zoomScale < 2.0) {
         this.zoomScale = Math.min(2.0, this.zoomScale + 0.15);
@@ -300,9 +268,6 @@ export class SummarizePdfController implements ViewController {
     const limits = getCurrentUserToolLimits('summarize-pdf');
     if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
       this.showError(`El archivo PDF excede el límite máximo de ${limits.maxFileSizeMB} MB.`);
-      if (!limits.isPremium) {
-        openUpgradeModal('pro');
-      }
       return;
     }
 
@@ -546,17 +511,12 @@ export class SummarizePdfController implements ViewController {
       try {
         const formData = new FormData();
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
-        formData.append('mode', this.selectedMode);
 
         const response = await postFormApi(API_ROUTES.tools.summarizePdf.summarize, formData);
         const result = (await response.json()) as { data?: SummarizePdfResultData; error?: string; success: boolean };
 
         if (!response.ok || !result.success || !result.data) {
           throw new Error(result.error || 'Error al generar el resumen del documento.');
-        }
-
-        if (this.selectedMode === 'advanced' && currentUser && currentUser.ai_credits_balance !== undefined) {
-          currentUser.ai_credits_balance = Math.max(0, currentUser.ai_credits_balance - 10);
         }
 
         this.currentResult = result.data;

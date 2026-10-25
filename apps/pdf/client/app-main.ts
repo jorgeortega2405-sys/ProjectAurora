@@ -1,6 +1,5 @@
 import { initRouter, navigate } from './app-router.js';
 import { setupLayoutScrollSync } from './components/layout.component.js';
-import { initTechSupportAutoResume } from './components/support-sidebar.component.js';
 import { checkAuthSession } from './services/api.service.js';
 import { initI18n, translateElement } from './services/i18n.service.js';
 import { initTelemetry } from './services/telemetry.service.js';
@@ -98,7 +97,6 @@ async function initApp(): Promise<void> {
   initScrollShadow();
   translateElement(document.body);
   initRouter();
-  void initTechSupportAutoResume();
 }
 
 if (document.readyState === 'loading') {

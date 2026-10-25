@@ -1,6 +1,6 @@
-import { closeTechSupportSidebar, ensureSidebarMounted, hasDesignatedMenuItems, setupLayoutScrollSync, toggleDrawer, updateSidebarActiveState } from './components/layout.component.js';
+import { ensureSidebarMounted, hasDesignatedMenuItems, setupLayoutScrollSync, toggleDrawer, updateSidebarActiveState } from './components/layout.component.js';
 import { closeAllModals } from './components/modal.component.js';
-import { findRoute, MatchedRoute } from './config/routes.config.js';
+import { findRoute } from './config/routes.config.js';
 import { getLocalizedPath, updateDomSeo } from './config/seo.config.js';
 import { getCurrentLanguage, setLanguage, translateElement } from './services/i18n.service.js';
 import { setLanguageSwitchHandler, setNavigationHandler } from './services/navigation.service.js';
@@ -93,7 +93,6 @@ export async function render(rawPath = window.location.pathname, options?: Rende
   const navigationStartTime = performance.now();
   const { pathname: path, query: targetQuery } = parseRouteUrl(options?.updateHistory?.fullUrl || rawPath);
   closeAllModals();
-  closeTechSupportSidebar();
   hideTooltip();
 
   const appRoot = document.querySelector<HTMLElement>('[data-ref="app"]');
@@ -120,21 +119,8 @@ export async function render(rawPath = window.location.pathname, options?: Rende
     }
   }
 
-  const activeInternalPath = matched ? matched.internalPath : path;
-  const isAuthView = activeInternalPath.startsWith('/login') || activeInternalPath.startsWith('/register') || activeInternalPath.startsWith('/forgot-password') || activeInternalPath.startsWith('/reset-password');
-
-  if (!isAuthView) {
-    layoutContent.classList.remove('is-auth-mode');
-    const sidebar = await ensureSidebarMounted(layoutContent);
-    sidebar.style.display = '';
-  } else {
-    toggleDrawer(false);
-    layoutContent.classList.add('is-auth-mode');
-    const existingSidebar = layoutContent.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
-    if (existingSidebar) {
-      existingSidebar.style.display = 'none';
-    }
-  }
+  const sidebar = await ensureSidebarMounted(layoutContent);
+  sidebar.style.display = '';
 
   const navId = ++currentNavigation;
   let nextViewElement: HTMLElement | null = null;
@@ -201,14 +187,13 @@ export async function render(rawPath = window.location.pathname, options?: Rende
   }
 
   const internalPath = matched ? matched.internalPath : path;
-  const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
-  if (sidebar && !isAuthView) {
-    updateSidebarActiveState(sidebar, internalPath);
-    translateElement(sidebar);
+  const currentSidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"], .layout-nav');
+  if (currentSidebar) {
+    updateSidebarActiveState(currentSidebar, internalPath);
+    translateElement(currentSidebar);
     if (hasDesignatedMenuItems(internalPath)) {
       if (window.innerWidth > 768) {
-        const mode = internalPath.includes('/settings') ? 'settings' : 'help';
-        toggleDrawer(true, mode);
+        toggleDrawer(true, 'help');
       }
     }
   }

@@ -1,25 +1,22 @@
 {
   "name": "projectaurora-monorepo",
   "version": "1.0.0",
-  "description": "ProjectAurora - Multi-Application Monorepo (PDF Tools & Multi-Site Admin)",
+  "description": "ProjectAurora - PDF Tools SPA Application and Backend",
   "private": true,
   "workspaces": [
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=apps/pdf && npm run build --workspace=apps/admin",
-    "build:admin": "npm run build --workspace=apps/admin",
+    "build": "npm run build --workspace=apps/pdf",
     "build:pdf": "npm run build --workspace=apps/pdf",
-    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev": "npm run dev --workspace=apps/pdf",
     "dev:pdf": "npm run dev --workspace=apps/pdf",
     "docker:down": "docker compose down",
     "docker:reset": "docker compose down -v && docker compose up -d",
     "docker:up": "docker compose up -d",
-    "test": "npm test --workspace=apps/admin && npm test --workspace=apps/pdf",
-    "test:admin": "npm test --workspace=apps/admin",
+    "test": "npm test --workspace=apps/pdf",
     "test:pdf": "npm test --workspace=apps/pdf",
-    "typecheck": "npm run typecheck --workspace=apps/pdf && npm run typecheck --workspace=apps/admin",
-    "typecheck:admin": "npm run typecheck --workspace=apps/admin",
+    "typecheck": "npm run typecheck --workspace=apps/pdf",
     "typecheck:pdf": "npm run typecheck --workspace=apps/pdf"
   }
 }

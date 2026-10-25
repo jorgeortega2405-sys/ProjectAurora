@@ -1,7 +1,6 @@
-import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { currentUser, hasPermission, postFormApi } from '../../../services/api.service.js';
+import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
@@ -238,18 +237,7 @@ export class SplitPdfController implements ViewController {
 
     tabRange?.addEventListener('click', () => this.switchMode('range'), { signal });
     tabPages?.addEventListener('click', () => this.switchMode('pages'), { signal });
-    tabSize?.addEventListener('click', () => {
-      const canSplitBySize = hasPermission(currentUser, 'tools:split:by_size') ||
-        hasPermission(currentUser, 'subscription:feature:pro') ||
-        hasPermission(currentUser, 'subscription:feature:enterprise') ||
-        hasPermission(currentUser, '*');
-      if (!canSplitBySize) {
-        showToast('Dividir por tamaño es una función exclusiva del plan Pro.', 'info');
-        openUpgradeModal('pro');
-        return;
-      }
-      this.switchMode('size');
-    }, { signal });
+    tabSize?.addEventListener('click', () => this.switchMode('size'), { signal });
 
     const rangeSubmodeToggle = this.container.querySelector<HTMLElement>('[data-ref="split-range-submode-toggle"]');
     const btnRangeCustom = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-range-submode-custom"]');

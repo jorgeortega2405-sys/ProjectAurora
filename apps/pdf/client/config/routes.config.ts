@@ -1,8 +1,7 @@
-import { currentUser } from '../services/api.service.js';
 import { getCurrentLanguage } from '../services/i18n.service.js';
 import { loadStylesheet } from '../utils/dom.util.js';
 import { isSupportedLanguage, normalizeLanguageCode } from '../utils/languages.util.js';
-import { getCanonicalSlug, getLocalizedPath, resolveRouteFromSlug, SEO_ROUTES } from './seo.config.js';
+import { getLocalizedPath, resolveRouteFromSlug, SEO_ROUTES } from './seo.config.js';
 
 export interface RouteContext {
   params: Record<string, string>;
@@ -27,15 +26,6 @@ export const APP_ROUTES: RouteDefinition[] = [
     },
     id: 'home',
     match: (path) => path === '/' || path === '',
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-pricing.css');
-      const { createUpgradeView } = await import('../views/upgrade.view.js');
-      return await createUpgradeView();
-    },
-    id: 'upgrade',
-    match: (path) => path === '/upgrade' || path.startsWith('/upgrade'),
   },
   {
     handler: async () => {
@@ -307,80 +297,6 @@ export const APP_ROUTES: RouteDefinition[] = [
     id: 'ocr-pdf',
     match: (path) => path === '/ocr-pdf' || path.startsWith('/ocr-pdf'),
   },
-
-  {
-    handler: async () => {
-      const { createLogin2FAView } = await import('../views/auth.view.js');
-      return await createLogin2FAView();
-    },
-    id: 'login-2fa',
-    match: (path) => path === '/login/verification-aditional',
-  },
-  {
-    handler: async () => {
-      const { createLoginView } = await import('../views/auth.view.js');
-      return await createLoginView();
-    },
-    id: 'login',
-    match: (path) => path === '/login' || path.startsWith('/login/'),
-  },
-  {
-    handler: async () => {
-      const { createRegisterView } = await import('../views/auth.view.js');
-      return await createRegisterView(1);
-    },
-    id: 'register',
-    match: (path) => path === '/register',
-  },
-  {
-    handler: async () => {
-      const { createRegisterView } = await import('../views/auth.view.js');
-      return await createRegisterView(2);
-    },
-    id: 'register-stage2',
-    match: (path) => path === '/register/aditional-data',
-  },
-  {
-    handler: async () => {
-      const { createRegisterView } = await import('../views/auth.view.js');
-      return await createRegisterView(3);
-    },
-    id: 'register-stage3',
-    match: (path) => path === '/register/verification-account',
-  },
-  {
-    handler: async () => {
-      const { createForgotPasswordView } = await import('../views/auth.view.js');
-      return await createForgotPasswordView();
-    },
-    id: 'auth-forgot-password',
-    match: (path) => path === '/forgot-password',
-  },
-  {
-    handler: async () => {
-      const { createResetPasswordView } = await import('../views/auth.view.js');
-      return await createResetPasswordView();
-    },
-    id: 'auth-reset-password',
-    match: (path) => path === '/reset-password',
-  },
-  {
-    handler: async ({ params }) => {
-      if (!currentUser) {
-        window.history.replaceState({}, '', '/login');
-        const { createLoginView } = await import('../views/auth.view.js');
-        return await createLoginView();
-      }
-      await loadStylesheet('/css/tools/tool-grid.css');
-      const { createWorkflowRunnerView } = await import('../views/workflow/workflow-runner.view.js');
-      return await createWorkflowRunnerView(params.id || '');
-    },
-    id: 'workflow-runner',
-    match: (path) => {
-      const match = path.match(/^\/workflow\/([a-zA-Z0-9_-]+)$/);
-      return match ? { id: match[1] } : false;
-    },
-  },
   {
     handler: async ({ params }) => {
       await Promise.all([
@@ -409,129 +325,6 @@ export const APP_ROUTES: RouteDefinition[] = [
     },
     id: 'ai',
     match: (path) => path === '/ai' || path.startsWith('/ai'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createWorkflowsPageView } = await import('../views/workflows.view.js');
-      return await createWorkflowsPageView();
-    },
-    id: 'workflows',
-    match: (path) => path === '/workflows' || path.startsWith('/workflows'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-settings.css');
-      const { createOrganizationMembersView } = await import('../views/settings.view.js');
-      return await createOrganizationMembersView();
-    },
-    id: 'organization-members',
-    match: (path) => path === '/organization/members',
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-settings.css');
-      const { createOrganizationSsoView } = await import('../views/settings.view.js');
-      return await createOrganizationSsoView();
-    },
-    id: 'organization-sso',
-    match: (path) => path === '/organization/sso',
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-settings.css');
-      const { createOrganizationView } = await import('../views/settings.view.js');
-      return await createOrganizationView();
-    },
-    id: 'organization',
-    match: (path) => path === '/organization' || path.startsWith('/organization'),
-  },
-  {
-    handler: async ({ params }) => {
-      const ticketParam = params.id ? `/${encodeURIComponent(params.id)}` : '';
-      window.location.href = `http://localhost:3005/internal-tickets${ticketParam}`;
-      return null;
-    },
-    id: 'internal-tickets-redirect',
-    match: (path) => {
-      const match = path.match(/^\/internal-tickets(?:\/([a-zA-Z0-9_-]+))?$/) ||
-                    path.match(/^\/tickets-internos(?:\/([a-zA-Z0-9_-]+))?$/);
-      if (match) {
-        return { id: match[1] || '' };
-      }
-      return false;
-    },
-  },
-  {
-    handler: async ({ path }) => {
-      await loadStylesheet('/css/components/component-settings.css');
-      const { createAccessibilityView, createBillingView, createGuestSettingsView, createOrganizationMembersView, createOrganizationSsoView, createOrganizationView, createPurchasesView, createSecurityView, createYourAccountView } = await import('../views/settings.view.js');
-
-      if (!currentUser) {
-        if (path.startsWith('/settings/workflows')) {
-          window.history.replaceState({}, '', '/login');
-          const { createLoginView } = await import('../views/auth.view.js');
-          return await createLoginView();
-        }
-        if (path !== '/settings/guest' && path !== '/settings/accessibility') {
-          window.history.replaceState({}, '', '/settings/guest');
-          return await createGuestSettingsView();
-        }
-        if (path === '/settings/accessibility') {
-          return await createAccessibilityView();
-        }
-        return await createGuestSettingsView();
-      }
-
-      if (path === '/settings' || path === '/settings/guest') {
-        window.history.replaceState({}, '', '/settings/your-account');
-      }
-
-      const subPath = path === '/settings' || path === '/settings/guest' ? '/settings/your-account' : path;
-      switch (subPath) {
-        case '/settings/accessibility':
-          return await createAccessibilityView();
-        case '/settings/billing':
-          return await createBillingView();
-        case '/settings/organization/members':
-          window.history.replaceState({}, '', '/organization/members');
-          return await createOrganizationMembersView();
-        case '/settings/organization/sso':
-          window.history.replaceState({}, '', '/organization/sso');
-          return await createOrganizationSsoView();
-        case '/settings/organization':
-          window.history.replaceState({}, '', '/organization');
-          return await createOrganizationView();
-        case '/settings/purchases':
-        case '/settings/purchases-history':
-          return await createPurchasesView();
-        case '/settings/security':
-        case '/settings/login-and-security':
-          return await createSecurityView();
-        case '/settings/workflows': {
-          window.history.replaceState({}, '', '/workflows');
-          await loadStylesheet('/css/components/component-views.css');
-          const { createWorkflowsPageView: createWfPage } = await import('../views/workflows.view.js');
-          return await createWfPage();
-        }
-        case '/settings/your-account':
-        case '/settings/profile':
-        default:
-          return await createYourAccountView();
-      }
-
-    },
-    id: 'settings',
-    match: (path) => path.startsWith('/settings'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createFeaturesView } = await import('../views/features.view.js');
-      return await createFeaturesView();
-    },
-    id: 'features',
-    match: (path) => path === '/features' || path === '/caracteristicas' || path.startsWith('/features') || path.startsWith('/caracteristicas'),
   },
   {
     handler: async () => {
@@ -570,62 +363,7 @@ export const APP_ROUTES: RouteDefinition[] = [
     match: (path) => path === '/contact' || path === '/contacto' || path === '/help/contact' || path.startsWith('/contact'),
   },
   {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createPressView } = await import('../views/press.view.js');
-      return await createPressView();
-    },
-    id: 'press',
-    match: (path) => path === '/press' || path === '/prensa' || path.startsWith('/press'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createBusinessContactView } = await import('../views/business-contact.view.js');
-      return await createBusinessContactView();
-    },
-    id: 'business-contact',
-    match: (path) => path === '/business/contact' || path === '/empresas/contacto' || path.startsWith('/business/contact') || path.startsWith('/empresas/contacto'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createBusinessView } = await import('../views/business.view.js');
-      return await createBusinessView();
-    },
-    id: 'business',
-    match: (path) => path === '/business' || path === '/empresas' || path === '/solutions/business' || path === '/soluciones/business' || path.startsWith('/business') || path.startsWith('/empresas'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createEducationVerifyView } = await import('../views/education-verify.view.js');
-      return await createEducationVerifyView();
-    },
-    id: 'education-verify',
-    match: (path) => path === '/education/verify' || path === '/educacion/verificar' || path === '/solutions/education/verify' || path === '/soluciones/educacion/verificar' || path.startsWith('/education/verify') || path.startsWith('/educacion/verificar'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createEducationInstitutionsView } = await import('../views/education-institutions.view.js');
-      return await createEducationInstitutionsView();
-    },
-    id: 'education-institutions',
-    match: (path) => path === '/education/institutions' || path === '/educacion/instituciones' || path === '/solutions/education/institutions' || path === '/soluciones/educacion/instituciones' || path.startsWith('/education/institutions') || path.startsWith('/educacion/instituciones'),
-  },
-  {
-    handler: async () => {
-      await loadStylesheet('/css/components/component-views.css');
-      const { createEducationView } = await import('../views/education.view.js');
-      return await createEducationView();
-    },
-    id: 'education',
-    match: (path) => (path === '/education' || path === '/educacion' || path === '/solutions/education' || path === '/soluciones/educacion' || path.startsWith('/education') || path.startsWith('/educacion')) && !path.startsWith('/education/verify') && !path.startsWith('/educacion/verificar') && !path.startsWith('/education/institutions') && !path.startsWith('/educacion/instituciones'),
-  },
-  {
     handler: async ({ path }) => {
-      await loadStylesheet('/css/components/component-settings.css');
       await loadStylesheet('/css/components/component-views.css');
       const { createHelpCookiesView, createHelpDocumentationView, createHelpFaqView, createHelpPrivacyView, createHelpSecurityView, createHelpTermsView } = await import('../views/help.view.js');
 

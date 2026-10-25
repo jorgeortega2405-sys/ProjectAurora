@@ -1,7 +1,6 @@
-import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { currentUser, hasPermission, postFormApi } from '../../../services/api.service.js';
+import { postFormApi } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -27,7 +26,6 @@ export class TranslatePdfViewController implements ViewController {
   private currentFile: File | null = null;
   private dropdownControllers: Array<{ destroy: () => void }> = [];
   private isProcessing = false;
-  private selectedMode: 'standard' | 'advanced' = 'standard';
   private sidebarModal: ToolSidebarModalController | null = null;
   private sourceLang: string = '';
   private targetLang: string = 'ES';
@@ -126,36 +124,6 @@ export class TranslatePdfViewController implements ViewController {
       });
     }
 
-    const modeOptions = this.container.querySelectorAll<HTMLElement>('.ai-mode-option');
-    modeOptions.forEach((opt) => {
-      opt.addEventListener('click', () => {
-        const mode = opt.getAttribute('data-mode') as 'standard' | 'advanced';
-        if (!mode) return;
-
-        if (mode === 'advanced') {
-          if (!currentUser) {
-            showToast('Inicia sesión para utilizar Advanced AI con tus créditos de suscripción.', 'info');
-            navigate('/login');
-            return;
-          }
-          const credits = currentUser.ai_credits_balance ?? 0;
-          if (credits < 10 && !hasPermission(currentUser, '*')) {
-            showToast('No tienes suficientes créditos de IA (10 requeridos). Actualiza tu plan para obtener más.', 'info');
-            openUpgradeModal('pro');
-            return;
-          }
-        }
-
-        this.selectedMode = mode;
-        modeOptions.forEach((o) => {
-          const isMatch = o === opt;
-          o.classList.toggle('is-active', isMatch);
-          const radio = o.querySelector<HTMLInputElement>('input[type="radio"]');
-          if (radio) radio.checked = isMatch;
-        });
-      }, { signal });
-    });
-
     const wrapperSource = this.container.querySelector<HTMLElement>('[data-ref="wrapper-source-lang"]');
     if (wrapperSource) {
       const ctrl = setupDropdown(wrapperSource, {
@@ -192,9 +160,6 @@ export class TranslatePdfViewController implements ViewController {
     const limits = getCurrentUserToolLimits('translate-pdf');
     if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
       this.showError(`El archivo PDF excede el límite máximo de ${limits.maxFileSizeMB} MB.`);
-      if (!limits.isPremium) {
-        openUpgradeModal('pro');
-      }
       return;
     }
 
@@ -299,7 +264,6 @@ export class TranslatePdfViewController implements ViewController {
         const formData = new FormData();
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
         formData.append('targetLang', this.targetLang);
-        formData.append('mode', this.selectedMode);
         if (this.sourceLang) {
           formData.append('sourceLang', this.sourceLang);
         }
@@ -309,10 +273,6 @@ export class TranslatePdfViewController implements ViewController {
 
         if (!response.ok || !res.success || !res.data) {
           throw new Error(res.error || 'Error al traducir el documento PDF.');
-        }
-
-        if (this.selectedMode === 'advanced' && currentUser && currentUser.ai_credits_balance !== undefined) {
-          currentUser.ai_credits_balance = Math.max(0, currentUser.ai_credits_balance - 10);
         }
 
         const token = res.data.fileId;

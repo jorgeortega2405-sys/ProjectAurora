@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import { getToolLimits } from '../../config/tools-limits.config.js';
-import { AI_CREDIT_COSTS, deductUserCredits } from '../../services/credits.service.js';
 import { logger } from '../../services/logger.service.js';
 import { summarizePdf } from './summarize-pdf.service.js';
 import { SummaryMode } from './summarize-pdf.types.js';
@@ -31,13 +30,13 @@ export function handlePdfUploadMiddleware(req: Request, res: Response, next: Nex
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         res.status(400).json({
-          error: 'El archivo PDF supera el límite permitido de 200 MB.',
+          error: 'El archivo PDF seleccionado supera el límite permitido de 200 MB.',
           success: false,
         });
         return;
       }
       res.status(400).json({
-        error: 'Error al subir el archivo PDF seleccionado.',
+        error: 'Error al subir el archivo para generar resumen.',
         success: false,
       });
       return;
@@ -51,7 +50,7 @@ export function handlePdfUploadMiddleware(req: Request, res: Response, next: Nex
         });
         return;
       }
-      logger.app.error('Error inesperado al cargar PDF para resumen con IA', err);
+      logger.app.error('Error inesperado al cargar archivo PDF para resumen', err);
       res.status(500).json({
         error: 'Ha ocurrido un error inesperado al procesar el archivo.',
         success: false,
@@ -74,40 +73,18 @@ export async function handleSummarizePdf(req: Request, res: Response): Promise<v
     return;
   }
 
-  const user = (req as any).user;
-  const userPerms: string[] = user?.permissions || [];
-  const limits = getToolLimits('summarize-pdf', userPerms);
+  const limits = getToolLimits('summarize-pdf');
   const maxBytes = limits.maxFileSizeMB * 1024 * 1024;
 
   if (file.buffer.length > maxBytes) {
     res.status(400).json({
-      error: `El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB. Actualiza a Pro para procesar documentos de hasta 200 MB.`,
+      error: `El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB.`,
       success: false,
     });
     return;
   }
 
-  const mode: SummaryMode = req.body?.mode === 'advanced' ? 'advanced' : 'standard';
-
-  if (mode === 'advanced') {
-    if (!user) {
-      res.status(401).json({
-        error: 'Debes iniciar sesión con una cuenta Pro o Empresas para utilizar Advanced AI.',
-        success: false,
-      });
-      return;
-    }
-
-    const deduction = await deductUserCredits(user.id, AI_CREDIT_COSTS.advancedSummarize, 'summarize_pdf_advanced');
-    if (!deduction.success) {
-      res.status(403).json({
-        error: `Créditos de IA insuficientes (${deduction.remaining} disponibles). Esta tarea requiere ${AI_CREDIT_COSTS.advancedSummarize} créditos.`,
-        success: false,
-      });
-      return;
-    }
-  }
-
+  const mode: SummaryMode = req.body?.mode === 'standard' ? 'standard' : 'advanced';
   const customPrompt = typeof req.body?.customPrompt === 'string' ? req.body.customPrompt : undefined;
 
   try {

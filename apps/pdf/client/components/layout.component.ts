@@ -1,18 +1,12 @@
 import { getLocalizedPath } from '../config/seo.config.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
-import { currentUser, escapeHtml, getApi, hasPermission, linkedAccounts, logoutAllApi, logoutApi, onAuthChange, switchAccountApi } from '../services/api.service.js';
 import { getCurrentLanguage, t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
-import { UserWorkflow } from '../types/workflow.types.js';
-import { applyAvatarTier } from '../utils/tier.util.js';
-import { closeTechSupportSidebar, toggleTechSupportSidebar } from './support-sidebar.component.js';
-
-export { closeTechSupportSidebar, toggleTechSupportSidebar } from './support-sidebar.component.js';
 
 export let isDrawerOpen = false;
-export let currentDrawerMode: 'apps' | 'settings' | 'navigation' | 'help' = 'navigation';
+export let currentDrawerMode: 'apps' | 'help' = 'apps';
 let activeResizeObserver: ResizeObserver | null = null;
 let drawerRemovalTimer: ReturnType<typeof setTimeout> | null = null;
 let sidebarInitPromise: Promise<HTMLElement> | null = null;
@@ -20,89 +14,13 @@ let sidebarInstance: HTMLElement | null = null;
 
 export function hasDesignatedMenuItems(pathname: string): boolean {
   if (!pathname) return false;
-  return pathname.includes('/settings') || pathname.includes('/help');
+  return pathname.includes('/help');
 }
 
-export function updateSidebarAuthState(sidebar: HTMLElement): void {
-  const itemLogin = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-login"]');
-  const railItemSettings = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-settings"]');
-  const avatarContainer = sidebar.querySelector<HTMLElement>('[data-ref="avatar-container"]');
-  const avatarImg = sidebar.querySelector<HTMLImageElement>('[data-ref="avatar-img"]');
-  const btnAvatar = sidebar.querySelector<HTMLElement>('[data-ref="btn-avatar"]');
-  const activeAvatar = sidebar.querySelector<HTMLImageElement>('[data-ref="active-account-avatar"]');
-  const activeAvatarBox = sidebar.querySelector<HTMLElement>('[data-ref="active-account-avatar-box"]');
-  const activeName = sidebar.querySelector<HTMLElement>('[data-ref="active-account-name"]');
-  const activeEmail = sidebar.querySelector<HTMLElement>('[data-ref="active-account-email"]');
-  const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
-  const btnMenuOrganization = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-organization"]');
-
-  if (currentUser) {
-    if (itemLogin) itemLogin.style.display = 'none';
-    if (railItemSettings) railItemSettings.style.display = 'none';
-    if (avatarContainer) avatarContainer.style.display = 'inline-flex';
-
-    const isProOrHigher = hasPermission(currentUser, 'subscription:feature:pro');
-    if (railItemAi) {
-      railItemAi.style.display = isProOrHigher ? 'flex' : 'none';
-    }
-
-    const isEnterprise = hasPermission(currentUser, 'subscription:feature:enterprise');
-    if (btnMenuOrganization) {
-      btnMenuOrganization.style.display = isEnterprise ? 'flex' : 'none';
-    }
-    const organizationDivider = sidebar.querySelector<HTMLElement>('[data-ref="organization-divider"]');
-    if (organizationDivider) {
-      organizationDivider.style.display = isEnterprise ? 'block' : 'none';
-    }
-
-    const avatarUrl = currentUser.avatar_url || `/api/avatar?name=${encodeURIComponent(currentUser.username)}`;
-
-    const bindAvatarLoaded = (img: HTMLImageElement, url: string, altText: string) => {
-      img.alt = altText;
-      if (img.src !== url) {
-        img.src = url;
-      }
-      img.onload = () => img.classList.add('image-loaded');
-      img.onerror = () => img.classList.add('image-loaded');
-      if (img.complete) {
-        img.classList.add('image-loaded');
-      }
-    };
-
-    if (avatarImg) {
-      bindAvatarLoaded(avatarImg, avatarUrl, currentUser.username);
-    }
-    if (activeAvatar) {
-      bindAvatarLoaded(activeAvatar, avatarUrl, currentUser.username);
-    }
-    if (activeName) {
-      activeName.textContent = currentUser.username;
-    }
-    if (activeEmail) {
-      activeEmail.textContent = currentUser.email || '';
-    }
-    if (btnAvatar) {
-      applyAvatarTier(btnAvatar, currentUser.subscription_tier, currentUser.subscription_tier_color);
-      btnAvatar.setAttribute('data-tooltip', currentUser.username);
-      btnAvatar.setAttribute('aria-label', currentUser.username);
-    }
-    if (activeAvatarBox) {
-      applyAvatarTier(activeAvatarBox, currentUser.subscription_tier, currentUser.subscription_tier_color);
-    }
-  } else {
-    if (itemLogin) itemLogin.style.display = 'flex';
-    if (railItemSettings) railItemSettings.style.display = 'flex';
-    if (avatarContainer) avatarContainer.style.display = 'none';
-    if (railItemAi) railItemAi.style.display = 'none';
-    if (btnMenuOrganization) btnMenuOrganization.style.display = 'none';
-    const organizationDivider = sidebar.querySelector<HTMLElement>('[data-ref="organization-divider"]');
-    if (organizationDivider) organizationDivider.style.display = 'none';
-  }
-}
+export function updateSidebarAuthState(_sidebar?: HTMLElement): void {}
 
 export function updateSidebarActiveState(sidebar: HTMLElement, path = window.location.pathname): void {
   const isHome = path === '/' || path === '' || /^\/[a-z]{2}\/?$/i.test(path);
-  const isSettings = path.includes('/settings');
   const isHelp = path.includes('/help') || path.includes('/preguntas-frecuentes') || path.includes('/herramientas') || path.includes('/seguridad') || path.includes('/privacidad') || path.includes('/terminos') || path.includes('/cookies');
   const isAi = path === '/ai' || path.startsWith('/ai') || /^\/[a-z]{2}\/ai(\/.*)?$/i.test(path);
 
@@ -111,29 +29,24 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const itemApps = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
   const btnApps = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
-  const railItemSettings = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-settings"]');
-  const btnRailSettings = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-settings"]');
   const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
   const btnRailAi = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-ai"]');
+  const railItemHelp = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
+  const btnRailHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
 
-  itemHome?.classList.toggle('is-active', isHome && (!isDrawerOpen || currentDrawerMode !== 'apps'));
-  btnHome?.classList.toggle('is-active', isHome && (!isDrawerOpen || currentDrawerMode !== 'apps'));
+  itemHome?.classList.toggle('is-active', isHome && !isDrawerOpen);
+  btnHome?.classList.toggle('is-active', isHome && !isDrawerOpen);
   itemApps?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode === 'apps');
   btnApps?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode === 'apps');
-  btnToggle?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode !== 'apps');
-  railItemSettings?.classList.toggle('is-active', isSettings && (!isDrawerOpen || currentDrawerMode === 'settings'));
-  btnRailSettings?.classList.toggle('is-active', isSettings && (!isDrawerOpen || currentDrawerMode === 'settings'));
-  railItemAi?.classList.toggle('is-active', isAi && (!isDrawerOpen || currentDrawerMode !== 'apps'));
-  btnRailAi?.classList.toggle('is-active', isAi && (!isDrawerOpen || currentDrawerMode !== 'apps'));
+  btnToggle?.classList.toggle('is-active', isDrawerOpen);
+  railItemAi?.classList.toggle('is-active', isAi && !isDrawerOpen);
+  btnRailAi?.classList.toggle('is-active', isAi && !isDrawerOpen);
+  railItemHelp?.classList.toggle('is-active', (isHelp && !isDrawerOpen) || (isDrawerOpen && currentDrawerMode === 'help'));
+  btnRailHelp?.classList.toggle('is-active', (isHelp && !isDrawerOpen) || (isDrawerOpen && currentDrawerMode === 'help'));
 
-  updateSidebarAuthState(sidebar);
   if (isDrawerOpen) {
-    if (isSettings && currentDrawerMode !== 'settings' && currentDrawerMode !== 'apps') {
-      currentDrawerMode = 'settings';
-    } else if (isHelp && currentDrawerMode !== 'help' && currentDrawerMode !== 'apps') {
+    if (isHelp && currentDrawerMode !== 'help') {
       currentDrawerMode = 'help';
-    } else if (!isSettings && !isHelp && currentDrawerMode !== 'navigation' && currentDrawerMode !== 'apps') {
-      currentDrawerMode = 'navigation';
     }
     void updateDynamicDrawer(sidebar);
   }
@@ -144,30 +57,16 @@ function setupRailNavigation(sidebar: HTMLElement): void {
   const btnHome = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-home"]');
   const itemApps = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
   const btnApps = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
-  const btnLogin = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-login"]');
-  const avatarContainer = sidebar.querySelector<HTMLElement>('[data-ref="avatar-container"]');
-  const btnAvatar = sidebar.querySelector<HTMLElement>('[data-ref="btn-avatar"]');
-  const avatarMenu = sidebar.querySelector<HTMLElement>('[data-ref="avatar-menu"]');
-  const avatarBackdrop = sidebar.querySelector<HTMLElement>('[data-ref="avatar-menu-backdrop"]');
-  const btnLogout = sidebar.querySelector<HTMLElement>('[data-ref="btn-logout"]');
-
-  const panelMain = sidebar.querySelector<HTMLElement>('[data-ref="panel-main-options"]');
-  const panelSwitcher = sidebar.querySelector<HTMLElement>('[data-ref="panel-account-switcher"]');
-  const panelHelp = sidebar.querySelector<HTMLElement>('[data-ref="panel-help-options"]');
-  const btnSwitchAccountMenu = sidebar.querySelector<HTMLElement>('[data-ref="btn-switch-account-menu"]');
-  const btnBackToMainMenu = sidebar.querySelector<HTMLElement>('[data-ref="btn-back-to-main-menu"]');
-  const btnAddAccount = sidebar.querySelector<HTMLElement>('[data-ref="btn-add-account"]');
-  const btnLogoutAll = sidebar.querySelector<HTMLElement>('[data-ref="btn-logout-all"]');
-  const accountSwitcherList = sidebar.querySelector<HTMLElement>('[data-ref="account-switcher-list"]');
-  const btnMenuHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-help"]');
-  const btnBackFromHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-back-from-help"]');
-  const btnHelpPrivacy = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-privacy"]');
-  const btnHelpTerms = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-terms"]');
-  const btnHelpCookies = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-cookies"]');
-  const btnHelpTechSupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-tech-support"]');
+  const itemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
+  const btnRailAi = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-ai"]');
+  const itemHelp = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
+  const btnRailHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
 
   const goHome = (e: Event) => {
     e.preventDefault();
+    if (isDrawerOpen) {
+      toggleDrawer(false);
+    }
     navigate('/');
   };
 
@@ -194,236 +93,35 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     }
   });
 
-  btnLogin?.addEventListener('click', (e) => {
-    e.preventDefault();
-    navigate('/login');
-  });
-
-  const showPanel = (panelName: 'main' | 'switcher' | 'help') => {
-    if (panelName === 'switcher') {
-      if (panelMain) panelMain.style.display = 'none';
-      if (panelHelp) panelHelp.style.display = 'none';
-      if (panelSwitcher) panelSwitcher.style.display = 'flex';
-      renderAccountList();
-    } else if (panelName === 'help') {
-      if (panelMain) panelMain.style.display = 'none';
-      if (panelSwitcher) panelSwitcher.style.display = 'none';
-      if (panelHelp) panelHelp.style.display = 'flex';
-    } else {
-      if (panelSwitcher) panelSwitcher.style.display = 'none';
-      if (panelHelp) panelHelp.style.display = 'none';
-      if (panelMain) panelMain.style.display = 'flex';
-    }
-  };
-
-  const renderAccountList = () => {
-    if (!accountSwitcherList) return;
-    accountSwitcherList.innerHTML = '';
-
-    const accounts = linkedAccounts.length > 0 ? linkedAccounts : (currentUser ? [currentUser] : []);
-
-    accounts.forEach((acc) => {
-      const isActive = acc.id === currentUser?.id;
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'menu-item menu-item--bordered account-item';
-      item.setAttribute('data-ref', `account-item-${acc.id}`);
-
-      const accAvatarUrl = acc.avatar_url || `/api/avatar?name=${encodeURIComponent(acc.username)}`;
-
-      item.innerHTML = `
-        <div class="account-item__avatar" data-ref="account-avatar-${acc.id}">
-          <img class="avatar-img image-lazy-fade" data-ref="avatar-img-${acc.id}" src="${accAvatarUrl}" alt="${acc.username}" referrerpolicy="no-referrer" onload="this.classList.add('image-loaded')" onerror="this.classList.add('image-loaded')" />
-        </div>
-        <div class="account-item__info" data-ref="account-info-${acc.id}">
-          <span class="account-item__name" data-ref="account-name-${acc.id}">${acc.username}</span>
-          <span class="account-item__email" data-ref="account-email-${acc.id}">${acc.email || ''}</span>
-        </div>
-        ${isActive ? '<svg class="component-icon account-item__check" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>' : ''}
-      `;
-
-      const accAvatarBox = item.querySelector<HTMLElement>(`[data-ref="account-avatar-${acc.id}"]`);
-      if (accAvatarBox) {
-        applyAvatarTier(accAvatarBox, acc.subscription_tier, acc.subscription_tier_color);
-      }
-
-
-      if (!isActive) {
-        item.addEventListener('click', async (e) => {
-          e.preventDefault();
-          closeAvatarMenu();
-          const res = await switchAccountApi(acc.id);
-          if (res.success) {
-            updateSidebarAuthState(sidebar);
-            navigate('/');
-          }
-        });
-      }
-
-      accountSwitcherList.appendChild(item);
-    });
-
-    renderIcons(accountSwitcherList);
-
-    if (btnAddAccount) {
-      btnAddAccount.style.display = accounts.length >= 3 ? 'none' : 'flex';
-    }
-  };
-
-  const closeAvatarMenu = () => {
-    avatarMenu?.classList.remove('is-open');
-    avatarBackdrop?.classList.remove('is-open');
-    showPanel('main');
-  };
-
-  const toggleAvatarMenu = (e: Event) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const isOpen = avatarMenu?.classList.contains('is-open');
-    if (isOpen) {
-      closeAvatarMenu();
-    } else {
-      showPanel('main');
-      avatarMenu?.classList.add('is-open');
-      avatarBackdrop?.classList.add('is-open');
-    }
-  };
-
-  btnAvatar?.addEventListener('click', toggleAvatarMenu);
-
-  btnSwitchAccountMenu?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showPanel('switcher');
-  });
-
-  btnBackToMainMenu?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showPanel('main');
-  });
-
-  btnAddAccount?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate('/login');
-  });
-
-  avatarBackdrop?.addEventListener('click', (e) => {
-    if (e.target === avatarBackdrop) {
-      closeAvatarMenu();
-    }
-  });
-
-  document.addEventListener('click', (e: MouseEvent) => {
-    if (!avatarContainer?.contains(e.target as Node)) {
-      closeAvatarMenu();
-    }
-  });
-
-  document.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closeAvatarMenu();
-    }
-  });
-
-  btnMenuHelp?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showPanel('help');
-  });
-
-  btnBackFromHelp?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showPanel('main');
-  });
-
-  btnHelpPrivacy?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate('/help/privacy');
-  });
-
-  btnHelpTerms?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate('/help/terms');
-  });
-
-  btnHelpCookies?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate('/help/cookies');
-  });
-
-  btnHelpTechSupport?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    toggleTechSupportSidebar();
-  });
-
-  const railItemSettings = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-settings"]');
-  const btnRailSettings = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-settings"]');
-  const btnMenuSettings = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-settings"]');
-  const btnMenuWorkflows = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-workflows"]');
-
-  const goSettings = (e: Event) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate(currentUser ? '/settings/your-account' : '/settings/guest');
-  };
-
-  btnRailSettings?.addEventListener('click', goSettings);
-  railItemSettings?.addEventListener('click', (e) => {
-    if (e.target !== btnRailSettings && !btnRailSettings?.contains(e.target as Node)) {
-      goSettings(e);
-    }
-  });
-
-  btnMenuSettings?.addEventListener('click', goSettings);
-
-  btnMenuWorkflows?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate('/workflows');
-  });
-
-  const btnMenuOrganization = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-organization"]');
-  btnMenuOrganization?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    navigate('/organization');
-  });
-
-  const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');
-  const btnRailAi = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-ai"]');
-
   const goAi = (e: Event) => {
     e.preventDefault();
-    closeAvatarMenu();
+    if (isDrawerOpen) {
+      toggleDrawer(false);
+    }
     navigate('/ai');
   };
 
   btnRailAi?.addEventListener('click', goAi);
-  railItemAi?.addEventListener('click', (e) => {
+  itemAi?.addEventListener('click', (e) => {
     if (e.target !== btnRailAi && !btnRailAi?.contains(e.target as Node)) {
       goAi(e);
     }
   });
 
-  btnLogout?.addEventListener('click', async (e) => {
+  const toggleHelp = (e: Event) => {
     e.preventDefault();
-    closeAvatarMenu();
-    const res = await logoutApi();
-    updateSidebarAuthState(sidebar);
-    if (!res.switched) {
-      navigate('/login');
+    if (isDrawerOpen && currentDrawerMode === 'help') {
+      toggleDrawer(false);
+    } else {
+      toggleDrawer(true, 'help');
     }
-  });
+  };
 
-  btnLogoutAll?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    await logoutAllApi();
-    updateSidebarAuthState(sidebar);
-    navigate('/login');
+  btnRailHelp?.addEventListener('click', toggleHelp);
+  itemHelp?.addEventListener('click', (e) => {
+    if (e.target !== btnRailHelp && !btnRailHelp?.contains(e.target as Node)) {
+      toggleHelp(e);
+    }
   });
 }
 
@@ -440,6 +138,7 @@ function createDrawerElement(): HTMLElement {
   const drawerFooter = document.createElement('div');
   drawerFooter.className = 'layout-drawer__footer';
   drawerFooter.setAttribute('data-ref', 'drawer-footer');
+  drawerFooter.style.display = 'none';
   drawer.appendChild(drawerFooter);
 
   return drawer;
@@ -450,198 +149,21 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
   const drawerFooter = drawer.querySelector<HTMLElement>('[data-ref="drawer-footer"]');
   if (!drawerBody) return;
 
-  const currentPath = window.location.pathname;
+  if (drawerFooter) {
+    drawerFooter.innerHTML = '';
+    drawerFooter.style.display = 'none';
+  }
 
-  const bindNavLink = (btn: HTMLElement | null, path: string) => {
-    btn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (window.innerWidth <= 768) {
-        toggleDrawer(false);
-      }
-      navigate(path);
-    });
-  };
-
-  const isSettings = currentDrawerMode === 'settings' || (currentDrawerMode !== 'apps' && currentPath.includes('/settings'));
-  const isHelp = currentDrawerMode === 'help' || (currentDrawerMode !== 'apps' && (currentPath.includes('/help') || currentPath.includes('/preguntas-frecuentes') || currentPath.includes('/herramientas') || currentPath.includes('/seguridad') || currentPath.includes('/privacidad') || currentPath.includes('/terminos') || currentPath.includes('/cookies')));
-
-  if (isSettings) {
-    if (currentUser) {
-      drawerBody.innerHTML = `
-        <div class="drawer-section__header" data-ref="drawer-settings-header" style="padding: 8px 8px 4px 8px;">
-          <span class="drawer-section__title" data-ref="drawer-settings-title" data-i18n="nav.settings" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.settings', 'Configuración')}</span>
-        </div>
-        <button type="button" class="menu-item" data-ref="btn-nav-settings-account">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#person"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.your_account">Tu cuenta</span>
-        </button>
-        <button type="button" class="menu-item" data-ref="btn-nav-settings-accessibility">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#accessibility_new"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.accessibility">Accesibilidad</span>
-        </button>
-        <button type="button" class="menu-item" data-ref="btn-nav-settings-security">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.security">Seguridad</span>
-        </button>
-      `;
-
-      if (drawerFooter) {
-        drawerFooter.innerHTML = `
-          <button type="button" class="menu-item" data-ref="btn-nav-settings-billing">
-            <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#credit_card"></use></svg>
-            <span class="menu-item__text" data-i18n="nav.billing">Facturación</span>
-          </button>
-          <button type="button" class="menu-item" data-ref="btn-nav-settings-purchases">
-            <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#receipt_long"></use></svg>
-            <span class="menu-item__text" data-i18n="nav.purchases">Historial de compras</span>
-          </button>
-        `;
-        drawerFooter.style.display = 'flex';
-        translateElement(drawerFooter);
-
-        const btnBilling = drawerFooter.querySelector<HTMLElement>('[data-ref="btn-nav-settings-billing"]');
-        const btnPurchases = drawerFooter.querySelector<HTMLElement>('[data-ref="btn-nav-settings-purchases"]');
-
-        if (currentPath.endsWith('/billing') || currentPath.includes('/billing')) {
-          btnBilling?.classList.add('is-active');
-        } else if (currentPath.endsWith('/purchases') || currentPath.includes('/purchases') || currentPath.includes('purchases-history')) {
-          btnPurchases?.classList.add('is-active');
-        }
-
-        bindNavLink(btnBilling, '/settings/billing');
-        bindNavLink(btnPurchases, '/settings/purchases');
-        renderIcons(drawerFooter);
-      }
-
-      translateElement(drawerBody);
-
-      const btnAccount = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-account"]');
-      const btnAccessibility = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-accessibility"]');
-      const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-security"]');
-
-      if (currentPath.endsWith('/settings') || currentPath.includes('/your-account') || currentPath.includes('/profile')) {
-        btnAccount?.classList.add('is-active');
-      } else if (currentPath.includes('/accessibility')) {
-        btnAccessibility?.classList.add('is-active');
-      } else if (currentPath.includes('/security') || currentPath.includes('login-and-security')) {
-        btnSecurity?.classList.add('is-active');
-      }
-
-      bindNavLink(btnAccount, '/settings/your-account');
-      bindNavLink(btnAccessibility, '/settings/accessibility');
-      bindNavLink(btnSecurity, '/settings/security');
-    } else {
-      drawerBody.innerHTML = `
-        <div class="drawer-section__header" data-ref="drawer-settings-header" style="padding: 8px 8px 4px 8px;">
-          <span class="drawer-section__title" data-ref="drawer-settings-title" data-i18n="nav.settings" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.settings', 'Configuración')}</span>
-        </div>
-        <button type="button" class="menu-item" data-ref="btn-nav-settings-guest">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#tune"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.guest_settings">Configuración</span>
-        </button>
-        <button type="button" class="menu-item" data-ref="btn-nav-settings-accessibility">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#accessibility_new"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.accessibility">Accesibilidad</span>
-        </button>
-      `;
-
-      if (drawerFooter) {
-        drawerFooter.innerHTML = '';
-        drawerFooter.style.display = 'none';
-      }
-
-      translateElement(drawerBody);
-
-      const btnGuest = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-guest"]');
-      const btnAccessibility = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-settings-accessibility"]');
-
-      if (currentPath.endsWith('/settings') || currentPath.includes('/guest')) {
-        btnGuest?.classList.add('is-active');
-      } else if (currentPath.includes('/accessibility')) {
-        btnAccessibility?.classList.add('is-active');
-      }
-
-      bindNavLink(btnGuest, '/settings/guest');
-      bindNavLink(btnAccessibility, '/settings/accessibility');
-    }
-  } else if (isHelp) {
-    if (drawerFooter) {
-      drawerFooter.innerHTML = '';
-      drawerFooter.style.display = 'none';
-    }
-
-    drawerBody.innerHTML = `
-      <div class="drawer-section__header" data-ref="drawer-help-header" style="padding: 8px 8px 4px 8px;">
-        <span class="drawer-section__title" data-ref="drawer-help-title" data-i18n="nav.help" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.help', 'Ayuda')}</span>
-      </div>
-      <button type="button" class="menu-item" data-ref="btn-nav-help-documentation">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
-        <span class="menu-item__text">Documentación</span>
-      </button>
-      <button type="button" class="menu-item" data-ref="btn-nav-help-faq">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#help"></use></svg>
-        <span class="menu-item__text">Preguntas frecuentes</span>
-      </button>
-      <button type="button" class="menu-item" data-ref="btn-nav-help-security">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
-        <span class="menu-item__text" data-i18n="help.nav_security">${t('help.nav_security', 'Política de seguridad')}</span>
-      </button>
-      <button type="button" class="menu-item" data-ref="btn-nav-help-privacy">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg>
-        <span class="menu-item__text" data-i18n="help.nav_privacy">${t('help.nav_privacy', 'Política de privacidad')}</span>
-      </button>
-      <button type="button" class="menu-item" data-ref="btn-nav-help-terms">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#gavel"></use></svg>
-        <span class="menu-item__text" data-i18n="help.nav_terms">${t('help.nav_terms', 'Términos y condiciones')}</span>
-      </button>
-      <button type="button" class="menu-item" data-ref="btn-nav-help-cookies">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#cookie"></use></svg>
-        <span class="menu-item__text" data-i18n="help.nav_cookies">${t('help.nav_cookies', 'Política de cookies')}</span>
-      </button>
-    `;
-    translateElement(drawerBody);
-
-    const btnDocs = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-documentation"]');
-    const btnFaq = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-faq"]');
-    const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-security"]');
-    const btnPrivacy = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-privacy"]');
-    const btnTerms = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-terms"]');
-    const btnCookies = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-cookies"]');
-
-    if (currentPath === '/help/documentation' || currentPath === '/documentation' || currentPath === '/herramientas') {
-      btnDocs?.classList.add('is-active');
-    } else if (currentPath === '/help/faq' || currentPath === '/faq' || currentPath === '/preguntas-frecuentes') {
-      btnFaq?.classList.add('is-active');
-    } else if (currentPath === '/help' || currentPath === '/help/security' || currentPath === '/security-policy') {
-      btnSecurity?.classList.add('is-active');
-    } else if (currentPath === '/help/privacy' || currentPath === '/privacy' || currentPath === '/privacy-policy') {
-      btnPrivacy?.classList.add('is-active');
-    } else if (currentPath === '/help/terms' || currentPath === '/terms' || currentPath === '/terms-and-conditions') {
-      btnTerms?.classList.add('is-active');
-    } else if (currentPath === '/help/cookies' || currentPath === '/cookies' || currentPath === '/cookie-policy') {
-      btnCookies?.classList.add('is-active');
-    }
-
-    bindNavLink(btnDocs, '/help/documentation');
-    bindNavLink(btnFaq, '/help/faq');
-    bindNavLink(btnSecurity, '/help/security');
-    bindNavLink(btnPrivacy, '/help/privacy');
-    bindNavLink(btnTerms, '/help/terms');
-    bindNavLink(btnCookies, '/help/cookies');
-  } else if (currentDrawerMode === 'apps') {
-    if (drawerFooter) {
-      drawerFooter.innerHTML = '';
-      drawerFooter.style.display = 'none';
-    }
-    renderAppsDrawerContent(drawerBody);
+  if (currentDrawerMode === 'help') {
+    renderHelpDrawerContent(drawerBody);
   } else {
-    await renderWorkflowsDrawerContent(drawerBody, drawerFooter);
+    renderAppsDrawerContent(drawerBody);
   }
 
   renderIcons(drawerBody);
 }
 
-async function renderWorkflowsDrawerContent(drawerBody: HTMLElement, drawerFooter: HTMLElement | null): Promise<void> {
+function renderHelpDrawerContent(drawerBody: HTMLElement): void {
   const currentPath = window.location.pathname;
 
   const bindNavLink = (btn: HTMLElement | null, path: string) => {
@@ -654,94 +176,65 @@ async function renderWorkflowsDrawerContent(drawerBody: HTMLElement, drawerFoote
     });
   };
 
-  if (!currentUser) {
-    drawerBody.innerHTML = `
-      <div class="drawer-section__header" data-ref="drawer-workflows-header" style="padding: 8px 8px 4px 8px;">
-        <span class="drawer-section__title" data-ref="drawer-workflows-title" data-i18n="nav.workflows" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.workflows', 'Flujos de trabajo')}</span>
-      </div>
-      <div class="drawer-empty-state" data-ref="drawer-guest-workflows" style="padding: 32px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-        <svg class="component-icon" style="width: 36px; height: 36px; color: var(--text-tertiary); opacity: 0.6;" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
-        <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">${t('workflows.login_prompt', 'Inicia sesión para ver tus flujos de trabajo')}</span>
-      </div>
-    `;
-
-    if (drawerFooter) {
-      drawerFooter.innerHTML = `
-        <button type="button" class="menu-item menu-item--bordered" data-ref="btn-nav-login-workflows">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#login"></use></svg>
-          <span class="menu-item__text" data-i18n="nav.login">Acceder</span>
-        </button>
-      `;
-      drawerFooter.style.display = 'flex';
-      translateElement(drawerFooter);
-      bindNavLink(drawerFooter.querySelector('[data-ref="btn-nav-login-workflows"]'), '/login');
-      renderIcons(drawerFooter);
-    }
-
-    translateElement(drawerBody);
-    return;
-  }
-
-  let workflows: UserWorkflow[] = [];
-  try {
-    const res = await getApi('/api/settings/workflows');
-    if (res.ok) {
-      const data = await res.json();
-      workflows = Array.isArray(data.workflows) ? data.workflows : [];
-    }
-  } catch {
-    workflows = [];
-  }
-
-  if (workflows.length === 0) {
-    drawerBody.innerHTML = `
-      <div class="drawer-section__header" data-ref="drawer-workflows-header" style="padding: 8px 8px 4px 8px;">
-        <span class="drawer-section__title" data-ref="drawer-workflows-title" data-i18n="nav.workflows" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.workflows', 'Flujos de trabajo')}</span>
-      </div>
-      <div class="drawer-empty-state" data-ref="drawer-empty-workflows" style="padding: 32px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
-        <svg class="component-icon" style="width: 36px; height: 36px; color: var(--text-tertiary); opacity: 0.6;" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
-        <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">${t('workflows.empty_title', 'No tienes flujos de trabajo')}</span>
-        <span style="font-size: 12px; color: var(--text-tertiary);">${t('workflows.empty_subtitle', 'Crea combinaciones de herramientas automáticas')}</span>
-      </div>
-    `;
-  } else {
-    let html = `
-      <div class="drawer-section__header" data-ref="drawer-workflows-header" style="padding: 8px 8px 4px 8px;">
-        <span class="drawer-section__title" data-ref="drawer-workflows-title" data-i18n="nav.workflows" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.workflows', 'Flujos de trabajo')}</span>
-      </div>
-    `;
-    for (const wf of workflows) {
-      const isActive = currentPath === `/workflow/${wf.id}`;
-      const escapedName = escapeHtml(wf.name);
-      html += `
-        <button type="button" class="menu-item ${isActive ? 'is-active' : ''}" data-ref="btn-nav-wf-${wf.id}" data-wf-id="${wf.id}" title="${escapedName}">
-          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
-          <span class="menu-item__text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapedName}</span>
-        </button>
-      `;
-    }
-    drawerBody.innerHTML = html;
-
-    workflows.forEach((wf) => {
-      const btn = drawerBody.querySelector<HTMLElement>(`[data-ref="btn-nav-wf-${wf.id}"]`);
-      bindNavLink(btn, `/workflow/${wf.id}`);
-    });
-  }
-
-  if (drawerFooter) {
-    drawerFooter.innerHTML = `
-      <button type="button" class="menu-item menu-item--bordered" data-ref="btn-nav-create-workflow">
-        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-        <span class="menu-item__text" data-i18n="workflows.create_title">Crear flujo de trabajo</span>
-      </button>
-    `;
-    drawerFooter.style.display = 'flex';
-    translateElement(drawerFooter);
-    bindNavLink(drawerFooter.querySelector('[data-ref="btn-nav-create-workflow"]'), '/workflows?new=1');
-    renderIcons(drawerFooter);
-  }
+  drawerBody.innerHTML = `
+    <div class="drawer-section__header" data-ref="drawer-help-header" style="padding: 8px 8px 4px 8px;">
+      <span class="drawer-section__title" data-ref="drawer-help-title" data-i18n="nav.help" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.help', 'Ayuda')}</span>
+    </div>
+    <button type="button" class="menu-item" data-ref="btn-nav-help-documentation">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+      <span class="menu-item__text">Documentación</span>
+    </button>
+    <button type="button" class="menu-item" data-ref="btn-nav-help-faq">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#help"></use></svg>
+      <span class="menu-item__text">Preguntas frecuentes</span>
+    </button>
+    <button type="button" class="menu-item" data-ref="btn-nav-help-security">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
+      <span class="menu-item__text" data-i18n="help.nav_security">${t('help.nav_security', 'Política de seguridad')}</span>
+    </button>
+    <button type="button" class="menu-item" data-ref="btn-nav-help-privacy">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg>
+      <span class="menu-item__text" data-i18n="help.nav_privacy">${t('help.nav_privacy', 'Política de privacidad')}</span>
+    </button>
+    <button type="button" class="menu-item" data-ref="btn-nav-help-terms">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#gavel"></use></svg>
+      <span class="menu-item__text" data-i18n="help.nav_terms">${t('help.nav_terms', 'Términos y condiciones')}</span>
+    </button>
+    <button type="button" class="menu-item" data-ref="btn-nav-help-cookies">
+      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#cookie"></use></svg>
+      <span class="menu-item__text" data-i18n="help.nav_cookies">${t('help.nav_cookies', 'Política de cookies')}</span>
+    </button>
+  `;
 
   translateElement(drawerBody);
+
+  const btnDocs = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-documentation"]');
+  const btnFaq = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-faq"]');
+  const btnSecurity = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-security"]');
+  const btnPrivacy = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-privacy"]');
+  const btnTerms = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-terms"]');
+  const btnCookies = drawerBody.querySelector<HTMLElement>('[data-ref="btn-nav-help-cookies"]');
+
+  if (currentPath === '/help/documentation' || currentPath === '/documentation' || currentPath === '/herramientas') {
+    btnDocs?.classList.add('is-active');
+  } else if (currentPath === '/help/faq' || currentPath === '/faq' || currentPath === '/preguntas-frecuentes') {
+    btnFaq?.classList.add('is-active');
+  } else if (currentPath === '/help' || currentPath === '/help/security' || currentPath === '/security-policy') {
+    btnSecurity?.classList.add('is-active');
+  } else if (currentPath === '/help/privacy' || currentPath === '/privacy' || currentPath === '/privacy-policy') {
+    btnPrivacy?.classList.add('is-active');
+  } else if (currentPath === '/help/terms' || currentPath === '/terms' || currentPath === '/terms-and-conditions') {
+    btnTerms?.classList.add('is-active');
+  } else if (currentPath === '/help/cookies' || currentPath === '/cookies' || currentPath === '/cookie-policy') {
+    btnCookies?.classList.add('is-active');
+  }
+
+  bindNavLink(btnDocs, '/help/documentation');
+  bindNavLink(btnFaq, '/help/faq');
+  bindNavLink(btnSecurity, '/help/security');
+  bindNavLink(btnPrivacy, '/help/privacy');
+  bindNavLink(btnTerms, '/help/terms');
+  bindNavLink(btnCookies, '/help/cookies');
 }
 
 function renderAppsDrawerContent(drawerBody: HTMLElement): void {
@@ -823,8 +316,13 @@ function closeDynamicDrawer(): void {
   const drawer = sidebar?.querySelector<HTMLElement>('[data-ref="layout-drawer"]');
   const itemApps = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
   const btnApps = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
+  const itemHelp = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
+  const btnRailHelp = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
+
   itemApps?.classList.remove('is-active');
   btnApps?.classList.remove('is-active');
+  itemHelp?.classList.remove('is-active');
+  btnRailHelp?.classList.remove('is-active');
 
   if (drawer) {
     drawer.classList.remove('is-open');
@@ -838,14 +336,16 @@ function closeDynamicDrawer(): void {
   }
 }
 
-export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'settings' | 'navigation' | 'help'): void {
+export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'help'): void {
   const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"]');
   const btnToggle = sidebar?.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]') || document.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
   const itemApps = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
   const btnApps = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
+  const itemHelp = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
+  const btnRailHelp = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
 
   const currentPath = window.location.pathname;
-  const targetMode = mode || (currentPath.includes('/settings') ? 'settings' : (currentPath.includes('/help') ? 'help' : 'navigation'));
+  const targetMode = mode || (currentPath.includes('/help') ? 'help' : 'apps');
 
   if (forceState === undefined) {
     if (isDrawerOpen && currentDrawerMode === targetMode) {
@@ -863,10 +363,13 @@ export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'settings' | 
     }
   }
 
-  btnToggle?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode !== 'apps');
+  btnToggle?.classList.toggle('is-active', isDrawerOpen);
   const isAppsActive = isDrawerOpen && currentDrawerMode === 'apps';
+  const isHelpActive = isDrawerOpen && currentDrawerMode === 'help';
   itemApps?.classList.toggle('is-active', isAppsActive);
   btnApps?.classList.toggle('is-active', isAppsActive);
+  itemHelp?.classList.toggle('is-active', isHelpActive);
+  btnRailHelp?.classList.toggle('is-active', isHelpActive);
 
   if (isDrawerOpen) {
     if (drawerRemovalTimer) {
@@ -895,7 +398,7 @@ function setupDrawerContent(sidebar: HTMLElement): void {
   btnToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     const currentPath = window.location.pathname;
-    const mode = currentPath.includes('/settings') ? 'settings' : (currentPath.includes('/help') ? 'help' : 'navigation');
+    const mode = currentPath.includes('/help') ? 'help' : 'apps';
     toggleDrawer(undefined, mode);
   });
 
@@ -922,22 +425,6 @@ export async function createSidebar(): Promise<HTMLElement> {
     updateSidebarActiveState(sidebar, window.location.pathname);
     renderIcons(sidebar);
     sidebarInstance = sidebar;
-
-    onAuthChange(() => {
-      if (sidebarInstance) {
-        updateSidebarAuthState(sidebarInstance);
-        if (isDrawerOpen) {
-          void updateDynamicDrawer(sidebarInstance);
-        }
-      }
-    });
-
-    window.addEventListener('workflow:changed', () => {
-      if (sidebarInstance && isDrawerOpen && currentDrawerMode === 'navigation') {
-        void updateDynamicDrawer(sidebarInstance);
-      }
-    });
-
     return sidebar;
   })();
 

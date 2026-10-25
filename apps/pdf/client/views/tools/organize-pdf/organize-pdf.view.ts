@@ -1,5 +1,4 @@
 import Sortable from 'sortablejs';
-import { openUpgradeModal } from '../../../components/upgrade-modal.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
 import { postFormApi } from '../../../services/api.service.js';
@@ -229,10 +228,7 @@ export class OrganizePdfController implements ViewController {
     const limits = getCurrentUserToolLimits('organize-pdf');
     const maxSizeBytes = limits.maxFileSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB para tu plan actual. Actualiza tu suscripción para procesar archivos de mayor tamaño.`);
-      if (!limits.isPremium) {
-        openUpgradeModal('pro');
-      }
+      this.showError(`El archivo supera el límite de ${limits.maxFileSizeMB} MB.`);
       return;
     }
 

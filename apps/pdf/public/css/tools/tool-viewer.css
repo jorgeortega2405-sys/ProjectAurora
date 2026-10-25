@@ -589,15 +589,6 @@
 .crop-handle--sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
 .crop-handle--w { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
 
-[data-ref="crop-pdf-workspace"] {
-  background-color: #f5f5fa;
-}
-
-[data-theme='dark'] [data-ref="crop-pdf-workspace"],
-.theme-dark [data-ref="crop-pdf-workspace"] {
-  background-color: var(--bg-card);
-}
-
 
 
 .redact-editor-workspace {

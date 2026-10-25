@@ -50,6 +50,10 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
     if (btnMenuOrganization) {
       btnMenuOrganization.style.display = isEnterprise ? 'flex' : 'none';
     }
+    const organizationDivider = sidebar.querySelector<HTMLElement>('[data-ref="organization-divider"]');
+    if (organizationDivider) {
+      organizationDivider.style.display = isEnterprise ? 'block' : 'none';
+    }
 
     const avatarUrl = currentUser.avatar_url || `/api/avatar?name=${encodeURIComponent(currentUser.username)}`;
 
@@ -91,6 +95,8 @@ export function updateSidebarAuthState(sidebar: HTMLElement): void {
     if (avatarContainer) avatarContainer.style.display = 'none';
     if (railItemAi) railItemAi.style.display = 'none';
     if (btnMenuOrganization) btnMenuOrganization.style.display = 'none';
+    const organizationDivider = sidebar.querySelector<HTMLElement>('[data-ref="organization-divider"]');
+    if (organizationDivider) organizationDivider.style.display = 'none';
   }
 }
 
@@ -104,8 +110,6 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnHome = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-home"]');
   const itemApps = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
   const btnApps = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
-  const itemHelp = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
-  const btnHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
   const railItemSettings = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-settings"]');
   const btnRailSettings = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-settings"]');
@@ -116,8 +120,6 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnHome?.classList.toggle('is-active', isHome && (!isDrawerOpen || currentDrawerMode !== 'apps'));
   itemApps?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode === 'apps');
   btnApps?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode === 'apps');
-  itemHelp?.classList.toggle('is-active', isHelp && (!isDrawerOpen || currentDrawerMode === 'help'));
-  btnHelp?.classList.toggle('is-active', isHelp && (!isDrawerOpen || currentDrawerMode === 'help'));
   btnToggle?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode !== 'apps');
   railItemSettings?.classList.toggle('is-active', isSettings && (!isDrawerOpen || currentDrawerMode === 'settings'));
   btnRailSettings?.classList.toggle('is-active', isSettings && (!isDrawerOpen || currentDrawerMode === 'settings'));
@@ -151,11 +153,18 @@ function setupRailNavigation(sidebar: HTMLElement): void {
 
   const panelMain = sidebar.querySelector<HTMLElement>('[data-ref="panel-main-options"]');
   const panelSwitcher = sidebar.querySelector<HTMLElement>('[data-ref="panel-account-switcher"]');
+  const panelHelp = sidebar.querySelector<HTMLElement>('[data-ref="panel-help-options"]');
   const btnSwitchAccountMenu = sidebar.querySelector<HTMLElement>('[data-ref="btn-switch-account-menu"]');
   const btnBackToMainMenu = sidebar.querySelector<HTMLElement>('[data-ref="btn-back-to-main-menu"]');
   const btnAddAccount = sidebar.querySelector<HTMLElement>('[data-ref="btn-add-account"]');
   const btnLogoutAll = sidebar.querySelector<HTMLElement>('[data-ref="btn-logout-all"]');
   const accountSwitcherList = sidebar.querySelector<HTMLElement>('[data-ref="account-switcher-list"]');
+  const btnMenuHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-help"]');
+  const btnBackFromHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-back-from-help"]');
+  const btnHelpPrivacy = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-privacy"]');
+  const btnHelpTerms = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-terms"]');
+  const btnHelpCookies = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-cookies"]');
+  const btnHelpTechSupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-help-tech-support"]');
 
   const goHome = (e: Event) => {
     e.preventDefault();
@@ -190,13 +199,19 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     navigate('/login');
   });
 
-  const showPanel = (panelName: 'main' | 'switcher') => {
+  const showPanel = (panelName: 'main' | 'switcher' | 'help') => {
     if (panelName === 'switcher') {
       if (panelMain) panelMain.style.display = 'none';
+      if (panelHelp) panelHelp.style.display = 'none';
       if (panelSwitcher) panelSwitcher.style.display = 'flex';
       renderAccountList();
+    } else if (panelName === 'help') {
+      if (panelMain) panelMain.style.display = 'none';
+      if (panelSwitcher) panelSwitcher.style.display = 'none';
+      if (panelHelp) panelHelp.style.display = 'flex';
     } else {
       if (panelSwitcher) panelSwitcher.style.display = 'none';
+      if (panelHelp) panelHelp.style.display = 'none';
       if (panelMain) panelMain.style.display = 'flex';
     }
   };
@@ -310,20 +325,38 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     }
   });
 
-  const itemHelp = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
-  const btnRailHelp = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
+  btnMenuHelp?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showPanel('help');
+  });
 
-  const goHelp = (e: Event) => {
+  btnBackFromHelp?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showPanel('main');
+  });
+
+  btnHelpPrivacy?.addEventListener('click', (e) => {
     e.preventDefault();
     closeAvatarMenu();
-    navigate('/help/security');
-  };
+    navigate('/help/privacy');
+  });
 
-  btnRailHelp?.addEventListener('click', goHelp);
-  itemHelp?.addEventListener('click', (e) => {
-    if (e.target !== btnRailHelp && !btnRailHelp?.contains(e.target as Node)) {
-      goHelp(e);
-    }
+  btnHelpTerms?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAvatarMenu();
+    navigate('/help/terms');
+  });
+
+  btnHelpCookies?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAvatarMenu();
+    navigate('/help/cookies');
+  });
+
+  btnHelpTechSupport?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAvatarMenu();
+    toggleTechSupportSidebar();
   });
 
   const railItemSettings = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-settings"]');
@@ -357,13 +390,6 @@ function setupRailNavigation(sidebar: HTMLElement): void {
     e.preventDefault();
     closeAvatarMenu();
     navigate('/organization');
-  });
-
-  const btnMenuTechSupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-menu-tech-support"]');
-  btnMenuTechSupport?.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeAvatarMenu();
-    toggleTechSupportSidebar();
   });
 
   const railItemAi = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-ai"]');

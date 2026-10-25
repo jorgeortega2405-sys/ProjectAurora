@@ -180,6 +180,8 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('admin:support:view', 'Ver Soporte en Vivo', 'Permite consultar chats y colas de atención en vivo'),
 ('admin:support:manage', 'Gestionar Soporte en Vivo', 'Permite aceptar, responder, escalar y resolver chats de soporte en tiempo real'),
 ('admin:support:audit', 'Auditar Soporte en Vivo', 'Permite consultar registros de auditoría inmutables en Cassandra y calificaciones de agentes'),
+('admin:email_support:view', 'Ver Soporte por Correo', 'Permite consultar incidencias y tickets recibidos por correo y formulario'),
+('admin:email_support:manage', 'Gestionar Soporte por Correo', 'Permite responder por correo, asignar y resolver incidencias de contacto'),
 ('admin:security:audit', 'Auditar Seguridad y Acciones Admin', 'Permite consultar el historial inmutable de acciones administrativas y eventos de acceso'),
 ('admin:security:manage', 'Gestionar Seguridad y Sesiones', 'Permite revocar sesiones activas y aplicar bloqueos de seguridad'),
 ('admin:analytics:view', 'Ver Explorador de Datos', 'Permite consultar el esquema de bases de datos y métricas'),
@@ -337,6 +339,18 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SUPPORT_L3', 'admin:support:manage'),
 ('SUPPORT_MANAGER', 'admin:support:view'),
 ('SUPPORT_MANAGER', 'admin:support:manage'),
+('PLATFORM_ADMIN', 'admin:email_support:view'),
+('PLATFORM_ADMIN', 'admin:email_support:manage'),
+('SUPPORT_L1', 'admin:email_support:view'),
+('SUPPORT_L1', 'admin:email_support:manage'),
+('SUPPORT_L2', 'admin:email_support:view'),
+('SUPPORT_L2', 'admin:email_support:manage'),
+('SUPPORT_L3', 'admin:email_support:view'),
+('SUPPORT_L3', 'admin:email_support:manage'),
+('SUPPORT_MANAGER', 'admin:email_support:view'),
+('SUPPORT_MANAGER', 'admin:email_support:manage'),
+('INCIDENT_MANAGER', 'admin:email_support:view'),
+('INCIDENT_MANAGER', 'admin:email_support:manage'),
 ('SUPER_ADMIN', 'admin:support:audit'),
 ('ADMIN', 'admin:support:audit'),
 ('PLATFORM_ADMIN', 'admin:support:audit'),
@@ -363,7 +377,6 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('ADMIN', 'admin:analytics:query'),
 ('PLATFORM_ADMIN', 'admin:analytics:view'),
 ('PLATFORM_ADMIN', 'admin:analytics:query'),
-('DATA_ANALYST', 'admin:access'),
 ('DATA_ANALYST', 'admin:dashboard:view'),
 ('DATA_ANALYST', 'admin:analytics:view'),
 ('DATA_ANALYST', 'admin:analytics:query'),
@@ -863,4 +876,61 @@ CREATE TABLE IF NOT EXISTS support_agent_presence (
 INSERT IGNORE INTO support_agent_presence (agent_id, agent_name, status, tier, active_chats_count, last_status_change) VALUES
 ('50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', 'available', 'L1', 1, '2026-10-24 10:00:00'),
 ('dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'Admin Principal', 'available', 'L2', 1, '2026-10-24 09:00:00');
+
+CREATE TABLE IF NOT EXISTS contact_tickets (
+    id VARCHAR(36) PRIMARY KEY,
+    ticket_number VARCHAR(32) NOT NULL UNIQUE,
+    website_id VARCHAR(50) NOT NULL DEFAULT 'aurora-pdf',
+    user_id VARCHAR(36) NULL,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(191) NOT NULL,
+    subject_category VARCHAR(50) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    status ENUM('open', 'waiting_user', 'resolved', 'closed') NOT NULL DEFAULT 'open',
+    priority ENUM('low', 'normal', 'high', 'urgent') NOT NULL DEFAULT 'normal',
+    assigned_agent_id VARCHAR(36) NULL,
+    assigned_agent_name VARCHAR(120) NULL,
+    tracking_token VARCHAR(64) NOT NULL UNIQUE,
+    initial_message_id VARCHAR(255) NULL,
+    last_message_id VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+    closed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_agent_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
+    INDEX idx_contact_tickets_status (status),
+    INDEX idx_contact_tickets_priority (priority),
+    INDEX idx_contact_tickets_website (website_id),
+    INDEX idx_contact_tickets_email (email),
+    INDEX idx_contact_tickets_created (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS contact_ticket_messages (
+    id VARCHAR(36) PRIMARY KEY,
+    ticket_id VARCHAR(36) NOT NULL,
+    sender_type ENUM('customer', 'agent', 'system') NOT NULL,
+    sender_id VARCHAR(36) NULL,
+    sender_name VARCHAR(120) NOT NULL,
+    sender_email VARCHAR(191) NULL,
+    message TEXT NOT NULL,
+    is_internal_note BOOLEAN NOT NULL DEFAULT FALSE,
+    smtp_message_id VARCHAR(255) NULL,
+    in_reply_to VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ticket_id) REFERENCES contact_tickets(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_contact_msg_ticket (ticket_id, created_at ASC),
+    INDEX idx_contact_msg_smtp (smtp_message_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO contact_tickets (id, ticket_number, website_id, user_id, name, email, subject_category, subject, status, priority, assigned_agent_id, assigned_agent_name, tracking_token, initial_message_id, last_message_id, created_at) VALUES
+('tk-seed-001', 'TK-2026-0001', 'aurora-pdf', 'b7123456-2222-4000-8000-000000000002', 'Valeria Torres', 'valeria.torres@projectaurora.com', 'technical', 'Error al procesar lote de 20 PDFs en herramienta de compresión', 'open', 'high', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', 'track_token_seed_001_valeria', '<ticket-TK-2026-0001-init@projectaurora.com>', '<ticket-TK-2026-0001-init@projectaurora.com>', '2026-10-24 14:00:00'),
+('tk-seed-002', 'TK-2026-0002', 'aurora-pdf', NULL, 'Carlos Mendoza', 'cmendoza@empresa.org', 'billing', 'Consulta sobre factura con RFC para plan Enterprise', 'waiting_user', 'normal', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', 'track_token_seed_002_carlos', '<ticket-TK-2026-0002-init@projectaurora.com>', '<ticket-TK-2026-0002-reply-1@projectaurora.com>', '2026-10-24 12:30:00');
+
+INSERT IGNORE INTO contact_ticket_messages (id, ticket_id, sender_type, sender_id, sender_name, sender_email, message, is_internal_note, smtp_message_id, in_reply_to, created_at) VALUES
+('tkm-seed-001', 'tk-seed-001', 'customer', 'b7123456-2222-4000-8000-000000000002', 'Valeria Torres', 'valeria.torres@projectaurora.com', 'Hola, estaba intentando comprimir un lote de 20 documentos PDF de 15MB cada uno y la herramienta se detuvo en el archivo 14.', FALSE, '<ticket-TK-2026-0001-init@projectaurora.com>', NULL, '2026-10-24 14:00:00'),
+('tkm-seed-002', 'tk-seed-002', 'customer', NULL, 'Carlos Mendoza', 'cmendoza@empresa.org', 'Buen día, requerimos contratar 15 licencias pero necesitamos factura fiscal con desglose de impuestos antes del pago.', FALSE, '<ticket-TK-2026-0002-init@projectaurora.com>', NULL, '2026-10-24 12:30:00'),
+('tkm-seed-003', 'tk-seed-002', 'agent', '50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', 'soporte@projectaurora.com', 'Estimado Carlos, con gusto te apoyamos. Nuestro departamento de finanzas puede emitir la factura proforma correspondiente. ¿Podrías confirmarnos tu razón social y país de residencia fiscal?', FALSE, '<ticket-TK-2026-0002-reply-1@projectaurora.com>', '<ticket-TK-2026-0002-init@projectaurora.com>', '2026-10-24 13:00:00');
 

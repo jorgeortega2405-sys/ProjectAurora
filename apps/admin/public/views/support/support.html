@@ -3,6 +3,10 @@
     <div class="component-top-left" data-ref="component-top-left">
       <h1 class="component-top-title" data-ref="support-page-title" style="font-size: 15px; font-weight: 700;">Soporte en Vivo</h1>
       <span class="component-badge component-badge--sm" data-ref="support-count-badge">0</span>
+      <div class="support-channel-tabs" data-ref="support-channel-tabs" style="display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; background: var(--bg-hover, rgba(0,0,0,0.04)); padding: 3px; border-radius: var(--radius-md);">
+        <button type="button" class="component-badge component-badge--sm is-active" data-ref="btn-channel-live" style="cursor: pointer; border: none;">Soporte en Vivo</button>
+        <button type="button" class="component-badge component-badge--sm" data-ref="btn-channel-email" style="cursor: pointer; border: none;">Tickets por Correo</button>
+      </div>
     </div>
 
     <div class="component-top-right" data-ref="component-top-right">
@@ -69,7 +73,7 @@
     </div>
   </header>
 
-  <div class="component-bottom component-bottom--no-padding support-split-layout" data-ref="component-bottom">
+  <div class="component-bottom component-bottom--no-padding support-split-layout" data-ref="component-bottom" data-channel-layout="live">
     <div class="support-sidebar-queue" data-ref="support-sidebar-queue">
       <div class="support-filter-tabs" data-ref="support-filter-tabs" style="display: flex; padding: 8px 12px; gap: 6px; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
         <button type="button" class="component-badge component-badge--sm is-active" data-ref="tab-status-all" data-status="all">Todos</button>
@@ -242,6 +246,150 @@
               <span>Se ha actualizado la respuesta con tono formal en el campo. Haz clic en «Enviar» para despacharla.</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="component-bottom component-bottom--no-padding support-split-layout" data-ref="support-split-layout-email" style="display: none;">
+    <div class="support-sidebar-queue" data-ref="email-sidebar-queue">
+      <div class="support-filter-tabs" data-ref="email-filter-tabs" style="display: flex; padding: 8px 12px; gap: 6px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; overflow-x: auto;">
+        <button type="button" class="component-badge component-badge--sm is-active" data-ref="email-tab-status-all" data-status="all">Todos</button>
+        <button type="button" class="component-badge component-badge--sm" data-ref="email-tab-status-open" data-status="open">Abiertos</button>
+        <button type="button" class="component-badge component-badge--sm" data-ref="email-tab-status-waiting" data-status="waiting_user">Esperando</button>
+        <button type="button" class="component-badge component-badge--sm" data-ref="email-tab-status-resolved" data-status="resolved">Resueltos</button>
+        <button type="button" class="component-badge component-badge--sm" data-ref="email-tab-status-closed" data-status="closed">Cerrados</button>
+      </div>
+
+      <div class="support-tier-filter-box" data-ref="email-category-filter-box" style="padding: 8px 12px; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
+        <div class="settings-dropdown-wrapper settings-dropdown-wrapper--full" data-ref="dropdown-wrapper-email-category">
+          <button type="button" class="dropdown-trigger" data-ref="btn-trigger-email-category" aria-label="Filtrar por categoría">
+            <div class="dropdown-trigger__left" data-ref="dropdown-trigger-left-email-category">
+              <svg class="component-icon dropdown-trigger__icon" aria-hidden="true"><use href="/icons.svg#category"></use></svg>
+              <span class="dropdown-trigger__text" data-ref="email-category-selected-text">Todas las Categorías</span>
+            </div>
+            <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+          </button>
+          <div class="dropdown-backdrop" data-ref="dropdown-backdrop-email-category" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;">
+            <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="dropdown-menu-email-category" style="padding: 4px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-surface); box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+              <div class="menu-panel__list" data-ref="list-email-categories">
+                <button type="button" class="menu-item is-active" data-ref="opt-cat-all" data-value="all" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Todas las Categorías</span>
+                </button>
+                <button type="button" class="menu-item" data-ref="opt-cat-general" data-value="general" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Consultas Generales</span>
+                </button>
+                <button type="button" class="menu-item" data-ref="opt-cat-technical" data-value="technical" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Soporte Técnico</span>
+                </button>
+                <button type="button" class="menu-item" data-ref="opt-cat-enterprise" data-value="enterprise" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Empresas y Licencias</span>
+                </button>
+                <button type="button" class="menu-item" data-ref="opt-cat-billing" data-value="billing" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Facturación y Pagos</span>
+                </button>
+                <button type="button" class="menu-item" data-ref="opt-cat-security" data-value="security" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Seguridad y Privacidad</span>
+                </button>
+                <button type="button" class="menu-item" data-ref="opt-cat-suggestion" data-value="suggestion" style="width: 100%; text-align: left; padding: 6px 10px;">
+                  <span class="menu-item__text">Sugerencias</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="support-chats-scroll" data-ref="email-tickets-scroll">
+        <div class="support-empty-list" data-ref="email-empty-list" style="padding: 32px 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5;"><use href="/icons.svg#mail"></use></svg>
+          <div>No hay incidencias que coincidan con el filtro.</div>
+        </div>
+        <div class="support-chats-container" data-ref="email-tickets-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+    </div>
+
+    <div class="support-chat-viewport" data-ref="email-ticket-viewport">
+      <div class="support-no-selection" data-ref="email-no-selection" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-tertiary); padding: 40px; text-align: center;">
+        <svg class="component-icon" aria-hidden="true" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4;"><use href="/icons.svg#mail"></use></svg>
+        <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 600; color: var(--text-primary);">Ninguna incidencia seleccionada</h3>
+        <p style="margin: 0; font-size: 13px; max-width: 340px;">Selecciona un ticket de la lista para ver el historial de mensajes, notas internas o responder directamente al usuario por correo.</p>
+      </div>
+
+      <div class="support-active-chat" data-ref="email-active-ticket" style="display: none; height: 100%; flex-direction: column;">
+        <div class="support-chat-header" data-ref="email-ticket-header" style="padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg-surface); flex-shrink: 0;">
+          <div class="support-chat-header__user-box" style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+            <div class="avatar-ring" data-ref="email-header-avatar-ring" style="width: 38px; height: 38px; border-radius: 50%; --avatar-tier-bg: #9ca3af; --tier-border-color: #9ca3af; flex-shrink: 0;">
+              <img class="support-header__avatar" data-ref="email-header-avatar-img" src="/api/avatar?name=Usuario" alt="Avatar" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover;" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="support-header__user" data-ref="email-header-name" style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Usuario</span>
+                <span class="component-badge component-badge--sm" data-ref="email-header-number">#TK-0000</span>
+                <span class="component-badge component-badge--sm" data-ref="email-header-status-badge">Abierto</span>
+                <span class="component-badge component-badge--sm" data-ref="email-header-category-badge">General</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                <span data-ref="email-header-email">correo@ejemplo.com</span>
+                <span>•</span>
+                <strong data-ref="email-header-subject" style="color: var(--text-primary); font-weight: 600;">Asunto</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="component-button component-button--h34 component-button--secondary" data-ref="btn-email-resolve" style="font-size: 12px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px; color: #10b981;"><use href="/icons.svg#check_circle"></use></svg>
+              <span>Resolver Incidencia</span>
+            </button>
+            <button type="button" class="component-button component-button--h34 component-button--danger" data-ref="btn-email-close" style="font-size: 12px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px;"><use href="/icons.svg#lock"></use></svg>
+              <span>Cerrar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="support-messages-feed" data-ref="email-messages-feed"></div>
+
+        <div class="support-input-toolbar" data-ref="email-reply-dock" style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div class="support-channel-tabs" style="display: inline-flex; align-items: center; gap: 4px; background: var(--bg-hover, rgba(0,0,0,0.04)); padding: 2px; border-radius: var(--radius-md);">
+              <button type="button" class="component-badge component-badge--sm is-active" data-ref="btn-email-mode-customer" style="cursor: pointer; border: none; display: flex; align-items: center; gap: 4px;">
+                <svg class="component-icon" aria-hidden="true" style="width: 13px; height: 13px;"><use href="/icons.svg#mail"></use></svg>
+                <span>Responder al Cliente por Correo</span>
+              </button>
+              <button type="button" class="component-badge component-badge--sm" data-ref="btn-email-mode-internal" style="cursor: pointer; border: none; display: flex; align-items: center; gap: 4px;">
+                <svg class="component-icon" aria-hidden="true" style="width: 13px; height: 13px;"><use href="/icons.svg#lock"></use></svg>
+                <span>Nota Interna (Privada)</span>
+              </button>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-tertiary);" data-ref="email-reply-hint">
+              El cliente recibirá tu mensaje en el mismo hilo de su correo.
+            </div>
+          </div>
+
+          <div class="field field--textarea" data-ref="field-email-reply" style="margin: 0;">
+            <textarea class="field__input field__textarea" data-ref="email-reply-textarea" placeholder="Escribe tu respuesta para el cliente... Se enviará directamente a su bandeja de correo en el hilo de la conversación." rows="3" style="min-height: 80px; resize: vertical;"></textarea>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; color: var(--text-secondary);">Al enviar:</span>
+              <select class="component-select" data-ref="select-email-next-status" style="font-size: 12px; padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-surface);">
+                <option value="waiting_user">Cambiar a «Esperando Usuario»</option>
+                <option value="resolved">Cambiar a «Resuelto»</option>
+                <option value="keep">Mantener estado actual</option>
+              </select>
+            </div>
+
+            <button type="button" class="component-button component-button--primary component-button--h36" data-ref="btn-submit-email-reply">
+              <svg class="component-icon" aria-hidden="true" style="width: 15px; height: 15px; margin-right: 4px;"><use href="/icons.svg#send"></use></svg>
+              <span data-ref="btn-submit-email-reply-text">Enviar Respuesta por Correo</span>
+            </button>
+          </div>
+
+          <div class="banner banner--danger" data-ref="email-reply-error" style="display: none; margin-top: 4px;"></div>
         </div>
       </div>
     </div>

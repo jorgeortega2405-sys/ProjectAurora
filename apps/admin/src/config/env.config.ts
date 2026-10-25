@@ -27,8 +27,17 @@ export const adminConfig = {
     port: parseInt(process.env.DB_PORT || '3306', 10),
     user: process.env.DB_USER || 'aurora_user',
   },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || '',
+    model: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
+  },
   nodeEnv: process.env.NODE_ENV || 'development',
+  originProtection: {
+    enforceCloudflare: process.env.ENFORCE_CLOUDFLARE_ORIGIN === 'true',
+    secret: process.env.CLOUDFLARE_ORIGIN_SECRET || '',
+  },
   port: parseInt(process.env.ADMIN_PORT || '3005', 10),
+  publicBaseUrl: process.env.BASE_URL || 'http://localhost:3000',
   redis: {
     host: process.env.REDIS_HOST || '127.0.0.1',
     password: process.env.REDIS_PASSWORD || undefined,
@@ -43,18 +52,18 @@ export const adminConfig = {
     secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin',
   },
   sessionSecret: process.env.SESSION_SECRET || 'aurora_session_secret_key_2026',
+  smtp: {
+    fromEmail: process.env.SMTP_FROM_EMAIL || 'soporte@projectaurora.com',
+    fromName: process.env.SMTP_FROM_NAME || 'ProjectAurora Soporte',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    pass: process.env.SMTP_PASS || '',
+    port: parseInt(process.env.SMTP_PORT || '465', 10),
+    user: process.env.SMTP_USER || '',
+  },
   turnstile: {
     enabled: process.env.TURNSTILE_ENABLED === 'true' || Boolean(process.env.TURNSTILE_SECRET_KEY),
     secretKey: process.env.TURNSTILE_SECRET_KEY || '',
     siteKey: process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || '',
-  },
-  gemini: {
-    apiKey: process.env.GEMINI_API_KEY || '',
-    model: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
-  },
-  originProtection: {
-    enforceCloudflare: process.env.ENFORCE_CLOUDFLARE_ORIGIN === 'true',
-    secret: process.env.CLOUDFLARE_ORIGIN_SECRET || '',
   },
   vitePort: parseInt(process.env.ADMIN_VITE_PORT || '5175', 10),
 };

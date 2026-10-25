@@ -1,5 +1,5 @@
 import fs from 'fs';
-import nodemailer from 'nodemailer';
+import nodemailer, { SendMailOptions } from 'nodemailer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../config/env.config.js';
@@ -9,6 +9,12 @@ export interface EmailTemplate {
   html: string;
   subject: string;
   text: string;
+}
+
+export interface SendEmailHeaders {
+  inReplyTo?: string;
+  messageId?: string;
+  references?: string;
 }
 
 function loadTemplates(): Record<string, EmailTemplate> {
@@ -78,7 +84,8 @@ export function renderTemplateString(
 export async function sendTemplateEmail(
   templateKey: string,
   toEmail: string,
-  variables: Record<string, string | number> = {}
+  variables: Record<string, string | number> = {},
+  headers?: SendEmailHeaders
 ): Promise<void> {
   const template: EmailTemplate | undefined = emailTemplates[templateKey];
   if (!template) {
@@ -96,13 +103,25 @@ export async function sendTemplateEmail(
   const text = renderTemplateString(template.text, mergedVariables, false);
   const fromAddress = `"${config.smtp.fromName}" <${config.smtp.fromEmail}>`;
 
-  await transporter.sendMail({
+  const mailOptions: SendMailOptions = {
     from: fromAddress,
     html,
     subject,
     text,
     to: toEmail,
-  });
+  };
+
+  if (headers?.messageId) {
+    mailOptions.messageId = headers.messageId;
+  }
+  if (headers?.inReplyTo) {
+    mailOptions.inReplyTo = headers.inReplyTo;
+  }
+  if (headers?.references) {
+    mailOptions.references = headers.references;
+  }
+
+  await transporter.sendMail(mailOptions);
 
   logger.app.info(`Correo ${templateKey} enviado exitosamente a ${toEmail}`);
 }
@@ -168,6 +187,60 @@ export async function sendEducationVerificationEmail(
     schoolName,
     username,
   });
+}
+
+export async function sendContactTicketConfirmationEmail(
+  toEmail: string,
+  name: string,
+  ticketNumber: string,
+  subject: string,
+  messageExcerpt: string,
+  portalUrl: string,
+  messageId: string
+): Promise<void> {
+  await sendTemplateEmail(
+    'contact_ticket_confirmation',
+    toEmail,
+    {
+      messageExcerpt,
+      name,
+      portalUrl,
+      subject,
+      ticketNumber,
+    },
+    { messageId }
+  );
+}
+
+export async function sendContactTicketReplyEmail(
+  toEmail: string,
+  name: string,
+  ticketNumber: string,
+  subject: string,
+  agentName: string,
+  replyMessage: string,
+  portalUrl: string,
+  messageId: string,
+  inReplyTo: string,
+  references?: string
+): Promise<void> {
+  await sendTemplateEmail(
+    'contact_ticket_reply',
+    toEmail,
+    {
+      agentName,
+      name,
+      portalUrl,
+      replyMessage,
+      subject,
+      ticketNumber,
+    },
+    {
+      inReplyTo,
+      messageId,
+      references: references || inReplyTo,
+    }
+  );
 }
 
 

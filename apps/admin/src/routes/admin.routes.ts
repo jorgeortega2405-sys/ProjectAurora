@@ -1,6 +1,7 @@
 import { createAdminBackup, deleteAdminBackup, downloadAdminBackup, getAdminAccessibleWebsitesController, getAdminBackupStatus, getAdminBackups, getAdminDashboardStats, getAdminHealth, getAdminInquiries, getAdminOrganizations, getAdminPurchases, getAdminUsers, getAdminVerifications, patchAdminUser, restoreAdminBackup, reviewAdminVerification, updateAdminInquiryStatus, updateAdminOrganization } from '../controllers/admin.controller.js';
 import { getMe, loginAdmin, logoutAdmin, logoutAllAdminController, switchAdminAccountController } from '../controllers/auth.controller.js';
 import { executeDataExplorerQueryController, getDataExplorerSchemaController, getDataExplorerTemplatesController } from '../controllers/data-explorer.controller.js';
+import { getEmailTicketByIdController, listEmailTicketsController, replyEmailTicketController, updateEmailTicketStatusController } from '../controllers/email-support.controller.js';
 import { deleteDocument, deleteEmployee, getEmployee, getHrOverview, getOrganigram, listDepartments, listDocuments, listEmployees, listVacationRequests, patchEmployee, patchVacationRequest, postHireEmployee, postUploadDocument, postVacationRequest } from '../controllers/hr.controller.js';
 import { addInternalTicketCommentController, createInternalTicketController, getInternalTicketByIdController, getInternalTicketOptionsController, getInternalTicketsController, getInternalTicketStatsController, updateInternalTicketController } from '../controllers/internal-tickets.controller.js';
 import { getActiveSessionsController, getAdminAuditLogsController, getSecurityAccessLogsController, getSecurityStatsController, revokeAllUserSessionsController, revokeSessionController } from '../controllers/security.controller.js';
@@ -121,6 +122,11 @@ router.post('/support/chats/:id/transfer', requireAdminAuth, requireAdminPermiss
 router.post('/support/chats/:id/close', requireAdminAuth, requireAdminPermission('admin:support:manage'), closeLiveChatController);
 router.post('/support/chats/:id/messages', requireAdminAuth, requireAdminPermission('admin:support:manage'), sendAgentMessageController);
 router.post('/support/chats/:id/refine-message', requireAdminAuth, requireAdminPermission('admin:support:manage'), refineAgentMessageController);
+
+router.get('/support/email-tickets', requireAdminAuth, requireAdminPermission(['admin:support:view', 'admin:email_support:view']), listEmailTicketsController);
+router.get('/support/email-tickets/:id', requireAdminAuth, requireAdminPermission(['admin:support:view', 'admin:email_support:view']), getEmailTicketByIdController);
+router.post('/support/email-tickets/:id/reply', requireAdminAuth, requireAdminPermission(['admin:support:manage', 'admin:email_support:manage']), replyEmailTicketController);
+router.patch('/support/email-tickets/:id', requireAdminAuth, requireAdminPermission(['admin:support:manage', 'admin:email_support:manage']), updateEmailTicketStatusController);
 
 router.get('/analytics/schema', requireAdminAuth, requireAdminPermission('admin:analytics:view'), getDataExplorerSchemaController);
 router.post('/analytics/query', requireAdminAuth, requireAdminPermission('admin:analytics:query'), executeDataExplorerQueryController);

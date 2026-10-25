@@ -123,12 +123,32 @@ export class ContactController implements ViewController {
         if (errorBanner) errorBanner.style.display = 'none';
 
         await withButtonLoading(submitBtn, 'Enviando mensaje...', async () => {
-          await new Promise((resolve) => setTimeout(resolve, 600));
+          const res = await fetch('/api/support/contact', {
+            body: JSON.stringify({
+              category: subject,
+              email,
+              message,
+              name,
+              subject: subjectText?.textContent || subject,
+            }),
+            headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            signal: this.abortController?.signal,
+          });
+
+          const data = (await res.json().catch(() => ({}))) as { error?: string; ticketNumber?: string };
+          if (!res.ok) {
+            showError(data.error || 'No se pudo enviar el mensaje. Intenta más tarde.');
+            return;
+          }
 
           form.reset();
           if (subjectInput) subjectInput.value = '';
           if (subjectText) subjectText.textContent = 'Selecciona un asunto...';
-          showSuccess('¡Tu mensaje ha sido enviado correctamente! Nuestro equipo te responderá a la brevedad posible.');
+          const ticketMsg = data.ticketNumber
+            ? `¡Incidencia registrada con el número #${data.ticketNumber}! Te hemos enviado un correo con el acuse y enlace de seguimiento.`
+            : '¡Tu mensaje ha sido enviado correctamente! Te responderemos a la brevedad posible.';
+          showSuccess(ticketMsg);
           showToast('Mensaje enviado con éxito', 'success');
         });
       },

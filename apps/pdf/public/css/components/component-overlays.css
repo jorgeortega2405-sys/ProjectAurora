@@ -789,7 +789,8 @@
   line-height: 1.2;
 }
 
-.account-item__arrow {
+.account-item__arrow,
+.menu-item__arrow {
   font-size: 18px;
   width: 18px;
   height: 18px;

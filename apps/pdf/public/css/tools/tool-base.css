@@ -10,12 +10,72 @@
   width: 100%;
 }
 
+@media (min-width: 961px) {
+  .tool-layout-wrapper:has(.component-top.tool-top:not([style*="display: none"]):not([style*="display:none"])) {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 56px 1fr;
+    grid-template-areas:
+      "top sidebar"
+      "workspace sidebar";
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .tool-layout-wrapper:has(.component-top.tool-top:not([style*="display: none"]):not([style*="display:none"])) .component-top.tool-top {
+    border-bottom: none !important;
+    grid-area: top;
+    height: 56px;
+    min-height: 56px;
+    min-width: 0;
+    width: 100%;
+    z-index: 5;
+  }
+
+  .tool-layout-wrapper:has(.component-top.tool-top:not([style*="display: none"]):not([style*="display:none"])) .component-bottom.tool-layout,
+  .tool-layout-wrapper:has(.component-top.tool-top:not([style*="display: none"]):not([style*="display:none"])) .tool-bottom {
+    display: contents !important;
+  }
+
+  .tool-layout-wrapper:has(.component-top.tool-top:not([style*="display: none"]):not([style*="display:none"])) .tool-layout__workspace {
+    grid-area: workspace;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .tool-layout-wrapper:has(.component-top.tool-top:not([style*="display: none"]):not([style*="display:none"])) .tool-layout__sidebar {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-sizing: border-box;
+    grid-area: sidebar;
+    height: calc(100% - 16px) !important;
+    margin: 8px;
+    max-height: calc(100% - 16px) !important;
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+  }
+}
+
 .component-top.tool-top {
+  border-bottom: none !important;
+  display: none !important;
+}
+
+.component-top.tool-top:has([data-ref="editor-top-controls"]:not([style*="display: none"]):not([style*="display:none"])),
+.component-top.tool-top:has([data-ref="redact-top-controls"]:not([style*="display: none"]):not([style*="display:none"])),
+.component-top.tool-top:has([data-ref="compare-top-controls"]:not([style*="display: none"]):not([style*="display:none"])) {
   align-items: center;
   background-color: var(--bg-surface);
   border-bottom: none !important;
   box-sizing: border-box;
-  display: flex;
+  display: flex !important;
   flex-shrink: 0;
   gap: 12px;
   height: 56px;
@@ -277,15 +337,15 @@
 
 .tool-layout__sidebar {
   background-color: var(--bg-surface);
-  border: none;
-  border-left: 1px solid var(--border-color);
-  border-radius: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
   box-shadow: none;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  height: 100%;
+  height: calc(100% - 16px);
+  margin: 8px;
   max-width: 440px;
   min-width: 340px;
   overflow: hidden;
@@ -567,7 +627,7 @@
   justify-content: flex-start;
   margin: auto;
   max-width: 760px;
-  padding: 48px 24px 32px;
+  padding: 0 24px 32px;
   position: relative;
   text-align: center;
   transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -681,7 +741,7 @@
 }
 
 .tool-hero-dropzone__btn-select {
-  border-radius: var(--sl-border-radius-large);
+  border-radius: 16px;
   font-size: 1.375rem;
   font-weight: 600;
   height: 80px;
@@ -1284,7 +1344,7 @@
   align-items: center;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   position: absolute;
   right: 28px;
   top: 24px;
@@ -1354,16 +1414,23 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 0;
+  max-height: 0;
   opacity: 0;
+  overflow: hidden;
+  padding: 0;
   pointer-events: none;
   transform: translateY(-8px) scale(0.92);
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  transition: max-height 0.24s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
   visibility: hidden;
 }
 
 .tool-fab-more:hover .tool-fab-more__options,
 .tool-fab-more:focus-within .tool-fab-more__options {
+  margin-top: 10px;
+  max-height: 120px;
   opacity: 1;
+  overflow: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
   visibility: visible;
@@ -1392,53 +1459,6 @@
 .tool-fab-more__btn--sub .tool-fab-more__icon {
   height: 20px;
   width: 20px;
-}
-
-.tool-fab-more__btn[data-tooltip]::before {
-  background-color: var(--text-primary);
-  border-radius: var(--sl-border-radius-medium);
-  box-shadow: var(--sl-shadow-large);
-  color: var(--text-inverse);
-  content: attr(data-tooltip);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1;
-  opacity: 0;
-  padding: 6px 10px;
-  pointer-events: none;
-  position: absolute;
-  right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%) translateX(4px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  visibility: hidden;
-  white-space: nowrap;
-  z-index: 60;
-}
-
-.tool-fab-more__btn[data-tooltip]::after {
-  border-bottom: 5px solid transparent;
-  border-left: 5px solid var(--text-primary);
-  border-top: 5px solid transparent;
-  content: '';
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  right: calc(100% + 5px);
-  top: 50%;
-  transform: translateY(-50%);
-  transition: opacity 0.18s ease;
-  visibility: hidden;
-  width: 0;
-  z-index: 60;
-}
-
-.tool-fab-more__btn[data-tooltip]:hover::before,
-.tool-fab-more__btn[data-tooltip]:hover::after {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
-  visibility: visible;
 }
 
 .tool-dropzone__input,
@@ -2504,7 +2524,7 @@
   }
 
   .tool-hero-dropzone {
-    padding: 32px 16px 24px;
+    padding: 0 16px 24px;
   }
 
   .tool-hero-dropzone__title {
@@ -2517,6 +2537,7 @@
   }
 
   .tool-hero-dropzone__btn-select {
+    border-radius: 16px;
     font-size: 1.125rem;
     height: 60px;
     width: 100%;

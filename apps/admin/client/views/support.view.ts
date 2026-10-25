@@ -4,7 +4,7 @@ import { loadTemplate } from '../services/template.service.js';
 import { toast } from '../services/toast.service.js';
 import { adminWsService } from '../services/websocket.service.js';
 import { ViewController } from '../types/common.types.js';
-import { debounce, DropdownController, escapeHtml, setupDropdown } from '../utils/dom.util.js';
+import { debounce, DropdownController, escapeHtml, setupDropdown, withButtonLoading } from '../utils/dom.util.js';
 import { getFallbackTierColor } from '../utils/tier.util.js';
 
 export interface AdminChatSummary {
@@ -40,6 +40,46 @@ export interface AdminChatMessage {
   sender_type: 'user' | 'agent' | 'system';
 }
 
+export interface AdminEmailTicketSummary {
+  assigned_agent_id: string | null;
+  assigned_agent_name: string | null;
+  closed_at: string | null;
+  created_at: string;
+  email: string;
+  id: string;
+  last_message_excerpt: string | null;
+  last_message_sender_type: 'agent' | 'customer' | 'system' | null;
+  messages_count: number;
+  name: string;
+  priority: 'high' | 'low' | 'normal' | 'urgent';
+  resolved_at: string | null;
+  status: 'closed' | 'open' | 'resolved' | 'waiting_user';
+  subject: string;
+  subject_category: string;
+  ticket_number: string;
+  tracking_token: string;
+  updated_at: string;
+  website_id: string;
+}
+
+export interface AdminEmailTicketMessage {
+  created_at: string;
+  id: string;
+  in_reply_to: string | null;
+  is_internal_note: boolean;
+  message: string;
+  sender_email: string | null;
+  sender_id: string | null;
+  sender_name: string;
+  sender_type: 'agent' | 'customer' | 'system';
+  smtp_message_id: string | null;
+  ticket_id: string;
+}
+
+export interface AdminEmailTicketDetail extends AdminEmailTicketSummary {
+  messages: AdminEmailTicketMessage[];
+}
+
 export class LiveSupportController implements ViewController {
   private abortController: AbortController | null = null;
   private activeChat: AdminChatSummary | null = null;
@@ -59,6 +99,14 @@ export class LiveSupportController implements ViewController {
   private tierDropdown: DropdownController | null = null;
   private wsChatUnsubscribe: (() => void) | null = null;
   private wsGlobalUnsubscribe: (() => void) | null = null;
+  private activeEmailTicket: AdminEmailTicketDetail | null = null;
+  private currentChannel: 'email' | 'live' = 'live';
+  private currentEmailCategory = 'all';
+  private currentEmailSearch = '';
+  private currentEmailStatus = 'all';
+  private emailCategoryDropdown: DropdownController | null = null;
+  private emailTickets: AdminEmailTicketSummary[] = [];
+  private isEmailInternalNoteMode = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -1328,6 +1376,465 @@ export class LiveSupportController implements ViewController {
 
     btnClose?.addEventListener('click', closeModal, { signal });
     btnDismiss?.addEventListener('click', closeModal, { signal });
+  }
+
+
+  private setupChannelTabs(): void {
+    const signal = this.abortController?.signal;
+    const btnLive = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-channel-live"]');
+    const btnEmail = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-channel-email"]');
+    const layoutLive = this.container.querySelector<HTMLElement>('[data-channel-layout="live"]');
+    const layoutEmail = this.container.querySelector<HTMLElement>('[data-ref="support-split-layout-email"]');
+    const pageTitle = this.container.querySelector<HTMLElement>('[data-ref="support-page-title"]');
+    const presenceWidget = this.container.querySelector<HTMLElement>('[data-ref="support-presence-widget"]');
+    const countBadge = this.container.querySelector<HTMLElement>('[data-ref="support-count-badge"]');
+
+    btnLive?.addEventListener(
+      'click',
+      () => {
+        if (this.currentChannel === 'live') return;
+        this.currentChannel = 'live';
+        btnLive.classList.add('is-active');
+        btnEmail?.classList.remove('is-active');
+        if (layoutLive) layoutLive.style.display = 'flex';
+        if (layoutEmail) layoutEmail.style.display = 'none';
+        if (presenceWidget) presenceWidget.style.display = 'flex';
+        if (pageTitle) pageTitle.textContent = 'Soporte en Vivo';
+        if (countBadge) countBadge.textContent = String(this.chats.length);
+      },
+      { signal }
+    );
+
+    btnEmail?.addEventListener(
+      'click',
+      async () => {
+        if (this.currentChannel === 'email') return;
+        this.currentChannel = 'email';
+        btnEmail.classList.add('is-active');
+        btnLive?.classList.remove('is-active');
+        if (layoutLive) layoutLive.style.display = 'none';
+        if (layoutEmail) layoutEmail.style.display = 'flex';
+        if (presenceWidget) presenceWidget.style.display = 'none';
+        if (pageTitle) pageTitle.textContent = 'Soporte por Correo';
+        await this.loadEmailTickets();
+      },
+      { signal }
+    );
+  }
+
+  private setupEmailTicketsEvents(): void {
+    const signal = this.abortController?.signal;
+
+    const statusTabs = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="email-tab-status-"]');
+    statusTabs.forEach((tab) => {
+      tab.addEventListener(
+        'click',
+        () => {
+          statusTabs.forEach((t) => t.classList.remove('is-active'));
+          tab.classList.add('is-active');
+          this.currentEmailStatus = tab.getAttribute('data-status') || 'all';
+          this.filterAndRenderEmailTickets();
+        },
+        { signal }
+      );
+    });
+
+    const categoryDropdownWrapper = this.container.querySelector<HTMLElement>('[data-ref="dropdown-wrapper-email-category"]');
+    const categoryText = this.container.querySelector<HTMLElement>('[data-ref="email-category-selected-text"]');
+    if (categoryDropdownWrapper) {
+      this.emailCategoryDropdown = setupDropdown(categoryDropdownWrapper, {
+        onSelect: (val, item) => {
+          this.currentEmailCategory = val;
+          if (categoryText && item) {
+            categoryText.textContent = item.querySelector('.menu-item__text')?.textContent || 'Todas las Categorías';
+          }
+          this.filterAndRenderEmailTickets();
+        },
+      });
+    }
+
+    const searchInput = this.container.querySelector<HTMLInputElement>('[data-ref="support-search-input"]');
+    if (searchInput) {
+      searchInput.addEventListener(
+        'input',
+        debounce(() => {
+          if (this.currentChannel === 'email') {
+            this.currentEmailSearch = (searchInput.value || '').trim().toLowerCase();
+            this.filterAndRenderEmailTickets();
+          }
+        }, 200),
+        { signal }
+      );
+    }
+
+    const btnRefresh = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-refresh-chats"]');
+    btnRefresh?.addEventListener(
+      'click',
+      () => {
+        if (this.currentChannel === 'email') {
+          this.loadEmailTickets();
+        }
+      },
+      { signal }
+    );
+
+    const btnModeCustomer = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-email-mode-customer"]');
+    const btnModeInternal = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-email-mode-internal"]');
+    const replyHint = this.container.querySelector<HTMLElement>('[data-ref="email-reply-hint"]');
+    const submitText = this.container.querySelector<HTMLElement>('[data-ref="btn-submit-email-reply-text"]');
+    const textarea = this.container.querySelector<HTMLTextAreaElement>('[data-ref="email-reply-textarea"]');
+
+    btnModeCustomer?.addEventListener(
+      'click',
+      () => {
+        this.isEmailInternalNoteMode = false;
+        btnModeCustomer.classList.add('is-active');
+        btnModeInternal?.classList.remove('is-active');
+        if (replyHint) replyHint.textContent = 'El cliente recibirá tu mensaje en el mismo hilo de su correo.';
+        if (submitText) submitText.textContent = 'Enviar Respuesta por Correo';
+        if (textarea) textarea.placeholder = 'Escribe tu respuesta para el cliente... Se enviará directamente a su bandeja de correo en el hilo de la conversación.';
+      },
+      { signal }
+    );
+
+    btnModeInternal?.addEventListener(
+      'click',
+      () => {
+        this.isEmailInternalNoteMode = true;
+        btnModeInternal.classList.add('is-active');
+        btnModeCustomer?.classList.remove('is-active');
+        if (replyHint) replyHint.textContent = 'Esta nota es confidencial. Solo el equipo interno la puede ver.';
+        if (submitText) submitText.textContent = 'Guardar Nota Interna';
+        if (textarea) textarea.placeholder = 'Escribe una nota interna para los agentes (el usuario NO recibirá esto por correo)...';
+      },
+      { signal }
+    );
+
+    const btnSubmitReply = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-submit-email-reply"]');
+    const selectNextStatus = this.container.querySelector<HTMLSelectElement>('[data-ref="select-email-next-status"]');
+    const replyError = this.container.querySelector<HTMLElement>('[data-ref="email-reply-error"]');
+
+    btnSubmitReply?.addEventListener(
+      'click',
+      async () => {
+        if (!this.activeEmailTicket) return;
+        const text = (textarea?.value || '').trim();
+        if (!text) {
+          if (replyError) {
+            replyError.textContent = 'Por favor escribe un mensaje para enviar.';
+            replyError.style.display = 'block';
+          }
+          textarea?.focus();
+          return;
+        }
+
+        if (replyError) replyError.style.display = 'none';
+
+        const nextStatusVal = selectNextStatus?.value || 'waiting_user';
+        const newStatus = nextStatusVal !== 'keep' ? nextStatusVal : undefined;
+
+        await withButtonLoading(btnSubmitReply, async () => {
+          try {
+            const res = await fetch(`/api/admin/support/email-tickets/${this.activeEmailTicket!.id}/reply`, {
+              body: JSON.stringify({
+                isInternalNote: this.isEmailInternalNoteMode,
+                message: text,
+                newStatus,
+              }),
+              headers: { 'Content-Type': 'application/json' },
+              method: 'POST',
+              signal,
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              if (replyError) {
+                replyError.textContent = data.error || 'Error al procesar la respuesta.';
+                replyError.style.display = 'block';
+              }
+              return;
+            }
+
+            if (textarea) textarea.value = '';
+            toast.success(this.isEmailInternalNoteMode ? 'Nota interna guardada.' : 'Respuesta enviada por correo al cliente.');
+
+            await this.selectEmailTicket(this.activeEmailTicket!.id);
+            await this.loadEmailTickets();
+          } catch {
+            if (replyError) {
+              replyError.textContent = 'Error de conexión al enviar el correo.';
+              replyError.style.display = 'block';
+            }
+          }
+        });
+      },
+      { signal }
+    );
+
+    const btnResolve = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-email-resolve"]');
+    btnResolve?.addEventListener(
+      'click',
+      async () => {
+        if (!this.activeEmailTicket) return;
+        await withButtonLoading(btnResolve, async () => {
+          try {
+            const res = await fetch(`/api/admin/support/email-tickets/${this.activeEmailTicket!.id}`, {
+              body: JSON.stringify({ status: 'resolved' }),
+              headers: { 'Content-Type': 'application/json' },
+              method: 'PATCH',
+              signal,
+            });
+            if (res.ok) {
+              toast.success('Incidencia marcada como resuelta.');
+              await this.selectEmailTicket(this.activeEmailTicket!.id);
+              await this.loadEmailTickets();
+            }
+          } catch {
+            toast.error('No se pudo actualizar el estado de la incidencia.');
+          }
+        });
+      },
+      { signal }
+    );
+
+    const btnClose = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-email-close"]');
+    btnClose?.addEventListener(
+      'click',
+      async () => {
+        if (!this.activeEmailTicket) return;
+        await withButtonLoading(btnClose, async () => {
+          try {
+            const res = await fetch(`/api/admin/support/email-tickets/${this.activeEmailTicket!.id}`, {
+              body: JSON.stringify({ status: 'closed' }),
+              headers: { 'Content-Type': 'application/json' },
+              method: 'PATCH',
+              signal,
+            });
+            if (res.ok) {
+              toast.success('Incidencia cerrada.');
+              await this.selectEmailTicket(this.activeEmailTicket!.id);
+              await this.loadEmailTickets();
+            }
+          } catch {
+            toast.error('No se pudo cerrar la incidencia.');
+          }
+        });
+      },
+      { signal }
+    );
+  }
+
+  private async loadEmailTickets(): Promise<void> {
+    const badge = this.container.querySelector<HTMLElement>('[data-ref="support-count-badge"]');
+    try {
+      const res = await fetch('/api/admin/support/email-tickets', {
+        signal: this.abortController?.signal,
+      });
+      if (!res.ok) return;
+      const data = await res.json() as { success: boolean; tickets: AdminEmailTicketSummary[] };
+      this.emailTickets = Array.isArray(data.tickets) ? data.tickets : [];
+      if (badge && this.currentChannel === 'email') {
+        badge.textContent = String(this.emailTickets.length);
+      }
+      this.filterAndRenderEmailTickets();
+    } catch {
+      // handled quietly
+    }
+  }
+
+  private filterAndRenderEmailTickets(): void {
+    let filtered = this.emailTickets;
+
+    if (this.currentEmailStatus !== 'all') {
+      filtered = filtered.filter((t) => t.status === this.currentEmailStatus);
+    }
+
+    if (this.currentEmailCategory !== 'all') {
+      filtered = filtered.filter((t) => t.subject_category === this.currentEmailCategory);
+    }
+
+    if (this.currentEmailSearch) {
+      filtered = filtered.filter((t) =>
+        t.name.toLowerCase().includes(this.currentEmailSearch) ||
+        t.email.toLowerCase().includes(this.currentEmailSearch) ||
+        t.ticket_number.toLowerCase().includes(this.currentEmailSearch) ||
+        t.subject.toLowerCase().includes(this.currentEmailSearch)
+      );
+    }
+
+    this.renderEmailTickets(filtered);
+  }
+
+  private renderEmailTickets(items: AdminEmailTicketSummary[]): void {
+    const container = this.container.querySelector<HTMLElement>('[data-ref="email-tickets-container"]');
+    const emptyEl = this.container.querySelector<HTMLElement>('[data-ref="email-empty-list"]');
+    if (!container) return;
+
+    if (items.length === 0) {
+      container.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    container.innerHTML = items
+      .map((t) => {
+        const isSelected = this.activeEmailTicket?.id === t.id;
+        const tierColor = getFallbackTierColor('free');
+        const avatarUrl = `/api/avatar?name=${encodeURIComponent(t.name)}`;
+        const timeFormatted = this.formatTime(t.updated_at || t.created_at);
+
+        let statusClass = 'component-badge--warning';
+        let statusLabel = 'Abierto';
+        if (t.status === 'waiting_user') {
+          statusClass = 'component-badge--info';
+          statusLabel = 'Esperando Usuario';
+        } else if (t.status === 'resolved') {
+          statusClass = 'component-badge--success';
+          statusLabel = 'Resuelto';
+        } else if (t.status === 'closed') {
+          statusClass = 'component-badge--neutral';
+          statusLabel = 'Cerrado';
+        }
+
+        return `
+          <div class="support-chat-item${isSelected ? ' is-active' : ''}" data-ref="email-ticket-item-${t.id}" style="padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: ${isSelected ? 'var(--bg-active, rgba(0,0,0,0.04))' : 'var(--bg-surface)'}; cursor: pointer; transition: background 0.15s ease;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <div class="avatar-ring" style="width: 24px; height: 24px; border-radius: 50%; --avatar-tier-bg: ${tierColor}; --tier-border-color: ${tierColor}; flex-shrink: 0;">
+                  <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(t.name)}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" onerror="this.src='/api/avatar?name=Usuario'" />
+                </div>
+                <strong style="font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(t.name)}</strong>
+              </div>
+              <span style="font-size: 11px; color: var(--text-tertiary); flex-shrink: 0;">${timeFormatted}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span class="component-badge component-badge--sm" style="font-weight: 700; font-family: monospace;">${escapeHtml(t.ticket_number)}</span>
+              <span class="component-badge component-badge--sm ${statusClass}">${statusLabel}</span>
+            </div>
+            <div style="font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${escapeHtml(t.subject)}
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${escapeHtml(t.last_message_excerpt || 'Sin mensajes.')}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    renderIcons(container);
+
+    items.forEach((t) => {
+      const itemEl = container.querySelector<HTMLElement>(`[data-ref="email-ticket-item-${t.id}"]`);
+      itemEl?.addEventListener(
+        'click',
+        () => {
+          this.selectEmailTicket(t.id);
+        },
+        { signal: this.abortController?.signal }
+      );
+    });
+  }
+
+  private async selectEmailTicket(ticketId: string): Promise<void> {
+    const noSelection = this.container.querySelector<HTMLElement>('[data-ref="email-no-selection"]');
+    const activeSection = this.container.querySelector<HTMLElement>('[data-ref="email-active-ticket"]');
+    const headerName = this.container.querySelector<HTMLElement>('[data-ref="email-header-name"]');
+    const headerNumber = this.container.querySelector<HTMLElement>('[data-ref="email-header-number"]');
+    const headerStatus = this.container.querySelector<HTMLElement>('[data-ref="email-header-status-badge"]');
+    const headerCategory = this.container.querySelector<HTMLElement>('[data-ref="email-header-category-badge"]');
+    const headerEmail = this.container.querySelector<HTMLElement>('[data-ref="email-header-email"]');
+    const headerSubject = this.container.querySelector<HTMLElement>('[data-ref="email-header-subject"]');
+    const avatarImg = this.container.querySelector<HTMLImageElement>('[data-ref="email-header-avatar-img"]');
+    const messagesFeed = this.container.querySelector<HTMLElement>('[data-ref="email-messages-feed"]');
+
+    try {
+      const res = await fetch(`/api/admin/support/email-tickets/${ticketId}`, {
+        signal: this.abortController?.signal,
+      });
+      if (!res.ok) return;
+
+      const data = await res.json() as { success: boolean; ticket: AdminEmailTicketDetail };
+      this.activeEmailTicket = data.ticket;
+
+      if (noSelection) noSelection.style.display = 'none';
+      if (activeSection) activeSection.style.display = 'flex';
+
+      if (headerName) headerName.textContent = this.activeEmailTicket.name;
+      if (headerNumber) headerNumber.textContent = this.activeEmailTicket.ticket_number;
+      if (headerEmail) headerEmail.textContent = this.activeEmailTicket.email;
+      if (headerSubject) headerSubject.textContent = this.activeEmailTicket.subject;
+      if (headerCategory) headerCategory.textContent = this.activeEmailTicket.subject_category;
+      if (avatarImg) avatarImg.src = `/api/avatar?name=${encodeURIComponent(this.activeEmailTicket.name)}`;
+
+      if (headerStatus) {
+        headerStatus.className = 'component-badge component-badge--sm';
+        if (this.activeEmailTicket.status === 'waiting_user') {
+          headerStatus.classList.add('component-badge--info');
+          headerStatus.textContent = 'Esperando Usuario';
+        } else if (this.activeEmailTicket.status === 'resolved') {
+          headerStatus.classList.add('component-badge--success');
+          headerStatus.textContent = 'Resuelto';
+        } else if (this.activeEmailTicket.status === 'closed') {
+          headerStatus.classList.add('component-badge--neutral');
+          headerStatus.textContent = 'Cerrado';
+        } else {
+          headerStatus.classList.add('component-badge--warning');
+          headerStatus.textContent = 'Abierto';
+        }
+      }
+
+      if (messagesFeed) {
+        messagesFeed.innerHTML = (this.activeEmailTicket.messages || [])
+          .map((m) => {
+            const timeStr = this.formatTime(m.created_at);
+            const isInternal = m.is_internal_note;
+            const isAgent = m.sender_type === 'agent';
+
+            let cardBg = 'var(--bg-surface)';
+            let borderColor = 'var(--border-color)';
+            let badgeClass = 'component-badge--neutral';
+            let roleTitle = 'Cliente';
+
+            if (isInternal) {
+              cardBg = 'rgba(245, 158, 11, 0.08)';
+              borderColor = 'rgba(245, 158, 11, 0.3)';
+              badgeClass = 'component-badge--warning';
+              roleTitle = 'Nota Interna (Privada)';
+            } else if (isAgent) {
+              cardBg = 'rgba(37, 99, 235, 0.04)';
+              borderColor = 'rgba(37, 99, 235, 0.2)';
+              badgeClass = 'component-badge--info';
+              roleTitle = 'Soporte Aurora (Agente)';
+            }
+
+            return `
+              <div class="email-message-card" style="padding: 14px 16px; border-radius: var(--radius-lg); border: 1px solid ${borderColor}; background: ${cardBg}; margin-bottom: 4px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong style="font-size: 13px; color: var(--text-primary);">${escapeHtml(m.sender_name)}</strong>
+                    <span class="component-badge component-badge--sm ${badgeClass}">${roleTitle}</span>
+                    ${m.sender_email ? `<span style="font-size: 11.5px; color: var(--text-secondary);">&lt;${escapeHtml(m.sender_email)}&gt;</span>` : ''}
+                  </div>
+                  <span style="font-size: 11px; color: var(--text-tertiary);">${timeStr}</span>
+                </div>
+                <div style="font-size: 13.5px; color: var(--text-primary); line-height: 1.55; white-space: pre-wrap;">${escapeHtml(m.message)}</div>
+                ${!isInternal && isAgent ? `<div style="margin-top: 8px; font-size: 10.5px; color: var(--text-tertiary); display: flex; align-items: center; gap: 4px;"><svg class="component-icon" style="width: 12px; height: 12px;"><use href="/icons.svg#mark_email_read"></use></svg><span>Enviado al usuario por correo mediante hilo SMTP</span></div>` : ''}
+              </div>
+            `;
+          })
+          .join('');
+
+        renderIcons(messagesFeed);
+        messagesFeed.scrollTop = messagesFeed.scrollHeight;
+      }
+
+      this.filterAndRenderEmailTickets();
+    } catch {
+      toast.error('No se pudo cargar el detalle del ticket.');
+    }
   }
 
   private formatTime(dateStr: string): string {

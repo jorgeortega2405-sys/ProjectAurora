@@ -1317,14 +1317,12 @@ html.dark-theme .rail-nav-item.is-active .rail-nav-item__label {
   border-radius: 16px 16px 0 0;
   border: 1px solid rgba(0, 0, 0, 0.125);
   border-bottom: none;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
 }
 
 html[data-theme="dark"] .component-wrapper,
 html.dark-theme .component-wrapper {
   border-color: rgba(255, 255, 255, 0.125);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .component-wrapper--full {

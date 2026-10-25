@@ -7,6 +7,43 @@
 
     <div class="component-top-right" data-ref="component-top-right">
       <div class="component-top-actions" data-ref="support-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <div class="support-presence-widget" data-ref="support-presence-widget" style="display: flex; align-items: center; gap: 8px;">
+          <div class="settings-dropdown-wrapper" data-ref="dropdown-wrapper-support-presence" style="position: relative;">
+            <button type="button" class="component-button component-button--h36" data-ref="btn-trigger-support-presence" aria-label="Cambiar estado de disponibilidad" style="display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 12px; font-weight: 600;">
+              <span class="support-presence-dot" data-ref="presence-dot-indicator" style="width: 8px; height: 8px; border-radius: 50%; background: #9ca3af;"></span>
+              <span data-ref="presence-status-text">No disponible</span>
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; opacity: 0.7;"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="dropdown-backdrop" data-ref="dropdown-backdrop-support-presence" style="display: none; position: absolute; top: calc(100% + 4px); right: 0; z-index: 50;">
+              <div class="menu-panel menu-panel--dropdown menu-panel--h-auto" data-ref="dropdown-menu-support-presence" style="width: 170px; padding: 4px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-surface); box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+                <div class="menu-panel__list" data-ref="list-support-presences">
+                  <button type="button" class="menu-item" data-ref="opt-presence-available" data-value="available" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; text-align: left; font-size: 12px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0;"></span>
+                    <span class="menu-item__text">Disponible</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-presence-away" data-value="away" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; text-align: left; font-size: 12px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; flex-shrink: 0;"></span>
+                    <span class="menu-item__text">Ausente</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-presence-busy" data-value="busy" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; text-align: left; font-size: 12px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; flex-shrink: 0;"></span>
+                    <span class="menu-item__text">Ocupado</span>
+                  </button>
+                  <button type="button" class="menu-item" data-ref="opt-presence-offline" data-value="offline" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; text-align: left; font-size: 12px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; flex-shrink: 0;"></span>
+                    <span class="menu-item__text">No disponible</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="component-button component-button--h36" data-ref="btn-open-ratings" data-tooltip="Ver calificaciones y reseñas" data-tooltip-placement="bottom" aria-label="Ver calificaciones" style="display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 12px;">
+            <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; color: #f59e0b;"><use href="/icons.svg#star"></use></svg>
+            <span>Calificaciones</span>
+          </button>
+        </div>
+
         <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar chats" data-tooltip-placement="bottom" aria-label="Buscar chats">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
         </button>
@@ -117,6 +154,11 @@
           </div>
 
           <div class="support-chat-header__actions" data-ref="support-header-actions" style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="component-button component-button--h34 component-button--secondary" data-ref="btn-open-audit" style="font-size: 12px;">
+              <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px;"><use href="/icons.svg#history"></use></svg>
+              <span>Auditoría Cassandra</span>
+            </button>
+
             <button type="button" class="component-button component-button--h34 component-button--primary" data-ref="btn-claim-chat" style="font-size: 12px;">
               <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px; margin-right: 4px;"><use href="/icons.svg#check"></use></svg>
               <span>Tomar caso</span>
@@ -254,6 +296,81 @@
       <div class="modal-card__footer" data-ref="modal-transfer-footer" style="padding: 14px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; background: var(--bg-surface);">
         <button type="button" class="component-button component-button--h36 component-button--secondary" data-ref="btn-cancel-transfer">Cancelar</button>
         <button type="button" class="component-button component-button--h36 component-button--primary" data-ref="btn-confirm-transfer">Confirmar Transferencia</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop is-hidden" data-ref="modal-audit-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;">
+    <div class="modal-card modal-card--w-640" data-ref="modal-audit-card" style="background: var(--bg-surface); border-radius: var(--radius-xl, 12px); border: 1px solid var(--border-color); box-shadow: 0 12px 40px rgba(0,0,0,0.25); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; width: 620px;">
+      <div class="modal-card__header" data-ref="modal-audit-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 18px; height: 18px; color: var(--color-brand-blue, #2563eb);"><use href="/icons.svg#history"></use></svg>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">Auditoría Inmutable en Apache Cassandra</h3>
+        </div>
+        <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-close-audit-modal" aria-label="Cerrar modal">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="modal-card__body" data-ref="modal-audit-body" style="padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto;">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px; color: #10b981;"><use href="/icons.svg#check_circle"></use></svg>
+            <span style="font-size: 12.5px; font-weight: 600; color: #047857;">Trazabilidad Criptográfica Inmutable</span>
+          </div>
+          <span class="component-badge component-badge--sm" data-ref="audit-cluster-tag" style="background: rgba(16, 185, 129, 0.15); color: #047857;">Cluster Cassandra 4.1</span>
+        </div>
+
+        <div class="audit-summary-box" data-ref="audit-summary-box" style="padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 6px; font-size: 12.5px;">
+          <div style="display: flex; justify-content: space-between;">
+            <strong data-ref="audit-chat-subject" style="color: var(--text-primary);">Motivo del caso</strong>
+            <span class="component-badge component-badge--sm" data-ref="audit-current-tier">L1</span>
+          </div>
+          <div style="color: var(--text-secondary); font-size: 11.5px;">
+            <span>ID: </span><code data-ref="audit-chat-id" style="font-size: 11px;"></code>
+            <span style="margin: 0 4px;">•</span>
+            <span>Usuario: </span><span data-ref="audit-chat-user"></span>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-tertiary); margin-top: 4px;">Línea de Tiempo y Escalaciones (L1 / L2 / L3)</div>
+        <div class="audit-timeline-feed" data-ref="audit-timeline-feed" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      </div>
+
+      <div class="modal-card__footer" data-ref="modal-audit-footer" style="padding: 14px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background: var(--bg-surface);">
+        <button type="button" class="component-button component-button--h36 component-button--secondary" data-ref="btn-dismiss-audit">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop is-hidden" data-ref="modal-ratings-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;">
+    <div class="modal-card modal-card--w-640" data-ref="modal-ratings-card" style="background: var(--bg-surface); border-radius: var(--radius-xl, 12px); border: 1px solid var(--border-color); box-shadow: 0 12px 40px rgba(0,0,0,0.25); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; width: 620px;">
+      <div class="modal-card__header" data-ref="modal-ratings-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 18px; height: 18px; color: #f59e0b;"><use href="/icons.svg#star"></use></svg>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">Métricas y Calificaciones de Soporte</h3>
+        </div>
+        <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-close-ratings-modal" aria-label="Cerrar modal">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+
+      <div class="modal-card__body" data-ref="modal-ratings-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+        <div class="ratings-overview-card" data-ref="ratings-overview-card" style="display: flex; gap: 20px; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-lg); align-items: center;">
+          <div style="text-align: center; min-width: 100px;">
+            <div data-ref="ratings-avg-number" style="font-size: 36px; font-weight: 800; color: var(--text-primary); line-height: 1;">5.0</div>
+            <div style="color: #f59e0b; margin: 4px 0;">★★★★★</div>
+            <div data-ref="ratings-total-count" style="font-size: 11.5px; color: var(--text-tertiary);">0 calificaciones</div>
+          </div>
+          <div class="ratings-breakdown-bars" data-ref="ratings-breakdown-bars" style="flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 11.5px;"></div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-tertiary);">Comentarios y Evaluaciones Recientes</div>
+        <div class="ratings-feed-list" data-ref="ratings-feed-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <div class="modal-card__footer" data-ref="modal-ratings-footer" style="padding: 14px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background: var(--bg-surface);">
+        <button type="button" class="component-button component-button--h36 component-button--secondary" data-ref="btn-dismiss-ratings">Cerrar</button>
       </div>
     </div>
   </div>

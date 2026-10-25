@@ -15,7 +15,9 @@ export async function loginAdmin(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const result = await authenticateAdminCredentials(identifier, password);
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const result = await authenticateAdminCredentials(identifier, password, { ip, userAgent });
     if (!result.success || !result.user) {
       const statusCode = result.error?.includes('Acceso denegado') ? 403 : 401;
       res.status(statusCode).json({

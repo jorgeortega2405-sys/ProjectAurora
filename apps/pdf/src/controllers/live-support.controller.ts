@@ -229,3 +229,20 @@ export async function rateLiveChatController(req: Request, res: Response): Promi
     });
   }
 }
+
+export async function checkAvailabilityController(req: Request, res: Response): Promise<void> {
+  try {
+    const tier = typeof req.query.tier === 'string' ? req.query.tier.trim() : undefined;
+    const availability = await LiveSupportService.checkAgentAvailability(tier);
+    res.json({
+      ...availability,
+      success: true,
+    });
+  } catch (error) {
+    logger.app.error('Error al verificar disponibilidad de agentes en soporte', { error });
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al procesar la solicitud. Por favor intenta más tarde.',
+      success: false,
+    });
+  }
+}

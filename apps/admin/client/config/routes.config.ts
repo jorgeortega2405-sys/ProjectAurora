@@ -108,6 +108,24 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
     match: (path) => path === '/support' || path.startsWith('/support') || path === '/soporte' || path.startsWith('/soporte'),
     requiredPermission: 'admin:support:view',
   },
+  {
+    handler: async () => {
+      const { createAuditView } = await import('../views/audit.view.js');
+      return await createAuditView();
+    },
+    id: 'audit',
+    match: (path) => path === '/audit' || path.startsWith('/audit') || path === '/security' || path.startsWith('/security') || path === '/seguridad' || path.startsWith('/seguridad') || path === '/auditoria' || path.startsWith('/auditoria'),
+    requiredPermission: 'admin:security:audit',
+  },
+  {
+    handler: async () => {
+      const { createDataExplorerView } = await import('../views/data-explorer.view.js');
+      return await createDataExplorerView();
+    },
+    id: 'data-explorer',
+    match: (path) => path === '/data-explorer' || path.startsWith('/data-explorer') || path === '/analytics' || path.startsWith('/analytics') || path === '/analista' || path.startsWith('/analista') || path === '/explorador' || path.startsWith('/explorador'),
+    requiredPermission: 'admin:analytics:view',
+  },
 ];
 
 export function findRoute(path: string): MatchedRoute | null {

@@ -3,6 +3,7 @@ import { RowDataPacket } from 'mysql2';
 import { pool } from '../config/database.config.js';
 import { redis } from '../config/redis.config.js';
 import { logger } from './logger.service.js';
+import { SupportAuditService } from './support-audit.service.js';
 
 export interface LiveChatRecord {
   assigned_agent_id: string | null;
@@ -106,6 +107,22 @@ export class LiveSupportService {
       logger.app.warn('Fallo al publicar evento de nuevo chat en Redis', { error: err });
     }
 
+    await SupportAuditService.recordChatEvent({
+      actorId: data.userId || null,
+      actorName: data.userName,
+      actorType: 'user',
+      chatId: id,
+      currentStatus: 'pending',
+      currentTier: 'L1',
+      eventType: 'created',
+      payload: { subject: data.subject },
+      sessionId: data.sessionId,
+      subject: data.subject,
+      userEmail: data.userEmail,
+      userId: data.userId || null,
+      userName: data.userName,
+    });
+
     return chat;
   }
 
@@ -190,6 +207,16 @@ export class LiveSupportService {
     } catch (err) {
       logger.app.warn('Fallo al publicar mensaje de usuario en Redis', { error: err });
     }
+
+    await SupportAuditService.recordMessage({
+      chatId: data.chatId,
+      message: msgRecord.message,
+      messageId: id,
+      senderId: data.senderId || null,
+      senderName: data.senderName,
+      senderType: 'user',
+      tier: chat.tier,
+    });
 
     return msgRecord;
   }
@@ -280,6 +307,16 @@ export class LiveSupportService {
       logger.app.warn('Fallo al publicar evento de chat_closed en Redis', { error: err });
     }
 
+    await SupportAuditService.recordChatEvent({
+      actorName: closedBy === 'user' ? (chat.user_name || 'Usuario') : 'Sistema',
+      actorType: closedBy === 'user' ? 'user' : 'system',
+      chatId,
+      currentStatus: 'closed',
+      currentTier: chat.tier,
+      eventType: 'closed',
+      payload: { closedBy },
+    });
+
     return updated;
   }
 
@@ -310,6 +347,38 @@ export class LiveSupportService {
       throw new Error('No se pudo verificar el registro de la calificación.');
     }
 
+    await SupportAuditService.recordRating({
+      agentId: chat.assigned_agent_id,
+      agentName: chat.assigned_agent_name,
+      chatId: data.chatId,
+      feedbackComment: comment,
+      rating: ratingVal,
+      tier: chat.tier,
+      userEmail: chat.user_email,
+      userId: chat.user_id,
+      userName: chat.user_name,
+    });
+
     return updated;
+  }
+
+  static async checkAgentAvailability(tierFilter?: string): Promise<{
+    available: boolean;
+    availableCount: number;
+    tier: string | null;
+  }> {
+    let sql = 'SELECT COUNT(*) as total FROM support_agent_presence WHERE status = \'available\'';
+    const params: unknown[] = [];
+    if (tierFilter && ['L1', 'L2', 'L3'].includes(tierFilter)) {
+      sql += ' AND tier = ?';
+      params.push(tierFilter);
+    }
+    const [rows] = await pool.query<RowDataPacket[]>(sql, params);
+    const count = Number(rows[0]?.total || 0);
+    return {
+      available: count > 0,
+      availableCount: count,
+      tier: tierFilter || null,
+    };
   }
 }

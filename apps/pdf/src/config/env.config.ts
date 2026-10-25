@@ -11,6 +11,11 @@ if (fs.existsSync(localEnvPath)) {
 export const config = {
   appName: process.env.APP_NAME || 'ProjectAurora',
   baseUrl: process.env.BASE_URL || 'http://localhost:3000',
+  cassandra: {
+    host: process.env.CASSANDRA_HOST || '127.0.0.1',
+    keyspace: process.env.CASSANDRA_KEYSPACE || 'aurora_telemetry',
+    port: parseInt(process.env.CASSANDRA_PORT || '9042', 10),
+  },
   cors: {
     allowedOrigins: (process.env.ALLOWED_ORIGINS || '')
       .split(',')

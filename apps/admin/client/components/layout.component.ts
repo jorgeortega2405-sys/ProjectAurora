@@ -44,6 +44,9 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const isHr = currentPath.startsWith('/hr') || currentPath.startsWith('/rrhh');
   const isBackups = currentPath.startsWith('/backups') || currentPath.startsWith('/copias-de-seguridad');
   const isTickets = currentPath.startsWith('/internal-tickets') || currentPath.startsWith('/tickets-internos') || currentPath.startsWith('/tickets');
+  const isSupport = currentPath.startsWith('/support') || currentPath.startsWith('/soporte');
+  const isAudit = currentPath.startsWith('/audit') || currentPath.startsWith('/security') || currentPath.startsWith('/seguridad') || currentPath.startsWith('/auditoria');
+  const isDataExplorer = currentPath.startsWith('/data-explorer') || currentPath.startsWith('/analytics') || currentPath.startsWith('/analista') || currentPath.startsWith('/explorador');
 
   const canDashboard = hasPermission('admin:dashboard:view') || hasPermission('admin:access');
   const canUsers = hasPermission('admin:users:view');
@@ -54,6 +57,9 @@ function populateDrawerContent(drawer: HTMLElement): void {
   const canHr = hasPermission('admin:hr:view');
   const canBackups = hasPermission('system:backup:read');
   const canTickets = hasPermission('admin:tickets:view');
+  const canSupport = hasPermission('admin:support:view');
+  const canAudit = hasPermission('admin:security:audit');
+  const canAnalytics = hasPermission('admin:analytics:view');
 
   const bindNavLink = (btn: HTMLElement | null, path: string) => {
     btn?.addEventListener('click', (e) => {
@@ -153,6 +159,33 @@ function populateDrawerContent(drawer: HTMLElement): void {
     `;
   }
 
+  if (canSupport) {
+    itemsHtml += `
+      <button type="button" class="menu-item ${isSupport ? 'is-active' : ''}" data-ref="btn-drawer-nav-support">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#headset_mic"></use></svg>
+        <span class="menu-item__text">Soporte en Vivo</span>
+      </button>
+    `;
+  }
+
+  if (canAudit) {
+    itemsHtml += `
+      <button type="button" class="menu-item ${isAudit ? 'is-active' : ''}" data-ref="btn-drawer-nav-audit">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
+        <span class="menu-item__text">Seguridad y Auditoría</span>
+      </button>
+    `;
+  }
+
+  if (canAnalytics) {
+    itemsHtml += `
+      <button type="button" class="menu-item ${isDataExplorer ? 'is-active' : ''}" data-ref="btn-drawer-nav-data-explorer">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#table_chart"></use></svg>
+        <span class="menu-item__text">Explorador de Datos</span>
+      </button>
+    `;
+  }
+
   drawerBody.innerHTML = itemsHtml;
 
   const websiteMount = drawerBody.querySelector<HTMLElement>('[data-ref="website-selector-mount"]');
@@ -221,6 +254,15 @@ function populateDrawerContent(drawer: HTMLElement): void {
   }
   if (canTickets) {
     bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-tickets"]'), '/internal-tickets');
+  }
+  if (canSupport) {
+    bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-support"]'), '/support');
+  }
+  if (canAudit) {
+    bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-audit"]'), '/audit');
+  }
+  if (canAnalytics) {
+    bindNavLink(drawerBody.querySelector<HTMLElement>('[data-ref="btn-drawer-nav-data-explorer"]'), '/data-explorer');
   }
 
   renderIcons(drawer);
@@ -337,6 +379,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isBackups = path.startsWith('/backups') || path.startsWith('/copias-de-seguridad');
   const isTickets = path.startsWith('/internal-tickets') || path.startsWith('/tickets-internos') || path.startsWith('/tickets');
   const isSupport = path.startsWith('/support') || path.startsWith('/soporte');
+  const isAudit = path.startsWith('/audit') || path.startsWith('/security') || path.startsWith('/seguridad') || path.startsWith('/auditoria');
+  const isDataExplorer = path.startsWith('/data-explorer') || path.startsWith('/analytics') || path.startsWith('/analista') || path.startsWith('/explorador');
 
   const canDashboard = hasPermission('admin:dashboard:view') || hasPermission('admin:access');
   const canUsers = hasPermission('admin:users:view');
@@ -348,6 +392,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const canBackups = hasPermission('system:backup:read');
   const canTickets = hasPermission('admin:tickets:view');
   const canSupport = hasPermission('admin:support:view');
+  const canAudit = hasPermission('admin:security:audit');
+  const canAnalytics = hasPermission('admin:analytics:view');
 
   const itemDashboard = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-dashboard"]');
   const btnDashboard = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-dashboard"]');
@@ -369,6 +415,10 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const btnTickets = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-tickets"]');
   const itemSupport = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-support"]');
   const btnSupport = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-support"]');
+  const itemAudit = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-audit"]');
+  const btnAudit = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-audit"]');
+  const itemDataExplorer = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-data-explorer"]');
+  const btnDataExplorer = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-data-explorer"]');
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
 
   if (itemDashboard) itemDashboard.style.display = canDashboard ? '' : 'none';
@@ -381,6 +431,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   if (itemBackups) itemBackups.style.display = canBackups ? '' : 'none';
   if (itemTickets) itemTickets.style.display = canTickets ? '' : 'none';
   if (itemSupport) itemSupport.style.display = canSupport ? '' : 'none';
+  if (itemAudit) itemAudit.style.display = canAudit ? '' : 'none';
+  if (itemDataExplorer) itemDataExplorer.style.display = canAnalytics ? '' : 'none';
 
   itemDashboard?.classList.toggle('is-active', isDashboard);
   btnDashboard?.classList.toggle('is-active', isDashboard);
@@ -402,7 +454,10 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnTickets?.classList.toggle('is-active', isTickets);
   itemSupport?.classList.toggle('is-active', isSupport);
   btnSupport?.classList.toggle('is-active', isSupport);
-  btnBackups?.classList.toggle('is-active', isBackups);
+  itemAudit?.classList.toggle('is-active', isAudit);
+  btnAudit?.classList.toggle('is-active', isAudit);
+  itemDataExplorer?.classList.toggle('is-active', isDataExplorer);
+  btnDataExplorer?.classList.toggle('is-active', isDataExplorer);
   btnToggle?.classList.toggle('is-active', isDrawerOpen);
 
   updateSidebarProfile(sidebar);
@@ -463,6 +518,8 @@ function bindSidebarEvents(sidebar: HTMLElement): void {
   bindItemNav('btn-rail-backups', 'rail-item-backups', '/backups');
   bindItemNav('btn-rail-tickets', 'rail-item-tickets', '/internal-tickets');
   bindItemNav('btn-rail-support', 'rail-item-support', '/support');
+  bindItemNav('btn-rail-audit', 'rail-item-audit', '/audit');
+  bindItemNav('btn-rail-data-explorer', 'rail-item-data-explorer', '/data-explorer');
 
   btnTheme?.addEventListener('click', (e) => {
     e.preventDefault();

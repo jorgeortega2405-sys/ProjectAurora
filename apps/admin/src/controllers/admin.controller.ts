@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
 import { adminConfig } from '../config/env.config.js';
 import { getAdminAccessibleWebsites } from '../services/auth.service.js';
 import { createBackup, deleteBackup, getBackupDownloadStream, getSystemStatus, restoreBackup } from '../services/backup.service.js';
 import { getDashboardStats } from '../services/dashboard.service.js';
-import { getAllBackups, getAllInquiries, getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, getBackupById, updateInquiryStatus, updateOrganizationSettings, updateVerificationStatus } from '../services/db.service.js';
+import { getAllBackups, getAllInquiries, getAllOrganizations, getAllPurchases, getAllUsers, getAllVerifications, getBackupById, updateInquiryStatus, updateOrganizationSettings, updateUserRole, updateUserStatus, updateVerificationStatus } from '../services/db.service.js';
 import { logger } from '../services/logger.service.js';
+import { Request, Response } from 'express';
+import { SecurityAuditService } from '../services/security-audit.service.js';
 
 export function getAdminHealth(_req: Request, res: Response): void {
   res.json({
@@ -103,6 +104,23 @@ export async function reviewAdminVerification(req: Request, res: Response): Prom
       return;
     }
 
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: status === 'approved' ? 'education.approve' : 'education.reject',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: { notes: notes || null, status },
+      ipAddress: ip,
+      status: 'success',
+      targetId: id,
+      targetName: `Verificación ${id}`,
+      targetType: 'verification',
+      userAgent: req.headers['user-agent'] as string,
+    });
+
     res.json({
       message: `Solicitud de verificación ${status === 'approved' ? 'aprobada' : 'rechazada'} exitosamente.`,
       success: true,
@@ -162,6 +180,23 @@ export async function updateAdminOrganization(req: Request, res: Response): Prom
       return;
     }
 
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: 'organization.update',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: { seat_limit, subscription_status },
+      ipAddress: ip,
+      status: 'success',
+      targetId: id,
+      targetName: `Organización ${id}`,
+      targetType: 'organization',
+      userAgent: req.headers['user-agent'] as string,
+    });
+
     res.json({
       message: 'Configuración de la organización actualizada exitosamente.',
       success: true,
@@ -219,6 +254,23 @@ export async function updateAdminInquiryStatus(req: Request, res: Response): Pro
       });
       return;
     }
+
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: 'inquiry.update',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: { status },
+      ipAddress: ip,
+      status: 'success',
+      targetId: id,
+      targetName: `Lead ${id}`,
+      targetType: 'inquiry',
+      userAgent: req.headers['user-agent'] as string,
+    });
 
     res.json({
       message: 'Estado de la solicitud comercial actualizado exitosamente.',
@@ -288,6 +340,31 @@ export async function createAdminBackup(req: Request, res: Response): Promise<vo
       notes,
     });
 
+    if (!backup) {
+      res.status(500).json({
+        error: 'No se pudo generar la copia de seguridad. Por favor intenta más tarde.',
+        success: false,
+      });
+      return;
+    }
+
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: 'backup.create',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: { components: backup.components, filename: backup.filename, size: backup.size_bytes },
+      ipAddress: ip,
+      status: 'success',
+      targetId: backup.id,
+      targetName: backup.name,
+      targetType: 'backup',
+      userAgent: req.headers['user-agent'] as string,
+    });
+
     res.status(201).json({
       backup,
       message: 'Copia de seguridad generada y almacenada en S3 exitosamente.',
@@ -318,6 +395,23 @@ export async function restoreAdminBackup(req: Request, res: Response): Promise<v
     }
 
     const result = await restoreBackup(id, { components });
+
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: 'backup.restore',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: { components: components || ['mysql', 'cassandra', 'minio'] },
+      ipAddress: ip,
+      status: 'success',
+      targetId: id,
+      targetName: `Backup ${id}`,
+      targetType: 'backup',
+      userAgent: req.headers['user-agent'] as string,
+    });
 
     res.json({
       message: 'Copia de seguridad restaurada exitosamente en el sistema.',
@@ -350,6 +444,23 @@ export async function downloadAdminBackup(req: Request, res: Response): Promise<
     res.setHeader('Content-Disposition', `attachment; filename="${downloadData.filename}"`);
     res.setHeader('Content-Length', String(downloadData.contentLength));
 
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: 'backup.download',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: { filename: downloadData.filename, size: downloadData.contentLength },
+      ipAddress: ip,
+      status: 'success',
+      targetId: id,
+      targetName: downloadData.filename,
+      targetType: 'backup',
+      userAgent: req.headers['user-agent'] as string,
+    });
+
     (downloadData.stream as any).pipe(res);
   } catch (err) {
     logger.app.error('Error al descargar copia de seguridad en controlador de admin', err);
@@ -379,6 +490,23 @@ export async function deleteAdminBackup(req: Request, res: Response): Promise<vo
       });
       return;
     }
+
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    void SecurityAuditService.recordAdminAction({
+      action: 'backup.delete',
+      actorEmail: adminUser?.email,
+      actorId: adminUser?.id || 'system',
+      actorRole: adminUser?.role || 'ADMIN',
+      actorUsername: adminUser?.username || 'Admin',
+      details: {},
+      ipAddress: ip,
+      status: 'success',
+      targetId: id,
+      targetName: `Backup ${id}`,
+      targetType: 'backup',
+      userAgent: req.headers['user-agent'] as string,
+    });
 
     res.json({
       message: 'Copia de seguridad eliminada exitosamente.',
@@ -427,6 +555,64 @@ export async function getAdminDashboardStats(_req: Request, res: Response): Prom
     logger.app.error('Error al obtener estadísticas del dashboard en controlador de admin', err);
     res.status(500).json({
       error: 'Ha ocurrido un error inesperado al consultar las métricas del sistema.',
+      success: false,
+    });
+  }
+}
+
+export async function patchAdminUser(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { role, status } = req.body as { role?: string; status?: string };
+    const adminUser = (req as any).adminUser;
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+
+    if (!id) {
+      res.status(400).json({ error: 'Identificador de usuario requerido.', success: false });
+      return;
+    }
+
+    if (role) {
+      await updateUserRole(id, role);
+      void SecurityAuditService.recordAdminAction({
+        action: 'user.update_role',
+        actorEmail: adminUser?.email,
+        actorId: adminUser?.id || 'system',
+        actorRole: adminUser?.role || 'ADMIN',
+        actorUsername: adminUser?.username || 'Admin',
+        details: { newRole: role },
+        ipAddress: ip,
+        status: 'success',
+        targetId: id,
+        targetName: `Usuario ${id}`,
+        targetType: 'user',
+        userAgent: req.headers['user-agent'] as string,
+      });
+    }
+
+    if (status) {
+      await updateUserStatus(id, status);
+      void SecurityAuditService.recordAdminAction({
+        action: status === 'suspended' ? 'user.suspend' : 'user.activate',
+        actorEmail: adminUser?.email,
+        actorId: adminUser?.id || 'system',
+        actorRole: adminUser?.role || 'ADMIN',
+        actorUsername: adminUser?.username || 'Admin',
+        details: { newStatus: status },
+        ipAddress: ip,
+        status: 'success',
+        targetId: id,
+        targetName: `Usuario ${id}`,
+        targetType: 'user',
+        userAgent: req.headers['user-agent'] as string,
+      });
+    }
+
+    res.json({ message: 'Usuario actualizado exitosamente.', success: true });
+  } catch (err) {
+    logger.app.error('Error al actualizar usuario en controlador de admin', err);
+    res.status(500).json({
+      error: 'Ha ocurrido un error inesperado al actualizar el usuario.',
       success: false,
     });
   }

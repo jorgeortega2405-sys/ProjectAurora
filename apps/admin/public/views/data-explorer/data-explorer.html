@@ -1,0 +1,129 @@
+<div class="data-explorer-container" data-ref="data-explorer-wrapper">
+  <div class="view-header" data-ref="view-header">
+    <div class="view-header__left" data-ref="header-left">
+      <div class="view-header__breadcrumbs" data-ref="header-breadcrumbs">
+        <span class="view-header__breadcrumb-item" data-ref="breadcrumb-admin">Administración</span>
+        <span class="view-header__breadcrumb-separator" data-ref="breadcrumb-sep">/</span>
+        <span class="view-header__breadcrumb-item view-header__breadcrumb-item--current" data-ref="breadcrumb-current">Explorador de Datos</span>
+      </div>
+      <h1 class="view-header__title" data-ref="header-title">Consola Analítica y Esquemas</h1>
+      <p class="view-header__subtitle" data-ref="header-subtitle">
+        Entorno de exploración de solo lectura conectado a MySQL (<span data-ref="pill-mysql-name">db_aurora</span>) y Apache Cassandra (<span data-ref="pill-cassandra-name">aurora_telemetry</span>) con enmascaramiento automático y auditoría inmutable.
+      </p>
+    </div>
+
+    <div class="view-header__actions" data-ref="header-actions">
+      <div class="badge badge--success" data-ref="badge-guardrails">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
+        <span>Solo Lectura (Guardrails Activos)</span>
+      </div>
+      <button type="button" class="component-button component-button--h35 component-button--ghost" data-ref="btn-refresh-all" data-tooltip="Recargar esquemas" aria-label="Recargar esquemas">
+        <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+        <span>Recargar</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="data-explorer-studio" data-ref="data-explorer-studio">
+    <aside class="data-explorer-sidebar" data-ref="schema-sidebar">
+      <div class="data-explorer-sidebar__header" data-ref="sidebar-header">
+        <div class="data-explorer-sidebar__tabs" data-ref="database-tabs">
+          <button type="button" class="data-explorer-db-tab is-active" data-ref="tab-select-mysql">MySQL (Relacional)</button>
+          <button type="button" class="data-explorer-db-tab" data-ref="tab-select-cassandra">Cassandra (NoSQL)</button>
+        </div>
+
+        <div class="data-explorer-sidebar__search" data-ref="sidebar-search">
+          <input class="field__input" data-ref="input-search-schema" type="text" placeholder="Buscar tablas y columnas..." autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="data-explorer-sidebar__tree" data-ref="schema-tree">
+        <div class="loading-spinner" data-ref="schema-loading">Cargando esquema de base de datos...</div>
+      </div>
+    </aside>
+
+    <main class="data-explorer-main" data-ref="workspace-main">
+      <div class="data-explorer-console" data-ref="console-box">
+        <div class="data-explorer-toolbar" data-ref="console-toolbar">
+          <div class="data-explorer-toolbar__actions" data-ref="toolbar-left">
+            <select class="field__input" data-ref="select-target-db" style="height: 32px; font-size: 12px; width: 140px; padding: 0 8px;">
+              <option value="mysql">MySQL (db_aurora)</option>
+              <option value="cassandra">Cassandra (telemetry)</option>
+            </select>
+
+            <select class="field__input" data-ref="select-query-template" style="height: 32px; font-size: 12px; max-width: 280px; padding: 0 8px;">
+              <option value="">-- Plantillas analíticas predefinidas --</option>
+            </select>
+          </div>
+
+          <div class="data-explorer-toolbar__actions" data-ref="toolbar-right">
+            <button type="button" class="component-button component-button--h35 component-button--ghost" data-ref="btn-clear-editor" data-tooltip="Limpiar editor" aria-label="Limpiar editor">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete_sweep"></use></svg>
+              <span>Limpiar</span>
+            </button>
+
+            <button type="button" class="component-button component-button--h35 component-button--black" data-ref="btn-run-query" data-tooltip="Ejecutar consulta (Ctrl + Enter)" aria-label="Ejecutar consulta">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#code"></use></svg>
+              <span>Ejecutar</span>
+              <kbd class="kbd-shortcut" data-ref="kbd-run">Ctrl + ↵</kbd>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-explorer-editor-box" data-ref="editor-box">
+          <textarea class="data-explorer-editor-textarea" data-ref="query-textarea" placeholder="Escribe tu consulta SQL o CQL aquí... Ejemplo: SELECT id, username, email FROM users LIMIT 50;" spellcheck="false"></textarea>
+        </div>
+
+        <div class="banner banner--danger is-hidden" data-ref="query-error-banner" style="margin: 8px 14px 0 14px;">
+          <span class="banner__message" data-ref="query-error-text"></span>
+        </div>
+
+        <div class="data-explorer-status-bar" data-ref="console-status-bar">
+          <span data-ref="status-guardrail-info">Protección automática: LIMIT 200 inyectado si falta | Timeout 5000ms | Columnas sensibles enmascaradas</span>
+          <span data-ref="status-execution-time">Esperando ejecución</span>
+        </div>
+      </div>
+
+      <div class="data-explorer-results-card" data-ref="results-card">
+        <div class="data-explorer-results-header" data-ref="results-header">
+          <div class="data-explorer-results-tabs" data-ref="results-tabs">
+            <button type="button" class="tab-btn is-active" data-ref="tab-btn-results">
+              <span>Resultados</span>
+              <span class="badge" data-ref="badge-row-count">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-ref="tab-btn-history">
+              <span>Historial</span>
+              <span class="badge" data-ref="badge-history-count">0</span>
+            </button>
+          </div>
+
+          <div class="data-explorer-results-actions" data-ref="results-actions">
+            <button type="button" class="component-button component-button--h30 component-button--ghost" data-ref="btn-export-csv" data-tooltip="Descargar resultados en CSV" aria-label="Descargar CSV">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+              <span>CSV</span>
+            </button>
+            <button type="button" class="component-button component-button--h30 component-button--ghost" data-ref="btn-export-json" data-tooltip="Descargar resultados en JSON" aria-label="Descargar JSON">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+              <span>JSON</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="data-explorer-results-body" data-ref="results-body">
+          <div class="empty-state" data-ref="results-empty-state" style="padding: 40px 20px; text-align: center; color: var(--text-tertiary);">
+            <svg class="component-icon" style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5;" aria-hidden="true"><use href="/icons.svg#table_chart"></use></svg>
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px;">Listo para ejecutar consultas</div>
+            <div style="font-size: 12px;">Selecciona una tabla en el menú lateral izquierdo o elige una plantilla predefinida para comenzar.</div>
+          </div>
+
+          <table class="data-explorer-table is-hidden" data-ref="results-table">
+            <thead data-ref="results-thead"></thead>
+            <tbody data-ref="results-tbody"></tbody>
+          </table>
+
+          <div class="query-history-list is-hidden" data-ref="history-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

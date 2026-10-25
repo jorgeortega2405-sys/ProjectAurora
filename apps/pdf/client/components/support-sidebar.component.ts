@@ -241,6 +241,8 @@ function bindLiveSupportWebSocket(sessionId: string, messagesList: HTMLElement |
       if (closedChatId) {
         openSupportRatingModal(closedChatId, closedAgentName);
       }
+    } else if (event.type === 'agent_presence_updated') {
+      void refreshAgentAvailability();
     } else if (event.type === 'chat_message') {
       if (event.id && renderedMessageIds.has(event.id)) {
         return;
@@ -555,6 +557,34 @@ export function initTechSupportAutoResume(): void {
   void checkAndResumeActiveChat();
 }
 
+async function refreshAgentAvailability(): Promise<void> {
+  if (!sidebarElement) return;
+  const badge = sidebarElement.querySelector<HTMLElement>('[data-ref="support-online-badge"]');
+  const dot = sidebarElement.querySelector<HTMLElement>('[data-ref="support-online-dot"]');
+  const text = sidebarElement.querySelector<HTMLElement>('[data-ref="support-online-text"]');
+  if (!badge || !dot || !text) return;
+
+  try {
+    const res = await getApi('/api/support/live/availability');
+    if (!res.ok) return;
+    const data = (await res.json()) as { available?: boolean; availableCount?: number };
+    badge.style.display = 'inline-flex';
+    if (data.available) {
+      badge.style.background = 'rgba(16, 185, 129, 0.12)';
+      badge.style.color = '#10b981';
+      dot.style.background = '#10b981';
+      text.textContent = 'Agentes en línea';
+    } else {
+      badge.style.background = 'rgba(156, 163, 175, 0.15)';
+      badge.style.color = 'var(--text-tertiary)';
+      dot.style.background = '#9ca3af';
+      text.textContent = 'Sin agentes en línea';
+    }
+  } catch {
+    // ignore
+  }
+}
+
 async function startLiveAgentHandoff(reason: string, messagesList: HTMLElement | null, centerEl: HTMLElement | null): Promise<void> {
   isLiveMode = true;
   activeSessionId = localStorage.getItem(STORAGE_KEY_SESSION_ID) || `support_sess_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -563,7 +593,23 @@ async function startLiveAgentHandoff(reason: string, messagesList: HTMLElement |
   activeAgentName = null;
   renderedMessageIds.clear();
 
-  updateLiveBadge('Conectando con agente en vivo... (Nivel L1)', false);
+  let isAvailable = true;
+  try {
+    const availRes = await getApi('/api/support/live/availability');
+    if (availRes.ok) {
+      const availData = (await availRes.json()) as { available?: boolean };
+      isAvailable = Boolean(availData?.available);
+    }
+  } catch {
+    // ignore
+  }
+
+  if (!isAvailable) {
+    updateLiveBadge('Agentes no disponibles (En cola)', false);
+  } else {
+    updateLiveBadge('Conectando con agente en vivo... (Nivel L1)', false);
+  }
+
   bindLiveSupportWebSocket(activeSessionId, messagesList, centerEl);
 
   try {
@@ -589,7 +635,11 @@ async function startLiveAgentHandoff(reason: string, messagesList: HTMLElement |
         localStorage.setItem(STORAGE_KEY_SESSION_ID, activeSessionId);
       }
       showEndChatButton(true);
-      appendSystemBubble(messagesList, 'Solicitud enviada a la cola de agentes. Esperando asignación...');
+      if (!isAvailable) {
+        appendSystemBubble(messagesList, 'Aviso: En este momento no hay agentes de soporte disponibles en línea. Tu solicitud ha quedado registrada en cola y te responderemos en cuanto un agente se conecte.');
+      } else {
+        appendSystemBubble(messagesList, 'Solicitud enviada a la cola de agentes. Esperando asignación...');
+      }
       scrollToBottom(centerEl);
     }
   } catch {
@@ -769,6 +819,10 @@ export function createTechSupportSidebar(): HTMLElement {
       <div class="chat-panel__top" data-ref="tech-support-top">
         <span class="chat-panel__title" data-ref="tech-support-title" data-i18n="nav.tech_support">${t('nav.tech_support', 'Soporte técnico')}</span>
         <div class="chat-panel__top-actions" data-ref="tech-support-top-actions" style="display: flex; align-items: center; gap: 6px;">
+          <span class="support-online-badge" data-ref="support-online-badge" style="display: none; align-items: center; gap: 5px; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 600;">
+            <span class="support-online-dot" data-ref="support-online-dot" style="width: 6px; height: 6px; border-radius: 50%;"></span>
+            <span data-ref="support-online-text"></span>
+          </span>
           <button type="button" class="component-button component-button--ghost component-button--danger component-button--h28" data-ref="btn-end-live-chat" style="display: none; font-size: 11px; padding: 0 8px; font-weight: 600;">Finalizar</button>
           <button type="button" class="component-button component-button--icon-only component-button--h32" data-ref="btn-close-tech-support" data-tooltip="Cerrar" data-i18n-tooltip="common.close" data-i18n-aria="common.close" aria-label="Cerrar">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
@@ -914,6 +968,7 @@ export function createTechSupportSidebar(): HTMLElement {
 
   bindGlobalEvents();
   sidebarElement = aside;
+  void refreshAgentAvailability();
   return aside;
 }
 
@@ -926,6 +981,7 @@ export function openTechSupportSidebar(): void {
   }
   sidebar.classList.add('is-active');
   isTechSupportOpen = true;
+  void refreshAgentAvailability();
 
   if (!isLiveMode) {
     void checkAndResumeActiveChat();

@@ -5,6 +5,7 @@ import { RowDataPacket } from 'mysql2/promise';
 import { adminConfig } from '../config/env.config.js';
 import { adminDbPool } from './db.service.js';
 import { logger } from './logger.service.js';
+import { SessionSecurityService } from './session-security.service.js';
 
 export interface AdminUser {
   avatar_url: string | null;
@@ -52,6 +53,7 @@ export interface AdminMultiAccountSession {
   activeId: string;
   exp: number;
   iat: number;
+  sessionId?: string;
 }
 
 export function hasPermission(permissions: string[] | undefined, requiredPermission: string): boolean {
@@ -85,6 +87,7 @@ export function createAdminMultiAccountToken(session: AdminMultiAccountSession):
     activeId: session.activeId,
     exp: session.exp || now + ADMIN_SESSION_TTL_SECONDS * 1000,
     iat: session.iat || now,
+    sessionId: session.sessionId || crypto.randomUUID(),
   };
 
   const payloadStr = JSON.stringify(sessionWithMeta);
@@ -319,12 +322,26 @@ export async function addAdminAccountToSession(
     accounts.push(sessionAcc);
   }
 
+  const sessionId = existingSession?.sessionId || crypto.randomUUID();
   const newSession: AdminMultiAccountSession = {
     accounts,
     activeId: user.id,
     exp: now + ADMIN_SESSION_TTL_SECONDS * 1000,
     iat: now,
+    sessionId,
   };
+
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || 'Unknown';
+  void SessionSecurityService.registerSession({
+    email: user.email,
+    ip,
+    role: user.role,
+    sessionId,
+    userAgent,
+    userId: user.id,
+    username: user.username,
+  });
 
   (req as any)._cachedAdminMultiAccountSession = newSession;
   setAdminSessionCookie(res, newSession);
@@ -410,6 +427,17 @@ export async function getAdminSessionUser(req: Request): Promise<AdminUser | nul
   const session = getAdminMultiAccountSession(req);
   if (!session) return null;
 
+  if (session.sessionId) {
+    const isRevoked = await SessionSecurityService.isSessionRevoked(session.sessionId);
+    if (isRevoked) {
+      logger.security.warn('Sesión administrativa revocada intentó autenticar en panel', {
+        sessionId: session.sessionId,
+      });
+      return null;
+    }
+    void SessionSecurityService.updateSessionActivity(session.sessionId);
+  }
+
   const activeId = session.activeId || (session.accounts[0] && session.accounts[0].id);
   if (!activeId) return null;
 
@@ -429,9 +457,28 @@ export async function getAdminSessionUser(req: Request): Promise<AdminUser | nul
 
 export async function authenticateAdminCredentials(
   identifier: string,
-  passwordPlain: string
+  passwordPlain: string,
+  meta?: { ip?: string; userAgent?: string }
 ): Promise<{ success: boolean; error?: string; user?: AdminUser }> {
   const cleanIdentifier = String(identifier || '').trim().toLowerCase();
+  const ip = meta?.ip || '127.0.0.1';
+  const userAgent = meta?.userAgent || 'Unknown';
+
+  if (meta?.ip) {
+    const risk = await SessionSecurityService.checkBruteForceRisk(meta.ip, cleanIdentifier);
+    if (risk.isBlocked) {
+      logger.security.warn('Intento de login admin bloqueado por sospecha de fuerza bruta', {
+        identifier: cleanIdentifier,
+        ip: meta.ip,
+        riskScore: risk.riskScore,
+      });
+      return {
+        error: 'Demasiados intentos fallidos. Tu acceso ha sido bloqueado temporalmente por seguridad.',
+        success: false,
+      };
+    }
+  }
+
   if (!cleanIdentifier || !passwordPlain) {
     return { error: 'Ingresa correo electrónico y contraseña.', success: false };
   }
@@ -442,18 +489,21 @@ export async function authenticateAdminCredentials(
   );
 
   if (rows.length === 0) {
+    void SessionSecurityService.recordFailedLoginAttempt(ip, cleanIdentifier, 'Usuario no encontrado', userAgent);
     logger.security.warn('Intento de login admin fallido: usuario no encontrado', { identifier: cleanIdentifier });
     return { error: 'Credenciales inválidas.', success: false };
   }
 
   const userRow = rows[0];
   if (!userRow.password_hash) {
+    void SessionSecurityService.recordFailedLoginAttempt(ip, cleanIdentifier, 'Usuario sin contraseña', userAgent);
     logger.security.warn('Intento de login admin fallido: usuario sin contraseña configurada', { identifier: cleanIdentifier });
     return { error: 'Credenciales inválidas.', success: false };
   }
 
   const validPassword = await bcrypt.compare(String(passwordPlain), userRow.password_hash);
   if (!validPassword) {
+    void SessionSecurityService.recordFailedLoginAttempt(ip, cleanIdentifier, 'Contraseña incorrecta', userAgent);
     logger.security.warn('Intento de login admin fallido: contraseña incorrecta', {
       identifier: cleanIdentifier,
       userId: userRow.id,
@@ -464,6 +514,7 @@ export async function authenticateAdminCredentials(
   const permissions = await getAdminRolePermissions(userRow.role || 'USER');
 
   if (!hasPermission(permissions, 'admin:access')) {
+    void SessionSecurityService.recordFailedLoginAttempt(ip, cleanIdentifier, 'Sin permiso admin:access', userAgent);
     logger.security.warn('Intento de login admin rechazado por falta de permiso admin:access', {
       identifier: cleanIdentifier,
       role: userRow.role,
@@ -484,6 +535,8 @@ export async function authenticateAdminCredentials(
     role: userRow.role || 'USER',
     username: userRow.username || 'Usuario',
   };
+
+  void SessionSecurityService.recordSuccessfulLoginAttempt(ip, cleanIdentifier, adminUser.id, userAgent);
 
   logger.security.info('Inicio de sesión administrativo exitoso', {
     email: adminUser.email,

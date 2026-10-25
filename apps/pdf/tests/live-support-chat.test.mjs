@@ -6,6 +6,7 @@ import { pool } from '../dist/config/database.config.js';
 import { redis } from '../dist/config/redis.config.js';
 import { LiveSupportService } from '../dist/services/live-support.service.js';
 import { SupportAiService } from '../dist/services/support-ai.service.js';
+import { SupportAuditService } from '../dist/services/support-audit.service.js';
 
 const ROOT_DIR = process.cwd();
 const PDF_DIR = fs.existsSync(path.resolve(ROOT_DIR, 'apps/pdf')) ? path.resolve(ROOT_DIR, 'apps/pdf') : ROOT_DIR;
@@ -209,6 +210,7 @@ describe('Suite: Live Support Chat & AI Agent Handoff (apps/pdf)', () => {
 
   after(async () => {
     try {
+      await SupportAuditService.closeClient();
       await pool.end();
       redis.disconnect();
     } catch {

@@ -73,8 +73,12 @@ export class LiveSupportController implements ViewController {
     this.setupChatListDelegation();
     this.setupChatActions();
     this.setupTransferModal();
+    this.setupPresence();
+    this.setupAuditModal();
+    this.setupRatingsModal();
     this.setupWebSocket();
     await this.loadChats();
+    await this.loadAgentPresence();
   }
 
   destroy(): void {
@@ -157,6 +161,8 @@ export class LiveSupportController implements ViewController {
           if (event.agentName) this.activeChat.assigned_agent_name = event.agentName;
           this.renderChatHeader();
         }
+      } else if (event.type === 'agent_presence_updated') {
+        void this.loadAgentPresence();
       }
     });
   }
@@ -980,6 +986,348 @@ export class LiveSupportController implements ViewController {
       },
       { signal }
     );
+  }
+
+  private setupPresence(): void {
+    const signal = this.abortController?.signal;
+    const btnTrigger = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-trigger-support-presence"]');
+    const dropdownMenu = this.container.querySelector<HTMLElement>('[data-ref="dropdown-backdrop-support-presence"]');
+    const options = this.container.querySelectorAll<HTMLButtonElement>('[data-ref^="opt-presence-"]');
+
+    btnTrigger?.addEventListener(
+      'click',
+      (e) => {
+        e.stopPropagation();
+        if (dropdownMenu) {
+          const isOpen = dropdownMenu.style.display === 'block';
+          dropdownMenu.style.display = isOpen ? 'none' : 'block';
+        }
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      'click',
+      (e) => {
+        if (dropdownMenu && !dropdownMenu.contains(e.target as Node) && e.target !== btnTrigger) {
+          dropdownMenu.style.display = 'none';
+        }
+      },
+      { signal }
+    );
+
+    options.forEach((opt) => {
+      opt.addEventListener(
+        'click',
+        async () => {
+          const val = opt.getAttribute('data-value');
+          if (val) {
+            if (dropdownMenu) dropdownMenu.style.display = 'none';
+            await this.setAgentPresence(val);
+          }
+        },
+        { signal }
+      );
+    });
+  }
+
+  private async loadAgentPresence(): Promise<void> {
+    try {
+      const res = await fetch('/api/admin/support/presence');
+      if (!res.ok) return;
+      const data = (await res.json()) as { myPresence?: { status: string } | null; presences?: any[] };
+      const status = data.myPresence?.status || 'offline';
+      this.updatePresenceVisuals(status);
+    } catch {
+      // ignore
+    }
+  }
+
+  private async setAgentPresence(status: string): Promise<void> {
+    try {
+      const res = await fetch('/api/admin/support/presence', {
+        body: JSON.stringify({ status }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+      if (!res.ok) {
+        toast.error('No se pudo actualizar el estado de disponibilidad.');
+        return;
+      }
+      this.updatePresenceVisuals(status);
+      toast.success(`Estado actualizado a: ${this.getPresenceLabel(status)}`);
+    } catch {
+      toast.error('Error de red al actualizar disponibilidad.');
+    }
+  }
+
+  private updatePresenceVisuals(status: string): void {
+    const dot = this.container.querySelector<HTMLElement>('[data-ref="presence-dot-indicator"]');
+    const text = this.container.querySelector<HTMLElement>('[data-ref="presence-status-text"]');
+
+    const colors: Record<string, string> = {
+      available: '#10b981',
+      away: '#f59e0b',
+      busy: '#ef4444',
+      offline: '#9ca3af',
+    };
+
+    if (dot) {
+      dot.style.background = colors[status] || '#9ca3af';
+    }
+    if (text) {
+      text.textContent = this.getPresenceLabel(status);
+    }
+  }
+
+  private getPresenceLabel(status: string): string {
+    const labels: Record<string, string> = {
+      available: 'Disponible',
+      away: 'Ausente',
+      busy: 'Ocupado',
+      offline: 'No disponible',
+    };
+    return labels[status] || 'No disponible';
+  }
+
+  private setupAuditModal(): void {
+    const signal = this.abortController?.signal;
+    const btnOpen = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-audit"]');
+    const modal = this.container.querySelector<HTMLElement>('[data-ref="modal-audit-backdrop"]');
+    const btnClose = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-audit-modal"]');
+    const btnDismiss = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-dismiss-audit"]');
+
+    const closeModal = () => {
+      if (modal) modal.style.display = 'none';
+    };
+
+    btnOpen?.addEventListener(
+      'click',
+      async () => {
+        if (!this.activeChat || !modal) return;
+        modal.style.display = 'flex';
+
+        const subjectEl = modal.querySelector<HTMLElement>('[data-ref="audit-chat-subject"]');
+        const tierEl = modal.querySelector<HTMLElement>('[data-ref="audit-current-tier"]');
+        const idEl = modal.querySelector<HTMLElement>('[data-ref="audit-chat-id"]');
+        const userEl = modal.querySelector<HTMLElement>('[data-ref="audit-chat-user"]');
+        const feed = modal.querySelector<HTMLElement>('[data-ref="audit-timeline-feed"]');
+
+        if (subjectEl) subjectEl.textContent = this.activeChat.subject;
+        if (tierEl) tierEl.textContent = this.activeChat.tier;
+        if (idEl) idEl.textContent = this.activeChat.id;
+        if (userEl) userEl.textContent = `${this.activeChat.user_name} (${this.activeChat.user_email})`;
+
+        if (feed) {
+          feed.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">Consultando registros inmutables en Cassandra...</div>';
+        }
+
+        try {
+          const res = await fetch(`/api/admin/support/chats/${this.activeChat.id}/audit`);
+          if (!res.ok) throw new Error('Error al consultar auditoría');
+          const data = (await res.json()) as {
+            auditTrail?: any[];
+            immutableMessages?: any[];
+            transfers?: any[];
+          };
+
+          if (feed) {
+            feed.innerHTML = '';
+            const events = Array.isArray(data.auditTrail) ? data.auditTrail : [];
+            const transfers = Array.isArray(data.transfers) ? data.transfers : [];
+
+            if (events.length === 0 && transfers.length === 0) {
+              feed.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">No hay eventos registrados en Cassandra para este caso.</div>';
+              return;
+            }
+
+            const combined = [...events];
+            for (const t of transfers) {
+              if (!combined.some((e) => e.eventType === 'transferred' && e.payload?.toTier === t.toTier)) {
+                combined.push({
+                  actorName: t.transferredByName,
+                  actorType: 'agent',
+                  auditId: t.transferId,
+                  currentTier: t.toTier,
+                  eventTime: t.timestamp,
+                  eventType: 'transferred',
+                  payload: { fromTier: t.fromTier, notes: t.notes, reason: t.reason, toTier: t.toTier },
+                });
+              }
+            }
+
+            combined.sort((a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime());
+
+            for (const ev of combined) {
+              const card = document.createElement('div');
+              card.className = 'audit-event-card';
+              card.setAttribute('data-ref', 'audit-event-card');
+              card.style.cssText = 'padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-surface); display: flex; flex-direction: column; gap: 4px; font-size: 12px;';
+
+              let title = `Evento: ${ev.eventType}`;
+              let details = '';
+              const timeStr = new Date(ev.eventTime).toLocaleString();
+
+              if (ev.eventType === 'created') {
+                title = `Caso Creado (${ev.currentTier || 'L1'})`;
+                details = `Iniciado por ${escapeHtml(ev.actorName)} para atención de soporte.`;
+              } else if (ev.eventType === 'claimed') {
+                title = 'Caso Tomado por Agente';
+                details = `El agente ${escapeHtml(ev.actorName)} tomó la conversación para soporte activo.`;
+              } else if (ev.eventType === 'transferred') {
+                const toT = ev.payload?.toTier || ev.currentTier || 'L2';
+                const fromT = ev.payload?.fromTier || 'L1';
+                title = `Escalación Multinivel: ${fromT} → ${toT}`;
+                const reasonText = ev.payload?.notes || ev.payload?.reason || 'Sin observaciones adicionales';
+                details = `Transferido por ${escapeHtml(ev.actorName)}. Motivo: ${escapeHtml(reasonText)}`;
+              } else if (ev.eventType === 'closed') {
+                title = 'Caso Cerrado y Resuelto';
+                details = `Concluido formalmente por ${escapeHtml(ev.actorName)}.`;
+              } else if (ev.eventType === 'rated') {
+                const rVal = ev.payload?.rating || '5';
+                const comm = ev.payload?.comment ? ` — «${escapeHtml(ev.payload.comment)}»` : '';
+                title = `Calificación de Usuario: ${rVal} ★`;
+                details = `Evaluación registrada de forma inmutable${comm}`;
+              }
+
+              card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <strong style="color: var(--text-primary); font-size: 12.5px;">${title}</strong>
+                  <span style="font-size: 11px; color: var(--text-tertiary);">${timeStr}</span>
+                </div>
+                <div style="color: var(--text-secondary); font-size: 11.5px;">${details}</div>
+              `;
+              feed.appendChild(card);
+            }
+          }
+        } catch {
+          if (feed) {
+            feed.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-error); font-size: 13px;">Fallo al conectar con el cluster de Cassandra.</div>';
+          }
+        }
+      },
+      { signal }
+    );
+
+    btnClose?.addEventListener('click', closeModal, { signal });
+    btnDismiss?.addEventListener('click', closeModal, { signal });
+  }
+
+  private setupRatingsModal(): void {
+    const signal = this.abortController?.signal;
+    const btnOpen = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-open-ratings"]');
+    const modal = this.container.querySelector<HTMLElement>('[data-ref="modal-ratings-backdrop"]');
+    const btnClose = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-close-ratings-modal"]');
+    const btnDismiss = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-dismiss-ratings"]');
+
+    const closeModal = () => {
+      if (modal) modal.style.display = 'none';
+    };
+
+    btnOpen?.addEventListener(
+      'click',
+      async () => {
+        if (!modal) return;
+        modal.style.display = 'flex';
+
+        const avgEl = modal.querySelector<HTMLElement>('[data-ref="ratings-avg-number"]');
+        const countEl = modal.querySelector<HTMLElement>('[data-ref="ratings-total-count"]');
+        const barsEl = modal.querySelector<HTMLElement>('[data-ref="ratings-breakdown-bars"]');
+        const listEl = modal.querySelector<HTMLElement>('[data-ref="ratings-feed-list"]');
+
+        if (listEl) {
+          listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">Cargando calificaciones y métricas...</div>';
+        }
+
+        try {
+          const res = await fetch('/api/admin/support/ratings');
+          if (!res.ok) throw new Error('Error al consultar calificaciones');
+          const data = (await res.json()) as {
+            ratings?: any[];
+            summary?: {
+              averageRating: number;
+              starBreakdown: Record<number, number>;
+              totalRatings: number;
+            };
+          };
+
+          const summary = data.summary || {
+            averageRating: 5.0,
+            starBreakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            totalRatings: 0,
+          };
+
+          if (avgEl) avgEl.textContent = summary.averageRating.toFixed(1);
+          if (countEl) countEl.textContent = `${summary.totalRatings} calificaciones`;
+
+          if (barsEl) {
+            barsEl.innerHTML = '';
+            for (let star = 5; star >= 1; star--) {
+              const count = summary.starBreakdown[star] || 0;
+              const pct = summary.totalRatings > 0 ? Math.round((count / summary.totalRatings) * 100) : 0;
+              const row = document.createElement('div');
+              row.className = 'ratings-bar-row';
+              row.setAttribute('data-ref', `rating-bar-row-${star}`);
+              row.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 11.5px;';
+              row.innerHTML = `
+                <span style="width: 38px; color: var(--text-secondary);">${star} ★</span>
+                <div style="flex: 1; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden;">
+                  <div style="width: ${pct}%; height: 100%; background: #f59e0b; border-radius: 3px;"></div>
+                </div>
+                <span style="width: 32px; text-align: right; color: var(--text-tertiary);">${pct}%</span>
+              `;
+              barsEl.appendChild(row);
+            }
+          }
+
+          if (listEl) {
+            listEl.innerHTML = '';
+            const ratings = Array.isArray(data.ratings) ? data.ratings : [];
+            if (ratings.length === 0) {
+              listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">Aún no se han recibido calificaciones de usuarios.</div>';
+              return;
+            }
+
+            for (const r of ratings) {
+              const card = document.createElement('div');
+              card.className = 'rating-review-card';
+              card.setAttribute('data-ref', 'rating-review-card');
+              card.style.cssText = 'padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-surface); display: flex; flex-direction: column; gap: 6px; font-size: 12px;';
+
+              const starSymbols = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+              const dateStr = new Date(r.ratedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+              const userStr = r.userName ? escapeHtml(r.userName) : 'Usuario';
+              const agentStr = r.agentName ? `Atendido por ${escapeHtml(r.agentName)}` : 'Soporte';
+              const commentStr = r.feedbackComment ? `<div style="font-style: italic; color: var(--text-primary); margin-top: 2px;">«${escapeHtml(r.feedbackComment)}»</div>` : '<div style="color: var(--text-tertiary); font-size: 11px;">Sin comentario escrito</div>';
+
+              card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #f59e0b; font-size: 13px; font-weight: 700;">${starSymbols}</span>
+                  <span style="font-size: 11px; color: var(--text-tertiary);">${dateStr}</span>
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-secondary); display: flex; gap: 8px;">
+                  <strong>${userStr}</strong>
+                  <span>•</span>
+                  <span>${agentStr}</span>
+                  <span>•</span>
+                  <span class="component-badge component-badge--sm">${r.tier || 'L1'}</span>
+                </div>
+                ${commentStr}
+              `;
+              listEl.appendChild(card);
+            }
+          }
+        } catch {
+          if (listEl) {
+            listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-error); font-size: 13px;">Error al cargar las calificaciones.</div>';
+          }
+        }
+      },
+      { signal }
+    );
+
+    btnClose?.addEventListener('click', closeModal, { signal });
+    btnDismiss?.addEventListener('click', closeModal, { signal });
   }
 
   private formatTime(dateStr: string): string {

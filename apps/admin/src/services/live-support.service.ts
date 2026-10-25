@@ -1,8 +1,10 @@
 import crypto from 'crypto';
 import { RowDataPacket } from 'mysql2';
+import { AgentPresenceService } from './agent-presence.service.js';
 import { adminDbPool } from './db.service.js';
 import { logger } from './logger.service.js';
 import { publishSupportEvent } from './redis.service.js';
+import { SupportAuditService } from './support-audit.service.js';
 
 export interface AdminLiveChatRecord {
   assigned_agent_id: string | null;
@@ -141,6 +143,21 @@ export class AdminLiveSupportService {
       type: 'chat_claimed',
     });
 
+    await SupportAuditService.recordChatEvent({
+      actorId: agentId,
+      actorName: agentName,
+      actorType: 'agent',
+      chatId,
+      currentStatus: 'active',
+      currentTier: updated.tier,
+      eventType: 'claimed',
+      payload: { agentId, agentName },
+    });
+
+    if (agentId) {
+      await AgentPresenceService.incrementActiveChats(agentId);
+    }
+
     return updated;
   }
 
@@ -189,6 +206,15 @@ export class AdminLiveSupportService {
       type: 'chat_transferred',
     });
 
+    await SupportAuditService.recordTransfer({
+      chatId,
+      fromTier: chat.tier,
+      notes,
+      reason: notes,
+      toTier: newTier,
+      transferredByName: agentName,
+    });
+
     return updated;
   }
 
@@ -232,6 +258,20 @@ export class AdminLiveSupportService {
       tier: updated.tier,
       type: 'chat_closed',
     });
+
+    await SupportAuditService.recordChatEvent({
+      actorName: agentName,
+      actorType: 'agent',
+      chatId,
+      currentStatus: 'closed',
+      currentTier: updated.tier,
+      eventType: 'closed',
+      payload: { closedBy: agentName },
+    });
+
+    if (chat.assigned_agent_id) {
+      await AgentPresenceService.decrementActiveChats(chat.assigned_agent_id);
+    }
 
     return updated;
   }
@@ -283,6 +323,16 @@ export class AdminLiveSupportService {
       senderType: 'agent',
       sessionId: chat.session_id,
       type: 'chat_message',
+    });
+
+    await SupportAuditService.recordMessage({
+      chatId,
+      message: msgRecord.message,
+      messageId: id,
+      senderId: agentId,
+      senderName: agentName,
+      senderType: 'agent',
+      tier: chat.tier,
     });
 
     return msgRecord;

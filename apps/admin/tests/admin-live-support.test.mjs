@@ -7,6 +7,7 @@ import { adminDbPool } from '../dist/services/db.service.js';
 import { adminRedis } from '../dist/services/redis.service.js';
 import { AdminLiveSupportService } from '../dist/services/live-support.service.js';
 import { hashPassword } from '../dist/services/crypto.service.js';
+import { SupportAuditService } from '../dist/services/support-audit.service.js';
 
 const ROOT_DIR = process.cwd();
 const ADMIN_DIR = fs.existsSync(path.resolve(ROOT_DIR, 'apps/admin')) ? path.resolve(ROOT_DIR, 'apps/admin') : ROOT_DIR;
@@ -294,6 +295,7 @@ describe('Suite: Admin Live Support Chat & Tier Escalation (apps/admin)', () => 
 
   after(async () => {
     try {
+      await SupportAuditService.closeClient();
       await adminDbPool.end();
       adminRedis.disconnect();
     } catch {

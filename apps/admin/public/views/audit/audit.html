@@ -1,0 +1,258 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="admin-audit-wrapper">
+  <header class="component-top" data-ref="component-top">
+    <div class="component-top-left" data-ref="component-top-left">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg class="component-icon" aria-hidden="true" style="width: 20px; height: 20px; color: var(--primary, #0ea5e9);"><use href="/icons.svg#shield"></use></svg>
+        <h1 class="component-top-title" data-ref="audit-page-title" style="font-size: 15px; font-weight: 700;">Seguridad y Auditoría</h1>
+      </div>
+      <span class="component-badge component-badge--sm" data-ref="audit-count-badge">0</span>
+    </div>
+
+    <div class="component-top-right" data-ref="component-top-right">
+      <div class="component-top-actions" data-ref="audit-default-actions" style="display: flex; align-items: center; gap: 8px;">
+        <span class="live-status-pill" data-ref="audit-live-status" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #10b981;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite;"></span>
+          Cassandra Inmutable
+        </span>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-toggle-search" data-tooltip="Buscar eventos" data-tooltip-placement="bottom" aria-label="Buscar eventos">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </button>
+
+        <button type="button" class="component-button component-button--h36 component-button--icon-only" data-ref="btn-refresh-audit" data-tooltip="Actualizar auditoría y métricas" data-tooltip-placement="bottom" aria-label="Actualizar">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="component-search-toolbar is-hidden" data-ref="search-toolbar">
+      <div class="component-search component-search--full" data-ref="search-box">
+        <div class="component-search__icon" data-ref="search-icon">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+        </div>
+        <div class="component-search__input-box" data-ref="search-input-box">
+          <input class="component-search__input" data-ref="audit-search-input" placeholder="Buscar por acción, usuario, IP, destino o hash..." type="text" maxlength="100" autocomplete="off" />
+        </div>
+        <button type="button" class="component-button component-button--h34 component-button--icon-only" data-ref="btn-clear-search" aria-label="Limpiar búsqueda" style="display: none; margin-right: 4px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="component-bottom component-bottom--no-padding" data-ref="component-bottom" style="display: flex; flex-direction: column; overflow: hidden; height: calc(100% - 56px);">
+    <div class="audit-metrics-row" data-ref="audit-metrics-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 14px 20px 8px 20px; flex-shrink: 0;">
+      <div class="metric-card" data-ref="card-actions-today" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; padding: 12px 16px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #6b7280); letter-spacing: 0.5px;">Acciones Admin (Hoy)</div>
+        <div data-ref="metric-actions-today" style="font-size: 22px; font-weight: 700; color: var(--text-primary, #111827); margin-top: 4px;">0</div>
+        <div style="font-size: 11px; color: #10b981; margin-top: 2px;">Inmutables en Cassandra</div>
+      </div>
+
+      <div class="metric-card" data-ref="card-active-sessions" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; padding: 12px 16px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #6b7280); letter-spacing: 0.5px;">Sesiones Activas</div>
+        <div data-ref="metric-active-sessions" style="font-size: 22px; font-weight: 700; color: var(--primary, #0ea5e9); margin-top: 4px;">0</div>
+        <div style="font-size: 11px; color: var(--text-secondary, #6b7280); margin-top: 2px;">Vivas en Redis</div>
+      </div>
+
+      <div class="metric-card" data-ref="card-failed-logins" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; padding: 12px 16px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #6b7280); letter-spacing: 0.5px;">Intentos Fallidos (24h)</div>
+        <div data-ref="metric-failed-logins" style="font-size: 22px; font-weight: 700; color: #f59e0b; margin-top: 4px;">0</div>
+        <div style="font-size: 11px; color: var(--text-secondary, #6b7280); margin-top: 2px;">Monitoreo de accesos</div>
+      </div>
+
+      <div class="metric-card" data-ref="card-suspicious-count" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; padding: 12px 16px;">
+        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #6b7280); letter-spacing: 0.5px;">Alertas de Seguridad</div>
+        <div data-ref="metric-suspicious-count" style="font-size: 22px; font-weight: 700; color: #ef4444; margin-top: 4px;">0</div>
+        <div style="font-size: 11px; color: var(--text-secondary, #6b7280); margin-top: 2px;">Posible fuerza bruta</div>
+      </div>
+    </div>
+
+    <div class="audit-tabs-bar" data-ref="audit-tabs-bar" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color, #e5e7eb); padding: 0 20px; flex-shrink: 0; background: var(--bg-surface, #ffffff);">
+      <div style="display: flex; gap: 4px;">
+        <button type="button" class="component-tab is-active" data-ref="tab-btn-audit-trail" style="padding: 10px 14px; font-size: 13px; font-weight: 600; border-bottom: 2px solid var(--primary, #0ea5e9); color: var(--primary, #0ea5e9); background: none; border-top: none; border-left: none; border-right: none; cursor: pointer;">
+          Historial Inmutable de Acciones
+        </button>
+        <button type="button" class="component-tab" data-ref="tab-btn-active-sessions" style="padding: 10px 14px; font-size: 13px; font-weight: 600; border-bottom: 2px solid transparent; color: var(--text-secondary, #6b7280); background: none; border-top: none; border-left: none; border-right: none; cursor: pointer;">
+          Sesiones Activas y Revocación
+        </button>
+        <button type="button" class="component-tab" data-ref="tab-btn-access-logs" style="padding: 10px 14px; font-size: 13px; font-weight: 600; border-bottom: 2px solid transparent; color: var(--text-secondary, #6b7280); background: none; border-top: none; border-left: none; border-right: none; cursor: pointer;">
+          Monitoreo de Accesos y Amenazas
+        </button>
+      </div>
+
+      <div class="audit-filter-controls" data-ref="audit-filter-controls" style="display: flex; align-items: center; gap: 8px;">
+        <label class="field field--compact" data-ref="filter-target-label" style="margin: 0;">
+          <select class="field__input" data-ref="select-target-type" style="padding: 4px 8px; font-size: 12px; height: 30px; border-radius: 6px;">
+            <option value="all">Todos los destinos</option>
+            <option value="user">Usuarios</option>
+            <option value="backup">Copias de Seguridad</option>
+            <option value="organization">Organizaciones</option>
+            <option value="verification">Educación</option>
+            <option value="session">Sesiones</option>
+            <option value="inquiry">Leads</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="audit-tab-panel" data-ref="panel-audit-trail" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+      <div class="component-table-wrapper" data-ref="audit-table-wrapper" style="flex: 1; overflow-y: auto;">
+        <table class="component-table" data-ref="audit-table">
+          <thead class="component-table__head" data-ref="audit-thead">
+            <tr>
+              <th style="width: 16%;">Fecha y Hora</th>
+              <th style="width: 18%;">Administrador</th>
+              <th style="width: 16%;">Acción</th>
+              <th style="width: 18%;">Destino / Objeto</th>
+              <th style="width: 14%;">IP de Origen</th>
+              <th style="width: 8%;">Estado</th>
+              <th style="width: 10%; text-align: right;">Auditoría</th>
+            </tr>
+          </thead>
+          <tbody class="component-table__body" data-ref="audit-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Cargando registros inmutables de auditoría desde Cassandra...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="audit-tab-panel" data-ref="panel-active-sessions" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+      <div class="component-table-wrapper" data-ref="sessions-table-wrapper" style="flex: 1; overflow-y: auto;">
+        <table class="component-table" data-ref="sessions-table">
+          <thead class="component-table__head" data-ref="sessions-thead">
+            <tr>
+              <th style="width: 22%;">Administrador</th>
+              <th style="width: 12%;">Rol</th>
+              <th style="width: 16%;">Dirección IP</th>
+              <th style="width: 18%;">Dispositivo / Agente</th>
+              <th style="width: 14%;">Inicio de Sesión</th>
+              <th style="width: 14%;">Última Actividad</th>
+              <th style="width: 14%; text-align: right;">Revocación</th>
+            </tr>
+          </thead>
+          <tbody class="component-table__body" data-ref="sessions-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Consultando sesiones activas en Redis...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="audit-tab-panel" data-ref="panel-access-logs" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+      <div class="component-table-wrapper" data-ref="access-table-wrapper" style="flex: 1; overflow-y: auto;">
+        <table class="component-table" data-ref="access-table">
+          <thead class="component-table__head" data-ref="access-thead">
+            <tr>
+              <th style="width: 16%;">Fecha y Hora</th>
+              <th style="width: 18%;">Tipo de Evento</th>
+              <th style="width: 20%;">Identificador / Email</th>
+              <th style="width: 16%;">Dirección IP</th>
+              <th style="width: 12%;">Nivel de Riesgo</th>
+              <th style="width: 18%;">Detalle / Motivo</th>
+            </tr>
+          </thead>
+          <tbody class="component-table__body" data-ref="access-tbody">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--text-secondary);">Consultando logs de acceso y detección de amenazas...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="banner banner--danger" data-ref="audit-page-error" style="display: none; margin: 12px 24px;"></div>
+  </div>
+
+  <div class="modal-backdrop" data-ref="modal-audit-detail-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; padding: 16px;">
+    <div class="modal-card" data-ref="modal-audit-detail-card" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; width: 100%; max-width: 680px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+      <header class="modal-header" data-ref="modal-audit-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 18px; height: 18px; color: #10b981;"><use href="/icons.svg#verified"></use></svg>
+          <h2 data-ref="modal-audit-title" style="font-size: 15px; font-weight: 700; margin: 0;">Detalle de Registro Inmutable</h2>
+        </div>
+        <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-close-audit-detail" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </header>
+
+      <div class="modal-body" data-ref="modal-audit-body" style="padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; font-size: 13px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Identificador (TimeUUID)</div>
+            <div data-ref="detail-log-id" style="font-family: monospace; font-size: 11px; word-break: break-all; margin-top: 2px;"></div>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Fecha y Hora Inmutable</div>
+            <div data-ref="detail-timestamp" style="font-weight: 600; margin-top: 2px;"></div>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Actor Administrativo</div>
+            <div data-ref="detail-actor" style="font-weight: 600; margin-top: 2px;"></div>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Acción Ejecutada</div>
+            <div data-ref="detail-action" style="font-weight: 600; margin-top: 2px;"></div>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Destino / Target</div>
+            <div data-ref="detail-target" style="font-weight: 600; margin-top: 2px;"></div>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Dirección IP</div>
+            <div data-ref="detail-ip" style="font-family: monospace; margin-top: 2px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">User-Agent / Navegador</div>
+          <div data-ref="detail-user-agent" style="font-size: 12px; margin-top: 2px; color: var(--text-secondary);"></div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Carga de Datos (Payload JSON)</div>
+          <pre data-ref="detail-payload" style="background: var(--bg-surface-secondary, rgba(0,0,0,0.03)); border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; max-height: 180px; margin: 0;"></pre>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; align-items: center; gap: 6px; color: #10b981; font-size: 12px; font-weight: 700;">
+            <svg class="component-icon" aria-hidden="true" style="width: 14px; height: 14px;"><use href="/icons.svg#shield"></use></svg>
+            Checksum Criptográfico HMAC SHA-256 (Anti-Manipulación)
+          </div>
+          <div data-ref="detail-checksum" style="font-family: monospace; font-size: 11px; word-break: break-all; margin-top: 4px; color: var(--text-secondary);"></div>
+        </div>
+      </div>
+
+      <footer class="modal-footer" data-ref="modal-audit-footer" style="padding: 12px 20px; border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: flex-end;">
+        <button type="button" class="component-button component-button--h36 component-button--black" data-ref="btn-modal-close-audit">Entendido</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" data-ref="modal-revoke-confirm-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; padding: 16px;">
+    <div class="modal-card" data-ref="modal-revoke-confirm-card" style="background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; width: 100%; max-width: 480px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+      <header class="modal-header" data-ref="modal-revoke-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color, #e5e7eb); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg class="component-icon" aria-hidden="true" style="width: 18px; height: 18px; color: #ef4444;"><use href="/icons.svg#block"></use></svg>
+          <h2 data-ref="modal-revoke-title" style="font-size: 15px; font-weight: 700; margin: 0;">Confirmar Revocación de Sesión</h2>
+        </div>
+        <button type="button" class="component-button component-button--h32 component-button--icon-only" data-ref="btn-close-revoke-modal" aria-label="Cerrar">
+          <svg class="component-icon" aria-hidden="true" style="width: 16px; height: 16px;"><use href="/icons.svg#close"></use></svg>
+        </button>
+      </header>
+
+      <div class="modal-body" data-ref="modal-revoke-body" style="padding: 20px; font-size: 13px; color: var(--text-primary);">
+        <p data-ref="revoke-confirm-text" style="margin: 0 0 12px 0;">¿Estás seguro de que deseas revocar esta sesión administrativa de forma inmediata?</p>
+        <p style="margin: 0; font-size: 12px; color: var(--text-secondary);">El token será invalidado en Redis, se emitirá una desconexión en tiempo real por WebSocket y la acción quedará registrada de forma inmutable en Cassandra.</p>
+        <div class="banner banner--danger" data-ref="revoke-modal-error" style="display: none; margin-top: 12px;"></div>
+      </div>
+
+      <footer class="modal-footer" data-ref="modal-revoke-footer" style="padding: 12px 20px; border-top: 1px solid var(--border-color, #e5e7eb); display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="component-button component-button--h36" data-ref="btn-cancel-revoke">Cancelar</button>
+        <button type="button" class="component-button component-button--h36 component-button--danger" data-ref="btn-confirm-revoke">Revocar Inmediatamente</button>
+      </footer>
+    </div>
+  </div>
+</div>

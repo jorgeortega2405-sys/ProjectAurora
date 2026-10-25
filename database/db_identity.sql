@@ -178,7 +178,12 @@ INSERT IGNORE INTO permissions (id, name, description) VALUES
 ('admin:tickets:create', 'Crear Tickets Internos', 'Permite reportar incidencias y tareas entre departamentos'),
 ('admin:tickets:manage', 'Gestionar Tickets Internos', 'Permite asignar, cambiar estado, prioridad y resolver tickets departamentales'),
 ('admin:support:view', 'Ver Soporte en Vivo', 'Permite consultar chats y colas de atención en vivo'),
-('admin:support:manage', 'Gestionar Soporte en Vivo', 'Permite aceptar, responder, escalar y resolver chats de soporte en tiempo real');
+('admin:support:manage', 'Gestionar Soporte en Vivo', 'Permite aceptar, responder, escalar y resolver chats de soporte en tiempo real'),
+('admin:support:audit', 'Auditar Soporte en Vivo', 'Permite consultar registros de auditoría inmutables en Cassandra y calificaciones de agentes'),
+('admin:security:audit', 'Auditar Seguridad y Acciones Admin', 'Permite consultar el historial inmutable de acciones administrativas y eventos de acceso'),
+('admin:security:manage', 'Gestionar Seguridad y Sesiones', 'Permite revocar sesiones activas y aplicar bloqueos de seguridad'),
+('admin:analytics:view', 'Ver Explorador de Datos', 'Permite consultar el esquema de bases de datos y métricas'),
+('admin:analytics:query', 'Ejecutar Consultas de Datos', 'Permite ejecutar consultas de solo lectura en MySQL y Cassandra');
 
 INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SUPER_ADMIN', '*'),
@@ -332,6 +337,38 @@ INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
 ('SUPPORT_L3', 'admin:support:manage'),
 ('SUPPORT_MANAGER', 'admin:support:view'),
 ('SUPPORT_MANAGER', 'admin:support:manage'),
+('SUPER_ADMIN', 'admin:support:audit'),
+('ADMIN', 'admin:support:audit'),
+('PLATFORM_ADMIN', 'admin:support:audit'),
+('AUDITOR', 'admin:support:audit'),
+('SUPPORT_MANAGER', 'admin:support:audit'),
+('SUPPORT_L1', 'admin:support:audit'),
+('SUPPORT_L2', 'admin:support:audit'),
+('SUPPORT_L3', 'admin:support:audit'),
+('SUPER_ADMIN', 'admin:security:audit'),
+('SUPER_ADMIN', 'admin:security:manage'),
+('ADMIN', 'admin:security:audit'),
+('ADMIN', 'admin:security:manage'),
+('PLATFORM_ADMIN', 'admin:security:audit'),
+('PLATFORM_ADMIN', 'admin:security:manage'),
+('SECURITY_ADMIN', 'admin:security:audit'),
+('SECURITY_ADMIN', 'admin:security:manage'),
+('IAM_ADMIN', 'admin:security:audit'),
+('IAM_ADMIN', 'admin:security:manage'),
+('COMPLIANCE_ADMIN', 'admin:security:audit'),
+('AUDITOR', 'admin:security:audit'),
+('SUPER_ADMIN', 'admin:analytics:view'),
+('SUPER_ADMIN', 'admin:analytics:query'),
+('ADMIN', 'admin:analytics:view'),
+('ADMIN', 'admin:analytics:query'),
+('PLATFORM_ADMIN', 'admin:analytics:view'),
+('PLATFORM_ADMIN', 'admin:analytics:query'),
+('DATA_ANALYST', 'admin:access'),
+('DATA_ANALYST', 'admin:dashboard:view'),
+('DATA_ANALYST', 'admin:analytics:view'),
+('DATA_ANALYST', 'admin:analytics:query'),
+('AUDITOR', 'admin:analytics:view'),
+('AUDITOR', 'admin:analytics:query'),
 ('OPERATIONS_AGENT', 'admin:tickets:view'),
 ('OPERATIONS_AGENT', 'admin:tickets:create'),
 ('OPERATIONS_AGENT', 'admin:tickets:manage'),
@@ -809,3 +846,21 @@ INSERT IGNORE INTO live_support_messages (id, chat_id, sender_type, sender_id, s
 ('msg-seed-004', 'chat-seed-002', 'user', NULL, 'Roberto Gómez', 'Buenas tardes, quisiera saber cuántas páginas por documento se pueden procesar con el beneficio de estudiante.', '2026-10-24 11:20:10'),
 ('msg-seed-005', 'chat-seed-003', 'user', NULL, 'Mariana Silva', 'Hola equipo, estamos migrando a SSO Okta y requerimos el Metadata XML de Aurora.', '2026-10-24 09:30:15'),
 ('msg-seed-006', 'chat-seed-003', 'system', NULL, 'Sistema', 'Caso escalado a Soporte Nivel L2 por soporte técnico especializado.', '2026-10-24 09:35:00');
+
+CREATE TABLE IF NOT EXISTS support_agent_presence (
+    agent_id VARCHAR(36) PRIMARY KEY,
+    agent_name VARCHAR(120) NOT NULL,
+    status ENUM('available', 'away', 'busy', 'offline') NOT NULL DEFAULT 'offline',
+    tier ENUM('L1', 'L2', 'L3') NOT NULL DEFAULT 'L1',
+    active_chats_count INT UNSIGNED NOT NULL DEFAULT 0,
+    last_status_change TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_presence_status (status),
+    INDEX idx_presence_tier (tier)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO support_agent_presence (agent_id, agent_name, status, tier, active_chats_count, last_status_change) VALUES
+('50e0819a-7151-433c-8797-613f6cbf0b6a', 'Soporte Aurora', 'available', 'L1', 1, '2026-10-24 10:00:00'),
+('dffc9deb-ea49-400b-b33a-ba6bf94685e3', 'Admin Principal', 'available', 'L2', 1, '2026-10-24 09:00:00');
+

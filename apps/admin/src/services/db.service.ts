@@ -1,4 +1,4 @@
-import mysql, { RowDataPacket } from 'mysql2/promise';
+import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { adminConfig } from '../config/env.config.js';
 import { logger } from './logger.service.js';
 
@@ -71,6 +71,7 @@ export interface AdminUserRecord {
   email: string;
   id: string;
   role: string;
+  subscription_status: string;
   subscription_tier: string;
   username: string;
 }
@@ -193,7 +194,7 @@ export const adminDbPool = mysql.createPool({
 export async function getAllUsers(): Promise<AdminUserRecord[]> {
   try {
     const [rows] = await adminDbPool.query<UserRowPacket[]>(
-      'SELECT id, username, email, avatar_url, role, subscription_tier, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, username, email, avatar_url, role, subscription_tier, subscription_status, created_at FROM users ORDER BY created_at DESC'
     );
 
     return rows.map((r) => ({
@@ -202,11 +203,38 @@ export async function getAllUsers(): Promise<AdminUserRecord[]> {
       email: r.email,
       id: r.id,
       role: r.role || 'USER',
+      subscription_status: r.subscription_status || 'active',
       subscription_tier: r.subscription_tier || 'free',
       username: r.username || 'Usuario',
     }));
   } catch (err) {
     logger.app.error('Error al consultar lista de usuarios en base de datos', err);
+    throw err;
+  }
+}
+
+export async function updateUserRole(userId: string, newRole: string): Promise<boolean> {
+  try {
+    const [result] = await adminDbPool.query<ResultSetHeader>(
+      'UPDATE users SET role = ? WHERE id = ?',
+      [newRole, userId]
+    );
+    return result.affectedRows > 0;
+  } catch (err) {
+    logger.db.error('Error al actualizar rol de usuario', err);
+    throw err;
+  }
+}
+
+export async function updateUserStatus(userId: string, newStatus: string): Promise<boolean> {
+  try {
+    const [result] = await adminDbPool.query<ResultSetHeader>(
+      'UPDATE users SET subscription_status = ? WHERE id = ?',
+      [newStatus, userId]
+    );
+    return result.affectedRows > 0;
+  } catch (err) {
+    logger.db.error('Error al actualizar estado de usuario', err);
     throw err;
   }
 }

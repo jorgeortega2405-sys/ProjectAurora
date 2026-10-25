@@ -1,21 +1,4 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="pdf-splitter-wrapper">
-  <header class="component-top tool-top" data-ref="component-top">
-    <div class="component-top-left tool-top__left" data-ref="component-top-left">
-      <div class="tool-top__filename-field" data-ref="field-output-filename">
-        <label class="tool-top__filename-label" data-ref="label-output-filename" aria-label="Nombre del documento a exportar">
-          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_dividido.pdf" placeholder="documento_dividido.pdf" autocomplete="off" spellcheck="false" />
-        </label>
-      </div>
-    </div>
-
-    <div class="component-top-right tool-top__right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
-      </button>
-    </div>
-  </header>
-
   <div class="component-bottom tool-bottom tool-bottom--grid tool-layout tool-layout--grid" data-ref="pdf-splitter-layout">
     <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="pdf-splitter-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
@@ -84,18 +67,16 @@
       </div>
 
       <div class="tool-sidebar__body">
-        <div class="split-tabs-nav" data-ref="split-tabs-nav">
-          <button type="button" class="split-tab is-active" data-ref="tab-range" data-mode="range">
-            <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#view_column"></use></svg>
-            <span class="split-tab__label" data-i18n="tools.split_pdf_tab_range">Rango</span>
+        <div class="component-toggle-pill component-toggle-pill--3" data-ref="split-tabs-nav" data-mode="range">
+          <div class="component-toggle-pill-glider" data-ref="split-mode-glider"></div>
+          <button type="button" class="component-button component-button--rounded-pill is-active" data-ref="tab-range" data-mode="range">
+            <span data-i18n="tools.split_pdf_tab_range">Rango</span>
           </button>
-          <button type="button" class="split-tab" data-ref="tab-pages" data-mode="pages">
-            <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#filter_none"></use></svg>
-            <span class="split-tab__label" data-i18n="tools.split_pdf_tab_pages">Páginas</span>
+          <button type="button" class="component-button component-button--rounded-pill" data-ref="tab-pages" data-mode="pages">
+            <span data-i18n="tools.split_pdf_tab_pages">Páginas</span>
           </button>
-          <button type="button" class="split-tab" data-ref="tab-size" data-mode="size">
-            <svg class="component-icon split-tab__icon" aria-hidden="true"><use href="/icons.svg#straighten"></use></svg>
-            <span class="split-tab__label" data-i18n="tools.split_pdf_tab_size">Tamaño</span>
+          <button type="button" class="component-button component-button--rounded-pill" data-ref="tab-size" data-mode="size">
+            <span data-i18n="tools.split_pdf_tab_size">Tamaño</span>
             <span class="component-badge component-badge--pro" data-ref="badge-split-pro" style="margin-left: 4px; font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--accent); color: #fff; font-weight: 700;">PRO</span>
           </button>
         </div>
@@ -103,15 +84,16 @@
         <div class="split-mode-panel" data-ref="panel-mode-range">
           <div class="tool-sidebar__section">
             <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_range_mode">Modo de rango:</span>
-            <div class="split-submode-toggles">
-              <button type="button" class="split-submode-btn is-active" data-ref="btn-range-submode-custom" data-i18n="tools.split_pdf_range_custom">Personalizado</button>
-              <button type="button" class="split-submode-btn" data-ref="btn-range-submode-fixed" data-i18n="tools.split_pdf_range_fixed">Fijo</button>
+            <div class="component-toggle-pill component-toggle-pill--2" data-ref="split-range-submode-toggle" data-submode="custom">
+              <div class="component-toggle-pill-glider"></div>
+              <button type="button" class="component-button component-button--rounded-pill is-active" data-ref="btn-range-submode-custom" data-i18n="tools.split_pdf_range_custom">Personalizado</button>
+              <button type="button" class="component-button component-button--rounded-pill" data-ref="btn-range-submode-fixed" data-i18n="tools.split_pdf_range_fixed">Fijo</button>
             </div>
           </div>
 
           <div class="split-submode-view" data-ref="section-range-custom">
             <div class="split-ranges-list" data-ref="split-ranges-list"></div>
-            <button type="button" class="component-button component-button--secondary component-button--h36 component-button--w-full split-btn-add-range" data-ref="btn-add-range">
+            <button type="button" class="component-button component-button--subtle component-button--h36 component-button--w-full split-btn-add-range" data-ref="btn-add-range">
               <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
               <span data-i18n="tools.split_pdf_add_range">Añadir Rango</span>
             </button>
@@ -131,20 +113,24 @@
             </div>
           </div>
 
-          <div class="split-option-box" data-ref="box-merge-ranges">
-            <label class="split-checkbox-label" data-ref="label-merge-ranges">
-              <input class="split-checkbox" data-ref="check-merge-ranges" type="checkbox" />
-              <span class="split-checkbox-text" data-i18n="tools.split_pdf_merge_ranges">Unir todos los rangos en un único PDF.</span>
-            </label>
+          <div class="tool-sidebar__section" data-ref="box-merge-ranges">
+            <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_merge_ranges">¿Unir todos los rangos en un único PDF?</span>
+            <div class="component-toggle-pill component-toggle-pill--2" data-ref="split-merge-ranges-toggle" data-merge="no">
+              <div class="component-toggle-pill-glider"></div>
+              <button type="button" class="component-button component-button--rounded-pill is-active" data-ref="btn-merge-ranges-no">No</button>
+              <button type="button" class="component-button component-button--rounded-pill" data-ref="btn-merge-ranges-yes">Sí, unir</button>
+            </div>
+            <input class="split-checkbox" data-ref="check-merge-ranges" type="checkbox" style="display: none;" />
           </div>
         </div>
 
         <div class="split-mode-panel" data-ref="panel-mode-pages" style="display: none;">
           <div class="tool-sidebar__section">
             <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_extract_mode">Modo de extracción:</span>
-            <div class="split-submode-toggles">
-              <button type="button" class="split-submode-btn is-active" data-ref="btn-pages-submode-all" data-i18n="tools.split_pdf_extract_all">Extraer todas las páginas</button>
-              <button type="button" class="split-submode-btn" data-ref="btn-pages-submode-custom" data-i18n="tools.split_pdf_select_pages">Seleccionar páginas</button>
+            <div class="component-toggle-pill component-toggle-pill--2" data-ref="split-pages-submode-toggle" data-submode="all">
+              <div class="component-toggle-pill-glider"></div>
+              <button type="button" class="component-button component-button--rounded-pill is-active" data-ref="btn-pages-submode-all" data-i18n="tools.split_pdf_extract_all">Extraer todas</button>
+              <button type="button" class="component-button component-button--rounded-pill" data-ref="btn-pages-submode-custom" data-i18n="tools.split_pdf_select_pages">Seleccionar</button>
             </div>
           </div>
 
@@ -158,11 +144,14 @@
               <span class="split-field-hint">También puedes hacer clic directamente en las tarjetas de página a la izquierda.</span>
             </div>
 
-            <div class="split-option-box" data-ref="box-merge-pages">
-              <label class="split-checkbox-label" data-ref="label-merge-pages">
-                <input class="split-checkbox" data-ref="check-merge-pages" type="checkbox" />
-                <span class="split-checkbox-text" data-i18n="tools.split_pdf_merge_pages">Unir las páginas extraídas en un archivo PDF.</span>
-              </label>
+            <div class="tool-sidebar__section" data-ref="box-merge-pages">
+              <span class="tool-sidebar__section-title" data-i18n="tools.split_pdf_merge_pages">¿Unir las páginas extraídas en un PDF?</span>
+              <div class="component-toggle-pill component-toggle-pill--2" data-ref="split-merge-pages-toggle" data-merge="no">
+                <div class="component-toggle-pill-glider"></div>
+                <button type="button" class="component-button component-button--rounded-pill is-active" data-ref="btn-merge-pages-no">No</button>
+                <button type="button" class="component-button component-button--rounded-pill" data-ref="btn-merge-pages-yes">Sí, unir</button>
+              </div>
+              <input class="split-checkbox" data-ref="check-merge-pages" type="checkbox" style="display: none;" />
             </div>
           </div>
 

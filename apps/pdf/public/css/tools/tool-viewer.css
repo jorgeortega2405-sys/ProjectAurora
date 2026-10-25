@@ -136,7 +136,7 @@
 
 .pdf-editor-pages-sidebar {
   background-color: var(--bg-surface);
-  border-right: 1px solid var(--border-color);
+  border-right: none;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -160,6 +160,7 @@
 
 .pdf-editor-thumbnails-scroll {
   align-items: center;
+  border-right: none;
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -654,13 +655,14 @@
 
 .redact-tool-btn.is-active {
   background-color: var(--bg-surface);
+  border: 1px solid var(--action-primary, #111827);
   box-shadow: var(--sl-shadow-small);
   color: var(--text-primary);
 }
 
 .redact-pages-sidebar {
   background-color: var(--bg-surface);
-  border-right: 1px solid var(--border-color);
+  border-right: none;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -684,6 +686,7 @@
 
 .redact-pages-sidebar .pdf-editor-thumbnails-scroll {
   align-items: center;
+  border-right: none;
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -833,6 +836,12 @@
   z-index: 5;
 }
 
+.pdf-redact-text-layer ::selection,
+.pdf-redact-text-item::selection {
+  background-color: rgba(17, 24, 39, 0.25);
+  color: transparent;
+}
+
 .pdf-redact-text-item {
   color: transparent;
   cursor: text;
@@ -852,10 +861,10 @@
 }
 
 .pdf-redact-preview-box {
-  background-color: var(--black-100);
-  border: 1px dashed var(--white-100);
+  background-color: rgba(17, 24, 39, 0.2);
+  border: 2px solid var(--action-primary, #111827);
   box-sizing: border-box;
-  opacity: 0.65;
+  opacity: 0.85;
   pointer-events: none;
   position: absolute;
   z-index: 25;
@@ -872,8 +881,10 @@
   z-index: 15;
 }
 
-.redaction-box:hover {
-  outline: 2px solid var(--danger-color);
+.redaction-box:hover,
+.redaction-box.is-selected,
+.redaction-box:focus {
+  outline: 2px solid var(--action-primary, #111827);
 }
 
 .redaction-box__remove-btn {

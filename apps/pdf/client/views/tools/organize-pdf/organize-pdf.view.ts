@@ -348,16 +348,13 @@ export class OrganizePdfController implements ViewController {
 
       return `
         <div class="organize-page-card" data-ref="card-${p.id}" data-page-id="${p.id}" data-page-index="${index}">
-          <div class="organize-page-card__header-actions">
-            <span class="organize-page-card__order-badge" data-ref="order-badge-${p.id}">${index + 1}</span>
-            <div class="organize-page-card__btns-group">
-              <button type="button" class="organize-page-card__btn-action" data-ref="btn-rotate-card" title="Girar 90°" aria-label="Girar 90°">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#autorenew"></use></svg>
-              </button>
-              <button type="button" class="organize-page-card__btn-action organize-page-card__btn-action--remove" data-ref="btn-remove-card" title="Quitar página" aria-label="Quitar página">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
-              </button>
-            </div>
+          <div class="organize-page-card__actions">
+            <button type="button" class="component-button organize-page-card__btn-rotate" data-ref="btn-rotate-card" title="Girar 90°" aria-label="Girar 90°">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#autorenew"></use></svg>
+            </button>
+            <button type="button" class="component-button organize-page-card__btn-remove" data-ref="btn-remove-card" title="Quitar página" aria-label="Quitar página">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
           </div>
           <div class="organize-page-card__sheet-wrapper">
             <div class="organize-page-card__sheet" data-ref="sheet-${p.id}">
@@ -407,10 +404,6 @@ export class OrganizePdfController implements ViewController {
 
   private refreshCardBadges(): void {
     this.pages.forEach((p, index) => {
-      const orderBadge = this.container.querySelector<HTMLElement>(`[data-ref="order-badge-${p.id}"]`);
-      if (orderBadge) {
-        orderBadge.textContent = `${index + 1}`;
-      }
       const card = this.container.querySelector<HTMLElement>(`[data-ref="card-${p.id}"]`);
       if (card) {
         card.setAttribute('data-page-index', `${index}`);
@@ -500,9 +493,6 @@ export class OrganizePdfController implements ViewController {
 
   private updateSummary(): void {
     const total = this.pages.length;
-    const valTotalPages = this.container.querySelector<HTMLElement>('[data-ref="val-total-pages"]');
-    if (valTotalPages) valTotalPages.textContent = `${total}`;
-
     if (total > 0) {
       this.hideError();
     }

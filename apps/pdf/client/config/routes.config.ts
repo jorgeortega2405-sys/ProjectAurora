@@ -37,10 +37,9 @@ export const APP_ROUTES: RouteDefinition[] = [
     id: 'upgrade',
     match: (path) => path === '/upgrade' || path.startsWith('/upgrade'),
   },
-
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/tool-viewer.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createPdfToMarkdownView } = await import('../views/tools/pdf-to-markdown/pdf-to-markdown.view.js');
       return await createPdfToMarkdownView();
     },
@@ -58,7 +57,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   },
   {
     handler: async () => {
-      await loadStylesheet('/css/tools/tool-viewer.css');
+      await loadStylesheet('/css/tools/tool-grid.css');
       const { createTranslatePdfView } = await import('../views/tools/translate-pdf/translate-pdf.view.js');
       return await createTranslatePdfView();
     },
@@ -627,6 +626,7 @@ export const APP_ROUTES: RouteDefinition[] = [
   {
     handler: async ({ path }) => {
       await loadStylesheet('/css/components/component-settings.css');
+      await loadStylesheet('/css/components/component-views.css');
       const { createHelpCookiesView, createHelpDocumentationView, createHelpFaqView, createHelpPrivacyView, createHelpSecurityView, createHelpTermsView } = await import('../views/help.view.js');
 
       switch (path) {

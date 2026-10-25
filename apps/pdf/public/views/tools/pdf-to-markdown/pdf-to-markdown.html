@@ -1,44 +1,6 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="pdf-to-markdown-wrapper">
-  <header class="component-top tool-top" data-ref="component-top">
-    <div class="tool-top__left" data-ref="tool-top-left">
-      <div class="tool-top__filename-field" data-ref="tool-filename-container">
-        <label class="tool-top__filename-label" data-ref="label-output-filename">
-          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento.md" placeholder="documento.md" autocomplete="off" spellcheck="false" />
-        </label>
-      </div>
-    </div>
-
-    <div class="tool-top__center" data-ref="tool-top-center">
-      <div class="pdf-viewer-toolbar__group" data-ref="toolbar-workspace-tabs" style="display: none;">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn is-active" data-ref="btn-tab-view-pdf" data-tooltip="PDF Original" aria-label="PDF Original">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
-        </button>
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-tab-view-markdown" data-tooltip="Markdown Generado" aria-label="Markdown Generado">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="component-top-right tool-top__right" data-ref="component-top-right">
-      <div class="pdf-viewer-toolbar__group pdf-viewer-toolbar__group--actions" data-ref="toolbar-actions-group" style="display: none;">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
-        </button>
-        <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-        </button>
-      </div>
-
-      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
-      </button>
-    </div>
-  </header>
-
-  <div class="component-bottom tool-bottom tool-bottom--viewer tool-layout tool-layout--viewer" data-ref="pdf-to-markdown-layout">
-    <main class="tool-layout__workspace tool-layout__workspace--viewer" data-ref="pdf-to-markdown-workspace">
+  <div class="component-bottom tool-bottom tool-bottom--grid tool-layout tool-layout--grid" data-ref="pdf-to-markdown-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="pdf-to-markdown-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
 
       <div class="tool-workspace__canvas" data-ref="markdown-dropzone-card">
@@ -64,42 +26,71 @@
         </div>
       </div>
 
-      <div class="pdf-viewer-workspace" data-ref="markdown-viewer-card" style="display: none;">
-        <div class="pdf-viewer-main-layout" data-ref="viewer-main-layout">
-          <aside class="pdf-viewer-pages-sidebar" data-ref="pages-sidebar">
-            <div class="pdf-viewer-thumbnails-scroll" data-ref="thumbnails-container"></div>
-          </aside>
-
-          <div class="pdf-viewer-canvas-container" data-ref="viewer-scroll-container">
-            <div class="pdf-viewer-pages-wrapper" data-ref="pages-wrapper"></div>
+      <div class="pdf-items-view" data-ref="markdown-selected-card" style="display: none;">
+        <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title">Documentos seleccionados (<span data-ref="pdf-count-badge">1</span>)</h2>
           </div>
         </div>
 
-        <div class="markdown-preview-workspace" data-ref="markdown-preview-workspace" style="display: none;">
-          <div class="markdown-preview-workspace__toolbar">
-            <div class="markdown-preview-workspace__tabs">
-              <button type="button" class="markdown-preview-workspace__tab is-active" data-ref="btn-subtab-preview">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
-                <span>Vista Previa</span>
-              </button>
-              <button type="button" class="markdown-preview-workspace__tab" data-ref="btn-subtab-raw">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#code"></use></svg>
-                <span>Código Fuente (.md)</span>
-              </button>
+        <div class="pdf-items-grid" data-ref="pdf-items-grid">
+          <div class="pdf-card" data-ref="selected-file-card">
+            <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-file" title="Eliminar archivo" aria-label="Eliminar archivo">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
+            <div class="pdf-card__sheet-wrapper" data-ref="sheet-wrapper">
+              <div class="pdf-card__sheet" data-ref="sheet">
+                <canvas class="pdf-card__canvas" data-ref="doc-preview-canvas"></canvas>
+              </div>
             </div>
-            <div class="markdown-preview-workspace__actions">
-              <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-workspace-copy" title="Copiar Markdown">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_copy"></use></svg>
-                <span>Copiar</span>
-              </button>
-              <button type="button" class="component-button component-button--primary component-button--h36" data-ref="btn-workspace-download" title="Descargar archivo Markdown">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
-                <span>Descargar .md</span>
-              </button>
+            <span class="pdf-card__filename" data-ref="selected-file-name">documento.pdf</span>
+            <span class="pdf-card__meta" data-ref="selected-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="markdown-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="markdown-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="markdown-processing-title">Convirtiendo documento a Markdown con IA...</h3>
+        <p class="tool-progress-card__meta" data-ref="markdown-processing-subtitle">Analizando estructura semántica, tablas y contenido del documento</p>
+        <div class="tool-progress-card__track" data-ref="markdown-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="markdown-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="markdown-result-card" style="display: none;">
+        <div class="pdf-ocr-result-card" data-ref="result-card-inner">
+          <div class="pdf-ocr-result__icon-box" data-ref="result-icon-box">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
+          </div>
+          <h2 class="pdf-ocr-result__title" data-ref="result-title">¡Documento convertido a Markdown con éxito!</h2>
+          <div class="pdf-ocr-result__meta" data-ref="result-meta">
+            <div class="pdf-ocr-result__meta-item" data-ref="meta-words">
+              <span class="pdf-ocr-result__meta-label">Palabras</span>
+              <span class="pdf-ocr-result__meta-value" data-ref="val-md-words">0</span>
+            </div>
+            <div class="pdf-ocr-result__meta-item" data-ref="meta-lines">
+              <span class="pdf-ocr-result__meta-label">Líneas</span>
+              <span class="pdf-ocr-result__meta-value" data-ref="val-md-lines">0</span>
+            </div>
+            <div class="pdf-ocr-result__meta-item" data-ref="meta-model">
+              <span class="pdf-ocr-result__meta-label">Modelo</span>
+              <span class="pdf-ocr-result__meta-value" data-ref="val-md-model">Aurora AI</span>
             </div>
           </div>
-          <div class="markdown-preview-workspace__content" data-ref="markdown-workspace-rendered"></div>
-          <pre class="markdown-preview-workspace__raw" data-ref="markdown-workspace-raw" style="display: none;"></pre>
+          <div style="display: flex; gap: 8px; width: 100%;">
+            <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full" data-ref="btn-download-result">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+              <span data-ref="txt-download-result">Descargar .md</span>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h50" data-ref="btn-copy-result" title="Copiar al portapapeles" aria-label="Copiar al portapapeles">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_copy"></use></svg>
+            </button>
+          </div>
+          <button type="button" class="component-button component-button--secondary component-button--h40" data-ref="btn-convert-another">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+            <span>Convertir otro archivo</span>
+          </button>
         </div>
       </div>
     </main>
@@ -107,11 +98,9 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="pdf-to-markdown-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
-        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
-          <div class="modal-card__drag-handle"></div>
-        </div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -122,74 +111,14 @@
       </div>
 
       <div class="tool-sidebar__body">
-
         <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title">Opciones de Formato</span>
-          <div class="md-options-list" data-ref="md-options-list">
-            <label class="md-option-item" data-ref="opt-toggle-latex">
-              <input class="md-option-item__checkbox" data-ref="chk-include-latex" type="checkbox" />
-              <div class="md-option-item__body">
-                <span class="md-option-item__title">Fórmulas en LaTeX</span>
-                <p class="md-option-item__desc">Formatea fórmulas matemáticas con sintaxis $ y $$.</p>
-              </div>
-            </label>
-
-            <label class="md-option-item" data-ref="opt-toggle-headers">
-              <input class="md-option-item__checkbox" data-ref="chk-remove-headers" type="checkbox" checked />
-              <div class="md-option-item__body">
-                <span class="md-option-item__title">Omitir números de página</span>
-                <p class="md-option-item__desc">Descarta cabeceras repetitivas y pies de página periódicos.</p>
-              </div>
-            </label>
-
-            <label class="md-option-item" data-ref="opt-toggle-tables">
-              <input class="md-option-item__checkbox" data-ref="chk-preserve-tables" type="checkbox" checked />
-              <div class="md-option-item__body">
-                <span class="md-option-item__title">Tablas Markdown GFM</span>
-                <p class="md-option-item__desc">Formatea datos en cuadrículas con cabeceras y barras verticales.</p>
-              </div>
-            </label>
+          <div class="banner banner--info" data-ref="banner-md-info">
+            <svg class="component-icon banner__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+            <div class="banner__content">
+              <p class="banner__text">Tu PDF se convertirá al formato Markdown (.md). Markdown es un formato de texto ligero que conserva la estructura del documento: encabezados, listas, enlaces, tablas e imágenes, lo que lo hace ideal para transformar PDFs en contenido limpio, editable y con capacidad de búsqueda que puedes reutilizar en documentos, sitios web, herramientas de IA o bases de datos.</p>
+            </div>
           </div>
         </div>
-
-        <div class="tool-sidebar__section">
-          <span class="tool-sidebar__section-title">Instrucciones Adicionales (Opcional)</span>
-          <label class="field" data-ref="field-custom-prompt">
-            <textarea class="field__input md-custom-prompt" data-ref="input-custom-prompt" placeholder=" " rows="2"></textarea>
-            <span class="field__label">Ej: Traducir notas al español, resumir pies de figura...</span>
-          </label>
-        </div>
-
-        <div class="tool-sidebar__section" data-ref="section-processing" style="display: none;">
-          <div class="ai-pulse-bar" data-ref="ai-pulse-bar"></div>
-          <p class="tool-sidebar__subtitle" data-ref="ai-processing-status" style="margin-top: 10px; font-weight: 500;">Leyendo documento y convirtiendo a Markdown con IA...</p>
-        </div>
-
-        <div class="tool-sidebar__section" data-ref="section-markdown-result" style="display: none;">
-          <div class="ai-summary-result-panel" data-ref="markdown-result-panel">
-            <div class="ai-summary-header" data-ref="markdown-result-header">
-              <div class="ai-summary-meta">
-                <span class="ai-summary-badge" data-ref="markdown-badge-model">Aurora AI</span>
-                <span class="ai-summary-badge" data-ref="markdown-badge-words">0 palabras</span>
-                <span class="ai-summary-badge" data-ref="markdown-badge-lines">0 líneas</span>
-              </div>
-            </div>
-
-            <div class="md-result-actions" data-ref="markdown-result-actions">
-              <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-sidebar-copy" title="Copiar Markdown">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#file_copy"></use></svg>
-                <span>Copiar</span>
-              </button>
-              <button type="button" class="component-button component-button--primary component-button--h36" data-ref="btn-sidebar-download" title="Descargar Markdown">
-                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
-                <span>Descargar .md</span>
-              </button>
-            </div>
-
-            <div class="ai-summary-content" data-ref="markdown-sidebar-preview"></div>
-          </div>
-        </div>
-
       </div>
 
       <div class="tool-sidebar__footer">

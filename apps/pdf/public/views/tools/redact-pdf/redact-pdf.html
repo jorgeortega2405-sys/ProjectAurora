@@ -1,48 +1,32 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="redact-pdf-wrapper">
   <header class="component-top tool-top" data-ref="component-top">
     <div class="tool-top__left" data-ref="tool-top-left">
-      <div class="tool-top__filename-field" data-ref="tool-filename-container">
-        <label class="tool-top__filename-label" data-ref="label-output-filename">
-          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_censurado.pdf" placeholder="documento_censurado.pdf" autocomplete="off" spellcheck="false" />
-        </label>
-      </div>
-    </div>
-
-    <div class="tool-top__center" data-ref="tool-top-center">
-      <div class="redact-top-controls" data-ref="redact-top-controls" style="display: none;">
-        <div class="redact-mode-switcher" data-ref="tool-switcher">
-          <button type="button" class="redact-tool-btn is-active" data-ref="btn-tool-select" data-tool="select" data-tooltip="Seleccionar y censurar texto" aria-label="Seleccionar y censurar texto">
+      <div class="redact-top-controls" data-ref="redact-top-controls" style="display: none; align-items: center; gap: 8px;">
+        <div class="redact-mode-switcher" data-ref="tool-switcher" style="display: flex; align-items: center; gap: 4px;">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only is-active" data-ref="btn-tool-select" data-tool="select" data-tooltip="Seleccionar texto" aria-label="Seleccionar texto">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#format_color_text"></use></svg>
-            <span>Seleccionar texto</span>
           </button>
-          <button type="button" class="redact-tool-btn" data-ref="btn-tool-draw" data-tool="draw" data-tooltip="Dibujar rectángulo de censura" aria-label="Dibujar rectángulo de censura">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-tool-draw" data-tool="draw" data-tooltip="Dibujar área" aria-label="Dibujar área">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#crop_square"></use></svg>
-            <span>Dibujar área</span>
           </button>
         </div>
       </div>
     </div>
 
     <div class="component-top-right tool-top__right" data-ref="component-top-right">
-      <div class="redact-top-actions" data-ref="redact-top-actions" style="display: none;">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+      <div class="redact-top-actions" data-ref="redact-top-actions" style="display: none; align-items: center; gap: 8px;">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
         </button>
         <span class="pdf-editor-status-pill" data-ref="val-zoom-level">100%</span>
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
         </button>
 
-        <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-clear-redactions" data-tooltip="Limpiar todas las censuras" aria-label="Limpiar todas las censuras">
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-clear-redactions" data-tooltip="Limpiar todas las censuras" aria-label="Limpiar todas las censuras">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
-          <span>Limpiar</span>
         </button>
       </div>
-
-      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Opciones de censura" aria-label="Opciones de censura">
-        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
-      </button>
     </div>
   </header>
 

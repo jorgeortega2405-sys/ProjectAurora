@@ -251,11 +251,13 @@ export class SplitPdfController implements ViewController {
       this.switchMode('size');
     }, { signal });
 
+    const rangeSubmodeToggle = this.container.querySelector<HTMLElement>('[data-ref="split-range-submode-toggle"]');
     const btnRangeCustom = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-range-submode-custom"]');
     const btnRangeFixed = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-range-submode-fixed"]');
 
     btnRangeCustom?.addEventListener('click', () => {
       this.rangeSubmode = 'custom';
+      rangeSubmodeToggle?.setAttribute('data-submode', 'custom');
       btnRangeCustom.classList.add('is-active');
       btnRangeFixed?.classList.remove('is-active');
       this.updateSubmodeViews();
@@ -265,6 +267,7 @@ export class SplitPdfController implements ViewController {
 
     btnRangeFixed?.addEventListener('click', () => {
       this.rangeSubmode = 'fixed';
+      rangeSubmodeToggle?.setAttribute('data-submode', 'fixed');
       btnRangeFixed.classList.add('is-active');
       btnRangeCustom?.classList.remove('is-active');
       this.updateSubmodeViews();
@@ -284,16 +287,34 @@ export class SplitPdfController implements ViewController {
       this.updateSummary();
     }, { signal });
 
+    const mergeRangesToggle = this.container.querySelector<HTMLElement>('[data-ref="split-merge-ranges-toggle"]');
+    const btnMergeRangesNo = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-ranges-no"]');
+    const btnMergeRangesYes = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-ranges-yes"]');
     const checkMergeRanges = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-ranges"]');
-    checkMergeRanges?.addEventListener('change', () => {
+
+    btnMergeRangesNo?.addEventListener('click', () => {
+      if (checkMergeRanges) checkMergeRanges.checked = false;
+      mergeRangesToggle?.setAttribute('data-merge', 'no');
+      btnMergeRangesNo.classList.add('is-active');
+      btnMergeRangesYes?.classList.remove('is-active');
       this.updateSummary();
     }, { signal });
 
+    btnMergeRangesYes?.addEventListener('click', () => {
+      if (checkMergeRanges) checkMergeRanges.checked = true;
+      mergeRangesToggle?.setAttribute('data-merge', 'yes');
+      btnMergeRangesYes.classList.add('is-active');
+      btnMergeRangesNo?.classList.remove('is-active');
+      this.updateSummary();
+    }, { signal });
+
+    const pagesSubmodeToggle = this.container.querySelector<HTMLElement>('[data-ref="split-pages-submode-toggle"]');
     const btnPagesAll = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-pages-submode-all"]');
     const btnPagesCustom = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-pages-submode-custom"]');
 
     btnPagesAll?.addEventListener('click', () => {
       this.pagesSubmode = 'all';
+      pagesSubmodeToggle?.setAttribute('data-submode', 'all');
       btnPagesAll.classList.add('is-active');
       btnPagesCustom?.classList.remove('is-active');
       this.updateSubmodeViews();
@@ -303,10 +324,32 @@ export class SplitPdfController implements ViewController {
 
     btnPagesCustom?.addEventListener('click', () => {
       this.pagesSubmode = 'custom';
+      pagesSubmodeToggle?.setAttribute('data-submode', 'pages-custom');
       btnPagesCustom.classList.add('is-active');
       btnPagesAll?.classList.remove('is-active');
       this.updateSubmodeViews();
       this.renderPagesWorkspace();
+      this.updateSummary();
+    }, { signal });
+
+    const mergePagesToggle = this.container.querySelector<HTMLElement>('[data-ref="split-merge-pages-toggle"]');
+    const btnMergePagesNo = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-pages-no"]');
+    const btnMergePagesYes = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-pages-yes"]');
+    const checkMergePages = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-pages"]');
+
+    btnMergePagesNo?.addEventListener('click', () => {
+      if (checkMergePages) checkMergePages.checked = false;
+      mergePagesToggle?.setAttribute('data-merge', 'no');
+      btnMergePagesNo.classList.add('is-active');
+      btnMergePagesYes?.classList.remove('is-active');
+      this.updateSummary();
+    }, { signal });
+
+    btnMergePagesYes?.addEventListener('click', () => {
+      if (checkMergePages) checkMergePages.checked = true;
+      mergePagesToggle?.setAttribute('data-merge', 'yes');
+      btnMergePagesYes.classList.add('is-active');
+      btnMergePagesNo?.classList.remove('is-active');
       this.updateSummary();
     }, { signal });
 
@@ -318,7 +361,6 @@ export class SplitPdfController implements ViewController {
       this.updateSummary();
     }, { signal });
 
-    const checkMergePages = this.container.querySelector<HTMLInputElement>('[data-ref="check-merge-pages"]');
     checkMergePages?.addEventListener('change', () => {
       this.updateSummary();
     }, { signal });
@@ -473,6 +515,9 @@ export class SplitPdfController implements ViewController {
 
   private switchMode(mode: SplitMode): void {
     this.activeMode = mode;
+
+    const tabsNav = this.container.querySelector<HTMLElement>('[data-ref="split-tabs-nav"]');
+    if (tabsNav) tabsNav.setAttribute('data-mode', mode);
 
     const tabRange = this.container.querySelector<HTMLButtonElement>('[data-ref="tab-range"]');
     const tabPages = this.container.querySelector<HTMLButtonElement>('[data-ref="tab-pages"]');
@@ -996,6 +1041,26 @@ export class SplitPdfController implements ViewController {
     const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
     if (outputNameInput) outputNameInput.value = 'documento_dividido.pdf';
     if (this.sidebarModal) this.sidebarModal.close();
+
+    const tabsNav = this.container.querySelector<HTMLElement>('[data-ref="split-tabs-nav"]');
+    if (tabsNav) tabsNav.setAttribute('data-mode', 'range');
+    const rangeSubmodeToggle = this.container.querySelector<HTMLElement>('[data-ref="split-range-submode-toggle"]');
+    if (rangeSubmodeToggle) rangeSubmodeToggle.setAttribute('data-submode', 'custom');
+    const mergeRangesToggle = this.container.querySelector<HTMLElement>('[data-ref="split-merge-ranges-toggle"]');
+    if (mergeRangesToggle) mergeRangesToggle.setAttribute('data-merge', 'no');
+    const btnMergeRangesNo = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-ranges-no"]');
+    const btnMergeRangesYes = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-ranges-yes"]');
+    btnMergeRangesNo?.classList.add('is-active');
+    btnMergeRangesYes?.classList.remove('is-active');
+
+    const pagesSubmodeToggle = this.container.querySelector<HTMLElement>('[data-ref="split-pages-submode-toggle"]');
+    if (pagesSubmodeToggle) pagesSubmodeToggle.setAttribute('data-submode', 'all');
+    const mergePagesToggle = this.container.querySelector<HTMLElement>('[data-ref="split-merge-pages-toggle"]');
+    if (mergePagesToggle) mergePagesToggle.setAttribute('data-merge', 'no');
+    const btnMergePagesNo = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-pages-no"]');
+    const btnMergePagesYes = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-merge-pages-yes"]');
+    btnMergePagesNo?.classList.add('is-active');
+    btnMergePagesYes?.classList.remove('is-active');
 
     this.updateSummary();
     this.updateActionButtons();

@@ -1,4 +1,5 @@
 import { getFooterHtml, mountSiteFooter } from '../components/footer.component.js';
+import { getApi, postApi } from '../services/api.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { loadTemplate } from '../services/template.service.js';
 import { showToast } from '../services/toast.service.js';
@@ -153,17 +154,12 @@ export class ContactController implements ViewController {
         if (errorBanner) errorBanner.style.display = 'none';
 
         await withButtonLoading(submitBtn, 'Enviando mensaje...', async () => {
-          const res = await fetch('/api/support/contact', {
-            body: JSON.stringify({
-              category: subject,
-              email,
-              message,
-              name,
-              subject: subjectText?.textContent || subject,
-            }),
-            headers: { 'Content-Type': 'application/json' },
-            method: 'POST',
-            signal: this.abortController?.signal,
+          const res = await postApi('/api/support/contact', {
+            category: subject,
+            email,
+            message,
+            name,
+            subject: subjectText?.textContent || subject,
           });
 
           const data = (await res.json().catch(() => ({}))) as { error?: string; ticketNumber?: string };
@@ -214,11 +210,8 @@ export class ContactController implements ViewController {
         if (replyError) replyError.style.display = 'none';
 
         await withButtonLoading(replyBtn, 'Enviando respuesta...', async () => {
-          const res = await fetch(`/api/support/tickets/${encodeURIComponent(this.currentTrackingToken!)}/reply`, {
-            body: JSON.stringify({ message }),
-            headers: { 'Content-Type': 'application/json' },
-            method: 'POST',
-            signal: this.abortController?.signal,
+          const res = await postApi(`/api/support/tickets/${encodeURIComponent(this.currentTrackingToken!)}/reply`, {
+            message,
           });
 
           const data = (await res.json().catch(() => ({}))) as { error?: string; message?: TicketMessageData };
@@ -265,9 +258,7 @@ export class ContactController implements ViewController {
     if (ticketCard) ticketCard.style.display = 'flex';
 
     try {
-      const res = await fetch(`/api/support/tickets/${encodeURIComponent(token)}`, {
-        signal: this.abortController?.signal,
-      });
+      const res = await getApi(`/api/support/tickets/${encodeURIComponent(token)}`);
 
       if (!res.ok) {
         if (titleEl) titleEl.textContent = 'Incidencia no encontrada';

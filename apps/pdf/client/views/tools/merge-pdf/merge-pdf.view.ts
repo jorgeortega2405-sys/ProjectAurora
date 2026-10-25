@@ -447,7 +447,6 @@ export class MergePdfController implements ViewController {
 
     return `
       <div class="pdf-card" data-ref="card-pdf-${item.id}" data-id="${item.id}">
-        <div class="pdf-card__order-badge" data-ref="badge-${item.id}">#${index + 1}</div>
         <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-pdf" data-id="${item.id}" title="Eliminar archivo" aria-label="Eliminar archivo">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
@@ -497,10 +496,6 @@ export class MergePdfController implements ViewController {
       const found = this.selectedFiles.find((f) => f.id === id);
       if (found) {
         newOrderedFiles.push(found);
-      }
-      const badge = card.querySelector<HTMLElement>('.pdf-card__order-badge');
-      if (badge) {
-        badge.textContent = `#${index + 1}`;
       }
     });
 

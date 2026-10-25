@@ -40,11 +40,29 @@ export class HomeController {
     }
     this.renderTools();
     renderIcons(this.container);
-    this.initCarousel();
-    this.bindEvents();
-    if (currentUser) {
-      void this.checkEducationalEligibility();
+    const hasProOrStudent = Boolean(
+      currentUser && (
+        currentUser.is_student ||
+        hasPermission(currentUser, 'subscription:feature:pro') ||
+        hasPermission(currentUser, 'subscription:feature:teams') ||
+        hasPermission(currentUser, 'subscription:feature:enterprise') ||
+        (currentUser.subscription_tier && currentUser.subscription_tier.toLowerCase() !== 'free' && currentUser.subscription_tier.toLowerCase() !== 'none')
+      )
+    );
+
+    const proSection = this.container.querySelector<HTMLElement>('[data-ref="home-pro-section"]');
+    if (proSection) {
+      if (hasProOrStudent) {
+        proSection.remove();
+      } else {
+        this.initCarousel();
+        if (currentUser) {
+          void this.checkEducationalEligibility();
+        }
+      }
     }
+
+    this.bindEvents();
   }
 
   destroy(): void {

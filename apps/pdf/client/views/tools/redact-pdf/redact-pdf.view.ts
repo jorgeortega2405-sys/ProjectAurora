@@ -760,6 +760,11 @@ export class RedactPdfController implements ViewController {
       boxEl.style.top = `${box.y * scale}px`;
       boxEl.style.width = `${box.width * scale}px`;
       boxEl.style.height = `${box.height * scale}px`;
+      boxEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.container.querySelectorAll('.redaction-box').forEach((b) => b.classList.remove('is-selected'));
+        boxEl.classList.add('is-selected');
+      });
 
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';

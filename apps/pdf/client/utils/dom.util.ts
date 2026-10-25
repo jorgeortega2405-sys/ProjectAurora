@@ -1,5 +1,5 @@
-import { setupSheetDragToDismiss } from '../components/modal.component.js';
 import { createPopper, Instance as PopperInstance, Placement } from '@popperjs/core';
+import { setupSheetDragToDismiss } from '../components/modal.component.js';
 
 export interface BannerManager {
   hideAll: () => void;
@@ -856,4 +856,88 @@ export function bindFileDropzone(options: {
   window.addEventListener('dragend', () => {
     removeActive();
   }, { signal });
+}
+
+export interface TypewriterOptions {
+  onChunk?: () => void;
+  renderHtml?: (partialText: string) => string;
+  signal?: AbortSignal;
+  speedMs?: number;
+}
+
+function attachCursorToHtml(html: string): string {
+  const cursorTag = '<span class="ai-typing-cursor" aria-hidden="true"></span>';
+  const match = html.match(/(<\/(?:p|li|h[1-6]|span|blockquote|td)>)((?:\s*<\/(?:ul|ol|table|div)>)*)$/i);
+  if (match && match.index !== undefined) {
+    return html.slice(0, match.index) + cursorTag + match[0];
+  }
+  return html + cursorTag;
+}
+
+export function animateTypewriter(
+  targetElement: HTMLElement,
+  fullText: string,
+  options: TypewriterOptions = {}
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (!fullText) {
+      targetElement.innerHTML = '';
+      resolve();
+      return;
+    }
+
+    const render = options.renderHtml || ((str: string) => str);
+
+    if (options.signal?.aborted) {
+      targetElement.innerHTML = render(fullText);
+      resolve();
+      return;
+    }
+
+    const tokens = fullText.match(/\S+|\s+/g) || [fullText];
+    const speed = options.speedMs || 22;
+    const tokensPerStep = Math.max(1, Math.ceil(tokens.length / 55));
+
+    let currentIndex = 0;
+    let timerId: number | null = null;
+
+    const cleanup = () => {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    };
+
+    if (options.signal) {
+      options.signal.addEventListener(
+        'abort',
+        () => {
+          cleanup();
+          targetElement.innerHTML = render(fullText);
+          resolve();
+        },
+        { once: true }
+      );
+    }
+
+    timerId = window.setInterval(() => {
+      currentIndex += tokensPerStep;
+      if (currentIndex >= tokens.length) {
+        cleanup();
+        targetElement.innerHTML = render(fullText);
+        if (options.onChunk) {
+          options.onChunk();
+        }
+        resolve();
+        return;
+      }
+
+      const partialText = tokens.slice(0, currentIndex).join('');
+      const renderedHtml = render(partialText);
+      targetElement.innerHTML = attachCursorToHtml(renderedHtml);
+      if (options.onChunk) {
+        options.onChunk();
+      }
+    }, speed);
+  });
 }

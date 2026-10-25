@@ -439,9 +439,6 @@ export class RemovePdfPagesController implements ViewController {
     const total = this.pages.length;
     const removed = this.removedPages.size;
 
-    const valTotalPages = this.container.querySelector<HTMLElement>('[data-ref="val-total-pages"]');
-    if (valTotalPages) valTotalPages.textContent = `${total}`;
-
     if (this.currentFile) {
       if (removed === 0) {
         this.hideError();

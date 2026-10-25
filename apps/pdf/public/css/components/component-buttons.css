@@ -1024,3 +1024,145 @@ html.dark-theme .component-badge--interactive:hover .component-badge__icon--colo
   transform: translateX(20px);
   background-color: var(--action-primary-text);
 }
+
+.component-toggle-pill {
+  background-color: var(--bg-hover-light, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  display: grid;
+  isolation: isolate;
+  padding: 4px;
+  position: relative;
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.component-toggle-pill--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.component-toggle-pill--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.component-toggle-pill-glider {
+  background-color: var(--action-primary, #111827);
+  border-radius: 9999px;
+  bottom: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  left: 4px;
+  pointer-events: none;
+  position: absolute;
+  top: 4px;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 1;
+}
+
+.component-toggle-pill--2 .component-toggle-pill-glider {
+  width: calc(50% - 4px);
+}
+
+.component-toggle-pill--3 .component-toggle-pill-glider {
+  width: calc(33.333% - 4px);
+}
+
+html[data-theme="dark"] .component-toggle-pill-glider,
+html.dark-theme .component-toggle-pill-glider,
+body[data-theme="dark"] .component-toggle-pill-glider {
+  background-color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .component-toggle-pill-glider {
+    background-color: #ffffff;
+  }
+}
+
+.component-toggle-pill .component-button {
+  align-items: center;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 9999px;
+  box-shadow: none !important;
+  box-sizing: border-box;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  height: 36px;
+  justify-content: center;
+  line-height: normal;
+  padding: 0 12px;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.component-toggle-pill .component-button:hover {
+  background-color: transparent !important;
+  color: var(--text-primary);
+}
+
+.component-toggle-pill .component-button.is-active,
+.component-toggle-pill .component-button.active {
+  background-color: transparent !important;
+  color: var(--action-primary-text, #ffffff) !important;
+}
+
+html[data-theme="dark"] .component-toggle-pill .component-button.is-active,
+html[data-theme="dark"] .component-toggle-pill .component-button.active,
+html.dark-theme .component-toggle-pill .component-button.is-active,
+html.dark-theme .component-toggle-pill .component-button.active,
+body[data-theme="dark"] .component-toggle-pill .component-button.is-active,
+body[data-theme="dark"] .component-toggle-pill .component-button.active {
+  color: #09090b !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .component-toggle-pill .component-button.is-active,
+  :root:not([data-theme="light"]) .component-toggle-pill .component-button.active {
+    color: #09090b !important;
+  }
+}
+
+.component-toggle-pill[data-active="0"] .component-toggle-pill-glider,
+.component-toggle-pill[data-mode="range"] .component-toggle-pill-glider,
+.component-toggle-pill[data-submode="custom"] .component-toggle-pill-glider,
+.component-toggle-pill[data-submode="all"] .component-toggle-pill-glider,
+.component-toggle-pill[data-merge="no"] .component-toggle-pill-glider,
+.component-toggle-pill[data-cycle="monthly"] .component-toggle-pill-glider {
+  transform: translateX(0);
+}
+
+.component-toggle-pill[data-active="1"] .component-toggle-pill-glider,
+.component-toggle-pill[data-mode="pages"] .component-toggle-pill-glider,
+.component-toggle-pill[data-submode="fixed"] .component-toggle-pill-glider,
+.component-toggle-pill[data-merge="yes"] .component-toggle-pill-glider,
+.component-toggle-pill[data-cycle="yearly"] .component-toggle-pill-glider {
+  transform: translateX(100%);
+}
+
+.component-toggle-pill--3[data-active="2"] .component-toggle-pill-glider,
+.component-toggle-pill--3[data-mode="size"] .component-toggle-pill-glider {
+  transform: translateX(200%);
+}
+
+.component-toggle-pill--2[data-submode="custom"] .component-toggle-pill-glider {
+  transform: translateX(0);
+}
+
+.component-toggle-pill--2[data-submode="fixed"] .component-toggle-pill-glider {
+  transform: translateX(100%);
+}
+
+.component-toggle-pill--2[data-submode="all"] .component-toggle-pill-glider {
+  transform: translateX(0);
+}
+
+.component-toggle-pill--2[data-submode="pages-custom"] .component-toggle-pill-glider {
+  transform: translateX(100%);
+}

@@ -1,34 +1,4 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="organize-pdf-wrapper">
-  <header class="component-top tool-top" data-ref="component-top">
-    <div class="component-top-left tool-top__left" data-ref="component-top-left">
-      <div class="tool-top__filename-field" data-ref="field-output-filename">
-        <label class="tool-top__filename-label" data-ref="label-output-filename" aria-label="Nombre del documento a exportar">
-          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_organizado.pdf" placeholder="documento_organizado.pdf" autocomplete="off" spellcheck="false" />
-        </label>
-      </div>
-    </div>
-
-    <div class="tool-top__center" data-ref="tool-top-center">
-      <div class="organize-top-actions" data-ref="organize-top-actions" style="display: none; align-items: center; gap: 8px;">
-        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-rotate-all">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#autorenew"></use></svg>
-          <span>Girar todas (+90°)</span>
-        </button>
-        <button type="button" class="component-button component-button--secondary component-button--h32" data-ref="btn-reset-order">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-          <span data-i18n="tools.organize_pdf_btn_reset">Restablecer orden</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="component-top-right tool-top__right" data-ref="component-top-right">
-      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
-      </button>
-    </div>
-  </header>
-
   <div class="component-bottom tool-bottom tool-bottom--grid tool-layout tool-layout--grid" data-ref="organize-pdf-layout">
     <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="organize-pdf-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
@@ -100,11 +70,6 @@
         <div class="organize-info-box" data-ref="organize-info-box">
           <svg class="component-icon organize-info-box__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
           <span class="organize-info-box__text" data-i18n="tools.organize_pdf_info_hint">Arrastra y suelta las páginas para reordenarlas. Usa los botones de giro para rotar páginas individuales.</span>
-        </div>
-
-        <div class="organize-stat-row" data-ref="row-total-pages">
-          <span class="organize-stat-label" data-i18n="tools.organize_pdf_summary_pages">Páginas totales:</span>
-          <strong class="organize-stat-value" data-ref="val-total-pages">0</strong>
         </div>
 
       </div>

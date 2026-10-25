@@ -4,6 +4,7 @@ import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { showToast } from '../services/toast.service.js';
 import { wsService } from '../services/websocket.service.js';
+import { animateTypewriter } from '../utils/dom.util.js';
 import { openModal } from './modal.component.js';
 
 export let isTechSupportOpen = false;
@@ -122,7 +123,13 @@ function appendUserBubble(container: HTMLElement | null, text: string): void {
   container.appendChild(userMsg);
 }
 
-function appendAgentBubble(container: HTMLElement | null, text: string, agentTitle = 'Soporte IA'): void {
+function appendAgentBubble(
+  container: HTMLElement | null,
+  text: string,
+  agentTitle = 'Soporte IA',
+  animate = false,
+  centerEl: HTMLElement | null = null
+): Promise<void> | void {
   if (!container) return;
   const agentMsg = document.createElement('div');
   agentMsg.className = 'chat-message chat-message--agent';
@@ -133,11 +140,24 @@ function appendAgentBubble(container: HTMLElement | null, text: string, agentTit
       <span>${escapeHtml(agentTitle)}</span>
     </div>
     <div class="chat-agent-bubble" data-ref="chat-agent-bubble">
-      ${renderSupportMarkdown(text)}
+      ${animate ? '' : renderSupportMarkdown(text)}
     </div>
   `;
   renderIcons(agentMsg);
   container.appendChild(agentMsg);
+  if (animate) {
+    const bubble = agentMsg.querySelector<HTMLElement>('[data-ref="chat-agent-bubble"]');
+    if (bubble) {
+      return animateTypewriter(bubble, text, {
+        onChunk: () => {
+          if (centerEl) {
+            centerEl.scrollTop = centerEl.scrollHeight;
+          }
+        },
+        renderHtml: renderSupportMarkdown
+      });
+    }
+  }
 }
 
 function appendSystemBubble(container: HTMLElement | null, text: string): void {
@@ -755,7 +775,7 @@ async function handleSendMessage(): Promise<void> {
       };
       const reply = data.reply || 'He recibido tu mensaje, pero no pude generar una respuesta en este momento.';
       history.push({ role: 'assistant', text: reply });
-      appendAgentBubble(messagesList, reply, 'Soporte IA');
+      appendAgentBubble(messagesList, reply, 'Soporte IA', true, centerEl);
 
       if (data.requiresHandoff) {
         const reason = data.reason || text;
@@ -765,7 +785,9 @@ async function handleSendMessage(): Promise<void> {
       appendAgentBubble(
         messagesList,
         'Ha ocurrido un inconveniente al conectar con el servicio de soporte. Por favor, intenta de nuevo en unos instantes.',
-        'Soporte IA'
+        'Soporte IA',
+        true,
+        centerEl
       );
     }
   } catch {
@@ -773,7 +795,9 @@ async function handleSendMessage(): Promise<void> {
     appendAgentBubble(
       messagesList,
       'No se pudo establecer conexión con el servidor. Revisa tu conexión a internet e intenta nuevamente.',
-      'Soporte IA'
+      'Soporte IA',
+      true,
+      centerEl
     );
   } finally {
     isPending = false;
@@ -853,19 +877,21 @@ export function createTechSupportSidebar(): HTMLElement {
                 <button type="button" class="component-button component-button--icon-only chat-pill-input__attach" data-ref="btn-attach-files" data-tooltip="Adjuntar archivos" aria-label="Adjuntar archivos" aria-haspopup="true" aria-expanded="false">
                   <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#attach_file"></use></svg>
                 </button>
-                <div class="ai-dropdown-menu ai-attach-dropdown-menu" data-ref="menu-attach-options" style="display: none;">
-                  <button type="button" class="ai-dropdown-item" data-ref="btn-attach-device">
-                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
-                    <span class="ai-dropdown-item__text">Desde este dispositivo</span>
-                  </button>
-                  <button type="button" class="ai-dropdown-item" data-ref="btn-attach-drive">
-                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
-                    <span class="ai-dropdown-item__text">Google Drive</span>
-                  </button>
-                  <button type="button" class="ai-dropdown-item" data-ref="btn-attach-dropbox">
-                    <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
-                    <span class="ai-dropdown-item__text">Dropbox</span>
-                  </button>
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-220 menu-panel--h-auto ai-attach-dropdown-menu" data-ref="menu-attach-options" style="display: none;">
+                  <div class="menu-panel__list" data-ref="list-attach-options">
+                    <button type="button" class="menu-item" data-ref="btn-attach-device">
+                      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+                      <span class="menu-item__text">Desde este dispositivo</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="btn-attach-drive">
+                      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+                      <span class="menu-item__text">Google Drive</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="btn-attach-dropbox">
+                      <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+                      <span class="menu-item__text">Dropbox</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <textarea class="chat-pill-input__field" data-ref="ai-chat-input" placeholder="${t('tech_support_panel.input_placeholder', 'Escribe tu consulta...')}" data-i18n-placeholder="tech_support_panel.input_placeholder" rows="1" maxlength="2000"></textarea>

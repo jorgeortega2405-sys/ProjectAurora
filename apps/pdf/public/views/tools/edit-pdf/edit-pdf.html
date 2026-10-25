@@ -1,16 +1,7 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="edit-pdf-wrapper">
   <header class="component-top tool-top" data-ref="component-top">
     <div class="tool-top__left" data-ref="tool-top-left">
-      <div class="tool-top__filename-field" data-ref="tool-filename-container">
-        <label class="tool-top__filename-label" data-ref="label-output-filename">
-          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_editado.pdf" placeholder="documento_editado.pdf" autocomplete="off" spellcheck="false" />
-        </label>
-      </div>
-    </div>
-
-    <div class="tool-top__center" data-ref="tool-top-center">
-      <div class="pdf-editor-top-controls" data-ref="editor-top-controls" style="display: none;">
+      <div class="pdf-editor-top-controls" data-ref="editor-top-controls" style="display: none; align-items: center; gap: 8px;">
         <div class="pdf-editor-mode-switcher" data-ref="mode-switcher">
           <button type="button" class="pdf-editor-mode-btn is-active" data-ref="btn-mode-annotate" data-mode="annotate">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
@@ -24,26 +15,26 @@
 
         <div class="tool-top__divider"></div>
 
-        <div class="pdf-editor-tools-group" data-ref="tools-group-annotate">
-          <button type="button" class="pdf-editor-tool-btn is-active" data-ref="tool-select" data-tool="select" data-tooltip="Seleccionar elemento" aria-label="Seleccionar">
+        <div class="pdf-editor-tools-group" data-ref="tools-group-annotate" style="display: flex; align-items: center; gap: 4px;">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only is-active" data-ref="tool-select" data-tool="select" data-tooltip="Seleccionar elemento" aria-label="Seleccionar">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#near_me"></use></svg>
           </button>
-          <button type="button" class="pdf-editor-tool-btn" data-ref="tool-text" data-tool="text" data-tooltip="Añadir texto" aria-label="Texto">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="tool-text" data-tool="text" data-tooltip="Añadir texto" aria-label="Texto">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#title"></use></svg>
           </button>
-          <button type="button" class="pdf-editor-tool-btn" data-ref="tool-image" data-tool="image" data-tooltip="Añadir imagen" aria-label="Imagen">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="tool-image" data-tool="image" data-tooltip="Añadir imagen" aria-label="Imagen">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#image"></use></svg>
           </button>
-          <button type="button" class="pdf-editor-tool-btn" data-ref="tool-draw" data-tool="draw" data-tooltip="Dibujar a mano alzada" aria-label="Dibujar">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="tool-draw" data-tool="draw" data-tooltip="Dibujar a mano alzada" aria-label="Dibujar">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#brush"></use></svg>
           </button>
-          <button type="button" class="pdf-editor-tool-btn" data-ref="tool-line" data-tool="line" data-tooltip="Línea recta" aria-label="Línea">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="tool-line" data-tool="line" data-tooltip="Línea recta" aria-label="Línea">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#horizontal_rule"></use></svg>
           </button>
-          <button type="button" class="pdf-editor-tool-btn" data-ref="tool-rect" data-tool="rect" data-tooltip="Rectángulo" aria-label="Rectángulo">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="tool-rect" data-tool="rect" data-tooltip="Rectángulo" aria-label="Rectángulo">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#crop_square"></use></svg>
           </button>
-          <button type="button" class="pdf-editor-tool-btn" data-ref="tool-circle" data-tool="circle" data-tooltip="Círculo" aria-label="Círculo">
+          <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="tool-circle" data-tool="circle" data-tooltip="Círculo" aria-label="Círculo">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#radio_button_unchecked"></use></svg>
           </button>
         </div>
@@ -59,27 +50,23 @@
 
     <div class="component-top-right tool-top__right" data-ref="component-top-right">
       <div class="pdf-editor-top-actions" data-ref="editor-top-actions" style="display: none;">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-undo" data-tooltip="Deshacer" aria-label="Deshacer" disabled>
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#undo"></use></svg>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-undo" data-tooltip="Deshacer" aria-label="Deshacer" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#undo"></use></svg>
         </button>
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-redo" data-tooltip="Rehacer" aria-label="Rehacer" disabled>
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#redo"></use></svg>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-redo" data-tooltip="Rehacer" aria-label="Rehacer" disabled>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#redo"></use></svg>
         </button>
 
         <div class="tool-top__divider"></div>
 
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
         </button>
         <span class="pdf-editor-status-pill" data-ref="val-zoom-level">100%</span>
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+        <button type="button" class="component-button component-button--h40 component-button--icon-only" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
         </button>
       </div>
-
-      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Propiedades" aria-label="Propiedades">
-        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
-      </button>
     </div>
   </header>
 

@@ -398,7 +398,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
   {
     activatedAt: '2026-10-12',
     category: 'pdf-intelligence',
-    cssPath: '/css/tools/tool-viewer.css',
+    cssPath: '/css/tools/tool-grid.css',
     customSvg: SVG_TOOL_TRANSLATE_PDF,
     descKey: 'home.tool_translate_pdf_desc',
     featured: true,
@@ -411,7 +411,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
   {
     activatedAt: '2026-10-15',
     category: 'pdf-intelligence',
-    cssPath: '/css/tools/tool-viewer.css',
+    cssPath: '/css/tools/tool-grid.css',
     customSvg: SVG_TOOL_PDF_TO_MARKDOWN,
     descKey: 'home.tool_pdf_to_markdown_desc',
     featured: true,

@@ -8,6 +8,7 @@ import { showToast } from '../services/toast.service.js';
 import { AiProgressEvent, wsService } from '../services/websocket.service.js';
 import { AttachedClientFile, ChatMessageItem, ChatMessageResult } from '../types/ai.types.js';
 import { ViewController } from '../types/common.types.js';
+import { animateTypewriter } from '../utils/dom.util.js';
 
 interface FileTypeDisplayInfo {
   badgeClass: string;
@@ -392,7 +393,7 @@ export class AiController implements ViewController {
   }
 
   private closeAllDropdowns(): void {
-    const menus = this.container.querySelectorAll<HTMLElement>('.ai-dropdown-menu');
+    const menus = this.container.querySelectorAll<HTMLElement>('.ai-dropdown-menu, .ai-attach-dropdown-menu');
     for (const m of menus) {
       m.style.display = 'none';
     }
@@ -741,7 +742,7 @@ export class AiController implements ViewController {
     renderIcons(row);
   }
 
-  private renderAssistantMessage(msg: ChatMessageItem): void {
+  private renderAssistantMessage(msg: ChatMessageItem, animate = true): void {
     const list = this.container.querySelector<HTMLElement>('[data-ref="ai-messages-list"]');
     if (!list) return;
 
@@ -865,8 +866,8 @@ export class AiController implements ViewController {
         <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
       </div>
       <div class="ai-message-body">
-        <div class="ai-message-bubble">
-          ${formattedText}
+        <div class="ai-message-bubble" data-ref="ai-bubble-${msg.id}">
+          ${animate ? '' : formattedText}
         </div>
         ${resultCardsHtml}
         <div class="ai-message-footer" data-ref="msg-footer-${msg.id}">
@@ -879,6 +880,19 @@ export class AiController implements ViewController {
 
     list.appendChild(row);
     renderIcons(row);
+
+    if (animate) {
+      const bubble = row.querySelector<HTMLElement>(`[data-ref="ai-bubble-${msg.id}"]`);
+      if (bubble) {
+        void animateTypewriter(bubble, msg.reply, {
+          onChunk: () => {
+            this.scrollToBottom();
+          },
+          renderHtml: renderSimpleMarkdown,
+          signal: this.abortController?.signal
+        });
+      }
+    }
 
     for (let i = 0; i < results.length; i++) {
       const res = results[i];

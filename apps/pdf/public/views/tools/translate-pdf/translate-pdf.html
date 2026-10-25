@@ -1,33 +1,6 @@
 <div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="translate-pdf-wrapper">
-  <header class="component-top tool-top" data-ref="component-top">
-    <div class="tool-top__left" data-ref="tool-top-left">
-      <div class="tool-top__filename-field" data-ref="tool-filename-container">
-        <label class="tool-top__filename-label" data-ref="label-output-filename">
-          <svg class="component-icon tool-top__filename-icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg>
-          <input class="tool-top__filename-input" data-ref="input-output-name" type="text" value="documento_traducido.pdf" placeholder="documento_traducido.pdf" autocomplete="off" spellcheck="false" />
-        </label>
-      </div>
-    </div>
-
-    <div class="component-top-right tool-top__right" data-ref="component-top-right">
-      <div class="pdf-viewer-toolbar__group pdf-viewer-toolbar__group--actions" data-ref="toolbar-actions-group" style="display: none;">
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-out" data-tooltip="Reducir zoom" aria-label="Reducir zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#remove"></use></svg>
-        </button>
-        <span class="pdf-viewer-toolbar__badge" data-ref="viewer-zoom-level">100%</span>
-        <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn" data-ref="btn-zoom-in" data-tooltip="Aumentar zoom" aria-label="Aumentar zoom">
-          <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
-        </button>
-      </div>
-
-      <button type="button" class="component-button component-button--h40 component-button--icon-only rail-btn tool-top__btn-settings" data-ref="btn-tool-settings" data-tooltip="Configuración" aria-label="Configuración">
-        <svg class="component-icon rail-btn__icon" aria-hidden="true"><use href="/icons.svg#settings"></use></svg>
-      </button>
-    </div>
-  </header>
-
-  <div class="component-bottom tool-bottom tool-bottom--viewer tool-layout tool-layout--viewer" data-ref="translate-pdf-layout">
-    <main class="tool-layout__workspace tool-layout__workspace--viewer" data-ref="translate-pdf-workspace">
+  <div class="component-bottom tool-bottom tool-bottom--grid tool-layout tool-layout--grid" data-ref="translate-pdf-layout">
+    <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="translate-pdf-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
 
       <div class="tool-workspace__canvas" data-ref="translate-dropzone-card">
@@ -53,15 +26,35 @@
         </div>
       </div>
 
-      <div class="pdf-viewer-workspace" data-ref="translate-viewer-card" style="display: none;">
-        <div class="pdf-viewer-main-layout" data-ref="viewer-main-layout">
-          <aside class="pdf-viewer-pages-sidebar" data-ref="pages-sidebar">
-            <div class="pdf-viewer-thumbnails-scroll" data-ref="thumbnails-container"></div>
-          </aside>
-
-          <div class="pdf-viewer-canvas-container" data-ref="viewer-scroll-container">
-            <div class="pdf-viewer-pages-wrapper" data-ref="pages-wrapper"></div>
+      <div class="pdf-items-view" data-ref="translate-selected-card" style="display: none;">
+        <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title">Documentos seleccionados (<span data-ref="pdf-count-badge">1</span>)</h2>
           </div>
+        </div>
+
+        <div class="pdf-items-grid" data-ref="pdf-items-grid">
+          <div class="pdf-card" data-ref="selected-file-card">
+            <button type="button" class="component-button pdf-card__btn-remove" data-ref="btn-remove-file" title="Eliminar archivo" aria-label="Eliminar archivo">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
+            </button>
+            <div class="pdf-card__sheet-wrapper" data-ref="sheet-wrapper">
+              <div class="pdf-card__sheet" data-ref="sheet">
+                <canvas class="pdf-card__canvas" data-ref="doc-preview-canvas"></canvas>
+              </div>
+            </div>
+            <span class="pdf-card__filename" data-ref="selected-file-name">documento.pdf</span>
+            <span class="pdf-card__meta" data-ref="selected-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-progress-card" data-ref="translate-processing-card" style="display: none;">
+        <div class="pdf-processing-spinner img-processing-spinner" data-ref="translate-processing-spinner"></div>
+        <h3 class="tool-progress-card__title" data-ref="translate-processing-title">Traduciendo documento con IA...</h3>
+        <p class="tool-progress-card__meta" data-ref="translate-processing-subtitle">Conservando formato, tipografía y tablas en el idioma de destino</p>
+        <div class="tool-progress-card__track" data-ref="translate-progress-track">
+          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="translate-progress-fill"></div>
         </div>
       </div>
     </main>
@@ -69,10 +62,8 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="translate-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
-        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
-          <div class="modal-card__drag-handle"></div>
-        </div>
+      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
+        <div class="tool-sidebar__drag-handle"></div>
         <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
@@ -245,40 +236,13 @@
             </div>
           </div>
         </div>
-
-
-        <div class="translate-result-card" data-ref="translate-result-card" style="display: none;">
-          <div class="translate-result-card__header">
-            <div class="translate-result-card__icon">
-              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#check_circle"></use></svg>
-            </div>
-            <div>
-              <h3 class="translate-result-card__title">¡Traducción completada!</h3>
-              <p class="translate-result-card__desc" data-ref="translate-result-summary">Formato y diseño preservados con éxito.</p>
-            </div>
-          </div>
-
-          <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-download-translated">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
-            <span>Descargar PDF Traducido</span>
-          </button>
-
-          <button type="button" class="component-button component-button--secondary component-button--h36 component-button--w-full" data-ref="btn-toggle-viewer-doc">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#visibility"></use></svg>
-            <span data-ref="txt-toggle-viewer-doc">Ver traducción en el visor</span>
-          </button>
-
-          <button type="button" class="component-button component-button--secondary component-button--h36 component-button--w-full" data-ref="btn-reset-tool">
-            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
-            <span>Traducir otro documento</span>
-          </button>
-        </div>
       </div>
 
       <div class="tool-sidebar__footer">
-        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-translate-action">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-translate-action" disabled>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#translate"></use></svg>
           <span data-ref="txt-translate-action">Traducir Documento</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
 
         <div class="banner banner--danger" data-ref="translate-error-banner" style="display: none; margin-top: 12px;">

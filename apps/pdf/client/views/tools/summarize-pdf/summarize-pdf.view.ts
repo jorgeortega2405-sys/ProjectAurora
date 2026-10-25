@@ -10,7 +10,7 @@ import { loadPdfJs } from '../../../services/pdf-loader.service.js';
 import { loadTemplate } from '../../../services/template.service.js';
 import { showToast } from '../../../services/toast.service.js';
 import { ViewController } from '../../../types/common.types.js';
-import { bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
+import { animateTypewriter, bindFileDropzone, setupToolSidebarModal, ToolSidebarModalController, withButtonLoading } from '../../../utils/dom.util.js';
 import { ClientSummaryMode, SummarizePdfResultData } from './summarize-pdf.types.js';
 
 function formatBytes(bytes: number): string {
@@ -583,8 +583,14 @@ export class SummarizePdfController implements ViewController {
     if (wordsBadge) wordsBadge.textContent = `${data.wordCount} palabras`;
 
     if (renderedTextEl) {
-      renderedTextEl.innerHTML = renderSimpleMarkdown(data.summary);
       renderedTextEl.scrollTop = 0;
+      void animateTypewriter(renderedTextEl, data.summary, {
+        onChunk: () => {
+          renderedTextEl.scrollTop = renderedTextEl.scrollHeight;
+        },
+        renderHtml: renderSimpleMarkdown,
+        signal: this.abortController?.signal
+      });
     }
   }
 

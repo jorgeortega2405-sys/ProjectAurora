@@ -70,7 +70,9 @@
 
 .component-top.tool-top:has([data-ref="editor-top-controls"]:not([style*="display: none"]):not([style*="display:none"])),
 .component-top.tool-top:has([data-ref="redact-top-controls"]:not([style*="display: none"]):not([style*="display:none"])),
-.component-top.tool-top:has([data-ref="compare-top-controls"]:not([style*="display: none"]):not([style*="display:none"])) {
+.component-top.tool-top:has([data-ref="compare-top-controls"]:not([style*="display: none"]):not([style*="display:none"])),
+.component-top.tool-top:has([data-ref="crop-page-nav"]:not([style*="display: none"]):not([style*="display:none"])),
+.component-top.tool-top:has([data-ref="toolbar-actions-group"]:not([style*="display: none"]):not([style*="display:none"])) {
   align-items: center;
   background-color: var(--bg-surface);
   border-bottom: none !important;
@@ -2104,7 +2106,7 @@
 .pdf-viewer-pages-sidebar,
 .pdf-editor-pages-sidebar {
   background-color: var(--bg-surface);
-  border-right: 1px solid var(--border-color);
+  border-right: none;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -2130,6 +2132,7 @@
 .pdf-viewer-thumbnails-scroll,
 .pdf-editor-thumbnails-scroll {
   align-items: center;
+  border-right: none;
   box-sizing: border-box;
   display: flex;
   flex: 1;

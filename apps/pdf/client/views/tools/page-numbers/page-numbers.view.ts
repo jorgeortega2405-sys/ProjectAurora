@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -28,6 +29,7 @@ export class PageNumbersController implements ViewController {
   private pdfDocument: any = null;
   private position: PageNumberPosition = 'bottom-right';
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -35,6 +37,8 @@ export class PageNumbersController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="page-numbers-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -43,6 +47,10 @@ export class PageNumbersController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
@@ -96,9 +104,10 @@ export class PageNumbersController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const sidebarBackdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
-    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="pn-sidebar-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="page-numbers-sidebar"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-page-numbers"]');
+    const fabAddBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-pn-fab-add"]');
 
     this.sidebarModal = setupToolSidebarModal({
       backdrop: sidebarBackdrop,
@@ -110,6 +119,7 @@ export class PageNumbersController implements ViewController {
     });
 
     browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
+    fabAddBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
     heroDriveBtn?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -432,7 +442,7 @@ export class PageNumbersController implements ViewController {
     this.hideError();
 
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="pn-workspace-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pn-processing-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="page-numbers-sidebar"]');
 
     const startNumberInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-start-number"]');
     const fromPageInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-from-page"]');
@@ -459,7 +469,8 @@ export class PageNumbersController implements ViewController {
 
     this.isProcessing = true;
     if (workspaceCard) workspaceCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
@@ -473,12 +484,23 @@ export class PageNumbersController implements ViewController {
         }
         formData.append('options', JSON.stringify(optionsPayload));
 
-        const response = await postFormApi(API_ROUTES.tools.pageNumbers.process, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.pageNumbers.process,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const result = (await response.json()) as {
           data?: PageNumberResponseData;
           error?: string;
           success: boolean;
         };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Renderizando y estampando las numeraciones en el documento PDF',
+          title: 'Insertando números de página...',
+        });
 
         if (!response.ok || !result.success || !result.data?.downloadUrl) {
           throw new Error(result.error || 'Ocurrió un error al insertar números de página.');
@@ -500,10 +522,13 @@ export class PageNumbersController implements ViewController {
         showToast('Números de página insertados con éxito.', 'success');
         navigate(`/download/${token}`);
       } catch (err: unknown) {
+        if (workspaceCard) workspaceCard.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
-        if (workspaceCard) workspaceCard.style.display = '';
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al numerar el documento.';
+        this.statusManager?.showError(errorMessage, () => {
+          this.statusManager?.hide();
+        });
         this.showError(errorMessage);
       }
     });
@@ -514,17 +539,16 @@ export class PageNumbersController implements ViewController {
     this.pages = [];
     this.pdfDocument = null;
     this.isProcessing = false;
+    this.statusManager?.hide();
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pn-dropzone-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="pn-workspace-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pn-processing-card"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-page-numbers"]');
 
     if (fileInput) fileInput.value = '';
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (workspaceCard) workspaceCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (executeBtn) executeBtn.disabled = true;
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="page-numbers-sidebar"]');

@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -34,6 +35,7 @@ export class RedactPdfController implements ViewController {
   private pdfDocument: any = null;
   private redactionBoxes: ClientRedactionBox[] = [];
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
   private zoomLevel = 1.0;
 
   constructor(container: HTMLElement) {
@@ -42,6 +44,8 @@ export class RedactPdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="redact-pdf-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -50,6 +54,10 @@ export class RedactPdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -69,7 +77,7 @@ export class RedactPdfController implements ViewController {
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="redact-pdf-sidebar"]');
     const backdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
-    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="redact-sidebar-drag-zone"]');
     const closeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
 
@@ -320,6 +328,7 @@ export class RedactPdfController implements ViewController {
     this.pdfDocument = null;
     this.redactionBoxes = [];
     this.fullPageRedactions.clear();
+    this.statusManager?.hide();
 
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="redact-dropzone-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="redact-workspace-card"]');
@@ -955,15 +964,11 @@ export class RedactPdfController implements ViewController {
 
     this.isProcessing = true;
     this.hideError();
-
-    const progressCard = this.container.querySelector<HTMLElement>('[data-ref="redact-processing-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="redact-workspace-card"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="redact-pdf-sidebar"]');
-    const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-redact"]');
-
-    if (progressCard) progressCard.style.display = 'flex';
     if (workspaceCard) workspaceCard.style.display = 'none';
     if (sidebar) sidebar.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     try {
       const numPages = this.pdfDocument?.numPages || 0;
@@ -993,9 +998,12 @@ export class RedactPdfController implements ViewController {
       formData.append('redactions', JSON.stringify(pageRedactions));
       formData.append('sanitizeMetadata', 'true');
 
-      const response = await postFormApi(
+      const response = await postFormWithProgress(
         API_ROUTES.tools.redactPdf.redact,
-        formData
+        formData,
+        (progress) => {
+          this.statusManager?.updateUploadProgress(progress);
+        }
       );
       const result = (await response.json()) as {
         data?: RedactPdfResultData;
@@ -1004,27 +1012,38 @@ export class RedactPdfController implements ViewController {
         success: boolean;
       };
 
-      if (response.ok && result.success && result.data) {
-        showToast('Documento censurado y purgado exitosamente.', 'success');
-        const downloadUrl = result.data.downloadUrl;
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = result.data.filename || `${this.currentFile.name.replace(/\.pdf$/i, '')}_censurado.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      this.statusManager?.showProcessingState({
+        subtitle: 'Eliminando texto internamente y aplicando marcas de censura permanentes',
+        title: 'Censurando y purgando contenido...',
+      });
 
-        if (progressCard) progressCard.style.display = 'none';
-        if (workspaceCard) workspaceCard.style.display = 'flex';
-        if (sidebar) sidebar.style.display = 'flex';
+      if (response.ok && result.success && result.data) {
+        const token = result.data.fileId;
+        const downloadPayload = {
+          downloadUrl: `/api/download/${token}`,
+          fileSize: result.data.fileSize,
+          filename: result.data.filename || `${this.currentFile.name.replace(/\.pdf$/i, '')}_censurado.pdf`,
+          returnText: 'Censurar otro documento PDF',
+          returnUrl: '/redact-pdf',
+          subtitle: `Se ha censurado y protegido exitosamente el documento "${this.currentFile?.name}".`,
+          title: '¡PDF censurado con éxito!',
+          token,
+        };
+
+        sessionStorage.setItem('download_ready_data', JSON.stringify(downloadPayload));
+        showToast('Documento censurado con éxito.', 'success');
+        navigate(`/download/${token}`);
       } else {
         throw new Error(result.error || result.message || 'Error al censurar el documento PDF.');
       }
     } catch (err: any) {
-      if (progressCard) progressCard.style.display = 'none';
       if (workspaceCard) workspaceCard.style.display = 'flex';
       if (sidebar) sidebar.style.display = 'flex';
-      this.showError(err?.message || 'Ha ocurrido un error inesperado al procesar el archivo PDF.');
+      const message = err?.message || 'Ha ocurrido un error inesperado al procesar el archivo PDF.';
+      this.statusManager?.showError(message, () => {
+        this.statusManager?.hide();
+      });
+      this.showError(message);
     } finally {
       this.isProcessing = false;
     }

@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -28,6 +29,7 @@ export class ProtectPdfController implements ViewController {
   private isProcessing = false;
   private pdfDocument: any = null;
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -35,6 +37,31 @@ export class ProtectPdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]') || this.container;
+    this.statusManager = new ToolStatusManager({
+      container: workspace,
+      onRetry: () => {
+        this.statusManager?.hide();
+        if (this.currentFile) {
+          const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
+          const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="protect-workspace-card"]');
+          const sidebar = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-sidebar"]');
+          const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+          const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+          const ws = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]');
+
+          if (dropzoneCard) dropzoneCard.style.display = 'none';
+          if (workspaceCard) workspaceCard.style.display = 'flex';
+          if (sidebar) sidebar.style.display = 'flex';
+          if (settingsBtn) settingsBtn.classList.add('is-visible');
+          if (fabMore) fabMore.style.display = 'block';
+          if (ws) ws.classList.add('tool-layout__workspace--top-aligned');
+        } else {
+          this.resetToInitial();
+        }
+      },
+      toolName: 'Proteger PDF',
+    });
     renderIcons(this.container);
     this.bindEvents();
     const transferred = consumeTransferFile();
@@ -47,6 +74,10 @@ export class ProtectPdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -76,10 +107,12 @@ export class ProtectPdfController implements ViewController {
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone"]');
-    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-pdf"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
+    const fabAddMoreBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-add-more"]');
+    const fabDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-drive"]');
+    const fabDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-dropbox"]');
     const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
     const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-password"]');
     const confirmInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-confirm-password"]');
@@ -89,6 +122,8 @@ export class ProtectPdfController implements ViewController {
 
     browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
 
+    fabAddMoreBtn?.addEventListener('click', () => fileInput?.click(), { signal });
+
     heroDriveBtn?.addEventListener('click', async (e) => {
       e.stopPropagation();
       const files = await pickGoogleDriveFiles({ multiselect: false });
@@ -97,7 +132,23 @@ export class ProtectPdfController implements ViewController {
       }
     }, { signal });
 
+    fabDriveBtn?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const files = await pickGoogleDriveFiles({ multiselect: false });
+      if (files && files.length > 0) {
+        void this.handleFileSelected(files[0]);
+      }
+    }, { signal });
+
     heroDropboxBtn?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const files = await pickDropboxFiles({ multiselect: false });
+      if (files && files.length > 0) {
+        void this.handleFileSelected(files[0]);
+      }
+    }, { signal });
+
+    fabDropboxBtn?.addEventListener('click', async (e) => {
       e.stopPropagation();
       const files = await pickDropboxFiles({ multiselect: false });
       if (files && files.length > 0) {
@@ -123,14 +174,16 @@ export class ProtectPdfController implements ViewController {
       fileInput.value = '';
     }, { signal });
 
-    if (dropzoneCard) {
+    if (dropzone) {
       bindFileDropzone({
-        dropTarget: dropzoneCard,
+        dropTarget: dropzone,
+        visualTarget: dropzone,
         onFiles: (files) => {
-          if (files.length > 0) void this.handleFileSelected(files[0]);
+          if (files.length > 0) {
+            void this.handleFileSelected(files[0]);
+          }
         },
         signal,
-        visualTarget: dropzoneCard,
       });
     }
 
@@ -138,120 +191,88 @@ export class ProtectPdfController implements ViewController {
       if (!passwordInput) return;
       const isPassword = passwordInput.type === 'password';
       passwordInput.type = isPassword ? 'text' : 'password';
-      togglePasswordBtn.innerHTML = `<svg class="component-icon" aria-hidden="true"><use href="/icons.svg#${isPassword ? 'visibility_off' : 'visibility'}"></use></svg>`;
-      renderIcons(togglePasswordBtn);
+      const useEl = togglePasswordBtn.querySelector('use');
+      if (useEl) {
+        useEl.setAttribute('href', isPassword ? '/icons.svg#visibility_off' : '/icons.svg#visibility');
+      }
     }, { signal });
 
     toggleConfirmBtn?.addEventListener('click', () => {
       if (!confirmInput) return;
       const isPassword = confirmInput.type === 'password';
       confirmInput.type = isPassword ? 'text' : 'password';
-      toggleConfirmBtn.innerHTML = `<svg class="component-icon" aria-hidden="true"><use href="/icons.svg#${isPassword ? 'visibility_off' : 'visibility'}"></use></svg>`;
-      renderIcons(toggleConfirmBtn);
+      const useEl = toggleConfirmBtn.querySelector('use');
+      if (useEl) {
+        useEl.setAttribute('href', isPassword ? '/icons.svg#visibility_off' : '/icons.svg#visibility');
+      }
     }, { signal });
-
-    const handlePasswordChange = () => {
-      this.hideError();
-      this.validateInputs();
-    };
-
-    passwordInput?.addEventListener('input', handlePasswordChange, { signal });
-    confirmInput?.addEventListener('input', handlePasswordChange, { signal });
 
     executeBtn?.addEventListener('click', () => {
       void this.handleExecuteProtect(executeBtn);
     }, { signal });
   }
 
-  private validateInputs(): boolean {
-    const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-password"]');
-    const confirmInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-confirm-password"]');
-    const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-protect"]');
-
-    const pass = passwordInput?.value ?? '';
-    const confirm = confirmInput?.value ?? '';
-
-    const isValid = Boolean(this.currentFile && pass.length > 0 && pass === confirm);
-    if (executeBtn) {
-      executeBtn.disabled = !isValid;
-    }
-    return isValid;
-  }
-
   private async handleFileSelected(file: File): Promise<void> {
-    if (this.isProcessing) return;
     this.hideError();
-
-    const isPdfExt = file.name.toLowerCase().endsWith('.pdf');
-    const isPdfMime = file.type === 'application/pdf' || file.type === 'application/x-pdf';
-    if (!isPdfExt && !isPdfMime) {
-      this.showError('Selecciona únicamente un documento en formato PDF.');
-      return;
-    }
-
     const limits = getCurrentUserToolLimits('protect-pdf');
     if (file.size > limits.maxFileSizeMB * 1024 * 1024) {
-      this.showError(`El archivo PDF seleccionado supera el límite permitido de ${limits.maxFileSizeMB} MB.`);
+      this.showError(`El archivo excede el tamaño máximo permitido (${limits.maxFileSizeMB} MB).`);
       return;
     }
 
     this.currentFile = file;
 
-    try {
-      const pdfjsLib = await loadPdfJs();
-      const arrayBuffer = await file.arrayBuffer();
-      const task = pdfjsLib.getDocument({
-        cMapPacked: true,
-        cMapUrl: '/vendor/pdfjs/cmaps/',
-        data: new Uint8Array(arrayBuffer),
-        standardFontDataUrl: '/vendor/pdfjs/standard_fonts/',
-      });
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
+    const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="protect-workspace-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-sidebar"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]');
+    const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-protect"]');
+    const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="txt-file-name"]');
+    const fileSizeEl = this.container.querySelector<HTMLElement>('[data-ref="txt-file-size"]');
 
-      this.pdfDocument = await task.promise;
+    if (fileNameEl) fileNameEl.textContent = file.name;
+    if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
 
-      const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
-      const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="protect-workspace-card"]');
-      const fileNameEl = this.container.querySelector<HTMLElement>('[data-ref="txt-file-name"]');
-      const fileSizeEl = this.container.querySelector<HTMLElement>('[data-ref="txt-file-size"]');
-      const sidebar = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-sidebar"]');
-      const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
-      const workspace = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]');
+    if (dropzoneCard) dropzoneCard.style.display = 'none';
+    if (workspaceCard) workspaceCard.style.display = 'flex';
+    if (sidebar) sidebar.style.display = 'flex';
+    if (settingsBtn) settingsBtn.classList.add('is-visible');
+    if (fabMore) fabMore.style.display = 'block';
+    if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
 
-      if (dropzoneCard) dropzoneCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = 'flex';
+    if (executeBtn) executeBtn.disabled = false;
 
-      if (sidebar) sidebar.style.display = 'flex';
-      if (settingsBtn) settingsBtn.classList.add('is-visible');
-      if (workspace) workspace.classList.add('tool-layout__workspace--top-aligned');
-
-      if (fileNameEl) fileNameEl.textContent = file.name;
-      if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
-
-      const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-      if (outputNameInput) {
-        const base = file.name.replace(/\.[^/.]+$/, '');
-        outputNameInput.value = `${base}_protegido.pdf`;
-      }
-
-      void this.renderThumbnail();
-      this.validateInputs();
-    } catch {
-      this.showError('No se pudo leer el archivo PDF seleccionado. Asegúrate de que no esté protegido o dañado.');
-      this.resetToInitial();
-    }
+    await this.loadDocumentPreview(file);
   }
 
-  private async renderThumbnail(): Promise<void> {
-    if (!this.pdfDocument) return;
+  private async loadDocumentPreview(file: File): Promise<void> {
+    const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="protect-doc-canvas"]');
+    if (!canvas) return;
+
     try {
-      const page = await this.pdfDocument.getPage(1);
+      const pdfjs = await loadPdfJs();
+      const buffer = await file.arrayBuffer();
+
+      const loadingTask = pdfjs.getDocument({
+        data: buffer,
+        password: '',
+      });
+
+      this.pdfDocument = await loadingTask.promise;
+      await this.renderPageThumbnail(this.pdfDocument, 1, canvas);
+    } catch {}
+  }
+
+  private async renderPageThumbnail(doc: any, pageNum: number, canvas: HTMLCanvasElement): Promise<void> {
+    try {
+      const page = await doc.getPage(pageNum);
       const targetWidth = 180;
       const origViewport = page.getViewport({ scale: 1 });
       const scale = targetWidth / origViewport.width;
       const viewport = page.getViewport({ scale });
       const dpr = window.devicePixelRatio || 1;
-      const canvas = this.container.querySelector<HTMLCanvasElement>('[data-ref="protect-doc-canvas"]');
-      if (!canvas) return;
 
       canvas.width = Math.floor(viewport.width * dpr);
       canvas.height = Math.floor(viewport.height * dpr);
@@ -264,6 +285,23 @@ export class ProtectPdfController implements ViewController {
 
       await page.render({ canvasContext: ctx, viewport }).promise;
     } catch {}
+  }
+
+  private showProcessingState(): void {
+    const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
+    const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="protect-workspace-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-sidebar"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]');
+
+    if (sidebar) sidebar.style.display = 'none';
+    if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
+    if (dropzoneCard) dropzoneCard.style.display = 'none';
+    if (workspaceCard) workspaceCard.style.display = 'none';
+    if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
   }
 
   private async handleExecuteProtect(button: HTMLButtonElement): Promise<void> {
@@ -285,26 +323,23 @@ export class ProtectPdfController implements ViewController {
       return;
     }
 
-    const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="protect-workspace-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="protect-processing-card"]');
-
     this.isProcessing = true;
-    if (workspaceCard) workspaceCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    this.showProcessingState();
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
-        const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-        const customFilename = outputNameInput?.value.trim();
-
         const formData = new FormData();
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
         formData.append('options', JSON.stringify({ password }));
-        if (customFilename) {
-          formData.append('filename', customFilename);
-        }
 
-        const response = await postFormApi(API_ROUTES.tools.protectPdf.process, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.protectPdf.process,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const result = (await response.json()) as {
           data?: ProtectPdfResponseData;
           error?: string;
@@ -319,7 +354,7 @@ export class ProtectPdfController implements ViewController {
         const downloadPayload = {
           downloadUrl: `/api/download/${token}`,
           fileSize: result.data.fileSize,
-          filename: customFilename || result.data.filename,
+          filename: result.data.filename,
           returnText: 'Proteger otro documento PDF',
           returnUrl: '/protect-pdf',
           subtitle: `Se ha protegido y cifrado exitosamente el documento "${this.currentFile?.name}".`,
@@ -330,12 +365,16 @@ export class ProtectPdfController implements ViewController {
         sessionStorage.setItem('download_ready_data', JSON.stringify(downloadPayload));
         showToast('PDF protegido correctamente.', 'success');
         navigate(`/download/${token}`);
-      } catch (err: unknown) {
+      } catch {
+        this.statusManager?.showError({
+          boxText: 'Comprueba que el archivo PDF no esté protegido o dañado y vuelve a intentarlo.',
+          boxTitle: 'Error al cifrar el documento',
+          desc: 'No se pudo aplicar el cifrado de seguridad al documento PDF. Por favor intenta más tarde.',
+          retryText: 'Reintentar Protección',
+          title: '¡Oh no! No hemos podido proteger tu archivo.',
+        });
+      } finally {
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
-        if (workspaceCard) workspaceCard.style.display = '';
-        const errorMessage = err instanceof Error ? err.message : 'Error inesperado al proteger el documento.';
-        this.showError(errorMessage);
       }
     });
   }
@@ -344,13 +383,14 @@ export class ProtectPdfController implements ViewController {
     this.currentFile = null;
     this.pdfDocument = null;
     this.isProcessing = false;
+    this.statusManager?.hide();
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="protect-dropzone-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="protect-workspace-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="protect-processing-card"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-sidebar"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="protect-pdf-workspace"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-protect"]');
     const passwordInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-password"]');
@@ -361,13 +401,11 @@ export class ProtectPdfController implements ViewController {
     if (confirmInput) confirmInput.value = '';
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (workspaceCard) workspaceCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
 
     if (sidebar) sidebar.style.display = 'none';
     if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
-    const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
-    if (outputNameInput) outputNameInput.value = 'documento_protegido.pdf';
     this.sidebarModal?.close();
 
     if (executeBtn) executeBtn.disabled = true;
@@ -385,7 +423,7 @@ export class ProtectPdfController implements ViewController {
     const errorEl = this.container.querySelector<HTMLElement>('[data-ref="protect-global-error"]');
     if (errorEl) {
       errorEl.textContent = message;
-      errorEl.style.display = '';
+      errorEl.style.display = 'block';
     }
   }
 

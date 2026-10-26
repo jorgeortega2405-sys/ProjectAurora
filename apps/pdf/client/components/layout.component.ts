@@ -1,12 +1,14 @@
 import { getLocalizedPath } from '../config/seo.config.js';
 import { TOOLS_REGISTRY } from '../config/tools.registry.js';
+import { escapeHtml } from '../services/api.service.js';
 import { getCurrentLanguage, t, translateElement } from '../services/i18n.service.js';
 import { renderIcons } from '../services/icon.service.js';
 import { navigate } from '../services/navigation.service.js';
 import { loadTemplate } from '../services/template.service.js';
+import { getWorkflows } from '../services/workflow-storage.service.js';
 
 export let isDrawerOpen = false;
-export let currentDrawerMode: 'apps' | 'help' = 'apps';
+export let currentDrawerMode: 'apps' | 'help' | 'workflows' = 'workflows';
 let activeResizeObserver: ResizeObserver | null = null;
 let drawerRemovalTimer: ReturnType<typeof setTimeout> | null = null;
 let sidebarInitPromise: Promise<HTMLElement> | null = null;
@@ -14,7 +16,7 @@ let sidebarInstance: HTMLElement | null = null;
 
 export function hasDesignatedMenuItems(pathname: string): boolean {
   if (!pathname) return false;
-  return pathname.includes('/help');
+  return pathname.includes('/help') || pathname.includes('/workflows') || pathname.includes('/workflow/');
 }
 
 export function updateSidebarAuthState(_sidebar?: HTMLElement): void {}
@@ -23,6 +25,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   const isHome = path === '/' || path === '' || /^\/[a-z]{2}\/?$/i.test(path);
   const isHelp = path.includes('/help') || path.includes('/preguntas-frecuentes') || path.includes('/herramientas') || path.includes('/seguridad') || path.includes('/privacidad') || path.includes('/terminos') || path.includes('/cookies');
   const isAi = path === '/ai' || path.startsWith('/ai') || /^\/[a-z]{2}\/ai(\/.*)?$/i.test(path);
+  const isWorkflows = path.includes('/workflows') || path.includes('/workflow/');
 
   const itemHome = sidebar.querySelector<HTMLElement>('[data-ref="rail-item-home"]');
   const btnHome = sidebar.querySelector<HTMLElement>('[data-ref="btn-rail-home"]');
@@ -38,7 +41,7 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   btnHome?.classList.toggle('is-active', isHome && !isDrawerOpen);
   itemApps?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode === 'apps');
   btnApps?.classList.toggle('is-active', isDrawerOpen && currentDrawerMode === 'apps');
-  btnToggle?.classList.toggle('is-active', isDrawerOpen);
+  btnToggle?.classList.toggle('is-active', (isDrawerOpen && currentDrawerMode === 'workflows') || (!isDrawerOpen && isWorkflows));
   railItemAi?.classList.toggle('is-active', isAi && !isDrawerOpen);
   btnRailAi?.classList.toggle('is-active', isAi && !isDrawerOpen);
   railItemHelp?.classList.toggle('is-active', (isHelp && !isDrawerOpen) || (isDrawerOpen && currentDrawerMode === 'help'));
@@ -47,6 +50,8 @@ export function updateSidebarActiveState(sidebar: HTMLElement, path = window.loc
   if (isDrawerOpen) {
     if (isHelp && currentDrawerMode !== 'help') {
       currentDrawerMode = 'help';
+    } else if (isWorkflows && currentDrawerMode !== 'workflows') {
+      currentDrawerMode = 'workflows';
     }
     void updateDynamicDrawer(sidebar);
   }
@@ -156,11 +161,79 @@ export async function populateDrawerContent(drawer: HTMLElement): Promise<void> 
 
   if (currentDrawerMode === 'help') {
     renderHelpDrawerContent(drawerBody);
-  } else {
+  } else if (currentDrawerMode === 'apps') {
     renderAppsDrawerContent(drawerBody);
+  } else {
+    renderWorkflowsDrawerContent(drawerBody, drawerFooter);
   }
 
   renderIcons(drawerBody);
+}
+
+function renderWorkflowsDrawerContent(drawerBody: HTMLElement, drawerFooter: HTMLElement | null): void {
+  const currentPath = window.location.pathname;
+
+  const bindNavLink = (btn: HTMLElement | null, path: string) => {
+    btn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.innerWidth <= 768) {
+        toggleDrawer(false);
+      }
+      navigate(path);
+    });
+  };
+
+  const workflows = getWorkflows();
+
+  if (workflows.length === 0) {
+    drawerBody.innerHTML = `
+      <div class="drawer-section__header" data-ref="drawer-workflows-header" style="padding: 8px 8px 4px 8px;">
+        <span class="drawer-section__title" data-ref="drawer-workflows-title" data-i18n="nav.workflows" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.workflows', 'Flujos de trabajo')}</span>
+      </div>
+      <div class="drawer-empty-state" data-ref="drawer-empty-workflows" style="padding: 32px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+        <svg class="component-icon" style="width: 36px; height: 36px; color: var(--text-tertiary); opacity: 0.6;" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
+        <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">${t('workflows.empty_title', 'No tienes flujos de trabajo')}</span>
+        <span style="font-size: 12px; color: var(--text-tertiary);">${t('workflows.empty_subtitle', 'Crea combinaciones de herramientas automáticas')}</span>
+      </div>
+    `;
+  } else {
+    let html = `
+      <div class="drawer-section__header" data-ref="drawer-workflows-header" style="padding: 8px 8px 4px 8px;">
+        <span class="drawer-section__title" data-ref="drawer-workflows-title" data-i18n="nav.workflows" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${t('nav.workflows', 'Flujos de trabajo')}</span>
+      </div>
+    `;
+    for (const wf of workflows) {
+      const isActive = currentPath === `/workflow/${wf.id}`;
+      const escapedName = escapeHtml(wf.name);
+      html += `
+        <button type="button" class="menu-item ${isActive ? 'is-active' : ''}" data-ref="btn-nav-wf-${wf.id}" data-wf-id="${wf.id}" title="${escapedName}">
+          <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#account_tree"></use></svg>
+          <span class="menu-item__text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapedName}</span>
+        </button>
+      `;
+    }
+    drawerBody.innerHTML = html;
+
+    workflows.forEach((wf) => {
+      const btn = drawerBody.querySelector<HTMLElement>(`[data-ref="btn-nav-wf-${wf.id}"]`);
+      bindNavLink(btn, `/workflow/${wf.id}`);
+    });
+  }
+
+  if (drawerFooter) {
+    drawerFooter.innerHTML = `
+      <button type="button" class="menu-item menu-item--bordered" data-ref="btn-nav-create-workflow">
+        <svg class="component-icon menu-item__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+        <span class="menu-item__text" data-i18n="workflows.create_title">${t('workflows.create_title', 'Crear flujo de trabajo')}</span>
+      </button>
+    `;
+    drawerFooter.style.display = 'flex';
+    translateElement(drawerFooter);
+    bindNavLink(drawerFooter.querySelector('[data-ref="btn-nav-create-workflow"]'), '/workflows?new=1');
+    renderIcons(drawerFooter);
+  }
+
+  translateElement(drawerBody);
 }
 
 function renderHelpDrawerContent(drawerBody: HTMLElement): void {
@@ -318,11 +391,16 @@ function closeDynamicDrawer(): void {
   const btnApps = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-apps"]');
   const itemHelp = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-help"]');
   const btnRailHelp = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
+  const btnToggle = sidebar?.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
 
   itemApps?.classList.remove('is-active');
   btnApps?.classList.remove('is-active');
   itemHelp?.classList.remove('is-active');
   btnRailHelp?.classList.remove('is-active');
+
+  const currentPath = window.location.pathname;
+  const isWorkflows = currentPath.includes('/workflows') || currentPath.includes('/workflow/');
+  btnToggle?.classList.toggle('is-active', isWorkflows);
 
   if (drawer) {
     drawer.classList.remove('is-open');
@@ -336,7 +414,7 @@ function closeDynamicDrawer(): void {
   }
 }
 
-export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'help'): void {
+export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'help' | 'workflows'): void {
   const sidebar = document.querySelector<HTMLElement>('[data-ref="sidebar"]');
   const btnToggle = sidebar?.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]') || document.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
   const itemApps = sidebar?.querySelector<HTMLElement>('[data-ref="rail-item-apps"]');
@@ -345,7 +423,8 @@ export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'help'): void
   const btnRailHelp = sidebar?.querySelector<HTMLElement>('[data-ref="btn-rail-help"]');
 
   const currentPath = window.location.pathname;
-  const targetMode = mode || (currentPath.includes('/help') ? 'help' : 'apps');
+  const isWorkflows = currentPath.includes('/workflows') || currentPath.includes('/workflow/');
+  const targetMode = mode || (currentPath.includes('/help') ? 'help' : (isWorkflows ? 'workflows' : 'workflows'));
 
   if (forceState === undefined) {
     if (isDrawerOpen && currentDrawerMode === targetMode) {
@@ -363,7 +442,7 @@ export function toggleDrawer(forceState?: boolean, mode?: 'apps' | 'help'): void
     }
   }
 
-  btnToggle?.classList.toggle('is-active', isDrawerOpen);
+  btnToggle?.classList.toggle('is-active', (isDrawerOpen && currentDrawerMode === 'workflows') || (!isDrawerOpen && isWorkflows));
   const isAppsActive = isDrawerOpen && currentDrawerMode === 'apps';
   const isHelpActive = isDrawerOpen && currentDrawerMode === 'help';
   itemApps?.classList.toggle('is-active', isAppsActive);
@@ -397,9 +476,11 @@ function setupDrawerContent(sidebar: HTMLElement): void {
   const btnToggle = sidebar.querySelector<HTMLElement>('[data-ref="btn-toggle-drawer"]');
   btnToggle?.addEventListener('click', (e) => {
     e.preventDefault();
-    const currentPath = window.location.pathname;
-    const mode = currentPath.includes('/help') ? 'help' : 'apps';
-    toggleDrawer(undefined, mode);
+    if (isDrawerOpen && currentDrawerMode === 'workflows') {
+      toggleDrawer(false);
+    } else {
+      toggleDrawer(true, 'workflows');
+    }
   });
 
   isDrawerOpen = false;
@@ -425,6 +506,13 @@ export async function createSidebar(): Promise<HTMLElement> {
     updateSidebarActiveState(sidebar, window.location.pathname);
     renderIcons(sidebar);
     sidebarInstance = sidebar;
+
+    window.addEventListener('workflow:changed', () => {
+      if (sidebarInstance && isDrawerOpen && currentDrawerMode === 'workflows') {
+        void updateDynamicDrawer(sidebarInstance);
+      }
+    });
+
     return sidebar;
   })();
 

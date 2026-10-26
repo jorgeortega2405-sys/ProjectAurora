@@ -1,7 +1,8 @@
 import Sortable from 'sortablejs';
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
@@ -33,6 +34,7 @@ export class OrganizePdfController implements ViewController {
   private pdfDocument: any = null;
   private sidebarModal: ToolSidebarModalController | null = null;
   private sortableInstance: Sortable | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -40,6 +42,15 @@ export class OrganizePdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="organize-pdf-workspace"]') || this.container;
+    this.statusManager = new ToolStatusManager({
+      container: workspace,
+      onRetry: () => {
+        this.statusManager?.hide();
+        this.renderFilesView();
+      },
+      toolName: 'Organizar PDF',
+    });
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -56,6 +67,10 @@ export class OrganizePdfController implements ViewController {
     if (this.sortableInstance) {
       this.sortableInstance.destroy();
       this.sortableInstance = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.pdfDocument) {
       try {
@@ -534,14 +549,21 @@ export class OrganizePdfController implements ViewController {
     formData.append('filename', customFilename);
 
     this.isProcessing = true;
+    this.hideError();
     this.showProcessingState();
+    this.statusManager?.showUploading(1, 1);
 
     try {
-      const response = await postFormApi(
+      const response = await postFormWithProgress(
         API_ROUTES.tools.organizePdf.organize,
-        formData
+        formData,
+        (progress) => {
+          this.statusManager?.updateUploadProgress(progress);
+        }
       );
       const json = await response.json();
+
+      this.statusManager?.showProcessing('Organizando páginas del PDF...');
 
       if (!response.ok || !json.success || !json.data) {
         throw new Error(json.error || 'Error al procesar la solicitud.');
@@ -562,10 +584,14 @@ export class OrganizePdfController implements ViewController {
       sessionStorage.setItem('download_ready_data', JSON.stringify(downloadPayload));
       showToast('Documento PDF organizado con éxito.', 'success');
       navigate(`/download/${token}`);
-    } catch (err: any) {
-      const message = err?.message || 'Error inesperado al ordenar el PDF.';
-      this.showError(message);
-      this.renderFilesView();
+    } catch {
+      this.statusManager?.showError({
+        boxText: 'Uno o más archivos seleccionados están dañados, protegidos o en un formato no compatible.',
+        boxTitle: 'Error al organizar el documento',
+        desc: 'No se pudo aplicar el nuevo orden a las páginas. Por favor intenta de nuevo.',
+        retryText: 'Reintentar Ordenar PDF',
+        title: '¡Oh no! No hemos podido ordenar tu archivo.',
+      });
     } finally {
       this.isProcessing = false;
     }
@@ -574,20 +600,18 @@ export class OrganizePdfController implements ViewController {
   private showProcessingState(): void {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="organize-pdf-sidebar"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="organize-pdf-workspace"]');
 
+    if (sidebar) sidebar.style.display = 'none';
+    if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
-    if (resultCard) resultCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'flex';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
-
-    const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
-    if (mainActionBtn) {
-      mainActionBtn.disabled = true;
-    }
   }
 
   private showResultState(): void {
@@ -628,6 +652,7 @@ export class OrganizePdfController implements ViewController {
     this.originalPages = [];
     this.pdfDocument = null;
     this.isProcessing = false;
+    this.statusManager?.hide();
 
     if (this.sortableInstance) {
       this.sortableInstance.destroy();

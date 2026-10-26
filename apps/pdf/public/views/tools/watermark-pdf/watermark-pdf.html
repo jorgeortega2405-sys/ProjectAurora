@@ -34,15 +34,16 @@
           </div>
         </div>
 
-        <div class="pdf-items-grid wm-pages-grid" data-ref="wm-pages-grid"></div>
-      </div>
+        <div class="pdf-reorder-hint" data-ref="wm-reorder-hint">
+          <span>Ajusta el texto o imagen de marca de agua, transparencia y posición en el panel lateral.</span>
+        </div>
 
-      <div class="tool-progress-card" data-ref="wm-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="wm-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="wm-processing-title">Insertando marca de agua en el PDF...</h3>
-        <p class="tool-progress-card__meta" data-ref="wm-processing-subtitle">Estampando elementos con la opacidad y posición configuradas</p>
-        <div class="tool-progress-card__track" data-ref="wm-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="wm-progress-fill"></div>
+        <div class="pdf-items-grid wm-pages-grid" data-ref="wm-pages-grid"></div>
+
+        <div class="tool-fab-container" data-ref="wm-fab-container">
+          <button type="button" class="tool-fab-btn" data-ref="btn-wm-fab-add" data-tooltip="Cambiar archivo" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+          </button>
         </div>
       </div>
     </main>
@@ -50,9 +51,11 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="watermark-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="wm-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="wm-sidebar-drag-zone">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -63,6 +66,10 @@
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="wm-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-wm-info-notice">La marca de agua se estampará sobre o debajo del contenido según la configuración elegida.</div>
+        </div>
         <div class="wm-tabs" data-ref="wm-tabs">
           <button type="button" class="wm-tab-btn is-active" data-ref="tab-text" data-tab="text">
             <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#text_fields"></use></svg>
@@ -281,10 +288,11 @@
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-watermark" disabled>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#branding_watermark"></use></svg>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#branding_watermark"></use></svg>
           <span data-ref="txt-execute-watermark">Insertar marca de agua</span>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="wm-global-error" style="display: none; margin-top: 12px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="wm-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

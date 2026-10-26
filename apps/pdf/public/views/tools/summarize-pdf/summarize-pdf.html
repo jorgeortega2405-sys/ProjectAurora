@@ -21,7 +21,7 @@
 
       <div class="tool-workspace__canvas" data-ref="summarize-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="summarize-dropzone">
-          <h1 class="tool-hero-dropzone__title" data-ref="summarize-dropzone-title">Resumir con IA</h1>
+          <h1 class="tool-hero-dropzone__title" data-ref="summarize-dropzone-title">Resumir PDF</h1>
           <p class="tool-hero-dropzone__desc" data-ref="summarize-dropzone-desc">Lee, comprende y sintetiza cualquier documento PDF con inteligencia artificial.</p>
 
           <div class="tool-hero-dropzone__actions">
@@ -58,24 +58,29 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="summarize-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
-        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+      <div class="tool-sidebar__mobile-bar" data-ref="summarize-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="summarize-sidebar-drag-zone">
           <div class="modal-card__drag-handle"></div>
         </div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
 
       <div class="tool-sidebar__header">
-        <h1 class="tool-sidebar__title" data-ref="summarize-sidebar-title">Resumir con IA</h1>
-        <p class="tool-sidebar__subtitle" data-ref="summarize-sidebar-subtitle">Lee, comprende y sintetiza cualquier documento PDF con inteligencia artificial.</p>
+        <h1 class="tool-sidebar__title" data-ref="summarize-sidebar-title">Resumir PDF</h1>
+        <p class="tool-sidebar__subtitle" data-ref="summarize-sidebar-subtitle">Lee, comprende y sintetiza cualquier documento PDF de forma inteligente.</p>
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="summarize-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-summarize-info-notice">Nuestra inteligencia artificial leerá y resumirá los puntos clave y conclusiones del documento.</div>
+        </div>
+
         <div class="tool-sidebar__section" data-ref="section-processing" style="display: none;">
           <div class="ai-pulse-bar" data-ref="ai-pulse-bar"></div>
-          <p class="tool-sidebar__subtitle" data-ref="ai-processing-status" style="margin-top: 10px; font-weight: 500;">Leyendo documento y sintetizando con IA...</p>
+          <p class="tool-sidebar__subtitle" data-ref="ai-processing-status" style="margin-top: 10px; font-weight: 500;">Leyendo documento y sintetizando...</p>
         </div>
 
         <div class="tool-sidebar__section" data-ref="section-summary-result" style="display: none;">
@@ -97,11 +102,11 @@
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-summarize-action" disabled>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
-          <span data-ref="txt-summarize-action">Generar Resumen con IA</span>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#auto_awesome"></use></svg>
+          <span data-ref="txt-summarize-action">Generar Resumen</span>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="summarize-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="summarize-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

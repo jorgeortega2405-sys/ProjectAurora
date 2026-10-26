@@ -3,6 +3,23 @@
     <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="pdf-converter-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
 
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <div class="tool-fab-more" data-ref="tool-fab-more" style="display: none;">
+          <button type="button" class="tool-fab-more__btn tool-fab-more__btn--main" data-ref="btn-fab-add-more" data-tooltip="Cambiar archivo" data-tooltip-placement="left" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <span class="tool-fab-more__badge" data-ref="badge-fab-count">1</span>
+          </button>
+          <div class="tool-fab-more__options" data-ref="tool-fab-options">
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-drive" data-tooltip="Google Drive" data-tooltip-placement="left" aria-label="Google Drive">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+            </button>
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-dropbox" data-tooltip="Dropbox" data-tooltip-placement="left" aria-label="Dropbox">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="tool-workspace__canvas" data-ref="converter-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="converter-dropzone">
           <h1 class="tool-hero-dropzone__title" data-ref="converter-dropzone-title">Convertir PDF</h1>
@@ -33,6 +50,11 @@
           </div>
         </div>
 
+        <div class="pdf-reorder-hint" data-ref="pdf-reorder-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#swap_horiz"></use></svg>
+          <span data-ref="txt-converter-hint">Tu documento PDF se convertirá con máxima fidelidad y formato editable.</span>
+        </div>
+
         <div class="pdf-items-grid" data-ref="pdf-items-grid">
           <div class="pdf-card" data-ref="selected-file-card">
             <div class="pdf-card__actions">
@@ -50,23 +72,16 @@
           </div>
         </div>
       </div>
-
-      <div class="tool-progress-card" data-ref="converter-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="converter-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="converter-processing-title">Procesando conversión...</h3>
-        <p class="tool-progress-card__meta" data-ref="converter-processing-subtitle">Transformando tu documento con la máxima fidelidad</p>
-        <div class="tool-progress-card__track" data-ref="converter-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="converter-progress-fill"></div>
-        </div>
-      </div>
     </main>
 
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="pdf-converter-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -76,7 +91,11 @@
         <p class="tool-sidebar__subtitle" data-ref="converter-sidebar-subtitle">Convierte documentos PDF a archivos editables manteniendo formato y tablas.</p>
       </div>
 
-      <div class="tool-sidebar__body">
+      <div class="tool-sidebar__body" data-ref="converter-sidebar-body">
+        <div class="tool-sidebar-notice" data-ref="converter-info-notice">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-converter-info-notice">El archivo se convertirá extrayendo el contenido, tablas e imágenes con la mayor precisión.</div>
+        </div>
       </div>
 
       <div class="tool-sidebar__footer">
@@ -85,7 +104,7 @@
           <span data-ref="txt-convert-action">Convertir Documento</span>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="converter-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger" data-ref="converter-global-error" style="display: none; margin-top: 6px;"></div>
       </div>
     </aside>
   </div>

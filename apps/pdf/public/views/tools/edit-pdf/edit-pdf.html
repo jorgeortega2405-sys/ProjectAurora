@@ -109,25 +109,16 @@
           </div>
         </div>
       </div>
-
-      <div class="tool-progress-card" data-ref="edit-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner" data-ref="edit-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="edit-processing-title">Aplicando ediciones al documento...</h3>
-        <p class="tool-progress-card__meta" data-ref="edit-processing-subtitle">Guardando anotaciones, formas, dibujos y modificaciones de texto</p>
-        <div class="tool-progress-card__track" data-ref="edit-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="edit-progress-fill"></div>
-        </div>
-      </div>
     </main>
 
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar pdf-editor-properties-sidebar" data-ref="edit-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
-        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+      <div class="tool-sidebar__mobile-bar" data-ref="edit-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="edit-sidebar-drag-zone">
           <div class="modal-card__drag-handle"></div>
         </div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -138,6 +129,10 @@
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="edit-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-edit-info-notice">Haz clic en los elementos agregados en el documento para ajustar sus propiedades de color y trazo.</div>
+        </div>
         <div class="tool-sidebar__section" data-ref="section-color">
           <span class="tool-sidebar__section-title">Color de Trazo / Texto</span>
           <div class="pdf-color-swatches" data-ref="color-swatches-stroke">
@@ -195,11 +190,12 @@
       </div>
 
       <div class="tool-sidebar__footer">
-        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full" data-ref="btn-sidebar-save-pdf">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-sidebar-save-pdf">
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#download"></use></svg>
           <span>Descargar PDF Editado</span>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="edit-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="edit-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

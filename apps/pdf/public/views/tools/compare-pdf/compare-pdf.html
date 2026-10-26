@@ -117,25 +117,16 @@
           </section>
         </div>
       </div>
-
-      <div class="tool-progress-card" data-ref="compare-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner" data-ref="compare-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="compare-processing-title">Comparando documentos PDF...</h3>
-        <p class="tool-progress-card__meta" data-ref="compare-processing-subtitle">Analizando estructura de texto semántico y detectando modificaciones</p>
-        <div class="tool-progress-card__track" data-ref="compare-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="compare-progress-fill"></div>
-        </div>
-      </div>
     </main>
 
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar pdf-editor-properties-sidebar compare-sidebar" data-ref="compare-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
-        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+      <div class="tool-sidebar__mobile-bar" data-ref="compare-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="compare-sidebar-drag-zone">
           <div class="modal-card__drag-handle"></div>
         </div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -152,8 +143,9 @@
       </div>
 
       <div class="tool-sidebar__body">
-        <div class="banner banner--info compare-instruction-banner" data-ref="compare-instruction-banner">
-          <span>Compara los cambios entre dos archivos PDF.</span>
+        <div class="tool-sidebar-notice" data-ref="compare-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-compare-info-notice">Compara los cambios y diferencias semánticas y visuales entre ambos archivos PDF.</div>
         </div>
 
         <div class="tool-sidebar__section compare-overlay-controls" data-ref="section-overlay-controls" style="display: none;">
@@ -181,10 +173,11 @@
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-download-report" disabled>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#article"></use></svg>
           <span>Descargar informe</span>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="compare-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="compare-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

@@ -1,124 +1,131 @@
 import { getFooterHtml, mountSiteFooter } from '../../components/footer.component.js';
+import { t } from '../../services/i18n.service.js';
 import { renderIcons } from '../../services/icon.service.js';
 import { loadTemplate } from '../../services/template.service.js';
 import { ViewController } from '../../types/common.types.js';
 
 interface FaqItem {
-  answer: string;
+  answerKey: string;
   category: string;
   id: string;
-  question: string;
+  questionKey: string;
 }
 
 interface FaqGroup {
   id: string;
-  title: string;
+  titleKey: string;
 }
 
 const FAQ_GROUPS: FaqGroup[] = [
-  { id: 'security', title: 'Seguridad y Privacidad' },
-  { id: 'limits', title: 'Archivos y Límites' },
-  { id: 'tools', title: 'Herramientas y Calidad' },
-  { id: 'ai', title: 'PDF Intelligence (IA)' },
-  { id: 'billing', title: 'Planes y Facturación' },
+  { id: 'security', titleKey: 'help.faq.cat_security' },
+  { id: 'limits', titleKey: 'help.faq.cat_limits' },
+  { id: 'tools', titleKey: 'help.faq.cat_tools' },
+  { id: 'ai', titleKey: 'help.faq.cat_ai' },
+  { id: 'billing', titleKey: 'help.faq.cat_billing' },
 ];
 
 const FAQ_ITEMS: FaqItem[] = [
   {
-    answer: 'Tus archivos se almacenan temporalmente en servidores cifrados únicamente durante el tiempo estrictamente necesario para realizar el procesamiento. Una vez descargados o transcurrido un breve período (máximo 2 horas), son eliminados de forma automática y definitiva de nuestros servidores.',
+    answerKey: 'help.faq.item_sec_1_a',
     category: 'security',
     id: 'sec-1',
-    question: '¿Qué sucede con mis archivos después de procesarlos?',
+    questionKey: 'help.faq.item_sec_1_q',
   },
   {
-    answer: 'Nadie. Todo el proceso es 100% automatizado mediante código seguro y túneles cifrados TLS 1.3 con AES-256. Ningún miembro de nuestro equipo ni agentes externos tienen acceso a inspeccionar o visualizar tus documentos.',
+    answerKey: 'help.faq.item_sec_2_a',
     category: 'security',
     id: 'sec-2',
-    question: '¿Quién tiene acceso para ver el contenido de mis documentos?',
+    questionKey: 'help.faq.item_sec_2_q',
   },
   {
-    answer: 'No, rotundamente no. Tus documentos nunca son utilizados para entrenar, calibrar o reentrenar ningún modelo de inteligencia artificial propio ni de terceros. La privacidad y confidencialidad de tus datos es nuestro compromiso primordial.',
+    answerKey: 'help.faq.item_sec_3_a',
     category: 'security',
     id: 'sec-3',
-    question: '¿Utilizan mis documentos para entrenar modelos de Inteligencia Artificial?',
+    questionKey: 'help.faq.item_sec_3_q',
   },
   {
-    answer: 'Sí. Operamos con total apego al Reglamento General de Protección de Datos (GDPR) de la Unión Europea y aplicamos protocolos rigurosos de seguridad basados en las mejores prácticas de la norma ISO 27001.',
+    answerKey: 'help.faq.item_sec_4_a',
     category: 'security',
     id: 'sec-4',
-    question: '¿Cumple Aurora con las normativas GDPR y estándares internacionales?',
+    questionKey: 'help.faq.item_sec_4_q',
   },
   {
-    answer: 'En el plan gratuito puedes procesar documentos de hasta 500 MB por archivo. Los usuarios de Aurora Pro pueden subir archivos de hasta 5 GB, y para organizaciones disponemos de soluciones empresariales con límites adaptados a sus requerimientos.',
+    answerKey: 'help.faq.item_sec_5_a',
+    category: 'security',
+    id: 'sec-5',
+    questionKey: 'help.faq.item_sec_5_q',
+  },
+  {
+    answerKey: 'help.faq.item_lim_1_a',
     category: 'limits',
     id: 'lim-1',
-    question: '¿Cuál es el tamaño máximo de archivo permitido?',
+    questionKey: 'help.faq.item_lim_1_q',
   },
   {
-    answer: 'Sí. Todas nuestras herramientas principales admiten la carga de múltiples archivos a la vez para procesamiento por lotes (batch processing), permitiéndote ahorrar tiempo en tareas repetitivas.',
+    answerKey: 'help.faq.item_lim_2_a',
     category: 'limits',
     id: 'lim-2',
-    question: '¿Puedo procesar varios archivos simultáneamente?',
+    questionKey: 'help.faq.item_lim_2_q',
   },
   {
-    answer: 'El plan gratuito ofrece un número generoso de tareas diarias estándar. Si necesitas procesamiento continuo de alto volumen y acceso sin colas prioritarias, te recomendamos el plan Aurora Pro.',
+    answerKey: 'help.faq.item_lim_3_a',
     category: 'limits',
     id: 'lim-3',
-    question: '¿Cuántos archivos puedo convertir o procesar gratis cada día?',
+    questionKey: 'help.faq.item_lim_3_q',
   },
   {
-    answer: 'Sí. Nuestros algoritmos de conversión analizan minuciosamente fuentes tipográficas, hojas de estilo, tablas, columnas e imágenes para reproducir con total fidelidad la maquetación original en el formato resultante.',
+    answerKey: 'help.faq.item_tool_1_a',
     category: 'tools',
     id: 'tool-1',
-    question: '¿Se mantiene la calidad y el diseño original al convertir archivos?',
+    questionKey: 'help.faq.item_tool_1_q',
   },
   {
-    answer: 'El motor OCR (Reconocimiento Óptico de Caracteres) examina las imágenes escaneadas de tu documento, identificando caracteres en decenas de idiomas y convirtiéndolos en texto digital seleccionable y editable.',
+    answerKey: 'help.faq.item_tool_2_a',
     category: 'tools',
     id: 'tool-2',
-    question: '¿Cómo funciona la tecnología OCR para PDFs escaneados?',
+    questionKey: 'help.faq.item_tool_2_q',
   },
   {
-    answer: 'No. Tus archivos originales en tu dispositivo nunca son modificados. El archivo resultante procesado se descarga como un nuevo archivo independiente en tu carpeta de descargas.',
+    answerKey: 'help.faq.item_tool_3_a',
     category: 'tools',
     id: 'tool-3',
-    question: '¿Se sobreescriben mis archivos originales al editarlos en Aurora?',
+    questionKey: 'help.faq.item_tool_3_q',
   },
   {
-    answer: 'El motor de PDF Intelligence puede analizar contratos legales, informes financieros, artículos académicos, manuales técnicos y libros completos, extrayendo conclusiones clave, resúmenes ejecutivos y tablas estructuradas.',
+    answerKey: 'help.faq.item_ai_1_a',
     category: 'ai',
     id: 'ai-1',
-    question: '¿Qué tipo de documentos puede analizar la IA de Aurora?',
+    questionKey: 'help.faq.item_ai_1_q',
   },
   {
-    answer: 'Soporta más de 40 idiomas, incluyendo español, inglés, francés, alemán, portugués, italiano, chino, japonés y más, conservando la estructura visual y los gráficos del documento original.',
+    answerKey: 'help.faq.item_ai_2_a',
     category: 'ai',
     id: 'ai-2',
-    question: '¿En qué idiomas está disponible la traducción inteligente de PDFs?',
+    questionKey: 'help.faq.item_ai_2_q',
   },
   {
-    answer: 'Extrae la estructura jerárquica del PDF (títulos, párrafos, listas con viñetas, tablas formateadas y bloques de código) y genera un documento Markdown limpio listo para su uso en LLMs o editores.',
+    answerKey: 'help.faq.item_ai_3_a',
     category: 'ai',
     id: 'ai-3',
-    question: '¿Cómo funciona la conversión de PDF a Markdown?',
+    questionKey: 'help.faq.item_ai_3_q',
   },
   {
-    answer: 'Sí. Puedes cancelar la renovación automática de tu suscripción en cualquier instante desde Ajustes > Facturación sin penalizaciones ni costes ocultos. Mantendrás todas las ventajas Pro hasta el fin del ciclo ya facturado.',
+    answerKey: 'help.faq.item_bill_1_a',
     category: 'billing',
     id: 'bill-1',
-    question: '¿Puedo cancelar mi suscripción en cualquier momento?',
+    questionKey: 'help.faq.item_bill_1_q',
   },
   {
-    answer: 'Aceptamos tarjetas de crédito y débito internacionales (Visa, Mastercard, American Express), así como pagos seguros a través de pasarelas certificadas con cifrado bancario de extremo a extremo.',
+    answerKey: 'help.faq.item_bill_2_a',
     category: 'billing',
     id: 'bill-2',
-    question: '¿Qué métodos de pago son aceptados?',
+    questionKey: 'help.faq.item_bill_2_q',
   },
   {
-    answer: 'Sí. Al realizar tu suscripción o desde tu panel de historial de compras podrás descargar tus facturas fiscales con todos tus datos corporativos y el desglose de impuestos correspondiente.',
+    answerKey: 'help.faq.item_bill_3_a',
     category: 'billing',
     id: 'bill-3',
-    question: '¿Ofrecen factura para empresas y profesionales con validez fiscal?',
+    questionKey: 'help.faq.item_bill_3_q',
   },
 ];
 
@@ -135,6 +142,10 @@ export class HelpFaqController implements ViewController {
 
   async init(): Promise<void> {
     this.abortController = new AbortController();
+    const searchInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-faq-search"]');
+    if (searchInput) {
+      searchInput.placeholder = t('help.faq.search_placeholder') || 'Buscar preguntas frecuentes...';
+    }
     this.renderFaqItems();
     this.renderFooter();
     this.bindEvents();
@@ -168,31 +179,40 @@ export class HelpFaqController implements ViewController {
     const html = filteredGroups.map((group) => {
       const items = FAQ_ITEMS.filter((item) => {
         if (item.category !== group.id) return false;
+        const q = t(item.questionKey).toLowerCase();
+        const a = t(item.answerKey).toLowerCase();
         if (!query) return true;
-        return item.question.toLowerCase().includes(query) || item.answer.toLowerCase().includes(query);
+        return q.includes(query) || a.includes(query);
       });
 
       if (items.length === 0) return '';
       renderedCount += items.length;
 
-      const itemsHtml = items.map((item) => `
-        <div class="faq-item" data-ref="faq-item-${item.id}">
-          <button type="button" class="faq-item__trigger" data-ref="faq-trigger-${item.id}" aria-expanded="false">
-            <span>${item.question}</span>
-            <svg class="component-icon faq-item__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
-          </button>
-          <div class="faq-item__content" data-ref="faq-content-${item.id}">
-            <div class="faq-item__inner" data-ref="faq-inner-${item.id}">
-              <div class="faq-item__body" data-ref="faq-body-${item.id}">${item.answer}</div>
+      const itemsHtml = items.map((item) => {
+        const question = t(item.questionKey);
+        const answer = t(item.answerKey);
+
+        return `
+          <div class="faq-item" data-ref="faq-item-${item.id}">
+            <button type="button" class="faq-item__trigger" data-ref="faq-trigger-${item.id}" aria-expanded="false">
+              <span>${question}</span>
+              <svg class="component-icon faq-item__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+            </button>
+            <div class="faq-item__content" data-ref="faq-content-${item.id}">
+              <div class="faq-item__inner" data-ref="faq-inner-${item.id}">
+                <div class="faq-item__body" data-ref="faq-body-${item.id}">${answer}</div>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      const groupTitle = t(group.titleKey) || group.id;
 
       return `
         <div class="faq-group" data-ref="faq-group-${group.id}">
           <div class="faq-group__header" data-ref="faq-group-header-${group.id}">
-            <h2 class="faq-group__title" data-ref="faq-group-title-${group.id}">${group.title}</h2>
+            <h2 class="faq-group__title" data-ref="faq-group-title-${group.id}">${groupTitle}</h2>
           </div>
           <div class="faq-accordion" data-ref="faq-accordion-${group.id}">
             ${itemsHtml}
@@ -203,9 +223,9 @@ export class HelpFaqController implements ViewController {
 
     if (renderedCount === 0) {
       itemsContainer.innerHTML = `
-        <div class="faq-group" data-ref="faq-empty-state" style="text-align: center; padding: 48px 24px;">
-          <h3 class="faq-group__title" data-ref="faq-empty-title" style="margin-bottom: 8px;">No se encontraron resultados</h3>
-          <p class="settings-subtitle" data-ref="faq-empty-desc" style="margin: 0;">Intenta buscar con otras palabras o selecciona otra categoría.</p>
+        <div class="faq-group" data-ref="faq-empty-state" style="padding: 48px 24px; text-align: center;">
+          <h3 class="faq-group__title" data-ref="faq-empty-title" style="margin-bottom: 8px;">${t('help.faq.empty_title') || 'No se encontraron resultados'}</h3>
+          <p class="settings-subtitle" data-ref="faq-empty-desc" style="margin: 0;">${t('help.faq.empty_desc') || 'Intenta buscar con otras palabras o selecciona otra categoría.'}</p>
         </div>
       `;
     } else {

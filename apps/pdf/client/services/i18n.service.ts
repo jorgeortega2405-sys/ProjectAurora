@@ -119,11 +119,11 @@ async function loadTranslationFile(code: string): Promise<void> {
   } catch {}
 
   try {
-    const fallbackRes = await fetch('/translations/es.json');
+    const fallbackRes = await fetch('/translations/es-419.json');
     if (fallbackRes.ok) {
       currentTranslations = await fallbackRes.json();
       try {
-        sessionStorage.setItem('aurora_i18n_es', JSON.stringify(currentTranslations));
+        sessionStorage.setItem('aurora_i18n_es-419', JSON.stringify(currentTranslations));
       } catch {}
       return;
     }

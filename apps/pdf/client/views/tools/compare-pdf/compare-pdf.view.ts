@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -30,6 +31,7 @@ export class ComparePdfController implements ViewController {
   private pdfDocument2: any = null;
   private searchQuery = '';
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
   private syncScroll = true;
   private zoom1 = 1.0;
   private zoom2 = 1.0;
@@ -40,6 +42,8 @@ export class ComparePdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="compare-pdf-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -48,6 +52,10 @@ export class ComparePdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -73,7 +81,7 @@ export class ComparePdfController implements ViewController {
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="compare-pdf-sidebar"]');
     const backdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
-    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="compare-sidebar-drag-zone"]');
     const closeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
 
@@ -507,6 +515,7 @@ export class ComparePdfController implements ViewController {
     this.pdfDocument1 = null;
     this.pdfDocument2 = null;
     this.comparisonResult = null;
+    this.statusManager?.hide();
 
     const fileInput1 = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file1"]');
     const fileInput2 = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file2"]');
@@ -639,12 +648,7 @@ export class ComparePdfController implements ViewController {
     if (!this.currentFile1 || !this.currentFile2 || this.isComparing) return;
     this.isComparing = true;
     this.hideError();
-
-    const progressCard = this.container.querySelector<HTMLElement>('[data-ref="compare-processing-card"]');
-    const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="compare-workspace-card"]');
-
-    if (progressCard) progressCard.style.display = 'flex';
-    if (workspaceCard) workspaceCard.style.display = 'none';
+    this.statusManager?.showUploading(2, 2);
 
     try {
       const formData = new FormData();
@@ -652,11 +656,13 @@ export class ComparePdfController implements ViewController {
       formData.append('file2', this.currentFile2);
       formData.append('comparisonMode', this.currentMode);
 
-      const response = await postFormApi(
+      const response = await postFormWithProgress(
         API_ROUTES.tools.comparePdf.compare,
-        formData
+        formData,
+        (progress) => {
+          this.statusManager?.updateUploadProgress(progress);
+        }
       );
-
       const result = (await response.json()) as {
         data?: ComparePdfResultData;
         error?: string;
@@ -664,21 +670,29 @@ export class ComparePdfController implements ViewController {
         success: boolean;
       };
 
+      this.statusManager?.showProcessingState({
+        subtitle: 'Analizando estructura de texto semántico y detectando modificaciones',
+        title: 'Comparando documentos PDF...',
+      });
+
       if (response.ok && result.success && result.data) {
         this.comparisonResult = result.data;
         this.updateSimilarityPill(result.data.similarityPercentage);
         this.renderChangesList();
         this.renderDiffMarkers();
+        this.statusManager?.hide();
         showToast('Comparación completada exitosamente.', 'success');
       } else {
         throw new Error(result.error || result.message || 'Error al procesar la comparación.');
       }
     } catch (err: any) {
-      this.showError(err?.message || 'Ha ocurrido un error al comparar los documentos.');
+      const message = err?.message || 'Ha ocurrido un error al comparar los documentos.';
+      this.statusManager?.showError(message, () => {
+        this.statusManager?.hide();
+      });
+      this.showError(message);
     } finally {
       this.isComparing = false;
-      if (progressCard) progressCard.style.display = 'none';
-      if (workspaceCard) workspaceCard.style.display = 'flex';
     }
   }
 

@@ -371,7 +371,6 @@ export class MergePdfController implements ViewController {
   private renderFilesList(): void {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
     const itemsGrid = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-grid"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
@@ -391,7 +390,6 @@ export class MergePdfController implements ViewController {
     this.statusManager?.hide();
 
     if (dropzoneCard) dropzoneCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'flex';
     if (sidebar) sidebar.style.display = 'flex';
@@ -607,7 +605,6 @@ export class MergePdfController implements ViewController {
   private showProcessingState(): void {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
     const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
@@ -621,14 +618,12 @@ export class MergePdfController implements ViewController {
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
   }
 
   private renderResultState(result: MergePdfResponseData): void {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
     const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
@@ -641,7 +636,6 @@ export class MergePdfController implements ViewController {
     this.sidebarModal?.close();
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'flex';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
 
@@ -685,7 +679,6 @@ export class MergePdfController implements ViewController {
     const addMoreInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-add-more-pdf"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-merger-workspace"]');
     const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
@@ -701,7 +694,6 @@ export class MergePdfController implements ViewController {
     if (addMoreInput) addMoreInput.value = '';
     if (outputNameInput) outputNameInput.value = 'documento_unido.pdf';
 
-    if (processingCard) processingCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
     this.statusManager?.hide();

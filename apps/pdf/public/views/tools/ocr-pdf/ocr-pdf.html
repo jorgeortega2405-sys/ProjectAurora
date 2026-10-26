@@ -33,6 +33,10 @@
           </div>
         </div>
 
+        <div class="pdf-reorder-hint" data-ref="ocr-reorder-hint">
+          <span>Selecciona el idioma del texto para digitalizar y hacer seleccionable el contenido del PDF.</span>
+        </div>
+
         <div class="pdf-items-grid" data-ref="pdf-items-grid">
           <div class="pdf-card" data-ref="selected-file-card">
             <div class="pdf-card__actions">
@@ -49,14 +53,11 @@
             <span class="pdf-card__meta" data-ref="selected-file-size">0 KB</span>
           </div>
         </div>
-      </div>
 
-      <div class="tool-progress-card" data-ref="ocr-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="ocr-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="ocr-processing-title">Reconociendo texto óptico (OCR)...</h3>
-        <p class="tool-progress-card__meta" data-ref="ocr-processing-subtitle">Escaneando páginas y generando capa de texto indexable y seleccionable</p>
-        <div class="tool-progress-card__track" data-ref="ocr-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="ocr-progress-fill"></div>
+        <div class="tool-fab-container" data-ref="ocr-fab-container">
+          <button type="button" class="tool-fab-btn" data-ref="btn-ocr-fab-add" data-tooltip="Cambiar archivo" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+          </button>
         </div>
       </div>
 
@@ -95,9 +96,11 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="ocr-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="ocr-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="ocr-sidebar-drag-zone">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -108,6 +111,11 @@
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="ocr-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-ocr-info-notice">El motor de reconocimiento óptico convertirá el texto de las imágenes en texto indexable y buscable.</div>
+        </div>
+
         <div class="tool-sidebar__section">
           <span class="tool-sidebar__section-title">Idioma del Documento</span>
           <div class="pdf-ocr-languages" data-ref="ocr-languages-container">
@@ -144,11 +152,11 @@
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-ocr-action" disabled>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#center_focus_strong"></use></svg>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#center_focus_strong"></use></svg>
           <span data-ref="txt-ocr-action">Reconocer Texto (OCR)</span>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="ocr-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="ocr-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

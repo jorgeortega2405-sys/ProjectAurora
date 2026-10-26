@@ -3,6 +3,23 @@
     <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="protect-pdf-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
 
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <div class="tool-fab-more" data-ref="tool-fab-more" style="display: none;">
+          <button type="button" class="tool-fab-more__btn tool-fab-more__btn--main" data-ref="btn-fab-add-more" data-tooltip="Cambiar archivo" data-tooltip-placement="left" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <span class="tool-fab-more__badge" data-ref="badge-fab-count">1</span>
+          </button>
+          <div class="tool-fab-more__options" data-ref="tool-fab-options">
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-drive" data-tooltip="Google Drive" data-tooltip-placement="left" aria-label="Google Drive">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+            </button>
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-dropbox" data-tooltip="Dropbox" data-tooltip-placement="left" aria-label="Dropbox">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="tool-workspace__canvas" data-ref="protect-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="protect-dropzone">
           <h1 class="tool-hero-dropzone__title" data-ref="protect-dropzone-title">Proteger PDF</h1>
@@ -33,6 +50,11 @@
           </div>
         </div>
 
+        <div class="pdf-reorder-hint" data-ref="pdf-reorder-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg>
+          <span data-ref="txt-protect-hint">Configura una contraseña segura en el panel lateral para cifrar tu documento con AES-256.</span>
+        </div>
+
         <div class="pdf-items-grid" data-ref="pdf-items-grid">
           <div class="pdf-card" data-ref="security-doc-card">
             <div class="pdf-card__actions">
@@ -50,23 +72,16 @@
           </div>
         </div>
       </div>
-
-      <div class="tool-progress-card" data-ref="protect-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="protect-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="protect-processing-title">Protegiendo y cifrando documento PDF...</h3>
-        <p class="tool-progress-card__meta" data-ref="protect-processing-subtitle">Aplicando algoritmo de cifrado AES-256 y estableciendo permisos</p>
-        <div class="tool-progress-card__track" data-ref="protect-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="protect-progress-fill"></div>
-        </div>
-      </div>
     </main>
 
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="protect-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -76,7 +91,7 @@
         <p class="tool-sidebar__subtitle" data-ref="protect-sidebar-subtitle">Establece una contraseña para proteger tu archivo PDF.</p>
       </div>
 
-      <div class="tool-sidebar__body">
+      <div class="tool-sidebar__body" data-ref="protect-sidebar-body">
         <div class="tool-sidebar__section" style="display: flex; flex-direction: column; gap: 16px;">
           <label class="field" data-ref="field-password">
             <input class="field__input field__input--has-action" data-ref="input-password" type="password" placeholder=" " autocomplete="new-password" />
@@ -94,18 +109,20 @@
             </button>
           </label>
 
-          <div class="banner banner--info" data-ref="protect-info-banner" style="font-size: 13px; line-height: 1.4; margin-top: 4px;">
-            <span>Tu archivo será cifrado con tecnología AES-256. Guarda tu contraseña en un lugar seguro, ya que será indispensable para abrir el PDF.</span>
+          <div class="tool-sidebar-notice" data-ref="protect-info-notice">
+            <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+            <div class="tool-sidebar-notice__text" data-ref="txt-protect-info-notice">Tu archivo será cifrado con tecnología AES-256. Guarda tu contraseña en un lugar seguro, ya que será indispensable para abrir el PDF.</div>
           </div>
         </div>
       </div>
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-protect" disabled>
-          <span>Proteger PDF</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg>
+          <span data-ref="txt-execute-protect">Proteger PDF</span>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="protect-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger" data-ref="protect-global-error" style="display: none; margin-top: 6px;"></div>
       </div>
     </aside>
   </div>

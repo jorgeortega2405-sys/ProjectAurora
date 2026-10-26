@@ -11,7 +11,7 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 RUN npm run build
-RUN mkdir -p dist/config && cp src/config/email-templates.json dist/config/email-templates.json && mkdir -p dist/tools/pdf-converter/scripts && cp src/tools/pdf-converter/scripts/converter_worker.py dist/tools/pdf-converter/scripts/converter_worker.py
+RUN mkdir -p dist/tools/pdf-converter/scripts && cp src/tools/pdf-converter/scripts/converter_worker.py dist/tools/pdf-converter/scripts/converter_worker.py
 
 EXPOSE 3000
 

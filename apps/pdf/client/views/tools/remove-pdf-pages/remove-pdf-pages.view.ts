@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
@@ -80,6 +81,7 @@ export class RemovePdfPagesController implements ViewController {
   private pdfDocument: any = null;
   private removedPages: Set<number> = new Set();
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -87,6 +89,15 @@ export class RemovePdfPagesController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-workspace"]') || this.container;
+    this.statusManager = new ToolStatusManager({
+      container: workspace,
+      onRetry: () => {
+        this.statusManager?.hide();
+        this.renderFilesView();
+      },
+      toolName: 'Eliminar páginas',
+    });
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -95,6 +106,10 @@ export class RemovePdfPagesController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
@@ -164,6 +179,20 @@ export class RemovePdfPagesController implements ViewController {
     });
 
     browseBtn?.addEventListener('click', () => fileInput?.click(), { signal });
+
+    const fabAddMoreBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-add-more"]');
+    const fabDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-drive"]');
+    const fabDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-fab-dropbox"]');
+
+    fabAddMoreBtn?.addEventListener('click', () => fileInput?.click(), { signal });
+    fabDriveBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void this.handleDriveImport();
+    }, { signal });
+    fabDropboxBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void this.handleDropboxImport();
+    }, { signal });
 
     heroDriveBtn?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -495,14 +524,19 @@ export class RemovePdfPagesController implements ViewController {
     formData.append('filename', customFilename);
 
     this.isProcessing = true;
-    this.showProcessingState();
+    this.statusManager?.showUploading(1, 1);
 
     try {
-      const response = await postFormApi(
+      const response = await postFormWithProgress(
         API_ROUTES.tools.removePdfPages.remove,
-        formData
+        formData,
+        (progress) => {
+          this.statusManager?.updateUploadProgress(progress);
+        }
       );
       const json = await response.json();
+
+      this.statusManager?.showProcessing('Eliminando páginas del PDF...');
 
       if (!response.ok || !json.success || !json.data) {
         throw new Error(json.error || 'Error al procesar la solicitud.');
@@ -523,10 +557,14 @@ export class RemovePdfPagesController implements ViewController {
       sessionStorage.setItem('download_ready_data', JSON.stringify(downloadPayload));
       showToast('Páginas eliminadas con éxito.', 'success');
       navigate(`/download/${token}`);
-    } catch (err: any) {
-      const message = err?.message || 'Error inesperado al eliminar las páginas del PDF.';
-      this.showError(message);
-      this.renderFilesView();
+    } catch {
+      this.statusManager?.showError({
+        boxText: 'Comprueba que el documento no esté protegido con contraseña o dañado.',
+        boxTitle: 'Error al eliminar páginas',
+        desc: 'No se pudieron eliminar las páginas seleccionadas. Por favor intenta de nuevo.',
+        retryText: 'Reintentar Eliminar Páginas',
+        title: '¡Oh no! No hemos podido procesar tu archivo.',
+      });
     } finally {
       this.isProcessing = false;
     }
@@ -535,20 +573,18 @@ export class RemovePdfPagesController implements ViewController {
   private showProcessingState(): void {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-sidebar"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="remove-pages-workspace"]');
 
+    if (sidebar) sidebar.style.display = 'none';
+    if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
-    if (resultCard) resultCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'flex';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
-
-    const mainActionBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-main-action"]');
-    if (mainActionBtn) {
-      mainActionBtn.disabled = true;
-    }
   }
 
   private showResultState(): void {
@@ -594,6 +630,7 @@ export class RemovePdfPagesController implements ViewController {
     this.lastClickedPageIndex = null;
     this.pdfDocument = null;
     this.isProcessing = false;
+    this.statusManager?.hide();
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const inputPagesToRemove = this.container.querySelector<HTMLInputElement>('[data-ref="input-pages-to-remove"]');

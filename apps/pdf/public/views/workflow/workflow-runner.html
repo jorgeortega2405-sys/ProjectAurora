@@ -1,0 +1,124 @@
+<div class="component-wrapper component-wrapper--full view-wrapper tool-layout-wrapper" data-ref="workflow-runner-wrapper">
+  <div class="component-bottom tool-bottom tool-bottom--grid tool-layout tool-layout--grid" data-ref="workflow-layout">
+
+    <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="workflow-workspace">
+      <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" style="display: none;" />
+
+      <div class="tool-workspace__canvas" data-ref="workflow-dropzone-card">
+        <div class="tool-hero-dropzone" data-ref="workflow-dropzone">
+          <div class="tool-hero-dropzone__icon-circle" data-ref="workflow-dropzone-icon" style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-hover); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+            <svg class="component-icon" aria-hidden="true" style="width: 28px; height: 28px;"><use href="/icons.svg#account_tree"></use></svg>
+          </div>
+          <h1 class="tool-hero-dropzone__title" data-ref="workflow-dropzone-title">Selecciona o arrastra tu archivo PDF</h1>
+          <p class="tool-hero-dropzone__desc" data-ref="workflow-dropzone-desc">Soporta documentos PDF para iniciar la ejecución del flujo</p>
+          <div class="tool-hero-dropzone__actions">
+            <button type="button" class="component-button component-button--black component-button--h55 tool-hero-dropzone__btn-select" data-ref="btn-browse-file">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#upload_file"></use></svg>
+              <span>Seleccionar PDF</span>
+            </button>
+          </div>
+          <p class="tool-hero-dropzone__hint">o arrastra y suelta el archivo PDF aquí</p>
+        </div>
+      </div>
+
+      <div class="pdf-items-view" data-ref="workflow-organize-card" style="display: none; width: 100%;">
+        <div class="tool-workspace__toolbar" data-ref="workflow-organize-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title" data-ref="workflow-organize-title">Documento (<span data-ref="workflow-organize-count">0 págs.</span>)</h2>
+          </div>
+          <div class="tool-workspace__toolbar-actions">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-organize-rotate-all">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#autorenew"></use></svg>
+              <span>Girar todas (+90°)</span>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-organize-reset">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+              <span>Restablecer orden</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pdf-reorder-hint" data-ref="workflow-organize-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <span>Arrastra y suelta las páginas para reordenarlas. Usa los botones de cada tarjeta para rotar o eliminar páginas.</span>
+        </div>
+
+        <div class="organize-pages-grid" data-ref="workflow-organize-grid"></div>
+      </div>
+
+      <div class="pdf-items-view" data-ref="workflow-split-card" style="display: none; width: 100%;">
+        <div class="tool-workspace__toolbar" data-ref="workflow-split-toolbar">
+          <div class="tool-workspace__toolbar-left">
+            <h2 class="tool-workspace__toolbar-title" data-ref="workflow-split-title">Dividir páginas (<span data-ref="workflow-split-count">0 págs.</span>)</h2>
+          </div>
+          <div class="tool-workspace__toolbar-actions">
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-split-select-all">
+              <span>Seleccionar todas</span>
+            </button>
+            <button type="button" class="component-button component-button--secondary component-button--h36" data-ref="btn-split-deselect-all">
+              <span>Deseleccionar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pdf-reorder-hint" data-ref="workflow-split-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <span>Haz clic en las páginas que deseas incluir y conservar para el siguiente paso del flujo.</span>
+        </div>
+
+        <div class="split-pages-grid" data-ref="workflow-split-grid-wrapper">
+          <div class="split-pages-plain-grid" data-ref="workflow-split-grid"></div>
+        </div>
+      </div>
+
+      <div class="tool-workspace__canvas" data-ref="workflow-overview-card" style="display: none;">
+        <div class="pdf-selected-file-panel" data-ref="workflow-selected-file-panel">
+          <div class="pdf-selected-file__icon" data-ref="workflow-selected-file-icon">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#picture_as_pdf"></use></svg>
+          </div>
+          <div class="pdf-selected-file__info" data-ref="workflow-selected-file-info">
+            <span class="pdf-selected-file__name" data-ref="overview-file-name">documento.pdf</span>
+            <span class="pdf-selected-file__size" data-ref="overview-file-size">0 KB</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="tool-layout__sidebar" data-ref="workflow-sidebar">
+      <div class="tool-sidebar__header" data-ref="workflow-sidebar-header">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+          <button type="button" class="component-button component-button--icon-only component-button--ghost component-button--h32" data-ref="btn-back-home" aria-label="Volver">
+            <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_back"></use></svg>
+          </button>
+          <h1 class="tool-sidebar__title" data-ref="workflow-sidebar-title" style="margin: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Cargando flujo...</h1>
+        </div>
+        <p class="tool-sidebar__subtitle" data-ref="workflow-sidebar-subtitle">Ejecución interactiva paso a paso</p>
+      </div>
+
+      <div class="tool-sidebar__body" data-ref="workflow-sidebar-body">
+        <div class="tool-sidebar__section" data-ref="section-stepper">
+          <span class="tool-sidebar__section-title">Pasos del flujo</span>
+          <div class="workflow-stepper-list" data-ref="workflow-stepper-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div class="tool-sidebar__section" data-ref="section-active-options" style="display: none;">
+          <span class="tool-sidebar__section-title" data-ref="active-step-title">Configuración del paso</span>
+          <div class="active-step-body" data-ref="active-step-body"></div>
+        </div>
+      </div>
+
+      <div class="tool-sidebar__footer" data-ref="workflow-sidebar-footer">
+        <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-main-action" disabled>
+          <span data-ref="txt-main-action">Seleccionar PDF</span>
+          <svg class="component-icon" data-ref="icon-main-action" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+        </button>
+        <button type="button" class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-sidebar-reset" style="display: none;">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#refresh"></use></svg>
+          <span>Reiniciar flujo</span>
+        </button>
+        <div class="banner banner--danger" data-ref="workflow-error-banner" style="display: none; margin-top: 6px;"></div>
+      </div>
+    </aside>
+
+  </div>
+</div>

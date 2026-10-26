@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -28,6 +29,7 @@ export class TranslatePdfViewController implements ViewController {
   private isProcessing = false;
   private sidebarModal: ToolSidebarModalController | null = null;
   private sourceLang: string = '';
+  private statusManager: ToolStatusManager | null = null;
   private targetLang: string = 'ES';
 
   constructor(container: HTMLElement) {
@@ -36,6 +38,8 @@ export class TranslatePdfViewController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -44,6 +48,10 @@ export class TranslatePdfViewController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -60,23 +68,30 @@ export class TranslatePdfViewController implements ViewController {
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-sidebar"]');
     const backdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
-    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="translate-sidebar-drag-zone"]');
     const closeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
 
     if (sidebar && backdrop) {
-      this.sidebarModal = setupToolSidebarModal({ backdrop, closeBtn, dragZone, sidebar, signal });
+      this.sidebarModal = setupToolSidebarModal({ backdrop, closeBtn, dragZone, settingsBtn, sidebar, signal });
     }
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="translate-dropzone"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="translate-dropzone-card"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
+    const fabAddBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-translate-fab-add"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
     const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
     const translateBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-translate-action"]');
 
     browseBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput?.click();
+    }, { signal });
+
+    fabAddBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       fileInput?.click();
     }, { signal });
@@ -227,19 +242,18 @@ export class TranslatePdfViewController implements ViewController {
 
   private resetSelectedFile(): void {
     this.currentFile = null;
+    this.statusManager?.hide();
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     if (fileInput) fileInput.value = '';
 
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="translate-dropzone-card"]');
     const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="translate-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="translate-processing-card"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-sidebar"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-workspace"]');
     const translateBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-translate-action"]');
 
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
 
     if (sidebar) sidebar.style.display = 'none';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
@@ -252,12 +266,12 @@ export class TranslatePdfViewController implements ViewController {
     if (!this.currentFile || this.isProcessing) return;
     this.hideError();
 
-    const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="translate-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="translate-processing-card"]');
-
     this.isProcessing = true;
+    const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="translate-selected-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="translate-pdf-sidebar"]');
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
@@ -268,8 +282,19 @@ export class TranslatePdfViewController implements ViewController {
           formData.append('sourceLang', this.sourceLang);
         }
 
-        const response = await postFormApi(API_ROUTES.tools.translatePdf.translate, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.translatePdf.translate,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const res = (await response.json()) as { data?: TranslatePdfResultData; error?: string; success: boolean };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Conservando formato, tipografía y tablas en el idioma de destino',
+          title: 'Traduciendo documento...',
+        });
 
         if (!response.ok || !res.success || !res.data) {
           throw new Error(res.error || 'Error al traducir el documento PDF.');
@@ -290,28 +315,33 @@ export class TranslatePdfViewController implements ViewController {
         showToast('Documento traducido con éxito.', 'success');
         navigate(`/download/${token}`);
       } catch (err: unknown) {
-        if (selectedCard) selectedCard.style.display = '';
+        if (selectedCard) selectedCard.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
         const errorMessage = err instanceof Error ? err.message : 'Error al conectar con el servidor.';
+        this.statusManager?.showError(errorMessage, () => {
+          this.statusManager?.hide();
+        });
         this.showError(errorMessage);
       } finally {
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
       }
     });
   }
 
   private showError(message: string): void {
     const errorEl = this.container.querySelector<HTMLElement>('[data-ref="translate-error-banner"]');
-    const errorText = this.container.querySelector<HTMLElement>('[data-ref="translate-error-text"]');
-    if (errorText) errorText.textContent = message;
-    if (errorEl) errorEl.style.display = 'block';
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.style.display = '';
+    }
   }
 
   private hideError(): void {
     const errorEl = this.container.querySelector<HTMLElement>('[data-ref="translate-error-banner"]');
-    const errorText = this.container.querySelector<HTMLElement>('[data-ref="translate-error-text"]');
-    if (errorText) errorText.textContent = '';
-    if (errorEl) errorEl.style.display = 'none';
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.style.display = 'none';
+    }
   }
 }
 

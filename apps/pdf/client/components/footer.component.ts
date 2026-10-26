@@ -16,46 +16,46 @@ export function getFooterHtml(): string {
       <div class="site-footer" data-ref="site-footer">
         <div class="site-footer__grid" data-ref="site-footer-grid">
           <div class="footer-col" data-ref="footer-col-producto">
-            <h4 class="footer-col__title" data-ref="footer-title-producto">Producto</h4>
+            <h4 class="footer-col__title" data-ref="footer-title-producto">${t('footer.col_product') || 'Producto'}</h4>
             <ul class="footer-col__list" data-ref="footer-list-producto">
               <li class="footer-col__item" data-ref="footer-item-inicio">
-                <a class="footer-col__link" data-ref="footer-link-inicio" href="${getLocalizedPath('home', currentLang)}">Inicio</a>
+                <a class="footer-col__link" data-ref="footer-link-inicio" href="${getLocalizedPath('home', currentLang)}">${t('footer.link_home') || 'Inicio'}</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-herramientas">
-                <a class="footer-col__link" data-ref="footer-link-herramientas" href="${getLocalizedPath('help-documentation', currentLang)}">Herramientas</a>
+                <a class="footer-col__link" data-ref="footer-link-herramientas" href="${getLocalizedPath('help-documentation', currentLang)}">${t('footer.link_tools') || 'Herramientas'}</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-faq">
-                <a class="footer-col__link" data-ref="footer-link-faq" href="${getLocalizedPath('help-faq', currentLang)}">Preguntas frecuentes</a>
+                <a class="footer-col__link" data-ref="footer-link-faq" href="${getLocalizedPath('help-faq', currentLang)}">${t('footer.link_faq') || 'Preguntas frecuentes'}</a>
               </li>
             </ul>
           </div>
 
           <div class="footer-col" data-ref="footer-col-legal">
-            <h4 class="footer-col__title" data-ref="footer-title-legal">Legal</h4>
+            <h4 class="footer-col__title" data-ref="footer-title-legal">${t('footer.col_legal') || 'Legal'}</h4>
             <ul class="footer-col__list" data-ref="footer-list-legal">
               <li class="footer-col__item" data-ref="footer-item-seguridad">
-                <a class="footer-col__link" data-ref="footer-link-seguridad" href="${getLocalizedPath('help-security', currentLang)}">Seguridad</a>
+                <a class="footer-col__link" data-ref="footer-link-seguridad" href="${getLocalizedPath('help-security', currentLang)}">${t('footer.link_security') || 'Seguridad'}</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-privacidad">
-                <a class="footer-col__link" data-ref="footer-link-privacidad" href="${getLocalizedPath('help-privacy', currentLang)}">Política de Privacidad</a>
+                <a class="footer-col__link" data-ref="footer-link-privacidad" href="${getLocalizedPath('help-privacy', currentLang)}">${t('footer.link_privacy') || 'Política de Privacidad'}</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-terminos">
-                <a class="footer-col__link" data-ref="footer-link-terminos" href="${getLocalizedPath('help-terms', currentLang)}">Términos y Condiciones</a>
+                <a class="footer-col__link" data-ref="footer-link-terminos" href="${getLocalizedPath('help-terms', currentLang)}">${t('footer.link_terms') || 'Términos y Condiciones'}</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-cookies">
-                <a class="footer-col__link" data-ref="footer-link-cookies" href="${getLocalizedPath('help-cookies', currentLang)}">Cookies</a>
+                <a class="footer-col__link" data-ref="footer-link-cookies" href="${getLocalizedPath('help-cookies', currentLang)}">${t('footer.link_cookies') || 'Cookies'}</a>
               </li>
             </ul>
           </div>
 
           <div class="footer-col" data-ref="footer-col-empresa">
-            <h4 class="footer-col__title" data-ref="footer-title-empresa">Empresa</h4>
+            <h4 class="footer-col__title" data-ref="footer-title-empresa">${t('footer.col_company') || 'Empresa'}</h4>
             <ul class="footer-col__list" data-ref="footer-list-empresa">
               <li class="footer-col__item" data-ref="footer-item-nosotros">
-                <a class="footer-col__link" data-ref="footer-link-nosotros" href="${getLocalizedPath('about', currentLang)}">Sobre nosotros</a>
+                <a class="footer-col__link" data-ref="footer-link-nosotros" href="${getLocalizedPath('about', currentLang)}">${t('footer.link_about') || 'Sobre nosotros'}</a>
               </li>
               <li class="footer-col__item" data-ref="footer-item-contacto">
-                <a class="footer-col__link" data-ref="footer-link-contacto" href="${getLocalizedPath('contact', currentLang)}">Contacto</a>
+                <a class="footer-col__link" data-ref="footer-link-contacto" href="${getLocalizedPath('contact', currentLang)}">${t('footer.link_contact') || 'Contacto'}</a>
               </li>
             </ul>
           </div>
@@ -79,10 +79,10 @@ export function getFooterHtml(): string {
                   </div>
                   <div class="menu-panel__search" data-ref="search-wrapper-footer-language">
                     <svg class="component-icon menu-panel__search-icon" data-ref="search-icon-footer-language" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
-                    <input class="menu-panel__search-input" data-ref="input-search-footer-language" type="text" placeholder="Buscar idioma..." maxlength="50" autocomplete="off" />
+                    <input class="menu-panel__search-input" data-ref="input-search-footer-language" type="text" placeholder="${t('footer.search_language') || 'Buscar idioma...'}" maxlength="50" autocomplete="off" />
                   </div>
                   <div class="menu-panel__list menu-panel__list--scrollable" data-ref="list-footer-languages"></div>
-                  <div class="menu-panel__empty" data-ref="empty-footer-languages" style="display: none;">No se encontraron idiomas</div>
+                  <div class="menu-panel__empty" data-ref="empty-footer-languages" style="display: none;">${t('footer.no_languages_found') || 'No se encontraron idiomas'}</div>
                 </div>
               </div>
             </div>
@@ -121,7 +121,7 @@ export function getFooterHtml(): string {
                 </svg>
               </a>
             </div>
-            <span class="site-footer__copyright" data-ref="footer-copyright">© Aurora 2026 ® - Tu editor de PDF</span>
+            <span class="site-footer__copyright" data-ref="footer-copyright">${t('footer.copyright') || '© Aurora 2026 ® - Tu editor de PDF'}</span>
           </div>
         </div>
       </div>

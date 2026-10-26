@@ -33,6 +33,10 @@
           </div>
         </div>
 
+        <div class="pdf-reorder-hint" data-ref="repair-reorder-hint">
+          <span>El motor reconstruirá los flujos y referencias cruzadas corruptas de tu archivo.</span>
+        </div>
+
         <div class="pdf-items-grid" data-ref="pdf-items-grid">
           <div class="pdf-card" data-ref="selected-file-card">
             <div class="pdf-card__actions">
@@ -49,14 +53,11 @@
             <span class="pdf-card__meta" data-ref="selected-file-size">0 KB</span>
           </div>
         </div>
-      </div>
 
-      <div class="tool-progress-card" data-ref="repair-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="repair-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="repair-processing-title">Analizando y reparando archivo PDF...</h3>
-        <p class="tool-progress-card__meta" data-ref="repair-processing-subtitle">Reconstruyendo la tabla de referencias cruzadas y flujos de contenido</p>
-        <div class="tool-progress-card__track" data-ref="repair-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="repair-progress-fill"></div>
+        <div class="tool-fab-container" data-ref="repair-fab-container">
+          <button type="button" class="tool-fab-btn" data-ref="btn-repair-fab-add" data-tooltip="Cambiar archivo" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+          </button>
         </div>
       </div>
 
@@ -91,9 +92,11 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="repair-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="repair-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="repair-sidebar-drag-zone">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -104,6 +107,11 @@
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="repair-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-repair-info-notice">El archivo será analizado y reparado manteniendo el contenido recuperable intacto.</div>
+        </div>
+
         <div class="tool-sidebar__section">
           <span class="tool-sidebar__section-title">Diagnóstico y Reparación</span>
           <div class="pdf-repair-info-box" data-ref="repair-diagnostics-box">
@@ -121,16 +129,15 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-repair-action" disabled>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#build"></use></svg>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#build"></use></svg>
           <span data-ref="txt-repair-action">Reparar PDF</span>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="repair-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="repair-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

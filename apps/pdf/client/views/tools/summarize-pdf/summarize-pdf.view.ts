@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -101,6 +102,7 @@ export class SummarizePdfController implements ViewController {
   private isRenderingPages = false;
   private pdfDocument: any = null;
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
   private zoomScale = 1.0;
 
   constructor(container: HTMLElement) {
@@ -109,6 +111,8 @@ export class SummarizePdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="summarize-pdf-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -121,6 +125,10 @@ export class SummarizePdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.pdfDocument) {
       try {
@@ -146,7 +154,7 @@ export class SummarizePdfController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const sidebarBackdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
-    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="summarize-sidebar-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="summarize-pdf-sidebar"]');
 
     this.sidebarModal = setupToolSidebarModal({
@@ -455,6 +463,7 @@ export class SummarizePdfController implements ViewController {
     this.pdfDocument = null;
     this.zoomScale = 1.0;
     this.activePageIndex = 0;
+    this.statusManager?.hide();
     this.updateZoomDisplay();
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
@@ -500,34 +509,44 @@ export class SummarizePdfController implements ViewController {
     if (!this.currentFile || this.isProcessing) return;
     this.hideError();
 
-    const processingSection = this.container.querySelector<HTMLElement>('[data-ref="section-processing"]');
-    const resultSection = this.container.querySelector<HTMLElement>('[data-ref="section-summary-result"]');
-
     this.isProcessing = true;
-    if (processingSection) processingSection.style.display = 'block';
-    if (resultSection) resultSection.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
         const formData = new FormData();
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
 
-        const response = await postFormApi(API_ROUTES.tools.summarizePdf.summarize, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.summarizePdf.summarize,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const result = (await response.json()) as { data?: SummarizePdfResultData; error?: string; success: boolean };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Leyendo documento y sintetizando puntos clave con IA',
+          title: 'Resumiendo documento PDF...',
+        });
 
         if (!response.ok || !result.success || !result.data) {
           throw new Error(result.error || 'Error al generar el resumen del documento.');
         }
 
         this.currentResult = result.data;
+        this.statusManager?.hide();
         showToast('Resumen generado exitosamente.', 'success');
         this.renderSummaryResult(result.data);
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al resumir el PDF.';
+        this.statusManager?.showError(errorMessage, () => {
+          this.statusManager?.hide();
+        });
         this.showError(errorMessage);
       } finally {
         this.isProcessing = false;
-        if (processingSection) processingSection.style.display = 'none';
       }
     });
   }

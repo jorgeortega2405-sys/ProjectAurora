@@ -613,8 +613,8 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
       pt: 'resumir-pdf',
     },
     titles: {
-      en: 'Summarize PDF with AI - Smart automatic summaries | ProjectAurora',
-      es: 'Resumir PDF con IA - Extrae resúmenes inteligentes | ProjectAurora',
+      en: 'Summarize PDF - Smart automatic summaries | ProjectAurora',
+      es: 'Resumir PDF - Extrae resúmenes inteligentes | ProjectAurora',
     },
   },
   'translate-pdf': {
@@ -634,8 +634,8 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
       pt: 'traduzir-pdf',
     },
     titles: {
-      en: 'Translate PDF with AI - Translate complete documents | ProjectAurora',
-      es: 'Traducir PDF con IA - Traduce documentos completos | ProjectAurora',
+      en: 'Translate PDF - Translate complete documents | ProjectAurora',
+      es: 'Traducir PDF - Traduce documentos completos | ProjectAurora',
     },
   },
   'pdf-to-markdown': {
@@ -657,96 +657,6 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
     titles: {
       en: 'PDF to Markdown - Clean text and table extraction | ProjectAurora',
       es: 'PDF a Markdown - Extrae texto limpio con formato | ProjectAurora',
-    },
-  },
-  'help-documentation': {
-    descriptions: {
-      en: 'Comprehensive user guides and tutorials to make the most of every tool on ProjectAurora.',
-      es: 'Guías completas y tutoriales paso a paso para utilizar cada una de las herramientas de ProjectAurora.',
-    },
-    routeId: 'help-documentation',
-    slugs: {
-      en: 'documentation',
-      es: 'herramientas',
-    },
-    titles: {
-      en: 'Tools Documentation & Guides - ProjectAurora',
-      es: 'Centro de Herramientas y Documentación - ProjectAurora',
-    },
-  },
-  'help-faq': {
-    descriptions: {
-      en: 'Find clear answers to common questions about security, limits, privacy, and plans on ProjectAurora.',
-      es: 'Respuestas a las dudas más comunes sobre privacidad, conversión, planes y seguridad en ProjectAurora.',
-    },
-    routeId: 'help-faq',
-    slugs: {
-      en: 'faq',
-      es: 'preguntas-frecuentes',
-    },
-    titles: {
-      en: 'Frequently Asked Questions (FAQ) - ProjectAurora',
-      es: 'Preguntas Frecuentes (FAQ) - ProjectAurora',
-    },
-  },
-  'help-security': {
-    descriptions: {
-      en: 'Learn about our rigorous security standards, end-to-end encryption, and automated file deletion.',
-      es: 'Conoce nuestros estrictos estándares de seguridad, cifrado TLS 1.3 y borrado automático de archivos.',
-    },
-    routeId: 'help-security',
-    slugs: {
-      en: 'security',
-      es: 'seguridad',
-    },
-    titles: {
-      en: 'Security & Data Protection - ProjectAurora',
-      es: 'Seguridad y Privacidad de Datos - ProjectAurora',
-    },
-  },
-  'help-privacy': {
-    descriptions: {
-      en: 'Transparent information on how we safeguard your data and protect your privacy in compliance with global standards.',
-      es: 'Información transparente sobre cómo tratamos tus datos y protegemos tu privacidad conforme a normativas globales.',
-    },
-    routeId: 'help-privacy',
-    slugs: {
-      en: 'privacy',
-      es: 'privacidad',
-    },
-    titles: {
-      en: 'Privacy Policy - ProjectAurora',
-      es: 'Política de Privacidad - ProjectAurora',
-    },
-  },
-  'help-terms': {
-    descriptions: {
-      en: 'Review our terms of use and conditions governing the access and utilization of ProjectAurora tools.',
-      es: 'Consulta las condiciones legales y términos aplicables al uso de nuestros servicios y herramientas web.',
-    },
-    routeId: 'help-terms',
-    slugs: {
-      en: 'terms',
-      es: 'terminos',
-    },
-    titles: {
-      en: 'Terms and Conditions of Service - ProjectAurora',
-      es: 'Términos y Condiciones de Uso - ProjectAurora',
-    },
-  },
-  'help-cookies': {
-    descriptions: {
-      en: 'Clear details regarding our responsible use of essential cookies and preference settings.',
-      es: 'Información clara sobre el uso responsable de cookies técnicas y de preferencias en nuestro sitio web.',
-    },
-    routeId: 'help-cookies',
-    slugs: {
-      en: 'cookies',
-      es: 'cookies',
-    },
-    titles: {
-      en: 'Cookie Policy - ProjectAurora',
-      es: 'Política de Cookies - ProjectAurora',
     },
   },
   ai: {
@@ -794,6 +704,120 @@ export const SEO_ROUTES: Record<string, RouteSeoInfo> = {
       es: 'Contacto | ProjectAurora',
     },
   },
+  'help-documentation': {
+    descriptions: {
+      en: 'Complete documentation and user guides for all ProjectAurora PDF tools, security features, and workflows.',
+      es: 'Guía detallada y documentación completa de todas las herramientas PDF, seguridad y flujos de trabajo en ProjectAurora.',
+    },
+    routeId: 'help-documentation',
+    slugs: {
+      de: 'dokumentation',
+      en: 'documentation',
+      es: 'herramientas',
+      fr: 'outils',
+      it: 'strumenti',
+      pt: 'ferramentas',
+    },
+    titles: {
+      en: 'Tools Documentation | ProjectAurora',
+      es: 'Documentación de Herramientas | ProjectAurora',
+    },
+  },
+  'help-faq': {
+    descriptions: {
+      en: 'Find answers to common questions about ProjectAurora PDF tools, security, privacy, pricing, and document lifecycle.',
+      es: 'Encuentra respuestas a preguntas frecuentes sobre herramientas PDF, seguridad, privacidad, planes y retención en ProjectAurora.',
+    },
+    routeId: 'help-faq',
+    slugs: {
+      de: 'faq',
+      en: 'faq',
+      es: 'preguntas-frecuentes',
+      fr: 'faq',
+      it: 'faq',
+      pt: 'perguntas-frequentes',
+    },
+    titles: {
+      en: 'Frequently Asked Questions (FAQ) | ProjectAurora',
+      es: 'Preguntas Frecuentes (FAQ) | ProjectAurora',
+    },
+  },
+  'help-security': {
+    descriptions: {
+      en: 'Learn how ProjectAurora protects your documents with TLS 1.3, AES-GCM-256 encryption, zero-knowledge architecture, and automated ephemeral deletion.',
+      es: 'Conoce cómo protege ProjectAurora tus documentos con cifrado TLS 1.3, AES-GCM-256, arquitectura de cero conocimiento y borrado efímero automático.',
+    },
+    routeId: 'help-security',
+    slugs: {
+      de: 'sicherheit',
+      en: 'security',
+      es: 'seguridad',
+      fr: 'securite',
+      it: 'sicurezza',
+      pt: 'seguranca',
+    },
+    titles: {
+      en: 'Security Policy | ProjectAurora',
+      es: 'Política de Seguridad | ProjectAurora',
+    },
+  },
+  'help-privacy': {
+    descriptions: {
+      en: 'ProjectAurora Privacy Policy. 100% ephemeral document processing, max 2-hour retention, zero AI training, and full GDPR & CCPA/CPRA compliance.',
+      es: 'Política de Privacidad de ProjectAurora. Procesamiento 100% efímero, borrado en < 2 horas, cero entrenamiento de IA y cumplimiento GDPR y CCPA/CPRA.',
+    },
+    routeId: 'help-privacy',
+    slugs: {
+      de: 'datenschutz',
+      en: 'privacy',
+      es: 'privacidad',
+      fr: 'confidentialite',
+      it: 'privacy',
+      pt: 'privacidade',
+    },
+    titles: {
+      en: 'Privacy Policy | ProjectAurora',
+      es: 'Política de Privacidad | ProjectAurora',
+    },
+  },
+  'help-terms': {
+    descriptions: {
+      en: 'Terms and conditions for using ProjectAurora. Transparent guidelines, service rules, binding individual arbitration, and class action waiver.',
+      es: 'Términos y condiciones de uso de ProjectAurora. Lineamientos transparentes, reglas de servicio, arbitraje individual vinculante y renuncia a demandas colectivas.',
+    },
+    routeId: 'help-terms',
+    slugs: {
+      de: 'agb',
+      en: 'terms',
+      es: 'terminos',
+      fr: 'conditions',
+      it: 'termini',
+      pt: 'termos',
+    },
+    titles: {
+      en: 'Terms of Service | ProjectAurora',
+      es: 'Términos y Condiciones | ProjectAurora',
+    },
+  },
+  'help-cookies': {
+    descriptions: {
+      en: 'ProjectAurora Cookie Policy. Detailed technical breakdown of cookies used, browser management guides, and privacy controls.',
+      es: 'Política de Cookies de ProjectAurora. Desglose técnico de cookies utilizadas, guías de configuración en navegadores y control de privacidad.',
+    },
+    routeId: 'help-cookies',
+    slugs: {
+      de: 'cookies',
+      en: 'cookies',
+      es: 'cookies',
+      fr: 'cookies',
+      it: 'cookie',
+      pt: 'cookies',
+    },
+    titles: {
+      en: 'Cookie Policy | ProjectAurora',
+      es: 'Política de Cookies | ProjectAurora',
+    },
+  },
 };
 
 const SLUG_TO_ROUTE_MAP = new Map<string, string>();
@@ -812,24 +836,56 @@ SLUG_TO_ROUTE_MAP.set('add-watermark', 'watermark-pdf');
 SLUG_TO_ROUTE_MAP.set('marca-de-agua-pdf', 'watermark-pdf');
 SLUG_TO_ROUTE_MAP.set('redactar-pdf', 'redact-pdf');
 SLUG_TO_ROUTE_MAP.set('documentation', 'help-documentation');
+SLUG_TO_ROUTE_MAP.set('documentacion', 'help-documentation');
 SLUG_TO_ROUTE_MAP.set('herramientas', 'help-documentation');
+SLUG_TO_ROUTE_MAP.set('help/documentation', 'help-documentation');
+SLUG_TO_ROUTE_MAP.set('help-documentation', 'help-documentation');
 SLUG_TO_ROUTE_MAP.set('faq', 'help-faq');
 SLUG_TO_ROUTE_MAP.set('preguntas-frecuentes', 'help-faq');
+SLUG_TO_ROUTE_MAP.set('help/faq', 'help-faq');
+SLUG_TO_ROUTE_MAP.set('help-faq', 'help-faq');
 SLUG_TO_ROUTE_MAP.set('security-policy', 'help-security');
+SLUG_TO_ROUTE_MAP.set('security', 'help-security');
+SLUG_TO_ROUTE_MAP.set('seguridad', 'help-security');
+SLUG_TO_ROUTE_MAP.set('help/security', 'help-security');
+SLUG_TO_ROUTE_MAP.set('help-security', 'help-security');
 SLUG_TO_ROUTE_MAP.set('privacy-policy', 'help-privacy');
+SLUG_TO_ROUTE_MAP.set('privacy', 'help-privacy');
+SLUG_TO_ROUTE_MAP.set('privacidad', 'help-privacy');
+SLUG_TO_ROUTE_MAP.set('help/privacy', 'help-privacy');
+SLUG_TO_ROUTE_MAP.set('help-privacy', 'help-privacy');
 SLUG_TO_ROUTE_MAP.set('terms-and-conditions', 'help-terms');
+SLUG_TO_ROUTE_MAP.set('terms', 'help-terms');
+SLUG_TO_ROUTE_MAP.set('terminos', 'help-terms');
+SLUG_TO_ROUTE_MAP.set('help/terms', 'help-terms');
+SLUG_TO_ROUTE_MAP.set('help-terms', 'help-terms');
 SLUG_TO_ROUTE_MAP.set('cookie-policy', 'help-cookies');
+SLUG_TO_ROUTE_MAP.set('cookies', 'help-cookies');
+SLUG_TO_ROUTE_MAP.set('help/cookies', 'help-cookies');
+SLUG_TO_ROUTE_MAP.set('help-cookies', 'help-cookies');
 SLUG_TO_ROUTE_MAP.set('about', 'about');
 SLUG_TO_ROUTE_MAP.set('sobre-nosotros', 'about');
 SLUG_TO_ROUTE_MAP.set('contact', 'contact');
 SLUG_TO_ROUTE_MAP.set('contacto', 'contact');
 
 export function getCanonicalSlug(routeId: string, lang = DEFAULT_LANGUAGE): string {
-  const normLang = normalizeLanguageCode(lang);
+  const cleanLang = (lang || '').trim().toLowerCase();
   const info = SEO_ROUTES[routeId];
   if (!info) return routeId;
   if (routeId === 'home') return '';
-  return info.slugs[normLang] || info.slugs.en || info.slugs.es || routeId;
+  const base = cleanLang.split('-')[0];
+  const normLang = normalizeLanguageCode(lang);
+  const normBase = normLang.split('-')[0];
+  return (
+    info.slugs[cleanLang] ||
+    info.slugs[base] ||
+    info.slugs[normLang] ||
+    info.slugs[normBase] ||
+    (base === 'es' || normBase === 'es' ? info.slugs.es : info.slugs.en) ||
+    info.slugs.es ||
+    info.slugs.en ||
+    routeId
+  );
 }
 
 export function resolveRouteFromSlug(slug: string, lang = DEFAULT_LANGUAGE): { canonicalSlug: string; isCanonical: boolean; routeId: string } | null {
@@ -854,12 +910,14 @@ export function resolveRouteFromSlug(slug: string, lang = DEFAULT_LANGUAGE): { c
 }
 
 export function getLocalizedPath(routeId: string, lang = DEFAULT_LANGUAGE): string {
+  const cleanLang = (lang || '').trim().toLowerCase();
   const normLang = normalizeLanguageCode(lang);
+  const targetLang = cleanLang === 'es' || cleanLang === 'en' ? cleanLang : normLang;
   if (routeId === 'home') {
-    return `/${normLang}`;
+    return `/${targetLang}`;
   }
-  const slug = getCanonicalSlug(routeId, normLang);
-  return `/${normLang}/${slug}`;
+  const slug = getCanonicalSlug(routeId, targetLang);
+  return `/${targetLang}/${slug}`;
 }
 
 export interface PageSeoResult {

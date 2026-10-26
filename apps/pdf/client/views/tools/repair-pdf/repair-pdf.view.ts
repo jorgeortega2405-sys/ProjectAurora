@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -27,6 +28,7 @@ export class RepairPdfController implements ViewController {
   private currentResult: RepairResultData | null = null;
   private isProcessing = false;
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -34,6 +36,8 @@ export class RepairPdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="repair-pdf-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -42,6 +46,10 @@ export class RepairPdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -55,7 +63,7 @@ export class RepairPdfController implements ViewController {
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="repair-pdf-sidebar"]');
     const backdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
-    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="repair-sidebar-drag-zone"]');
     const closeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
 
@@ -66,12 +74,18 @@ export class RepairPdfController implements ViewController {
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="repair-dropzone"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
+    const fabAddBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-repair-fab-add"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
     const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
     const repairBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-repair-action"]');
     const downloadBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-download-result"]');
     const anotherBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-repair-another"]');
+
+    fabAddBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput?.click();
+    }, { signal });
 
     browseBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -220,6 +234,7 @@ export class RepairPdfController implements ViewController {
   private resetSelectedFile(): void {
     this.currentFile = null;
     this.currentResult = null;
+    this.statusManager?.hide();
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     if (fileInput) fileInput.value = '';
 
@@ -262,12 +277,12 @@ export class RepairPdfController implements ViewController {
     if (!this.currentFile || this.isProcessing) return;
     this.hideError();
 
-    const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="repair-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="repair-processing-card"]');
-
     this.isProcessing = true;
+    const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="repair-selected-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="repair-pdf-sidebar"]');
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
@@ -280,8 +295,19 @@ export class RepairPdfController implements ViewController {
           formData.append('filename', customFilename);
         }
 
-        const response = await postFormApi(API_ROUTES.tools.repairPdf.repair, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.repairPdf.repair,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const result = (await response.json()) as { data?: RepairResultData; error?: string; success: boolean };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Reconstruyendo la tabla de referencias cruzadas y flujos de contenido',
+          title: 'Analizando y reparando archivo PDF...',
+        });
 
         if (!response.ok || !result.success || !result.data) {
           throw new Error(result.error || 'Error al reparar el archivo PDF.');
@@ -303,25 +329,26 @@ export class RepairPdfController implements ViewController {
         showToast('PDF reparado con éxito.', 'success');
         navigate(`/download/${token}`);
       } catch (err: unknown) {
-        if (selectedCard) selectedCard.style.display = '';
+        if (selectedCard) selectedCard.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al reparar el PDF.';
+        this.statusManager?.showError(errorMessage, () => {
+          this.statusManager?.hide();
+        });
         this.showError(errorMessage);
       } finally {
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
       }
     });
   }
 
   private renderResultState(data: RepairResultData): void {
     const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="repair-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="repair-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="repair-result-card"]');
     const pagesEl = this.container.querySelector<HTMLElement>('[data-ref="val-recovered-pages"]');
     const sizeEl = this.container.querySelector<HTMLElement>('[data-ref="val-repaired-size"]');
 
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (resultCard) resultCard.style.display = '';
 
     if (pagesEl) pagesEl.textContent = `${data.pageCount} ${data.pageCount === 1 ? 'página' : 'páginas'}`;

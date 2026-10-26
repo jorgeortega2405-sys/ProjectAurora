@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -26,6 +27,7 @@ export class PdfToMarkdownController implements ViewController {
   private currentResult: PdfToMarkdownResultData | null = null;
   private isProcessing = false;
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -33,6 +35,8 @@ export class PdfToMarkdownController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -41,6 +45,10 @@ export class PdfToMarkdownController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.abortController) {
       this.abortController.abort();
@@ -56,17 +64,19 @@ export class PdfToMarkdownController implements ViewController {
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
     const backdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
-    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="markdown-sidebar-drag-zone"]');
     const closeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
 
     if (sidebar && backdrop) {
-      this.sidebarModal = setupToolSidebarModal({ backdrop, closeBtn, dragZone, sidebar, signal });
+      this.sidebarModal = setupToolSidebarModal({ backdrop, closeBtn, dragZone, settingsBtn, sidebar, signal });
     }
 
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzone = this.container.querySelector<HTMLElement>('[data-ref="markdown-dropzone"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-dropzone-card"]');
     const browseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-browse-file"]');
+    const fabAddBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-markdown-fab-add"]');
     const heroDriveBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-drive"]');
     const heroDropboxBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-hero-dropbox"]');
     const removeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-remove-file"]');
@@ -76,6 +86,11 @@ export class PdfToMarkdownController implements ViewController {
     const anotherBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-convert-another"]');
 
     browseBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput?.click();
+    }, { signal });
+
+    fabAddBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
       fileInput?.click();
     }, { signal });
@@ -222,12 +237,12 @@ export class PdfToMarkdownController implements ViewController {
   private resetSelectedFile(): void {
     this.currentFile = null;
     this.currentResult = null;
+    this.statusManager?.hide();
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     if (fileInput) fileInput.value = '';
 
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-dropzone-card"]');
     const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-result-card"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-workspace"]');
@@ -235,7 +250,6 @@ export class PdfToMarkdownController implements ViewController {
 
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
 
     if (sidebar) sidebar.style.display = 'none';
@@ -249,12 +263,12 @@ export class PdfToMarkdownController implements ViewController {
     if (!this.currentFile || this.isProcessing) return;
     this.hideError();
 
-    const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-processing-card"]');
-
     this.isProcessing = true;
+    const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-selected-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
@@ -262,30 +276,44 @@ export class PdfToMarkdownController implements ViewController {
         formData.append('pdf', this.currentFile as Blob, this.currentFile?.name);
         formData.append('mode', 'structured');
 
-        const response = await postFormApi(API_ROUTES.tools.pdfToMarkdown.convert, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.pdfToMarkdown.convert,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const result = (await response.json()) as { data?: PdfToMarkdownResultData; error?: string; success: boolean };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Analizando estructura semántica, tablas y contenido del documento',
+          title: 'Convirtiendo documento a Markdown...',
+        });
 
         if (!response.ok || !result.success || !result.data) {
           throw new Error(result.error || 'Error al convertir el documento a Markdown.');
         }
 
         this.currentResult = result.data;
+        this.statusManager?.hide();
         showToast('Documento convertido a Markdown con éxito.', 'success');
         this.renderResultState(result.data);
       } catch (err: unknown) {
-        if (selectedCard) selectedCard.style.display = '';
+        if (selectedCard) selectedCard.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al convertir el PDF.';
+        this.statusManager?.showError(errorMessage, () => {
+          this.statusManager?.hide();
+        });
         this.showError(errorMessage);
       } finally {
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
       }
     });
   }
 
   private renderResultState(data: PdfToMarkdownResultData): void {
     const selectedCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-selected-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-processing-card"]');
     const resultCard = this.container.querySelector<HTMLElement>('[data-ref="markdown-result-card"]');
     const wordsEl = this.container.querySelector<HTMLElement>('[data-ref="val-md-words"]');
     const linesEl = this.container.querySelector<HTMLElement>('[data-ref="val-md-lines"]');
@@ -293,7 +321,6 @@ export class PdfToMarkdownController implements ViewController {
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-to-markdown-sidebar"]');
 
     if (selectedCard) selectedCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'flex';
     if (sidebar) sidebar.style.display = 'none';
 
@@ -332,7 +359,7 @@ export class PdfToMarkdownController implements ViewController {
     const errorEl = this.container.querySelector<HTMLElement>('[data-ref="markdown-global-error"]');
     if (errorEl) {
       errorEl.textContent = message;
-      errorEl.style.display = 'block';
+      errorEl.style.display = '';
     }
   }
 

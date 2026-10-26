@@ -5,7 +5,7 @@
 
       <div class="tool-workspace__canvas" data-ref="translate-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="translate-dropzone">
-          <h1 class="tool-hero-dropzone__title" data-ref="translate-dropzone-title">Traducir PDF con IA</h1>
+          <h1 class="tool-hero-dropzone__title" data-ref="translate-dropzone-title">Traducir PDF</h1>
           <p class="tool-hero-dropzone__desc" data-ref="translate-dropzone-desc">Traduce documentos completos conservando tablas, imágenes, columnas y el diseño original con DeepL AI.</p>
 
           <div class="tool-hero-dropzone__actions">
@@ -33,6 +33,10 @@
           </div>
         </div>
 
+        <div class="pdf-reorder-hint" data-ref="translate-reorder-hint">
+          <span>Selecciona los idiomas de origen y destino en el panel lateral para traducir tu documento.</span>
+        </div>
+
         <div class="pdf-items-grid" data-ref="pdf-items-grid">
           <div class="pdf-card" data-ref="selected-file-card">
             <div class="pdf-card__actions">
@@ -49,14 +53,11 @@
             <span class="pdf-card__meta" data-ref="selected-file-size">0 KB</span>
           </div>
         </div>
-      </div>
 
-      <div class="tool-progress-card" data-ref="translate-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="translate-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="translate-processing-title">Traduciendo documento con IA...</h3>
-        <p class="tool-progress-card__meta" data-ref="translate-processing-subtitle">Conservando formato, tipografía y tablas en el idioma de destino</p>
-        <div class="tool-progress-card__track" data-ref="translate-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="translate-progress-fill"></div>
+        <div class="tool-fab-container" data-ref="translate-fab-container">
+          <button type="button" class="tool-fab-btn" data-ref="btn-translate-fab-add" data-tooltip="Cambiar archivo" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-btn__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+          </button>
         </div>
       </div>
     </main>
@@ -64,19 +65,25 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="translate-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="translate-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="translate-sidebar-drag-zone">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
 
       <div class="tool-sidebar__header">
-        <h1 class="tool-sidebar__title" data-ref="translate-sidebar-title">Traducir PDF con IA</h1>
+        <h1 class="tool-sidebar__title" data-ref="translate-sidebar-title">Traducir PDF</h1>
         <p class="tool-sidebar__subtitle" data-ref="translate-sidebar-subtitle">Traduce documentos completos conservando tablas, imágenes, columnas y el diseño original con DeepL AI.</p>
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="translate-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-translate-info-notice">El documento será traducido preservando tablas, imágenes y la maqueta original.</div>
+        </div>
         <div class="translate-language-group" data-ref="group-source-lang">
           <label class="translate-language-label" data-ref="label-source-lang">Idioma de Origen</label>
           <div class="dropdown-wrapper dropdown-wrapper--full tool-dropdown-wrapper" data-ref="wrapper-source-lang">
@@ -215,14 +222,12 @@
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-translate-action" disabled>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#translate"></use></svg>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#translate"></use></svg>
           <span data-ref="txt-translate-action">Traducir Documento</span>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
 
-        <div class="banner banner--danger" data-ref="translate-error-banner" style="display: none; margin-top: 12px;">
-          <span data-ref="translate-error-text"></span>
-        </div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="translate-error-banner" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

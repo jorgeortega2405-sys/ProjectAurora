@@ -3,6 +3,23 @@
     <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="remove-pages-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept="application/pdf,.pdf" />
 
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <div class="tool-fab-more" data-ref="tool-fab-more" style="display: none;">
+          <button type="button" class="tool-fab-more__btn tool-fab-more__btn--main" data-ref="btn-fab-add-more" data-tooltip="Cambiar archivo" data-tooltip-placement="left" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <span class="tool-fab-more__badge" data-ref="badge-fab-count">1</span>
+          </button>
+          <div class="tool-fab-more__options" data-ref="tool-fab-options">
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-drive" data-tooltip="Google Drive" data-tooltip-placement="left" aria-label="Google Drive">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+            </button>
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-dropbox" data-tooltip="Dropbox" data-tooltip-placement="left" aria-label="Dropbox">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="tool-workspace__canvas" data-ref="pdf-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="pdf-dropzone">
           <h1 class="tool-hero-dropzone__title" data-ref="pdf-dropzone-title" data-i18n="tools.remove_pdf_pages_title">Eliminar páginas</h1>
@@ -26,15 +43,6 @@
         </div>
       </div>
 
-      <div class="tool-progress-card" data-ref="pdf-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner" data-ref="pdf-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="pdf-processing-title" data-i18n="tools.remove_pdf_pages_processing">Eliminando páginas...</h3>
-        <p class="tool-progress-card__meta" data-ref="pdf-processing-subtitle" data-i18n="tools.remove_pdf_pages_processing_subtitle">Generando documento con las páginas seleccionadas removidas</p>
-        <div class="tool-progress-card__track" data-ref="pdf-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="pdf-progress-fill"></div>
-        </div>
-      </div>
-
       <div class="pdf-items-view" data-ref="pdf-items-card" style="display: none;">
         <div class="tool-workspace__toolbar" data-ref="pdf-workspace-toolbar">
           <div class="tool-workspace__toolbar-left">
@@ -43,7 +51,7 @@
         </div>
 
         <div class="pdf-reorder-hint" data-ref="remove-instruction-hint">
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#delete"></use></svg>
           <span data-ref="remove-instruction-text" data-i18n="tools.remove_pdf_pages_info_hint">Haz click en las páginas que quieres eliminar de tu documento. Presiona 'Shift' para establecer rangos.</span>
         </div>
 
@@ -54,9 +62,11 @@
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="remove-pages-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -66,10 +76,10 @@
         <p class="tool-sidebar__subtitle" data-ref="pdf-hero-subtitle" data-i18n="tools.remove_pdf_pages_subtitle">Selecciona y elimina las páginas que no necesitas de tu documento PDF.</p>
       </div>
 
-      <div class="tool-sidebar__body">
-        <div class="remove-info-box" data-ref="remove-info-box">
-          <svg class="component-icon remove-info-box__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
-          <span class="remove-info-box__text" data-i18n="tools.remove_pdf_pages_info_hint">Haz click en las páginas que quieres eliminar de tu documento. Presiona 'Shift' para establecer rangos.</span>
+      <div class="tool-sidebar__body" data-ref="remove-sidebar-body">
+        <div class="tool-sidebar-notice" data-ref="remove-info-notice">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-remove-info-notice" data-i18n="tools.remove_pdf_pages_info_hint">Haz click en las páginas que quieres eliminar de tu documento. Presiona 'Shift' para establecer rangos.</div>
         </div>
 
         <div class="tool-sidebar__section">
@@ -80,7 +90,6 @@
           </label>
           <span class="remove-field-hint">Haz clic en las tarjetas a la izquierda o escribe los números aquí.</span>
         </div>
-
       </div>
 
       <div class="tool-sidebar__footer">

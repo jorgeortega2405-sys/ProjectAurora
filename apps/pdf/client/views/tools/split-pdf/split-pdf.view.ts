@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { t } from '../../../services/i18n.service.js';
@@ -86,6 +87,7 @@ export class SplitPdfController implements ViewController {
   private sidebarModal: ToolSidebarModalController | null = null;
   private sizeLimitValue = 200;
   private sizeUnit: 'KB' | 'MB' = 'KB';
+  private statusManager: ToolStatusManager | null = null;
 
   constructor(container: HTMLElement, initialMode: SplitMode = 'range') {
     this.container = container;
@@ -94,6 +96,15 @@ export class SplitPdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-splitter-workspace"]') || this.container;
+    this.statusManager = new ToolStatusManager({
+      container: workspace,
+      onRetry: () => {
+        this.statusManager?.hide();
+        this.renderFilesView();
+      },
+      toolName: 'Dividir PDF',
+    });
     renderIcons(this.container);
     if (this.activeMode !== 'range') {
       this.switchMode(this.activeMode);
@@ -115,6 +126,10 @@ export class SplitPdfController implements ViewController {
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
       this.sidebarModal = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.pdfDocument) {
       try {
@@ -863,7 +878,7 @@ export class SplitPdfController implements ViewController {
 
     this.isProcessing = true;
     this.hideError();
-    this.showProcessingState();
+    this.statusManager?.showUploading(1, 1);
 
     try {
       const outputNameInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-output-name"]');
@@ -906,13 +921,25 @@ export class SplitPdfController implements ViewController {
       formData.append('pdf', this.currentFile, this.currentFile.name);
       formData.append('options', JSON.stringify(optionsPayload));
 
-      const response = await postFormApi(API_ROUTES.tools.splitPdf.split, formData);
+      const response = await postFormWithProgress(
+        API_ROUTES.tools.splitPdf.split,
+        formData,
+        (progress) => {
+          this.statusManager?.updateUploadProgress(progress, 1);
+        },
+        this.abortController?.signal
+      );
       const json = await response.json();
 
       if (!response.ok || !json.success) {
         const errorMsg = json.error || 'No se pudo dividir el documento PDF. Intenta nuevamente.';
-        this.showError(errorMsg);
-        this.renderFilesView();
+        this.statusManager?.showError({
+          boxText: 'Uno o más rangos o páginas no pudieron procesarse. Comprueba el formato de división.',
+          boxTitle: 'Error al dividir PDF',
+          desc: errorMsg,
+          retryText: 'Reintentar Dividir PDF',
+          title: '¡Oh no! No hemos podido dividir tu archivo.',
+        });
         return;
       }
 
@@ -930,10 +957,16 @@ export class SplitPdfController implements ViewController {
       };
       sessionStorage.setItem('download_ready_data', JSON.stringify(downloadPayload));
       showToast('¡Documento PDF dividido exitosamente!', 'success');
+      this.statusManager?.hide();
       navigate(`/download/${token}`);
     } catch {
-      this.showError('Ha ocurrido un error inesperado al procesar el archivo. Por favor intenta más tarde.');
-      this.renderFilesView();
+      this.statusManager?.showError({
+        boxText: 'Comprueba tu conexión a internet o intenta con un archivo de menor tamaño.',
+        boxTitle: 'Error de conexión',
+        desc: 'Ha ocurrido un error inesperado al procesar el archivo. Por favor intenta más tarde.',
+        retryText: 'Reintentar Dividir PDF',
+        title: '¡Oh no! No hemos podido dividir tu archivo.',
+      });
     } finally {
       this.isProcessing = false;
     }
@@ -942,14 +975,17 @@ export class SplitPdfController implements ViewController {
   private showProcessingState(): void {
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-dropzone-card"]');
     const itemsCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-items-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-processing-card"]');
-    const resultCard = this.container.querySelector<HTMLElement>('[data-ref="pdf-result-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="pdf-splitter-sidebar"]');
+    const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
+    const fabMore = this.container.querySelector<HTMLElement>('[data-ref="tool-fab-more"]');
     const workspace = this.container.querySelector<HTMLElement>('[data-ref="pdf-splitter-workspace"]');
 
+    if (sidebar) sidebar.style.display = 'none';
+    if (settingsBtn) settingsBtn.classList.remove('is-visible');
+    if (fabMore) fabMore.style.display = 'none';
+    this.sidebarModal?.close();
     if (dropzoneCard) dropzoneCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
-    if (resultCard) resultCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'flex';
     if (workspace) workspace.classList.remove('tool-layout__workspace--top-aligned');
   }
 
@@ -1016,6 +1052,7 @@ export class SplitPdfController implements ViewController {
 
     if (fileInput) fileInput.value = '';
 
+    this.statusManager?.hide();
     if (processingCard) processingCard.style.display = 'none';
     if (itemsCard) itemsCard.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';

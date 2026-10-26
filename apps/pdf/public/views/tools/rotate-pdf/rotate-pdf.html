@@ -3,6 +3,23 @@
     <main class="tool-layout__workspace tool-layout__workspace--grid" data-ref="rotate-pdf-workspace">
       <input class="pdf-dropzone__input" data-ref="input-pdf-file" type="file" accept=".pdf,application/pdf" />
 
+      <div class="tool-fab-container" data-ref="tool-fab-container">
+        <div class="tool-fab-more" data-ref="tool-fab-more" style="display: none;">
+          <button type="button" class="tool-fab-more__btn tool-fab-more__btn--main" data-ref="btn-fab-add-more" data-tooltip="Cambiar archivo" data-tooltip-placement="left" aria-label="Cambiar archivo">
+            <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#add"></use></svg>
+            <span class="tool-fab-more__badge" data-ref="badge-fab-count">1</span>
+          </button>
+          <div class="tool-fab-more__options" data-ref="tool-fab-options">
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-drive" data-tooltip="Google Drive" data-tooltip-placement="left" aria-label="Google Drive">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#google_drive"></use></svg>
+            </button>
+            <button type="button" class="tool-fab-more__btn tool-fab-more__btn--sub" data-ref="btn-fab-dropbox" data-tooltip="Dropbox" data-tooltip-placement="left" aria-label="Dropbox">
+              <svg class="component-icon tool-fab-more__icon" aria-hidden="true"><use href="/icons.svg#dropbox"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="tool-workspace__canvas" data-ref="rotate-dropzone-card">
         <div class="tool-hero-dropzone" data-ref="rotate-dropzone">
           <h1 class="tool-hero-dropzone__title" data-ref="rotate-dropzone-title">Rotar PDF</h1>
@@ -33,25 +50,23 @@
           </div>
         </div>
 
-        <div class="pdf-items-grid rotate-pages-grid" data-ref="rotate-pages-grid"></div>
-      </div>
-
-      <div class="tool-progress-card" data-ref="rotate-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner img-processing-spinner" data-ref="rotate-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="rotate-processing-title">Rotando páginas del documento PDF...</h3>
-        <p class="tool-progress-card__meta" data-ref="rotate-processing-subtitle">Aplicando las nuevas orientaciones al documento</p>
-        <div class="tool-progress-card__track" data-ref="rotate-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated img-progress-fill-animated" data-ref="rotate-progress-fill"></div>
+        <div class="pdf-reorder-hint" data-ref="pdf-reorder-hint">
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_right"></use></svg>
+          <span data-ref="txt-rotate-hint">Pasa el cursor por encima de una página para rotarla individualmente, o usa los botones del panel para rotar todas a la vez.</span>
         </div>
+
+        <div class="pdf-items-grid rotate-pages-grid" data-ref="rotate-pages-grid"></div>
       </div>
     </main>
 
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar" data-ref="rotate-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="modal-drag-zone">
-        <div class="tool-sidebar__drag-handle"></div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+          <div class="modal-card__drag-handle"></div>
+        </div>
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" data-i18n-aria="common.close" aria-label="Cerrar">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -61,10 +76,10 @@
         <p class="tool-sidebar__subtitle" data-ref="rotate-sidebar-subtitle">Gira tus páginas PDF permanentemente a 90, 180 o 270 grados en segundos.</p>
       </div>
 
-      <div class="tool-sidebar__body">
-        <div class="rotate-info-box" data-ref="rotate-info-box">
-          <svg class="component-icon rotate-info-box__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
-          <span class="rotate-info-box__text">Pasa el cursor por encima de una página para rotarla individualmente, o usa los botones para rotar todas a la vez.</span>
+      <div class="tool-sidebar__body" data-ref="rotate-sidebar-body">
+        <div class="tool-sidebar-notice" data-ref="rotate-info-notice">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-rotate-info-notice">Pasa el cursor por encima de una página para rotarla individualmente, o usa los botones para rotar todas a la vez.</div>
         </div>
 
         <div class="tool-sidebar__section">
@@ -86,8 +101,9 @@
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-rotate" disabled>
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#rotate_right"></use></svg>
           <span data-ref="txt-execute-rotate">Rotar PDF</span>
+          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="rotate-global-error" style="display: none; margin-top: 12px;"></div>
+        <div class="banner banner--danger" data-ref="rotate-global-error" style="display: none; margin-top: 6px;"></div>
       </div>
     </aside>
   </div>

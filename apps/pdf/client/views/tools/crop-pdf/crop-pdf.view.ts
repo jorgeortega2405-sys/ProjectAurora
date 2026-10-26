@@ -1,6 +1,7 @@
+import { ToolStatusManager } from '../../../components/tool-status.component.js';
 import { API_ROUTES } from '../../../config/api-routes.js';
 import { getCurrentUserToolLimits } from '../../../config/tools-limits.config.js';
-import { postFormApi } from '../../../services/api.service.js';
+import { postFormApi, postFormWithProgress } from '../../../services/api.service.js';
 import { pickDropboxFiles } from '../../../services/dropbox.service.js';
 import { pickGoogleDriveFiles } from '../../../services/google-drive.service.js';
 import { renderIcons } from '../../../services/icon.service.js';
@@ -21,6 +22,7 @@ export class CropPdfController implements ViewController {
   private isProcessing = false;
   private pdfDocument: any = null;
   private sidebarModal: ToolSidebarModalController | null = null;
+  private statusManager: ToolStatusManager | null = null;
   private totalPages = 1;
 
   constructor(container: HTMLElement) {
@@ -29,6 +31,8 @@ export class CropPdfController implements ViewController {
 
   public async init(): Promise<void> {
     this.abortController = new AbortController();
+    const workspace = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-workspace"]');
+    this.statusManager = new ToolStatusManager(workspace || this.container);
     renderIcons(this.container);
     this.bindEvents();
   }
@@ -37,6 +41,10 @@ export class CropPdfController implements ViewController {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
+    }
+    if (this.statusManager) {
+      this.statusManager.destroy();
+      this.statusManager = null;
     }
     if (this.sidebarModal) {
       this.sidebarModal.destroy();
@@ -88,7 +96,7 @@ export class CropPdfController implements ViewController {
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
     const sidebarBackdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
     const sidebarCloseBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
-    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const sidebarDragZone = this.container.querySelector<HTMLElement>('[data-ref="crop-sidebar-drag-zone"]');
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');
     const resetBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-reset-crop"]');
     const prevPageBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-prev-page"]');
@@ -400,8 +408,6 @@ export class CropPdfController implements ViewController {
     if (!this.currentFile || this.isProcessing) return;
     this.hideError();
 
-    const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="crop-workspace-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="crop-processing-card"]');
     const radioAll = this.container.querySelector<HTMLInputElement>('[data-ref="radio-all-pages"]');
 
     const optionsPayload = {
@@ -411,8 +417,11 @@ export class CropPdfController implements ViewController {
     };
 
     this.isProcessing = true;
+    const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="crop-workspace-card"]');
+    const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');
     if (workspaceCard) workspaceCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    this.statusManager?.showUploading(1, 1);
 
     await withButtonLoading(button, async () => {
       try {
@@ -420,12 +429,23 @@ export class CropPdfController implements ViewController {
         formData.append('file', this.currentFile as Blob, this.currentFile?.name);
         formData.append('options', JSON.stringify(optionsPayload));
 
-        const response = await postFormApi(API_ROUTES.tools.cropPdf.process, formData);
+        const response = await postFormWithProgress(
+          API_ROUTES.tools.cropPdf.process,
+          formData,
+          (progress) => {
+            this.statusManager?.updateUploadProgress(progress);
+          }
+        );
         const result = (await response.json()) as {
           data?: CropPdfResponseData;
           error?: string;
           success: boolean;
         };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Ajustando los márgenes visuales y vectoriales del documento',
+          title: 'Recortando páginas del documento PDF...',
+        });
 
         if (!response.ok || !result.success || !result.data?.downloadUrl) {
           throw new Error(result.error || 'Ocurrió un error al recortar el documento.');
@@ -447,10 +467,13 @@ export class CropPdfController implements ViewController {
         showToast('PDF recortado correctamente.', 'success');
         navigate(`/download/${token}`);
       } catch (err: unknown) {
+        if (workspaceCard) workspaceCard.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
         this.isProcessing = false;
-        if (processingCard) processingCard.style.display = 'none';
-        if (workspaceCard) workspaceCard.style.display = '';
         const errorMessage = err instanceof Error ? err.message : 'Error inesperado al recortar el documento.';
+        this.statusManager?.showError(errorMessage, () => {
+          this.statusManager?.hide();
+        });
         this.showError(errorMessage);
       }
     });
@@ -460,6 +483,7 @@ export class CropPdfController implements ViewController {
     this.currentFile = null;
     this.pdfDocument = null;
     this.isProcessing = false;
+    this.statusManager?.hide();
     this.currentPage = 1;
     this.totalPages = 1;
     this.cropPercent = { height: 90, width: 90, x: 5, y: 5 };
@@ -467,13 +491,11 @@ export class CropPdfController implements ViewController {
     const fileInput = this.container.querySelector<HTMLInputElement>('[data-ref="input-pdf-file"]');
     const dropzoneCard = this.container.querySelector<HTMLElement>('[data-ref="crop-dropzone-card"]');
     const workspaceCard = this.container.querySelector<HTMLElement>('[data-ref="crop-workspace-card"]');
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="crop-processing-card"]');
     const executeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-execute-crop"]');
 
     if (fileInput) fileInput.value = '';
     if (dropzoneCard) dropzoneCard.style.display = '';
     if (workspaceCard) workspaceCard.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
     if (executeBtn) executeBtn.disabled = true;
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="crop-pdf-sidebar"]');

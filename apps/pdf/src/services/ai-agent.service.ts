@@ -186,7 +186,7 @@ function getModelProtectionResponse(): AiExecutionPlan {
       'Unir estos 2 PDF y comprimir',
       'Pasar Word a PDF',
       'Pasar Excel a PDF',
-      'Resumir PDF con IA',
+      'Resumir PDF',
     ],
     thought: 'Consulta sobre modelo o detalles de arquitectura interna protegida por confidencialidad.',
   };
@@ -1221,7 +1221,7 @@ async function heuristicIntentPlanner(
       'Unir estos 2 PDF y comprimir',
       'Pasar Word a PDF',
       'Pasar Excel a PDF',
-      'Resumir PDF con IA',
+      'Resumir PDF',
     ],
   };
 }
@@ -1892,7 +1892,7 @@ function generateToolAlternatives(tool: string, options: Record<string, any>, _f
     case 'to-pdf-converter': {
       return [
         { icon: 'compress', label: 'Comprimir PDF resultante', prompt: 'Comprimir este PDF en calidad recomendada', sourceType: 'result', tool: 'compress-pdf' },
-        { icon: 'auto_awesome', label: 'Resumir con IA', prompt: 'Resumir este PDF con IA', sourceType: 'result', tool: 'summarize-pdf' },
+        { icon: 'auto_awesome', label: 'Resumir PDF', prompt: 'Resumir este PDF', sourceType: 'result', tool: 'summarize-pdf' },
         { icon: 'lock', label: 'Proteger con contraseña', prompt: 'Proteger este PDF con contraseña', sourceType: 'result', tool: 'protect-pdf' },
       ];
     }
@@ -1919,12 +1919,12 @@ function generateToolAlternatives(tool: string, options: Record<string, any>, _f
       const mode = options.mode || 'standard';
       if (mode === 'standard') {
         return [
-          { icon: 'auto_awesome', label: 'Resumen avanzado con IA (profundo)', prompt: 'Generar resumen avanzado y exhaustivo con IA', sourceType: 'original', tool: 'summarize-pdf' },
+          { icon: 'auto_awesome', label: 'Resumen avanzado (profundo)', prompt: 'Generar resumen avanzado y exhaustivo', sourceType: 'original', tool: 'summarize-pdf' },
           { icon: 'translate', label: 'Traducir al inglés', prompt: 'Traducir este documento al inglés', sourceType: 'original', tool: 'translate-pdf' },
         ];
       }
       return [
-        { icon: 'description', label: 'Resumen estándar', prompt: 'Generar resumen estándar con IA', sourceType: 'original', tool: 'summarize-pdf' },
+        { icon: 'description', label: 'Resumen estándar', prompt: 'Generar resumen estándar', sourceType: 'original', tool: 'summarize-pdf' },
         { icon: 'translate', label: 'Traducir al inglés', prompt: 'Traducir este documento al inglés', sourceType: 'original', tool: 'translate-pdf' },
       ];
     }
@@ -1941,7 +1941,7 @@ function generateToolAlternatives(tool: string, options: Record<string, any>, _f
       return [
         { icon: 'compress', label: 'Comprimir PDF unido', prompt: 'Comprimir el PDF unido en calidad recomendada', sourceType: 'result', tool: 'compress-pdf' },
         { icon: 'format_list_numbered', label: 'Numerar páginas', prompt: 'Numerar páginas del PDF unido', sourceType: 'result', tool: 'page-numbers' },
-        { icon: 'auto_awesome', label: 'Resumir con IA', prompt: 'Resumir el documento unido con IA', sourceType: 'result', tool: 'summarize-pdf' },
+        { icon: 'auto_awesome', label: 'Resumir PDF', prompt: 'Resumir el documento unido', sourceType: 'result', tool: 'summarize-pdf' },
       ];
     }
 
@@ -1979,7 +1979,7 @@ function generateToolAlternatives(tool: string, options: Record<string, any>, _f
     default: {
       return [
         { icon: 'compress', label: 'Comprimir PDF', prompt: 'Comprimir este PDF', sourceType: 'result', tool: 'compress-pdf' },
-        { icon: 'auto_awesome', label: 'Resumir con IA', prompt: 'Resumir este PDF con IA', sourceType: 'result', tool: 'summarize-pdf' },
+        { icon: 'auto_awesome', label: 'Resumir PDF', prompt: 'Resumir este PDF', sourceType: 'result', tool: 'summarize-pdf' },
       ];
     }
   }

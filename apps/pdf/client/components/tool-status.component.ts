@@ -16,10 +16,15 @@ export class ToolStatusManager {
   private toolName: string;
   private uploadScreen: HTMLElement | null = null;
 
-  constructor(options: ToolStatusOptions) {
-    this.container = options.container;
-    this.toolName = options.toolName;
-    this.onRetry = options.onRetry;
+  constructor(options: ToolStatusOptions | HTMLElement) {
+    if (options instanceof HTMLElement) {
+      this.container = options;
+      this.toolName = 'Herramienta PDF';
+    } else {
+      this.container = options.container;
+      this.toolName = options.toolName || 'Herramienta PDF';
+      this.onRetry = options.onRetry;
+    }
     this.ensureElements();
   }
 
@@ -128,6 +133,8 @@ export class ToolStatusManager {
 
   public showUploading(currentFileIndex = 1, totalFiles = 1): void {
     this.currentTotalFiles = totalFiles;
+    const layoutEl = this.container.querySelector<HTMLElement>('.tool-layout');
+    if (layoutEl) layoutEl.style.display = 'none';
     if (this.errorScreen) this.errorScreen.style.display = 'none';
     if (this.uploadScreen) {
       this.uploadScreen.style.display = 'flex';
@@ -156,7 +163,21 @@ export class ToolStatusManager {
     }
   }
 
-  public updateUploadProgress(info: UploadProgressInfo, currentFileIndex = 1): void {
+  public updateUploadProgress(info: UploadProgressInfo | number, totalOrFileIndex = 1): void {
+    if (typeof info === 'number') {
+      const loaded = info;
+      const total = totalOrFileIndex > 0 ? totalOrFileIndex : 1;
+      const percent = Math.min(100, Math.round((loaded / total) * 100));
+      this.updateUploadProgress({
+        etaSeconds: 0,
+        loaded,
+        percent,
+        speedBytesPerSec: 0,
+        total,
+      });
+      return;
+    }
+
     if (!this.uploadScreen) return;
     const titleEl = this.uploadScreen.querySelector<HTMLElement>('[data-ref="upload-screen-title"]');
     const subEl = this.uploadScreen.querySelector<HTMLElement>('[data-ref="upload-screen-subtitle"]');
@@ -181,7 +202,7 @@ export class ToolStatusManager {
     }
 
     if (titleEl && this.currentTotalFiles > 1) {
-      titleEl.textContent = `Subiendo archivo ${currentFileIndex} de ${this.currentTotalFiles}`;
+      titleEl.textContent = `Subiendo archivo ${totalOrFileIndex} de ${this.currentTotalFiles}`;
     }
     if (fillEl) fillEl.style.width = `${info.percent}%`;
     if (percentEl) percentEl.textContent = `${info.percent}%`;
@@ -199,6 +220,8 @@ export class ToolStatusManager {
   }
 
   public showProcessing(title = 'Procesando documento...', subtitle = 'Por favor espera mientras finaliza la tarea'): void {
+    const layoutEl = this.container.querySelector<HTMLElement>('.tool-layout');
+    if (layoutEl) layoutEl.style.display = 'none';
     if (this.errorScreen) this.errorScreen.style.display = 'none';
     if (this.uploadScreen) {
       this.uploadScreen.style.display = 'flex';
@@ -223,13 +246,27 @@ export class ToolStatusManager {
     }
   }
 
+  public showProcessingState(opts?: { subtitle?: string; title?: string } | string, subtitle?: string): void {
+    if (typeof opts === 'object' && opts !== null) {
+      this.showProcessing(opts.title || 'Procesando documento...', opts.subtitle || 'Por favor espera mientras finaliza la tarea');
+    } else {
+      this.showProcessing(opts || 'Procesando documento...', subtitle || 'Por favor espera mientras finaliza la tarea');
+    }
+  }
+
   public showError(options: {
     boxText?: string;
     boxTitle?: string;
     desc?: string;
     retryText?: string;
     title?: string;
-  } = {}): void {
+  } | string = {}, onRetry?: () => void): void {
+    if (onRetry) {
+      this.onRetry = onRetry;
+    }
+    const opt = typeof options === 'string' ? { desc: options } : options;
+    const layoutEl = this.container.querySelector<HTMLElement>('.tool-layout');
+    if (layoutEl) layoutEl.style.display = 'none';
     if (this.uploadScreen) this.uploadScreen.style.display = 'none';
     if (this.errorScreen) {
       this.errorScreen.style.display = 'flex';
@@ -239,17 +276,19 @@ export class ToolStatusManager {
       const boxTextEl = this.errorScreen.querySelector<HTMLElement>('[data-ref="error-screen-box-text"]');
       const retryTextEl = this.errorScreen.querySelector<HTMLElement>('[data-ref="txt-retry-btn"]');
 
-      if (titleEl) titleEl.textContent = options.title || '¡Oh no! No hemos podido procesar tus archivos.';
-      if (descEl) descEl.textContent = options.desc || 'El archivo no se ha procesado porque ocurrió un error durante el procesamiento.';
-      if (boxTitleEl) boxTitleEl.textContent = options.boxTitle || 'Archivo dañado o no compatible';
+      if (titleEl) titleEl.textContent = opt.title || '¡Oh no! No hemos podido procesar tus archivos.';
+      if (descEl) descEl.textContent = opt.desc || 'El archivo no se ha procesado porque ocurrió un error durante el procesamiento.';
+      if (boxTitleEl) boxTitleEl.textContent = opt.boxTitle || 'Archivo dañado o no compatible';
       if (boxTextEl) {
-        boxTextEl.textContent = options.boxText || 'No podemos procesar archivos dañados, protegidos o con formato incorrecto. Comprueba que tu archivo se pueda abrir correctamente e inténtalo de nuevo.';
+        boxTextEl.textContent = opt.boxText || 'No podemos procesar archivos dañados, protegidos o con formato incorrecto. Comprueba que tu archivo se pueda abrir correctamente e inténtalo de nuevo.';
       }
-      if (retryTextEl) retryTextEl.textContent = options.retryText || `Reintentar ${this.toolName}`;
+      if (retryTextEl) retryTextEl.textContent = opt.retryText || `Reintentar ${this.toolName}`;
     }
   }
 
   public hide(): void {
+    const layoutEl = this.container.querySelector<HTMLElement>('.tool-layout');
+    if (layoutEl) layoutEl.style.display = '';
     if (this.uploadScreen) this.uploadScreen.style.display = 'none';
     if (this.errorScreen) this.errorScreen.style.display = 'none';
   }
@@ -259,6 +298,8 @@ export class ToolStatusManager {
       this.abortController.abort();
       this.abortController = null;
     }
+    const layoutEl = this.container.querySelector<HTMLElement>('.tool-layout');
+    if (layoutEl) layoutEl.style.display = '';
     this.uploadScreen = null;
     this.errorScreen = null;
   }

@@ -68,25 +68,16 @@
           </div>
         </div>
       </div>
-
-      <div class="tool-progress-card" data-ref="redact-processing-card" style="display: none;">
-        <div class="pdf-processing-spinner" data-ref="redact-processing-spinner"></div>
-        <h3 class="tool-progress-card__title" data-ref="redact-processing-title">Censurando y purgando contenido...</h3>
-        <p class="tool-progress-card__meta" data-ref="redact-processing-subtitle">Eliminando texto internamente y aplicando marcas de censura permanentes</p>
-        <div class="tool-progress-card__track" data-ref="redact-progress-track">
-          <div class="tool-progress-card__fill pdf-progress-fill-animated" data-ref="redact-progress-fill"></div>
-        </div>
-      </div>
     </main>
 
     <div class="tool-sidebar-backdrop" data-ref="tool-sidebar-backdrop"></div>
 
     <aside class="tool-layout__sidebar pdf-editor-properties-sidebar redact-sidebar" data-ref="redact-pdf-sidebar" style="display: none;">
-      <div class="tool-sidebar__mobile-bar" data-ref="tool-sidebar-mobile-bar">
-        <div class="modal-card__drag-zone" data-ref="modal-drag-zone" aria-hidden="true">
+      <div class="tool-sidebar__mobile-bar" data-ref="redact-sidebar-mobile-bar">
+        <div class="modal-card__drag-zone" data-ref="redact-sidebar-drag-zone">
           <div class="modal-card__drag-handle"></div>
         </div>
-        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar">
+        <button type="button" class="tool-sidebar__close-btn" data-ref="btn-sidebar-close" aria-label="Cerrar opciones">
           <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#close"></use></svg>
         </button>
       </div>
@@ -97,6 +88,11 @@
       </div>
 
       <div class="tool-sidebar__body">
+        <div class="tool-sidebar-notice" data-ref="redact-info-notice" style="display: flex;">
+          <svg class="component-icon tool-sidebar-notice__icon" aria-hidden="true"><use href="/icons.svg#info"></use></svg>
+          <div class="tool-sidebar-notice__text" data-ref="txt-redact-info-notice">El texto censurado se eliminará internamente del documento PDF para garantizar que sea imposible de extraer o copiar.</div>
+        </div>
+
         <div class="tool-sidebar__section" data-ref="section-search-redact">
           <span class="tool-sidebar__section-title">Buscar y censurar texto</span>
           <div class="redact-search-box" data-ref="redact-search-box">
@@ -119,20 +115,15 @@
             <p class="redact-items-list__empty" data-ref="redactions-empty-msg">No has añadido ninguna censura todavía. Selecciona texto en el documento o dibuja un área.</p>
           </div>
         </div>
-
-        <div class="tool-sidebar__section" data-ref="section-warning">
-          <div class="banner banner--info" data-ref="redact-info-banner">
-            <span>El texto censurado se eliminará internamente del documento PDF para garantizar que sea imposible de extraer o copiar.</span>
-          </div>
-        </div>
       </div>
 
       <div class="tool-sidebar__footer">
         <button type="button" class="component-button component-button--black component-button--h50 component-button--w-full tool-sidebar__action-btn" data-ref="btn-execute-redact" disabled>
+          <svg class="component-icon component-button__icon-left" aria-hidden="true"><use href="/icons.svg#security"></use></svg>
           <span>Aplicar Censuras</span>
-          <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
+          <svg class="component-icon component-button__icon-right" aria-hidden="true"><use href="/icons.svg#arrow_forward"></use></svg>
         </button>
-        <div class="banner banner--danger" data-ref="redact-global-error" style="display: none; margin-top: 10px;"></div>
+        <div class="banner banner--danger tool-sidebar__error-banner" data-ref="redact-global-error" role="alert" style="display: none;"></div>
       </div>
     </aside>
   </div>

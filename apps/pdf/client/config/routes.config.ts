@@ -329,11 +329,32 @@ export const APP_ROUTES: RouteDefinition[] = [
   {
     handler: async () => {
       await loadStylesheet('/css/components/component-views.css');
+      const { createWorkflowsPageView } = await import('../views/workflows.view.js');
+      return await createWorkflowsPageView();
+    },
+    id: 'workflows',
+    match: (path) => path === '/workflows' || path.startsWith('/workflows') || path === '/settings/workflows',
+  },
+  {
+    handler: async ({ params }) => {
+      await loadStylesheet('/css/tools/tool-grid.css');
+      const { createWorkflowRunnerView } = await import('../views/workflow/workflow-runner.view.js');
+      return await createWorkflowRunnerView(params.id || '');
+    },
+    id: 'workflow-runner',
+    match: (path) => {
+      const match = path.match(/^\/workflow\/([a-zA-Z0-9_-]+)$/);
+      return match ? { id: match[1] } : false;
+    },
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
       const { createHelpDocumentationView } = await import('../views/help.view.js');
       return await createHelpDocumentationView();
     },
     id: 'help-documentation',
-    match: (path) => path === '/help/documentation' || path === '/documentation' || path === '/herramientas',
+    match: (path) => path === '/help/documentation' || path === '/help-documentation' || path === '/documentation' || path === '/documentacion' || path === '/herramientas',
   },
   {
     handler: async () => {
@@ -342,7 +363,43 @@ export const APP_ROUTES: RouteDefinition[] = [
       return await createHelpFaqView();
     },
     id: 'help-faq',
-    match: (path) => path === '/help/faq' || path === '/faq' || path === '/preguntas-frecuentes',
+    match: (path) => path === '/help/faq' || path === '/help-faq' || path === '/faq' || path === '/preguntas-frecuentes',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createHelpPrivacyView } = await import('../views/help.view.js');
+      return await createHelpPrivacyView();
+    },
+    id: 'help-privacy',
+    match: (path) => path === '/help/privacy' || path === '/help-privacy' || path === '/privacy' || path === '/privacy-policy' || path === '/privacidad',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createHelpTermsView } = await import('../views/help.view.js');
+      return await createHelpTermsView();
+    },
+    id: 'help-terms',
+    match: (path) => path === '/help/terms' || path === '/help-terms' || path === '/terms' || path === '/terms-and-conditions' || path === '/terminos',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createHelpCookiesView } = await import('../views/help.view.js');
+      return await createHelpCookiesView();
+    },
+    id: 'help-cookies',
+    match: (path) => path === '/help/cookies' || path === '/help-cookies' || path === '/cookies' || path === '/cookie-policy',
+  },
+  {
+    handler: async () => {
+      await loadStylesheet('/css/components/component-views.css');
+      const { createHelpSecurityView } = await import('../views/help.view.js');
+      return await createHelpSecurityView();
+    },
+    id: 'help-security',
+    match: (path) => path === '/help/security' || path === '/help-security' || path === '/security' || path === '/security-policy' || path === '/seguridad',
   },
   {
     handler: async () => {
@@ -369,10 +426,13 @@ export const APP_ROUTES: RouteDefinition[] = [
 
       switch (path) {
         case '/help/documentation':
+        case '/help-documentation':
         case '/documentation':
+        case '/documentacion':
         case '/herramientas':
           return await createHelpDocumentationView();
         case '/help/faq':
+        case '/help-faq':
         case '/faq':
         case '/preguntas-frecuentes':
           return await createHelpFaqView();
@@ -389,19 +449,28 @@ export const APP_ROUTES: RouteDefinition[] = [
           return await createContactView();
         }
         case '/help/privacy':
+        case '/help-privacy':
         case '/privacy':
         case '/privacy-policy':
+        case '/privacidad':
           return await createHelpPrivacyView();
         case '/help/terms':
+        case '/help-terms':
         case '/terms':
         case '/terms-and-conditions':
+        case '/terminos':
           return await createHelpTermsView();
         case '/help/cookies':
+        case '/help-cookies':
         case '/cookies':
         case '/cookie-policy':
           return await createHelpCookiesView();
         case '/help/security':
+        case '/help-security':
+        case '/security':
         case '/security-policy':
+        case '/seguridad':
+          return await createHelpSecurityView();
         default:
           if (path === '/help' || path === '/help/') {
             window.history.replaceState({}, '', '/help/security');
@@ -410,7 +479,7 @@ export const APP_ROUTES: RouteDefinition[] = [
       }
     },
     id: 'help',
-    match: (path) => path.startsWith('/help') || path === '/privacy' || path === '/privacy-policy' || path === '/terms' || path === '/terms-and-conditions' || path === '/cookies' || path === '/cookie-policy' || path === '/security-policy',
+    match: (path) => path === '/help' || path === '/help/' || path.startsWith('/help/') || path.startsWith('/help-'),
   },
   {
     handler: async () => {
@@ -457,8 +526,8 @@ export function parseRoutePath(rawPath: string): {
   const parts = clean.split('/');
   const first = parts[0].toLowerCase();
 
-  if (isSupportedLanguage(first)) {
-    const lang = normalizeLanguageCode(first);
+  if (isSupportedLanguage(first) || first === 'es' || first === 'en') {
+    const lang = first === 'es' || first === 'en' ? first : normalizeLanguageCode(first);
     const subPath = parts.slice(1).join('/');
 
     if (!subPath) {

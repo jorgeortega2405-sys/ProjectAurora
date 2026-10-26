@@ -97,7 +97,7 @@ export class EditPdfController implements ViewController {
 
     const sidebar = this.container.querySelector<HTMLElement>('[data-ref="edit-pdf-sidebar"]');
     const backdrop = this.container.querySelector<HTMLElement>('[data-ref="tool-sidebar-backdrop"]');
-    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="modal-drag-zone"]');
+    const dragZone = this.container.querySelector<HTMLElement>('[data-ref="edit-sidebar-drag-zone"]');
     const closeBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-sidebar-close"]');
     const settingsBtn = this.container.querySelector<HTMLButtonElement>('[data-ref="btn-tool-settings"]');
 
@@ -1313,7 +1313,6 @@ export class EditPdfController implements ViewController {
     if (!this.currentFile || this.isProcessing) return;
     this.hideError();
 
-    const processingCard = this.container.querySelector<HTMLElement>('[data-ref="edit-processing-card"]');
     const editorCard = this.container.querySelector<HTMLElement>('[data-ref="edit-editor-card"]');
     const topControls = this.container.querySelector<HTMLElement>('[data-ref="editor-top-controls"]');
     const topActions = this.container.querySelector<HTMLElement>('[data-ref="editor-top-actions"]');
@@ -1325,7 +1324,6 @@ export class EditPdfController implements ViewController {
     if (topControls) topControls.style.display = 'none';
     if (topActions) topActions.style.display = 'none';
     if (sidebar) sidebar.style.display = 'none';
-    if (processingCard) processingCard.style.display = 'none';
 
     this.statusManager?.showUploading(1, 1);
 
@@ -1371,6 +1369,11 @@ export class EditPdfController implements ViewController {
           this.abortController?.signal
         );
         const result = (await response.json()) as { data?: EditPdfResponseData; error?: string; success: boolean };
+
+        this.statusManager?.showProcessingState({
+          subtitle: 'Guardando anotaciones, formas, dibujos y modificaciones de texto',
+          title: 'Aplicando ediciones al documento...',
+        });
 
         if (!response.ok || !result.success || !result.data) {
           throw new Error(result.error || 'Error al aplicar las modificaciones al PDF.');

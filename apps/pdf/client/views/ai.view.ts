@@ -483,7 +483,7 @@ export class AiController implements ViewController {
     if (count === 1 && pdfCount === 1) {
       suggestions.push(
         { icon: 'compress', label: 'Comprimir PDF', prompt: 'Comprímeme este archivo PDF' },
-        { icon: 'auto_awesome', label: 'Resumir con IA', prompt: 'Resúmeme este documento con IA' },
+        { icon: 'auto_awesome', label: 'Resumir PDF', prompt: 'Resúmeme este documento' },
         { icon: 'description', label: 'Pasar a Word', prompt: 'Convierte este PDF a formato Word (.docx)' },
         { icon: 'lock', label: 'Proteger con clave', prompt: 'Protege este documento PDF con contraseña' },
         { icon: 'translate', label: 'Traducir al inglés', prompt: 'Traduce este documento PDF al inglés' },

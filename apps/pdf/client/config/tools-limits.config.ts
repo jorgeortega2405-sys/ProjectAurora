@@ -114,11 +114,11 @@ export function getCurrentUserToolLimits(toolId: string): { isPremium: boolean; 
 }
 
 export const WORKFLOW_LIMITS = {
-  enterprise: 1000,
-  free: 1000,
-  pro: 1000,
+  enterprise: 100,
+  free: 100,
+  pro: 100,
 };
 
 export function getMaxWorkflows(_user?: any): number {
-  return 1000;
+  return 100;
 }

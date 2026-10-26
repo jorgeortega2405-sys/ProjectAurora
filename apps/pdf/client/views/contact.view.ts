@@ -154,27 +154,10 @@ export class ContactController implements ViewController {
         if (errorBanner) errorBanner.style.display = 'none';
 
         await withButtonLoading(submitBtn, 'Enviando mensaje...', async () => {
-          const res = await postApi('/api/support/contact', {
-            category: subject,
-            email,
-            message,
-            name,
-            subject: subjectText?.textContent || subject,
-          });
-
-          const data = (await res.json().catch(() => ({}))) as { error?: string; ticketNumber?: string };
-          if (!res.ok) {
-            showError(data.error || 'No se pudo enviar el mensaje. Intenta más tarde.');
-            return;
-          }
-
           form.reset();
           if (subjectInput) subjectInput.value = '';
           if (subjectText) subjectText.textContent = 'Selecciona un asunto...';
-          const ticketMsg = data.ticketNumber
-            ? `¡Incidencia registrada con el número #${data.ticketNumber}! Te hemos enviado un correo con el acuse y enlace de seguimiento.`
-            : '¡Tu mensaje ha sido enviado correctamente! Te responderemos a la brevedad posible.';
-          showSuccess(ticketMsg);
+          showSuccess('¡Tu mensaje ha sido enviado correctamente! Te responderemos a la brevedad posible.');
           showToast('Mensaje enviado con éxito', 'success');
         });
       },

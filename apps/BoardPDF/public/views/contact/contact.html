@@ -1,0 +1,147 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="contact-wrapper">
+  <div class="view-backdrop view-backdrop--dots" data-ref="contact-backdrop"></div>
+  <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="contact-scrollable">
+    <div class="contact-view" data-ref="contact-view">
+      <div class="contact-hero" data-ref="contact-hero">
+        <div class="contact-hero__badge" data-ref="contact-badge">
+          <svg class="component-icon contact-hero__badge-icon" data-ref="contact-badge-icon" aria-hidden="true"><use href="/icons.svg#support_agent"></use></svg>
+          <span data-ref="contact-badge-text">Atención y Soporte</span>
+        </div>
+        <h1 class="contact-hero__title" data-ref="contact-title">¿En qué podemos ayudarte?</h1>
+        <p class="contact-hero__subtitle" data-ref="contact-subtitle">Envíanos tu mensaje, consulta técnica o solicitud corporativa. Nuestro equipo te responderá en menos de 24 horas hábiles.</p>
+      </div>
+
+      <div class="contact-container" data-ref="contact-container">
+        <div class="contact-card" data-ref="contact-card-form">
+          <h2 class="contact-card__title" data-ref="contact-form-title">Envíanos un mensaje</h2>
+          <p class="contact-card__desc" data-ref="contact-form-desc">Completa el formulario y nos pondremos en contacto contigo lo antes posible.</p>
+
+          <form class="contact-form" data-ref="contact-form">
+            <label class="field" data-ref="field-contact-name">
+              <input class="field__input" data-ref="contact-name" type="text" placeholder=" " required autocomplete="name" />
+              <span class="field__label">Nombre completo</span>
+            </label>
+
+            <label class="field" data-ref="field-contact-email">
+              <input class="field__input" data-ref="contact-email" type="email" placeholder=" " required autocomplete="email" />
+              <span class="field__label">Correo electrónico</span>
+            </label>
+
+            <div class="settings-dropdown-wrapper settings-dropdown-wrapper--full" data-ref="dropdown-wrapper-contact-subject">
+              <button type="button" class="dropdown-trigger" data-ref="btn-trigger-contact-subject" aria-label="Asunto de la consulta">
+                <div class="dropdown-trigger__left">
+                  <span class="dropdown-trigger__text" data-ref="contact-subject-selected-text">Selecciona un asunto...</span>
+                </div>
+                <svg class="component-icon dropdown-trigger__chevron" aria-hidden="true"><use href="/icons.svg#expand_more"></use></svg>
+              </button>
+              <div class="dropdown-backdrop" data-ref="dropdown-backdrop-contact-subject">
+                <div class="menu-panel menu-panel--dropdown menu-panel--w-full menu-panel--h-auto" data-ref="dropdown-menu-contact-subject">
+                  <div class="menu-panel__drag-zone" data-ref="drag-zone-contact-subject" aria-hidden="true">
+                    <div class="menu-panel__drag-handle"></div>
+                  </div>
+                  <div class="menu-panel__list" data-ref="list-contact-subject">
+                    <button type="button" class="menu-item" data-ref="option-subject-general" data-value="general">
+                      <span class="menu-item__text">Consultas generales</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-technical" data-value="technical">
+                      <span class="menu-item__text">Soporte técnico y problemas con herramientas</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-security" data-value="security">
+                      <span class="menu-item__text">Seguridad y Privacidad (GDPR)</span>
+                    </button>
+                    <button type="button" class="menu-item" data-ref="option-subject-suggestion" data-value="suggestion">
+                      <span class="menu-item__text">Sugerencia de nueva función</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <input class="hidden-field" data-ref="contact-subject" type="hidden" value="" />
+            </div>
+
+            <label class="field field--textarea" data-ref="field-contact-message">
+              <textarea class="field__input field__textarea" data-ref="contact-message" placeholder=" " rows="5" required></textarea>
+              <span class="field__label">Describe tu consulta con detalle...</span>
+            </label>
+
+            <button type="submit" class="component-button component-button--primary component-button--h44 component-button--w-full" data-ref="btn-submit-contact">
+              <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#mail"></use></svg>
+              <span>Enviar mensaje</span>
+            </button>
+
+            <div class="banner banner--danger" data-ref="contact-error" style="display: none;"></div>
+            <div class="banner banner--success" data-ref="contact-success" style="display: none;"></div>
+          </form>
+        </div>
+
+        <div class="contact-card contact-card--ticket" data-ref="contact-card-ticket" style="display: none;">
+          <div class="contact-ticket-header" data-ref="ticket-header">
+            <div class="contact-ticket-header__meta" data-ref="ticket-header-meta">
+              <span class="contact-ticket-tag" data-ref="ticket-number">#TK-0000-0000</span>
+              <span class="contact-ticket-status-badge" data-ref="ticket-status-badge">Abierto</span>
+            </div>
+            <h2 class="contact-card__title" data-ref="ticket-title">Cargando incidencia...</h2>
+            <p class="contact-card__desc" data-ref="ticket-meta-desc">Iniciada por <strong data-ref="ticket-author">...</strong></p>
+          </div>
+
+          <div class="contact-ticket-conversation" data-ref="ticket-messages-list"></div>
+
+          <form class="contact-ticket-reply-form" data-ref="ticket-reply-form">
+            <label class="field field--textarea" data-ref="field-ticket-reply-message">
+              <textarea class="field__input field__textarea" data-ref="ticket-reply-message" placeholder=" " rows="4" required></textarea>
+              <span class="field__label">Escribe tu respuesta a soporte...</span>
+            </label>
+            <div class="contact-ticket-reply-actions" data-ref="ticket-reply-actions">
+              <button type="submit" class="component-button component-button--primary component-button--h44" data-ref="btn-submit-ticket-reply">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#send"></use></svg>
+                <span>Enviar respuesta</span>
+              </button>
+              <a class="component-button component-button--secondary component-button--h44" data-ref="btn-new-ticket" href="/contact">
+                <span>Nueva consulta</span>
+              </a>
+            </div>
+            <div class="banner banner--danger" data-ref="ticket-reply-error" style="display: none;"></div>
+            <div class="banner banner--success" data-ref="ticket-reply-success" style="display: none;"></div>
+          </form>
+
+          <div class="banner banner--info" data-ref="ticket-closed-notice" style="display: none;">
+            Este ticket ha sido resuelto y cerrado. Si necesitas asistencia adicional, por favor crea una <a class="link" data-ref="link-new-ticket" href="/contact">nueva consulta</a>.
+          </div>
+        </div>
+
+        <div class="contact-sidebar" data-ref="contact-sidebar">
+          <div class="contact-info-card" data-ref="contact-info-card">
+            <div class="contact-info-item" data-ref="contact-item-support">
+              <div class="contact-info-icon-box" data-ref="contact-icon-support">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#support_agent"></use></svg>
+              </div>
+              <div class="contact-info-content" data-ref="contact-content-support">
+                <h3 class="contact-info-title" data-ref="contact-title-support">Soporte Técnico</h3>
+                <a class="contact-info-link" data-ref="contact-link-support" href="mailto:soporte@boardpdf.app">soporte@boardpdf.app</a>
+                <p class="contact-info-text" data-ref="contact-desc-support">Dudas técnicas, incidencias de conversión y asistencia en herramientas.</p>
+              </div>
+            </div>
+
+            <div class="contact-info-item" data-ref="contact-item-privacy">
+              <div class="contact-info-icon-box" data-ref="contact-icon-privacy">
+                <svg class="component-icon" aria-hidden="true"><use href="/icons.svg#shield"></use></svg>
+              </div>
+              <div class="contact-info-content" data-ref="contact-content-privacy">
+                <h3 class="contact-info-title" data-ref="contact-title-privacy">Privacidad y Legal</h3>
+                <a class="contact-info-link" data-ref="contact-link-privacy" href="mailto:privacidad@boardpdf.app">privacidad@boardpdf.app</a>
+                <p class="contact-info-text" data-ref="contact-desc-privacy">Consultas sobre protección de datos personales, RGPD y seguridad.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-info-card" data-ref="contact-faq-card">
+            <h3 class="contact-card__title" data-ref="contact-faq-title">¿Buscas una solución inmediata?</h3>
+            <p class="contact-card__desc" data-ref="contact-faq-desc" style="margin-bottom: 20px;">Las preguntas más comunes sobre límites de tamaño, seguridad de archivos y planes ya están respondidas en nuestro centro de ayuda.</p>
+            <a class="component-button component-button--secondary component-button--h44 component-button--w-full" data-ref="btn-contact-to-faq" data-navigate="/help/faq" href="/help/faq">Consultar Preguntas Frecuentes</a>
+          </div>
+        </div>
+      </div>
+
+      <div data-ref="contact-footer-section"></div>
+    </div>
+  </div>
+</div>

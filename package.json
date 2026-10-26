@@ -1,22 +1,19 @@
 {
-  "name": "projectaurora-monorepo",
+  "name": "boardstack",
   "version": "1.0.0",
-  "description": "ProjectAurora - PDF Tools SPA Application and Backend",
+  "description": "BoardStack - Monorepo for BoardPDF and Web Applications",
   "private": true,
   "workspaces": [
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=apps/pdf",
-    "build:pdf": "npm run build --workspace=apps/pdf",
-    "dev": "npm run dev --workspace=apps/pdf",
-    "dev:pdf": "npm run dev --workspace=apps/pdf",
-    "docker:down": "docker compose down",
-    "docker:reset": "docker compose down -v && docker compose up -d",
-    "docker:up": "docker compose up -d",
-    "test": "npm test --workspace=apps/pdf",
-    "test:pdf": "npm test --workspace=apps/pdf",
-    "typecheck": "npm run typecheck --workspace=apps/pdf",
-    "typecheck:pdf": "npm run typecheck --workspace=apps/pdf"
+    "build": "npm run build --workspace=apps/BoardPDF",
+    "build:boardpdf": "npm run build --workspace=apps/BoardPDF",
+    "dev": "npm run dev --workspace=apps/BoardPDF",
+    "dev:boardpdf": "npm run dev --workspace=apps/BoardPDF",
+    "test": "npm test --workspace=apps/BoardPDF",
+    "test:boardpdf": "npm test --workspace=apps/BoardPDF",
+    "typecheck": "npm run typecheck --workspace=apps/BoardPDF",
+    "typecheck:boardpdf": "npm run typecheck --workspace=apps/BoardPDF"
   }
 }

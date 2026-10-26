@@ -1,7 +1,6 @@
 {
   "files": [],
   "references": [
-    { "path": "./apps/pdf" },
-    { "path": "./apps/admin" }
+    { "path": "./apps/BoardPDF" }
   ]
 }

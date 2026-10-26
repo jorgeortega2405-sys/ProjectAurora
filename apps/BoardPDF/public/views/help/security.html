@@ -1,0 +1,74 @@
+<div class="component-wrapper component-wrapper--full home-wrapper view-wrapper" data-ref="help-security-wrapper">
+  <div class="layout-body layout-body--scrollable layout-scrollable view-scrollable" data-ref="help-security-scrollable">
+    <div class="settings-layout settings-layout--wide" data-ref="help-security-layout">
+      <div class="settings-header" data-ref="help-security-header">
+        <h1 class="settings-title" data-ref="help-security-title" data-i18n="help.security.title">Política de seguridad</h1>
+        <p class="settings-subtitle" data-ref="help-security-subtitle" data-i18n="help.security.subtitle">Arquitectura de cero conocimiento, contenedores de procesamiento aislados, estándares criptográficos TLS 1.3 / AES-256 y divulgación responsable.</p>
+        <span class="settings-item__value" data-ref="help-security-last-updated" data-i18n="help.security.last_updated">Última actualización: 26 de octubre de 2026</span>
+      </div>
+
+      <div class="banner banner--info" data-ref="help-security-banner">
+        <div class="banner__text" data-ref="help-security-banner-text">
+          <strong class="banner__title" data-ref="help-security-banner-title" data-i18n="help.security.banner_title">ARQUITECTURA DE CERO CONOCIMIENTO, AISLAMIENTO ESTRICTO Y CIFRADO DE VANGUARDIA</strong>
+          <span class="banner__desc" data-ref="help-security-banner-desc" data-i18n="help.security.banner_desc">En BoardPDF, la seguridad y la confidencialidad de tus datos son el principio fundacional de nuestra arquitectura técnica. Cada operación de procesamiento se ejecuta en contenedores aislados y efímeros con cero memoria compartida, protegidos por cifrado de extremo a extremo mediante TLS 1.3 en tránsito y AES-GCM-256 en reposo transitorio. Tus documentos nunca son persistidos de forma permanente y se destruyen automáticamente en un máximo de 2 horas o inmediatamente tras su descarga.</span>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="help-security-group-1" style="padding: 24px 28px; gap: 14px;">
+        <div class="settings-item__text" data-ref="help-security-heading-1">
+          <h2 class="settings-title" data-ref="help-security-title-1" data-i18n="help.security.section1_title" style="font-size: 16px; text-align: left; font-weight: 700;">1. Arquitectura de Cero Conocimiento y Aislamiento de Procesos</h2>
+        </div>
+        <div class="settings-item__text" data-ref="help-security-body-1" style="gap: 10px;">
+          <p class="settings-item__desc" data-ref="help-security-p-1" data-i18n="help.security.section1_text" style="font-size: 14px; line-height: 1.65; margin: 0;">BoardPDF opera bajo un estricto principio de arquitectura de cero conocimiento (Zero-Knowledge Architecture). Cuando cargas un documento para su conversión, compresión, edición o análisis mediante IA, la tarea se asigna dinámicamente a un contenedor de procesamiento efímero y totalmente aislado (sandbox). Este contenedor opera con privilegios mínimos, sin acceso a redes externas innecesarias y sin memoria compartida con otros procesos o inquilinos concurrentes. Finalizada la ejecución de la herramienta, el espacio de memoria volátil asignado se sobrescribe físicamente y se destruye de inmediato, imposibilitando cualquier persistencia residual de datos o contaminación cruzada entre usuarios.</p>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="help-security-group-2" style="padding: 24px 28px; gap: 14px;">
+        <div class="settings-item__text" data-ref="help-security-heading-2">
+          <h2 class="settings-title" data-ref="help-security-title-2" data-i18n="help.security.section2_title" style="font-size: 16px; text-align: left; font-weight: 700;">2. Estándares Criptográficos de Vanguardia en Tránsito y Reposo</h2>
+        </div>
+        <div class="settings-item__text" data-ref="help-security-body-2" style="gap: 10px;">
+          <p class="settings-item__desc" data-ref="help-security-p-2" data-i18n="help.security.section2_text" style="font-size: 14px; line-height: 1.65; margin: 0;">La protección criptográfica de la información se implementa en todas las capas del servicio: (a) Cifrado en tránsito: todas las conexiones hacia y desde BoardPDF exigen de manera obligatoria el protocolo TLS 1.3 (Transport Layer Security) con negociación exclusiva de conjuntos de cifrado modernos que garantizan Secreto Perfecto hacia Adelante (Perfect Forward Secrecy - PFS), tales como ECDHE-RSA-AES256-GCM-SHA384 y ChaCha20-Poly1305; (b) Cifrado en reposo transitorio: los buffers temporales y archivos en cola de procesamiento se cifran individualmente utilizando el algoritmo simétrico autenticado AES-GCM de 256 bits (Advanced Encryption Standard en modo Galois/Counter Mode), con claves criptográficas rotadas periódicamente y gestionadas mediante módulos de seguridad de hardware (HSM) y servicios de gestión de claves con certificación FIPS 140-2 Nivel 3.</p>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="help-security-group-3" style="padding: 24px 28px; gap: 14px;">
+        <div class="settings-item__text" data-ref="help-security-heading-3">
+          <h2 class="settings-title" data-ref="help-security-title-3" data-i18n="help.security.section3_title" style="font-size: 16px; text-align: left; font-weight: 700;">3. Defensa Perimetral, Control de Acceso PBAC y Mitigación de Amenazas</h2>
+        </div>
+        <div class="settings-item__text" data-ref="help-security-body-3" style="gap: 10px;">
+          <p class="settings-item__desc" data-ref="help-security-p-3" data-i18n="help.security.section3_text" style="font-size: 14px; line-height: 1.65; margin: 0;">Nuestra infraestructura perimetral cuenta con múltiples capas defensivas sincronizadas: (a) Control de Acceso Basado en Permisos (PBAC): la autorización interna se gestiona estrictamente mediante permisos atómicos granulares (PBAC), erradicando privilegios directos basados en roles genéricos o nombres de suscripción y previniendo la escalada horizontal o vertical de privilegios; (b) Mitigación de Ataques Distribuidos (DDoS): red perimetral Anycast global distribuida con absorción automática y mitigación volumétrica en tiempo real de ataques DoS/DDoS en capas 3, 4 y 7; (c) Neutralización de Bots y Abusos: integración de Cloudflare Turnstile para la verificación de tráfico automatizado sin fricción ni recolección invasiva de datos del usuario; (d) Blindaje Web: implementación estricta de encabezados de seguridad HTTP (HSTS con preload, Content Security Policy CSP estricto, X-Frame-Options: DENY, X-Content-Type-Options: nosniff) y protección activa contra falsificación de peticiones en sitios cruzados (tokens CSRF vinculados a la sesión).</p>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="help-security-group-4" style="padding: 24px 28px; gap: 14px;">
+        <div class="settings-item__text" data-ref="help-security-heading-4">
+          <h2 class="settings-title" data-ref="help-security-title-4" data-i18n="help.security.section4_title" style="font-size: 16px; text-align: left; font-weight: 700;">4. Ciclo de Vida Efímero y Destrucción Automatizada de Documentos</h2>
+        </div>
+        <div class="settings-item__text" data-ref="help-security-body-4" style="gap: 10px;">
+          <p class="settings-item__desc" data-ref="help-security-p-4" data-i18n="help.security.section4_text" style="font-size: 14px; line-height: 1.65; margin: 0;">Los documentos procesados en BoardPDF tienen un ciclo de vida estrictamente efímero con garantía de destrucción física: (a) Límite de Retención Máximo: ningún archivo permanece en los servidores por más de 2 horas desde su recepción; (b) Demonio de Purga Automatizada: procesos daemon independientes ejecutan barridos continuos para destruir de manera irreversible cualquier archivo que haya expirado su TTL (Time-To-Live); (c) Destrucción Inmediata a Demanda: tan pronto como confirmas la descarga de tu archivo procesado o cierras la sesión en la herramienta, puedes activar la eliminación física inmediata; (d) Triturado Criptográfico (Crypto-Shredding): al destruirse un documento, las claves de cifrado efímeras asociadas a dicho archivo se eliminan y purgan de la memoria de forma irrecuperable, asegurando que los bloques de datos residuales sean matemáticamente indecifrables.</p>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="help-security-group-5" style="padding: 24px 28px; gap: 14px;">
+        <div class="settings-item__text" data-ref="help-security-heading-5">
+          <h2 class="settings-title" data-ref="help-security-title-5" data-i18n="help.security.section5_title" style="font-size: 16px; text-align: left; font-weight: 700;">5. Seguridad de Infraestructura en la Nube y Aislamiento de Red</h2>
+        </div>
+        <div class="settings-item__text" data-ref="help-security-body-5" style="gap: 10px;">
+          <p class="settings-item__desc" data-ref="help-security-p-5" data-i18n="help.security.section5_text" style="font-size: 14px; line-height: 1.65; margin: 0;">La infraestructura de cómputo y almacenamiento de BoardPDF está desplegada sobre nubes públicas certificadas (Amazon Web Services) bajo rigurosas políticas de hardening: (a) Aislamiento en Nube Privada Virtual (VPC): todos los servidores de procesamiento y bases de datos residen en subredes privadas aisladas sin acceso directo a internet público; el tráfico interno se canaliza a través de gateways seguros y endpoints privados; (b) Gestión de Identidades con Principio de Menor Privilegio (IAM): las políticas de Identity and Access Management limitan de forma estricta las capacidades de cada microservicio, requiriendo autenticación mutua (mTLS) para la comunicación inter-servicios; (c) Monitorización y Telemetría Cifrada: monitorización continua de eventos de seguridad y registros de auditoría centralizados con detección de anomalías en tiempo real, garantizando que los logs técnicos nunca contengan contraseñas, tokens de sesión ni contenidos de archivos de usuario.</p>
+        </div>
+      </div>
+
+      <div class="settings-group" data-ref="help-security-group-6" style="padding: 24px 28px; gap: 14px;">
+        <div class="settings-item__text" data-ref="help-security-heading-6">
+          <h2 class="settings-title" data-ref="help-security-title-6" data-i18n="help.security.section6_title" style="font-size: 16px; text-align: left; font-weight: 700;">6. Política de Divulgación Responsable de Vulnerabilidades (VDP)</h2>
+        </div>
+        <div class="settings-item__text" data-ref="help-security-body-6" style="gap: 10px;">
+          <p class="settings-item__desc" data-ref="help-security-p-6" data-i18n="help.security.section6_text" style="font-size: 14px; line-height: 1.65; margin: 0;">En BoardPDF reconocemos y valoramos la labor de la comunidad internacional de investigadores de seguridad ética para salvaguardar el ecosistema digital: (a) Canal de Notificación: si identificas una posible vulnerabilidad de seguridad en nuestros sistemas, te solicitamos que la reportes de manera confidencial y responsable a security@boardpdf.app (clave PGP pública disponible para reportes sensibles); (b) Principios de Safe Harbor: garantizamos no emprender acciones legales civiles ni penales contra investigadores que descubran y reporten vulnerabilidades actuando de buena fe, respetando la privacidad de otros usuarios, absteniéndose de acceder a datos ajenos, no degradando el rendimiento del servicio (evitando ataques DoS/DDoS) y otorgándonos un plazo razonable para su remediación antes de cualquier divulgación pública; (c) Acuerdos de Nivel de Servicio (SLA): nuestro equipo de seguridad acusará recibo de tu informe en un plazo máximo de 24 horas y completará la clasificación y triaje inicial dentro de las siguientes 72 horas, manteniéndote informado periódicamente sobre el progreso de la resolución.</p>
+        </div>
+      </div>
+
+      <div class="help-security-footer-wrapper" data-ref="help-security-footer-section"></div>
+    </div>
+  </div>
+</div>

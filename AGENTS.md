@@ -23,7 +23,7 @@ Este documento define las reglas estrictas de desarrollo, seguridad, arquitectur
    - Queda estrictamente prohibido utilizar `console.log`, `console.warn`, `console.error`, `console.info` o `console.debug` tanto en el backend (`src/`) como en el frontend (`client/`).
    - **Excepción Única**: Exclusivamente en `client/services/websocket.service.ts` se permite el uso de `console.log`, `console.warn` y `console.error` para monitoreo y depuración en tiempo real del ciclo de vida y eventos de la conexión WebSocket.
 2. **Uso Obligatorio de `Logger`**:
-   - En el backend, todos los registros deben realizarse a través del servicio centralizado `Logger` ([src/services/logger.service.ts](file:///f:/ProjectBoreal/src/services/logger.service.ts)), el cual escribe en archivos diarios en el directorio `logs/`.
+   - En el backend, todos los registros deben realizarse a través del servicio centralizado `Logger` ([src/services/logger.service.ts](apps/BoardPDF/src/services/logger.service.ts)), el cual escribe en archivos diarios en el directorio `logs/`.
    - Categorías disponibles:
      - `logger.app`: Eventos generales del ciclo de vida de la aplicación, inicio del servidor, rutas y peticiones.
      - `logger.db`: Conexiones a bases de datos (MySQL, Redis, futuras NoSQL), ejecuciones de queries, migraciones y errores de persistencia.

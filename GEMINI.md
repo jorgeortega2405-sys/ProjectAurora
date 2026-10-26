@@ -1,4 +1,4 @@
-# Reglas de Desarrollo y Seguridad de Spriteboard (GEMINI.md)
+# Reglas de Desarrollo y Seguridad de BoardPDF (GEMINI.md)
 
 Este archivo complementa a `AGENTS.md` y es cargado directamente por Antigravity / Gemini CLI para gobernar el comportamiento en este repositorio.
 
@@ -47,6 +47,6 @@ Este archivo complementa a `AGENTS.md` y es cargado directamente por Antigravity
 11. **CERO DDL Inline en Código de Base de Datos**:
     - Todo esquema, tabla, columna e índice debe residir en los scripts de arranque en `database/` (`database/db_identity.sql`). Prohibido `CREATE TABLE` o `ALTER TABLE` en `database.config.ts` o servicios backend.
 
-Consulta las especificaciones completas en [AGENTS.md](file:///f:/ProjectAurora/AGENTS.md).
+Consulta las especificaciones completas en [AGENTS.md](AGENTS.md).
 
 

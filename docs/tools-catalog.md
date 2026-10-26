@@ -1,4 +1,4 @@
-# Catálogo Maestro de Herramientas y Operaciones IA (ProjectAurora)
+# Catálogo Maestro de Herramientas y Operaciones IA (BoardPDF)
 
 Este documento contiene el mapeo exhaustivo de todas las herramientas (`tools`), sus parámetros de configuración, opciones de calidad, modos de ejecución de Inteligencia Artificial, costos de créditos, formatos de entrada y compatibilidad con pipelines encadenados para el agente conversacional `/ai`.
 
@@ -83,7 +83,7 @@ Este documento contiene el mapeo exhaustivo de todas las herramientas (`tools`),
 - **Límites**: Free 50 MB; Pro 500 MB.
 
 ### 2.5. Resumir PDF con IA (`summarize-pdf`)
-- **Descripción**: Extrae el contenido textual del PDF y utiliza el motor de IA de ProjectAurora para producir análisis ejecutivos o profundos.
+- **Descripción**: Extrae el contenido textual del PDF y utiliza el motor de IA de BoardPDF para producir análisis ejecutivos o profundos.
 - **Modos de Resumen (`mode`) y Costos**:
   - `standard` (Resumen General Estándar):
     - **Costo**: **0 créditos** (Gratuito para todos los usuarios).

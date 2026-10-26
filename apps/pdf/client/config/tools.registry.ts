@@ -76,7 +76,7 @@ export const TOOLS_REGISTRY: ToolItem[] = [
     cssPath: '/css/tools/tool-grid.css',
     customSvg: SVG_TOOL_EXTRACT_PDF_PAGES,
     descKey: 'home.tool_extract_pdf_pages_desc',
-    featured: false,
+    featured: true,
     icon: 'file_copy',
     iconBoxClass: 'tool-card__icon-box--orange',
     id: 'extract-pdf-pages',

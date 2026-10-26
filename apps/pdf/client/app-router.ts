@@ -193,7 +193,8 @@ export async function render(rawPath = window.location.pathname, options?: Rende
     translateElement(currentSidebar);
     if (hasDesignatedMenuItems(internalPath)) {
       if (window.innerWidth > 768) {
-        toggleDrawer(true, 'help');
+        const drawerMode = internalPath.includes('/workflows') || internalPath.includes('/workflow/') ? 'workflows' : 'help';
+        toggleDrawer(true, drawerMode);
       }
     }
   }

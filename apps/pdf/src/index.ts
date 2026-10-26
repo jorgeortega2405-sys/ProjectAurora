@@ -4,7 +4,6 @@ import express, { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
-import { checkDbConnection, closeDbPools } from './config/database.config.js';
 import { config } from './config/env.config.js';
 import { checkRedisConnection } from './config/redis.config.js';
 import { ensureBucketExists } from './config/s3.config.js';
@@ -19,13 +18,11 @@ import telemetryRoutes from './routes/telemetry.routes.js';
 import toolsRoutes from './routes/tools.routes.js';
 import { logger } from './services/logger.service.js';
 
-process.on('SIGINT', async () => {
-  await closeDbPools();
+process.on('SIGINT', () => {
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  await closeDbPools();
+process.on('SIGTERM', () => {
   process.exit(0);
 });
 
@@ -176,7 +173,6 @@ async function setupClient(app: express.Express, server: http.Server): Promise<v
 
 async function startServer(): Promise<void> {
   void checkRedisConnection();
-  void checkDbConnection();
   void ensureBucketExists();
   const app = express();
   app.set('trust proxy', 1);
